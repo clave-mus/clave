@@ -100,8 +100,8 @@ public/
    (`Sound`). Quem renderiza e corrige é o `Player`, um só para todos.
 3. **O relógio do áudio não é o relógio da tela.** `audio/engine.ts` agenda eventos com
    antecedência no Web Audio, porque `setTimeout` não é preciso o suficiente para música.
-4. **O estado é local primeiro.** `store.ts` guarda tudo no navegador numa forma que já antecipa a
-   sincronização com o servidor. Conta é opcional e entra por cima.
+4. **O estado é local primeiro.** `store.ts` guarda tudo no navegador e o app funciona inteiro
+   offline. Conta é opcional e entra por cima: `src/sync/` mantém o aparelho igual à conta.
 
 ## O que existe hoje
 
@@ -220,9 +220,9 @@ Use a chave **anon public**. A `service_role` nunca vai para o repositório nem 
 O passo a passo completo — criar o projeto, rodar o schema, configurar os três logins — está em
 [docs/supabase-setup.md](docs/supabase-setup.md).
 
-A sincronização do progresso local com a conta (migrar o que já existe, resolver conflitos) é a
-tarefa `B2` e **ainda não existe**. Por enquanto, entrar salva nome, instrumento e, se maior de
-13 anos, data de nascimento e faixa etária.
+Com conta, o progresso sincroniza em segundo plano (`src/sync/`, tarefa B2): o primeiro login
+leva para a conta o que estava no aparelho; tentativas e histórico somam; configurações ficam com
+a versão mais recente. As regras estão em [docs/sincronizacao.md](docs/sincronizacao.md).
 
 ## Decisões e plano
 

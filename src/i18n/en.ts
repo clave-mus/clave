@@ -239,6 +239,8 @@ const en: Shape<typeof pt> = {
     redoOnboarding: 'Redo the first questions',
     resetProgress: 'Delete my progress',
     resetWarn: 'This deletes history and answers from this browser. It cannot be undone.',
+    resetWarnAccount: 'This deletes history and answers from your account, on every device. It cannot be undone.',
+    resetNeedsInternet: 'Deleting progress from your account needs internet. Try again when you are online.',
   },
   voices: {
     piano: 'Piano',
@@ -250,7 +252,13 @@ const en: Shape<typeof pt> = {
   account: {
     title: 'Account',
     connectedAs: 'Signed in as',
-    connectedNote: 'This browser’s progress stays here; syncing comes in a later step.',
+    connectedNote: 'Your progress syncs with your account in the background.',
+    syncing: 'Syncing…',
+    synced: 'Synced at {time}.',
+    syncOffline: 'Offline: it will sync when the internet is back. Nothing is lost on this device.',
+    syncError: 'Could not sync right now. Your progress is still saved on this device.',
+    signOutNote: 'When you sign out, your progress stays in your account and leaves this device.',
+    signOutFailed: 'Could not save everything to your account before signing out (no internet?). Try again when you are online.',
     signOut: 'Sign out',
     delete: 'Delete my account',
     deleteWarn: 'This deletes the account and all your data on the server. It cannot be undone.',

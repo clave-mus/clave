@@ -240,6 +240,8 @@ const pt = {
     redoOnboarding: 'Refazer as perguntas iniciais',
     resetProgress: 'Apagar meu progresso',
     resetWarn: 'Isso apaga histórico e acertos deste navegador. Não dá para desfazer.',
+    resetWarnAccount: 'Isso apaga histórico e acertos da sua conta, em todos os aparelhos. Não dá para desfazer.',
+    resetNeedsInternet: 'Precisa de internet para apagar o progresso da conta. Tente de novo quando estiver conectado.',
   },
   voices: {
     piano: 'Piano',
@@ -251,7 +253,13 @@ const pt = {
   account: {
     title: 'Conta',
     connectedAs: 'Conectado como',
-    connectedNote: 'O progresso deste navegador continua aqui; a sincronização chega numa próxima etapa.',
+    connectedNote: 'Seu progresso é sincronizado com a conta em segundo plano.',
+    syncing: 'Sincronizando…',
+    synced: 'Sincronizado às {time}.',
+    syncOffline: 'Sem conexão: sincroniza quando a internet voltar. Nada se perde neste aparelho.',
+    syncError: 'Não deu para sincronizar agora. O progresso continua salvo neste aparelho.',
+    signOutNote: 'Ao sair, seu progresso fica guardado na conta e sai deste aparelho.',
+    signOutFailed: 'Não deu para salvar tudo na conta antes de sair (sem internet?). Tente de novo quando estiver conectado.',
     signOut: 'Sair',
     delete: 'Apagar minha conta',
     deleteWarn: 'Isso apaga a conta e todos os seus dados no servidor. Não dá para desfazer.',

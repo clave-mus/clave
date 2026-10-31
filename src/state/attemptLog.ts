@@ -1,26 +1,36 @@
 // Onde as tentativas ficam guardadas no aparelho. IndexedDB, e não localStorage: cada tentativa ocupa
 // ~500 bytes e o localStorage tem ~5 MB (umas 10 mil tentativas); quando estoura, a gravação falha
 // sem aviso, e histórico não gravado não se recupera (decisão 9). A versão em memória serve aos
-// testes e a navegadores sem IndexedDB. A sincronização com a conta é da B2.
+// testes e a navegadores sem IndexedDB. A sincronização com a conta (B2) está em src/sync/.
 import type { Attempt, AttemptFeedback } from './attempts';
 
 export interface AttemptLog {
   add(a: Attempt): Promise<void>;
   addFeedback(f: AttemptFeedback): Promise<void>;
+  /** Grava vários de uma vez; um id que já existe não duplica (é o que vem da conta). */
+  putMany(attempts: Attempt[], feedback: AttemptFeedback[]): Promise<void>;
   all(): Promise<Attempt[]>;
   feedback(): Promise<AttemptFeedback[]>;
+  /** Apaga as tentativas e confianças feitas até `at`, inclusive ("apagar meu progresso"). */
+  removeBefore(at: number): Promise<void>;
   clear(): Promise<void>;
 }
 
 export function memoryLog(): AttemptLog {
-  let attempts: Attempt[] = [];
-  let fb: AttemptFeedback[] = [];
+  // por id, como o IndexedDB: gravar de novo o mesmo id substitui
+  let attempts = new Map<string, Attempt>();
+  let fb = new Map<string, AttemptFeedback>();
   return {
-    async add(a) { attempts.push(a); },
-    async addFeedback(f) { fb.push(f); },
-    async all() { return [...attempts].sort((x, y) => x.at - y.at); },
-    async feedback() { return [...fb]; },
-    async clear() { attempts = []; fb = []; },
+    async add(a) { attempts.set(a.id, a); },
+    async addFeedback(f) { fb.set(f.id, f); },
+    async putMany(as, fs) { as.forEach(a => attempts.set(a.id, a)); fs.forEach(f => fb.set(f.id, f)); },
+    async all() { return [...attempts.values()].sort((x, y) => x.at - y.at); },
+    async feedback() { return [...fb.values()]; },
+    async removeBefore(at) {
+      attempts = new Map([...attempts].filter(([, a]) => a.at > at));
+      fb = new Map([...fb].filter(([, f]) => f.at > at));
+    },
+    async clear() { attempts = new Map(); fb = new Map(); },
   };
 }
 
@@ -69,6 +79,23 @@ export function indexedDbLog(): AttemptLog {
   return {
     add: a => put(STORES.attempts, a),
     addFeedback: f => put(STORES.feedback, f),
+    async putMany(as, fs) {
+      if (!as.length && !fs.length) return;
+      const tx = (await get()).transaction([STORES.attempts, STORES.feedback], 'readwrite');
+      as.forEach(a => tx.objectStore(STORES.attempts).put(a));
+      fs.forEach(f => tx.objectStore(STORES.feedback).put(f));
+      await done(tx);
+    },
+    async removeBefore(at) {
+      const tx = (await get()).transaction([STORES.attempts, STORES.feedback], 'readwrite');
+      const attempts = tx.objectStore(STORES.attempts);
+      const oldIds = await result(attempts.index('at').getAllKeys(IDBKeyRange.upperBound(at)));
+      oldIds.forEach(id => attempts.delete(id));
+      const feedback = tx.objectStore(STORES.feedback);
+      const fbs = await result(feedback.getAll() as IDBRequest<AttemptFeedback[]>);
+      fbs.filter(f => f.at <= at).forEach(f => feedback.delete(f.id));
+      await done(tx);
+    },
     async all() {
       const tx = (await get()).transaction(STORES.attempts, 'readonly');
       return result(tx.objectStore(STORES.attempts).index('at').getAll() as IDBRequest<Attempt[]>);
@@ -96,12 +123,20 @@ export function setAttemptLog(log: AttemptLog) {
   current = log;
 }
 
+const saved = new Set<() => void>();
+/** Avisa quando uma tentativa ou confiança nova é gravada neste aparelho (a sincronização usa). */
+export function onAttemptSaved(fn: () => void): () => void {
+  saved.add(fn);
+  return () => saved.delete(fn);
+}
+const notify = () => saved.forEach(fn => fn());
+
 /** Grava a confiança declarada sem travar a tela. */
 export function saveFeedback(f: AttemptFeedback) {
-  attemptLog().addFeedback(f).catch(err => console.error('Não deu para gravar a confiança', err));
+  attemptLog().addFeedback(f).then(notify, err => console.error('Não deu para gravar a confiança', err));
 }
 
 /** Grava uma tentativa sem travar a tela. Uma falha aparece no console, mas não interrompe o exercício. */
 export function saveAttempt(a: Attempt) {
-  attemptLog().add(a).catch(err => console.error('Não deu para gravar a tentativa', err));
+  attemptLog().add(a).then(notify, err => console.error('Não deu para gravar a tentativa', err));
 }

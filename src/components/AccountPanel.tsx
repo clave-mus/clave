@@ -1,17 +1,28 @@
 // Painel de conta no Perfil: sem conta (padrão) → pede data de nascimento uma vez → link
-// mágico/Google/Apple → logado → apagar conta. Tudo opcional: sem Supabase configurado, o
-// painel nem aparece, e o app segue 100% local.
+// mágico/Google/Apple → logado (com o estado da sincronização) → sair ou apagar conta. Tudo
+// opcional: sem Supabase configurado, o painel nem aparece, e o app segue 100% local.
 import { useState } from 'react';
 import { checkBirthdate, deleteAccount, isSupabaseConfigured, rememberBirthdateForSignIn, signInWithEmail, signInWithProvider, signOut } from '../state/account';
 import { useStore } from '../state/store';
+import { useSyncStatus, type SyncStatus } from '../sync';
 import { Btn, SecTitle } from './ui';
-import { useT } from '../i18n';
+import { localeTag, useLocale, useT, type Translate } from '../i18n';
+
+function syncLine(t: Translate, status: SyncStatus, tag: string): string | null {
+  if (status.state === 'syncing') return t('account.syncing');
+  if (status.state === 'offline') return t('account.syncOffline');
+  if (status.state === 'error') return t('account.syncError');
+  if (status.state === 'ok' && status.at) return t('account.synced', { time: new Date(status.at).toLocaleTimeString(tag, { hour: '2-digit', minute: '2-digit' }) });
+  return null;
+}
 
 type Step = 'idade' | 'bloqueado' | 'entrar' | 'enviado';
 
 export default function AccountPanel() {
   const account = useStore(s => s.account);
   const t = useT();
+  const locale = useLocale();
+  const sync = useSyncStatus();
   const ageGroup = useStore(s => s.ageGroup);
   const [step, setStep] = useState<Step>(ageGroup ? 'entrar' : 'idade');
   const [birthdate, setBirthdate] = useState('');
@@ -28,8 +39,14 @@ export default function AccountPanel() {
         <SecTitle>{t('account.title')}</SecTitle>
         <div className="panel" style={{ display: 'grid', gap: 12 }}>
           <span>{t('account.connectedAs')} <strong>{account.email ?? account.userId}</strong>. {t('account.connectedNote')}</span>
+          {syncLine(t, sync, localeTag(locale)) && <span className="eyebrow" role="status">{syncLine(t, sync, localeTag(locale))}</span>}
+          <span style={{ color: 'var(--muted)' }}>{t('account.signOutNote')}</span>
           <div className="row">
-            <Btn small tone="ghost" onClick={() => signOut()}>{t('account.signOut')}</Btn>
+            <Btn small tone="ghost" disabled={busy} onClick={async () => {
+              setError(null);
+              setBusy(true);
+              try { await signOut(); } catch { setError(t('account.signOutFailed')); } finally { setBusy(false); }
+            }}>{t('account.signOut')}</Btn>
             {!confirmDelete ? (
               <Btn small tone="ghost" onClick={() => setConfirmDelete(true)}>{t('account.delete')}</Btn>
             ) : (

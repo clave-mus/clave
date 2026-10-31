@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { GoalId } from '../data/modules';
 import { useContent } from '../data/localized';
-import { resetAll, setLocale, setState, updateProfile, useStore } from '../state/store';
+import { setLocale, setState, updateProfile, useStore } from '../state/store';
+import { resetProgress } from '../sync';
 import { detectLocale, LOCALES, useLocale, useT } from '../i18n';
 import { Art, Btn, Chip, PageHead, SecTitle } from '../components/ui';
 import AccountPanel from '../components/AccountPanel';
@@ -17,6 +18,8 @@ export default function Perfil() {
   const detected = LOCALES.find(l => l.id === detectLocale())!.name;
   const autoNames = useLocale() === 'pt' ? 'Dó Ré Mi' : 'C D E';
   const [confirmReset, setConfirmReset] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const account = useStore(s => s.account);
   const toggleGoal = (id: GoalId) => updateProfile({ goals: profile.goals.includes(id) ? profile.goals.filter(g => g !== id) : [...profile.goals, id] });
 
   return (
@@ -66,12 +69,16 @@ export default function Perfil() {
             <Btn tone="ghost" small to="/comecar">{t('profile.redoOnboarding')}</Btn>
             {!confirmReset ? <Btn tone="ghost" small onClick={() => setConfirmReset(true)}>{t('profile.resetProgress')}</Btn> : (
               <div className="row panel" style={{ padding: 12, background: 'var(--ve)' }}>
-                <span>{t('profile.resetWarn')}</span>
-                <Btn small tone="ghost" onClick={() => { resetAll(); setConfirmReset(false); }}>{t('common.deleteAll')}</Btn>
+                <span>{t(account ? 'profile.resetWarnAccount' : 'profile.resetWarn')}</span>
+                <Btn small tone="ghost" onClick={() => {
+                  setResetError(null);
+                  resetProgress().then(() => setConfirmReset(false), () => setResetError(t('profile.resetNeedsInternet')));
+                }}>{t('common.deleteAll')}</Btn>
                 <Btn small tone="mu" onClick={() => setConfirmReset(false)}>{t('common.cancel')}</Btn>
               </div>
             )}
           </div>
+          {resetError && <span style={{ color: 'var(--ve)' }}>{resetError}</span>}
         </section>
       </div>
     </div>

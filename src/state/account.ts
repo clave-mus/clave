@@ -1,8 +1,8 @@
-// Ações de conta: entrar (link mágico, Google, Apple), sair e apagar a conta.
-// A sincronização do progresso (migrar o localStorage para a conta, resolver conflitos) é a
-// B2, ainda não existe aqui — login só cria/atualiza a linha de perfil (nome, instrumento,
-// data de nascimento e faixa etária).
+// Ações de conta: entrar (link mágico, Google, Apple), sair e apagar a conta. Com sessão, a
+// sincronização do progresso (B2, src/sync/) liga sozinha; o primeiro login leva o que estava neste
+// aparelho para a conta.
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { clearAfterSignOut, detachAfterDelete, flushBeforeSignOut, startSync, stopSync } from '../sync';
 import { ageFromBirthdate, ageGroupFor, type AgeGroup } from './age';
 import { getState, setAccount, setAgeGroup } from './store';
 
@@ -27,6 +27,9 @@ export function initAccount() {
   supabase.auth.onAuthStateChange((event, session) => {
     const user = session?.user;
     setAccount(user ? { userId: user.id, email: user.email ?? null } : null);
+    // fora do callback: o supabase-js pede para não chamar a API de dentro dele
+    if (user) setTimeout(() => startSync(user.id), 0);
+    else stopSync();
     if (event === 'SIGNED_IN' && user) {
       let pending: string | null = null;
       try { pending = sessionStorage.getItem(PENDING_KEY); } catch { /* ignora */ }
@@ -59,17 +62,21 @@ export async function signInWithProvider(provider: 'google' | 'apple') {
   if (error) throw error;
 }
 
+/** Sai da conta. Antes, salva tudo na conta; se não der (sem internet), não sai e avisa — o aparelho
+ *  é limpo ao sair, e o que não chegou à conta se perderia. */
 export async function signOut() {
   if (!supabase) return;
+  await flushBeforeSignOut();
   await supabase.auth.signOut();
-  setAccount(null);
+  await clearAfterSignOut();
 }
 
 /**
- * Depois que a sessão chega (link mágico clicado, ou volta do Google/Apple), grava o perfil
- * mínimo. Chamado automaticamente pelo listener do initAccount a cada novo login; `birthdate`
- * só vem preenchida no primeiro login (ver rememberBirthdateForSignIn) — nos logins seguintes,
- * atualiza só nome/instrumento e não mexe na data de nascimento já salva no servidor.
+ * Depois que a sessão chega (link mágico clicado, ou volta do Google/Apple), garante a linha de
+ * cadastro em `profiles`. No primeiro login (`birthdate` preenchida, ver rememberBirthdateForSignIn)
+ * grava nome, instrumento, objetivos, data de nascimento e faixa etária. Nos seguintes, só cria a
+ * linha se faltar: num aparelho novo o perfil local ainda está vazio, e sobrescrever apagaria o da
+ * conta. O perfil que o app usa viaja pela sincronização (documento 'profile', ver src/sync/).
  */
 export async function upsertProfileAfterSignIn(birthdate?: string) {
   const client = assertConfigured();
@@ -87,7 +94,7 @@ export async function upsertProfileAfterSignIn(birthdate?: string) {
   };
   // As colunas kind e levels do servidor ficaram sem uso (têm valor padrão); não são mais enviadas.
   if (birthdate) { row.birthdate = birthdate; row.age_group = group; }
-  const { error } = await client.from('profiles').upsert(row);
+  const { error } = await client.from('profiles').upsert(row, { ignoreDuplicates: !birthdate });
   if (error) throw error;
   if (group) setAgeGroup(group);
 }
@@ -97,6 +104,7 @@ export async function deleteAccount() {
   const client = assertConfigured();
   const { error } = await client.rpc('delete_my_account');
   if (error) throw error;
+  detachAfterDelete();
   await client.auth.signOut();
   setAccount(null);
 }

@@ -1,5 +1,5 @@
-// Estado do usuário, salvo no navegador (localStorage). Sem login por enquanto:
-// a forma dos dados já pensa em subir isso para um servidor depois.
+// Estado do usuário, salvo no navegador (localStorage). Com conta, src/sync/ o mantém igual ao da
+// conta (B2); sem conta, tudo fica só aqui.
 import { useSyncExternalStore } from 'react';
 import type { GoalId, Instrument } from '../data/modules';
 import type { ModuleId } from '../exercises/taxonomy';
@@ -9,7 +9,8 @@ import type { StoredParams } from '../exercises/params';
 import type { AgeGroup } from './age';
 import { migrateSaved } from './migrate';
 import { attemptLog } from './attemptLog';
-import { aggregateStats, mergeStats, subtractStats } from './attempts';
+import { aggregateStats, mergeStats, subtractStats, type Totals } from './attempts';
+import { resetBefore, stampChanges, withMeta, type SyncMeta } from './syncMeta';
 import type { Locale } from '../i18n';
 
 export interface Profile {
@@ -58,6 +59,8 @@ export interface State {
   // Guardado para não perguntar a data de nascimento de novo; a data em si nunca fica aqui
   // (fica só no servidor, e só para quem tem conta — ver src/state/age.ts).
   ageGroup: AgeGroup | null;
+  /** Sincronização com a conta (ver src/state/syncMeta.ts). Criado ao carregar. */
+  sync?: SyncMeta;
 }
 
 const KEY = 'clave:v1';
@@ -84,28 +87,38 @@ export const DEFAULT_STATE: State = {
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_STATE;
+    if (!raw) return withMeta(DEFAULT_STATE, DEFAULT_STATE);
     const parsed = migrateSaved(JSON.parse(raw)) as Partial<State>;
-    return { ...DEFAULT_STATE, ...parsed, profile: { ...DEFAULT_STATE.profile, ...parsed.profile } };
+    return withMeta({ ...DEFAULT_STATE, ...parsed, profile: { ...DEFAULT_STATE.profile, ...parsed.profile } }, DEFAULT_STATE);
   } catch {
-    return DEFAULT_STATE;
+    return withMeta(DEFAULT_STATE, DEFAULT_STATE);
   }
 }
 
 let state: State = load();
 const listeners = new Set<() => void>();
+const changeListeners = new Set<(fromSync: boolean) => void>();
 
 export function getState() {
   return state;
 }
-export function setState(fn: (s: State) => State) {
-  state = fn(state);
+/** Muda o estado. Edição local carimba os documentos que mudaram; `fromSync` é para o que vem da
+ *  conta, que já chega com o carimbo de lá. */
+export function setState(fn: (s: State) => State, opts: { fromSync?: boolean } = {}) {
+  const prev = state;
+  state = opts.fromSync ? fn(prev) : stampChanges(prev, fn(prev), Date.now());
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     /* sem armazenamento: segue só em memória */
   }
   listeners.forEach(l => l());
+  changeListeners.forEach(l => l(!!opts.fromSync));
+}
+/** Avisa a cada mudança de estado, dizendo se ela veio da sincronização. */
+export function onStateChange(fn: (fromSync: boolean) => void): () => void {
+  changeListeners.add(fn);
+  return () => changeListeners.delete(fn);
 }
 export function useStore<T>(select: (s: State) => T): T {
   return useSyncExternalStore(
@@ -120,15 +133,21 @@ export function useStore<T>(select: (s: State) => T): T {
  *  Na primeira vez, o que estava nos totais e não veio do registro vira essa base. */
 export async function rebuildStats() {
   const derived = aggregateStats(await attemptLog().all());
-  setState(s => {
-    const legacy = s.legacyStats ?? subtractStats(s.stats, derived);
-    return { ...s, legacyStats: legacy, stats: mergeStats(legacy, derived) };
-  });
+  setState(s => withStats(s, derived));
 }
-export function resetAll() {
-  setState(() => DEFAULT_STATE);
-  // "apagar meu progresso" apaga também o registro de tentativas deste aparelho
-  attemptLog().clear().catch(err => console.error('Não deu para apagar as tentativas', err));
+/** Totais = base de antes da C2 deste aparelho + a dos outros aparelhos da conta + tentativas. */
+export function withStats(s: State, derived: Record<string, Totals>): State {
+  const legacy = s.legacyStats ?? subtractStats(s.stats, derived);
+  const others = Object.values(s.sync?.otherLegacy ?? {}).reduce(mergeStats, {});
+  return { ...s, legacyStats: legacy, stats: mergeStats(mergeStats(legacy, others), derived) };
+}
+/** Apaga o progresso deste aparelho: tudo o que foi feito até `at` some (ver resetBefore), inclusive
+ *  o registro de tentativas. Sessão e faixa etária ficam. Com conta, use resetProgress (src/sync),
+ *  que apaga também da conta e avisa os outros aparelhos. */
+export async function resetAll(at = Date.now()) {
+  setState(s => resetBefore(s, at, DEFAULT_STATE), { fromSync: true });
+  await attemptLog().removeBefore(at);
+  await rebuildStats();
 }
 
 // ---------------- ações ----------------

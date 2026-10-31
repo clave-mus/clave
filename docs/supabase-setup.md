@@ -24,7 +24,13 @@ pronto esperando esses dados — nada aqui precisa de outra mudança no app.
    [supabase/migrations/20261102120000_attempts.sql](../supabase/migrations/20261102120000_attempts.sql):
    cria `attempts` e `attempt_feedback` (o registro de tentativas da C2), com RLS e sem
    permissão de alterar uma tentativa já gravada.
-5. Confira em **Table Editor** que as tabelas apareceram.
+5. Repita com
+   [supabase/migrations/20261103120000_sync.sql](../supabase/migrations/20261103120000_sync.sql)
+   (B2, sincronização): cria `user_state` e a função `push_state`, prepara o histórico e as
+   tentativas para serem lidos "pelo que chegou de novo", e **apaga** as tabelas `stats`,
+   `arsenal`, `settings` e `tonality_plan` do passo 3, que nenhuma versão do app chegou a usar.
+   As três migrações rodam nessa ordem, uma vez cada.
+6. Confira em **Table Editor** que as tabelas apareceram.
 
 ## 3. Pegar as chaves e configurar o app
 
@@ -92,8 +98,16 @@ bloqueio real aqui; o resto do app funciona sem isso (fica só sem o botão Appl
 5. Teste **Apagar minha conta**: confirme que a conta some do **Authentication → Users** do
    Supabase e que as linhas das tabelas (`profiles`, etc.) somem também.
 
-## O que ainda não faz parte disso (fica para a B2)
+## Testar a sincronização (B2)
 
-Login hoje só grava um perfil mínimo (nome, instrumento, data de nascimento/faixa etária).
-Migrar o progresso que já existia no navegador para a conta, e manter os dois sincronizados
-depois, é a tarefa B2 — ainda não implementada.
+Com dois navegadores (ou um normal e uma janela anônima) logados na mesma conta:
+
+1. No primeiro, responda alguns exercícios e mude uma configuração. Em **Perfil → Conta**
+   aparece "Sincronizado às …".
+2. Abra o segundo: o mesmo progresso aparece (Progresso, histórico, configurações).
+3. Desligue a internet do primeiro (DevTools → Network → Offline), responda mais alguns, ligue de
+   novo: em alguns segundos o segundo navegador mostra tudo ao voltar a ficar visível.
+4. No **Table Editor**, `attempts` e `history` têm uma linha por tentativa/atividade, sem repetir.
+
+As regras (o que soma, o que fica com a versão mais recente, sair, apagar progresso) estão em
+[sincronizacao.md](sincronizacao.md).
