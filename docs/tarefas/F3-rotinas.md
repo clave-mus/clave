@@ -11,7 +11,7 @@ paralelo com F3-5.
 
 ---
 
-## F3-1 · Modelo e armazenamento
+## F3-1 · Modelo e armazenamento ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 4, 5, 7, 23. **Depende de:** F2-1. **Bloqueia:** todo o resto de F3.
 
@@ -35,6 +35,14 @@ ao Supabase em F9-1.
 
 **Pronto quando:** dá para criar, ler, alterar e apagar rotina pelo código; um teste cria uma
 rotina da v1, sobe a versão de formato, roda a migração e confere que nada se perdeu.
+
+**Feito.** `src/routines/types.ts` e `storage.ts`, com 24 testes. A corrente de migração está
+montada e **vazia de propósito** — a v1 é a única que existe, e a máquina precisa estar pronta
+antes de precisar dela. Um buraco na corrente é **recusa**, nunca entrada meio migrada.
+
+Um bug que o teste pegou: `copiarRotina` fazia cópia rasa, então adotar uma rotina do time e
+mexer numa configuração alterava **a do time junto**. Agora é cópia profunda de `settings`,
+`params` e `valores` da rotação.
 
 **Não faça:** nenhuma interface. Esta tarefa é modelo, persistência e testes.
 
@@ -242,7 +250,7 @@ pontuação (decisão 10). Nada de rotacionar vários parâmetros ao mesmo tempo
 
 ---
 
-## F3-9 · O histórico guarda os parâmetros
+## F3-9 · O histórico guarda os parâmetros ✅ *feita em 03/11/2026*
 
 **Decisão de origem:** 39. **Depende de:** F2-1. **Bloqueia:** F3-8 ser útil.
 
@@ -256,3 +264,8 @@ validação não deixam rastro nenhum de conteúdo.
 
 **Contrato de saída:** teste que grava uma atividade sem validação nenhuma (um `ambiente`) e
 recupera depois em que tonalidade e região ela rodou.
+
+**Feito.** `Activity.snapshot` em `store.ts`, com a mesma forma do `parameters_snapshot` de uma
+tentativa — de propósito, para a análise ler os dois do mesmo jeito. `useToolLog` aceita o
+snapshot, o `Player` grava o que já tinha em mãos, e o histórico no Perfil mostra a tonalidade e o
+andamento ao lado do item. Atividade antiga, sem snapshot, continua válida.

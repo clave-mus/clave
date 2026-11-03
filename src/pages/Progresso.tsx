@@ -12,6 +12,8 @@ import { minutesByModule, useStore } from '../state/store';
 import { fmtMin, PageHead, SecTitle } from '../components/ui';
 import { itemText, localeTag, useLocale, useT } from '../i18n';
 import { itemById } from '../catalog';
+import { pcName } from '../theory/core';
+import { useNaming } from '../i18n';
 
 export default function Progresso() {
   const stats = useStore(s => s.stats);
@@ -19,6 +21,16 @@ export default function Progresso() {
   const t = useT();
   const { MODULES, moduleById } = useContent();
   const lang = localeTag(useLocale());
+  const naming = useNaming();
+
+  /** Com que configuração a prática rodou. Vazio nas atividades de antes da F3-9. */
+  const comoFoi = (h: (typeof history)[number]) => {
+    const p = h.snapshot?.params;
+    const partes: string[] = [];
+    if (p?.key) partes.push(`${pcName(p.key.tonic, naming)} ${p.key.mode}`);
+    if (p?.tempo) partes.push(`${p.tempo} bpm`);
+    return partes.join(' · ');
+  };
 
   const byModule = minutesByModule(history, 30);
   const totalMin = Object.values(byModule).reduce((a, b) => a + b, 0);
@@ -79,6 +91,7 @@ export default function Progresso() {
                 <div style={{ minWidth: 0 }}>
                   <b>{itemById[h.id] ? itemText(t, h.id, 'title') : h.title}</b>
                   <span className="muted"> · {moduleById[h.module]?.name}</span>
+                  {comoFoi(h) && <span className="muted"> · {comoFoi(h)}</span>}
                 </div>
                 <span className="num muted">{h.total ? `${h.correct}/${h.total}` : fmtMin(h.seconds)}</span>
                 <span className="num muted">{new Date(h.at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>

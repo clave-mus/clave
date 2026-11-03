@@ -2,21 +2,30 @@
 import { useEffect, useRef, useState } from 'react';
 import { atTime, Clock, drum } from '../audio/engine';
 import type { ModuleId } from '../catalog/taxonomy';
-import { logActivity } from '../state/store';
+import { logActivity, type ActivityParams } from '../state/store';
 import { Btn, Chip } from '../components/ui';
 import { useT } from '../i18n';
 
 /** Soma o tempo em que a ferramenta ficou ativa e registra no histórico ao sair. */
-export function useToolLog(id: string, title: string, module: ModuleId, active: boolean) {
+/**
+ * Conta o tempo de uso de um ambiente e grava a atividade ao sair.
+ *
+ * `snapshot` guarda com que configuração a prática rodou (F3-9). Ambiente não produz tentativa
+ * nenhuma, então sem ele a atividade não deixa rastro de conteúdo — e "em que tonalidade eu
+ * pratiquei?" fica sem resposta.
+ */
+export function useToolLog(id: string, title: string, module: ModuleId, active: boolean, snapshot?: ActivityParams) {
   const acc = useRef(0);
   const since = useRef<number | null>(null);
+  const snap = useRef(snapshot);
+  snap.current = snapshot;
   useEffect(() => {
     if (active) since.current = Date.now();
     else if (since.current) { acc.current += Date.now() - since.current; since.current = null; }
   }, [active]);
   useEffect(() => () => {
     const total = acc.current + (since.current ? Date.now() - since.current : 0);
-    logActivity({ id, title, module, seconds: Math.round(total / 1000) });
+    logActivity({ id, title, module, seconds: Math.round(total / 1000), snapshot: snap.current });
   }, [id, title, module]);
 }
 

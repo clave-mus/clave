@@ -5,7 +5,7 @@ import type { GoalId, Instrument } from '../data/modules';
 import type { ModuleId } from '../catalog/taxonomy';
 import type { Naming } from '../theory/core';
 import type { SettingValue } from '../catalog/types';
-import type { StoredParams } from '../catalog/params';
+import type { GlobalParams, StoredParams } from '../catalog/params';
 import type { AgeGroup } from './age';
 import { migrateSaved } from './migrate';
 import { attemptLog } from './attemptLog';
@@ -25,14 +25,31 @@ export interface Stat {
   correct: number;
   last: number;
 }
+/**
+ * Com que configuração a prática rodou (F3-9).
+ *
+ * Sem isto, "em que tonalidade eu pratiquei isto?" não tem resposta — e é justamente essa pergunta
+ * que torna a rotação de parâmetro utilizável (decisão 38). Vale sobretudo para os itens SEM
+ * validação, que não geram tentativa nenhuma e por isso não deixariam rastro de conteúdo.
+ *
+ * Mesma forma do `parameters_snapshot` de uma tentativa (src/state/attempts.ts), de propósito:
+ * a análise lê os dois do mesmo jeito.
+ */
+export interface ActivityParams {
+  settings?: Record<string, SettingValue>;
+  params?: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'tempo' | 'material' | 'clef'>;
+}
+
 export interface Activity {
   at: number;
-  id: string; // exercício ou ferramenta
+  id: string; // item do catálogo
   title: string;
   module: ModuleId;
   seconds: number;
   correct?: number;
   total?: number;
+  /** Ausente nas atividades gravadas antes da F3-9; a tela lida com isso. */
+  snapshot?: ActivityParams;
 }
 /** Sessão da conta (Supabase). Null = sem conta, só localStorage. */
 export interface Account {

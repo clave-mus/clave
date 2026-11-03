@@ -82,7 +82,12 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
     const t0 = started.current;
     return () => {
       const s = scoreRef.current;
-      if (s.total > 0 && !target) logActivity({ id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule, seconds: Math.round((Date.now() - t0) / 1000), correct: s.correct, total: s.total });
+      if (s.total > 0 && !target) logActivity({
+        id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule,
+        seconds: Math.round((Date.now() - t0) / 1000), correct: s.correct, total: s.total,
+        // a mesma forma do snapshot de uma tentativa (F3-9)
+        snapshot: { settings, params: { instrument: params.instrument, tuning: params.tuning, key: params.key, range: params.range, tempo: params.tempo, material: params.material, clef: params.clef } },
+      });
     };
   }, [def, target, t]);
 
