@@ -258,3 +258,47 @@ O que o rascunho confirmou:
 
 **Continua valendo: não invente exercício de instrumento fora do catálogo.** Se faltar alguma
 coisa, isso é conversa com o Paulo, não decisão de tarefa.
+
+---
+
+## F6-11 · 👤 Biblioteca de padrões rítmicos nomeados
+
+**Decisões de origem:** 84, 85. **Bloqueia:** o item *Identificar o padrão*.
+
+**Isto é tarefa de curadoria, não de código** — e o código que falta é quase nenhum, porque
+`src/theory/rhythm-cells.ts` já tem a notação. A clave de son se escreve `8. 8. q 8 q` (intervalos
+de 3, 3, 4, 2 e 4 semicolcheias) **hoje**, sem motor novo.
+
+**8 a 12 padrões, poucos e bem feitos.** Quarenta mal atribuídos valem menos que oito certos.
+
+Formato, em `docs/padroes-ritmicos.md`, uma entrada por padrão:
+
+```md
+### Clave de son (3-2)
+
+- **padrão:** `8. 8. q 8 q`
+- **intervalos:** 3 3 4 2 4 (semicolcheias)
+- **origem:** Cuba
+- **fonte:** <método, gravação ou pessoa>
+- **revisado por:** <quem conhece a tradição> · <data>
+```
+
+**As três regras da decisão 85, e elas são bloqueantes:**
+
+1. **Sem fonte, o padrão não entra no arquivo.**
+2. Precisa de **revisão por quem conhece a tradição**, além da revisão do dono do produto.
+3. **Se o time não tiver essa pessoa para algum padrão, o padrão não entra** — vai para
+   [guardados.md](../guardados.md).
+
+**Por quê tão rígido aqui, e não nos outros itens.** Clave e cáscara são afro-cubanas; telecoteco,
+partido alto, baião, samba e coco são brasileiras. Nomear e grafar esses padrões é culturalmente
+específico e há divergência real entre quem ensina. **Erro aqui não é erro de teoria — é erro de
+atribuição**, e num app chamado Clave, feito por brasileiros, isso pesa diferente.
+
+**Um fato já conferido, para não ser escrito errado:** a clave de son é `3 3 4 2 4` e a de rumba é
+`3 4 3 2 4`. As cinco rotações da de son são `33424`, `34243`, `42433`, `24334` e `43342` — **a de
+rumba não está entre elas.** São colares diferentes, não modos do mesmo. **Não escreva numa aula que
+uma é modo da outra.**
+
+**Pronto quando:** 8 a 12 padrões existem, cada um com fonte e com revisor nomeado e datado; e o item
+*Identificar o padrão* consegue sortear entre eles sem nenhum `TODO` no caminho.

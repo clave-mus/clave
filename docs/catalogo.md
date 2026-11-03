@@ -348,6 +348,7 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Tocar em tempo | tocar | tarefa-metrônomo | V+R |
 | Vocalizar ritmo | cantar | tarefa-metrônomo | matriz |
 | Deslocamento de padrão *(T8 — um tempo, família e modos)* | tocar | tarefa-metrônomo | 83 |
+| Identificar o padrão *(clave, telecoteco, baião… — consome a biblioteca)* | ouvir | perguntas | 84 |
 | ~~Manter um groove~~ | tocar | — | [guardado](guardados.md) |
 
 > **Funde** (decisão 61): *Leitura rítmica* e *Ler e tocar ritmos* são a mesma tarefa — bater palma
@@ -430,6 +431,14 @@ padrão com o metrônomo", sem conteúdo nenhum.
 > código novo) e *checagem de tensão* é **nota num passo de rotina**, não exercício.
 
 > **E o andamento nunca é comemorado** (decisão 82): é configuração neutra, nunca recorde.
+
+> **A biblioteca de padrões nomeados é dado, não item** (decisão 84): nome, padrão, origem e
+> **fonte**, na notação que `rhythm-cells.ts` já tem. Quatro consumidores — a biblioteca, uma aula,
+> o item *Identificar o padrão*, e parâmetro de itens que já existem. Como tela, ela seria uma tela
+> que lista dados, que é o modo de falha da decisão 15.
+>
+> **E padrão de tradição precisa de fonte citada e de revisão por quem conhece a tradição**
+> (decisão 85). Erro aqui não é erro de teoria, é erro de atribuição.
 
 ⚠️ = validação duvidosa ou dependência externa (gravações licenciadas, pesquisa de estilo).
 

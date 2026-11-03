@@ -1275,6 +1275,61 @@ mudam, é a T8.
 
 ---
 
+### 84 · A biblioteca de padrões rítmicos nomeados é dado, com quatro consumidores
+
+Clave, cáscara, telecoteco, partido alto, baião, samba, coco, tresillo. **Não é um lugar no app: é
+um dado, e quatro coisas o consomem.**
+
+**E não precisa de motor nenhum.** O `src/theory/rhythm-cells.ts` já tem notação de texto para
+padrões. A clave de son — intervalos entre ataques de 3, 3, 4, 2 e 4 semicolcheias — se escreve hoje
+como `8. 8. q 8 q`, sem uma linha de código novo. **O trabalho é curadoria, não programação.**
+
+| Consumidor | O que faz |
+|---|---|
+| **A biblioteca** | o dado: nome, padrão, origem, **fonte** |
+| **Aula de teoria** | o texto que explica, com os exemplos soando |
+| **Item "Identificar o padrão"** | ouve e nomeia — célula *Ritmo × Ouvir*, que já está ocupada |
+| **Parâmetro de itens existentes** | leitura rítmica, reproduzir ritmos, a `T8`, e o metrônomo tocando como acompanhamento |
+
+⚠️ **A biblioteca não pode virar item.** "Padrões de clave" como tela seria uma tela que lista
+dados — exatamente o modo de falha que a decisão 15 existe para impedir.
+
+**No beta: 8 a 12 padrões, poucos e bem feitos.** Quarenta mal atribuídos valem menos que oito
+certos. **"Identificar o padrão" entra** como item: é o consumidor mais óbvio da biblioteca e o que
+justifica construí-la.
+
+**Um fato a registrar, para ninguém escrever errado numa aula.** A clave de son é `3 3 4 2 4` e a de
+rumba é `3 4 3 2 4`. As cinco rotações da de son são `33424`, `34243`, `42433`, `24334` e `43342` —
+**a de rumba não está entre elas.** São colares diferentes, não modos do mesmo. A conexão com a `T8`
+é de **conceito**, não de conteúdo.
+
+---
+
+### 85 · Padrão de tradição precisa de fonte citada e de revisão por quem conhece a tradição
+
+Oitava linha do portão de qualidade, e vale **só para o bloco de padrões rítmicos tradicionais**.
+
+Clave e cáscara são afro-cubanas. Telecoteco, partido alto, baião, samba e coco são brasileiras. Há
+padrões da África Ocidental. **Nomear e grafar esses padrões é culturalmente específico**, varia por
+região e por fonte, e há divergência real entre quem ensina.
+
+Um erro aqui **não é erro de teoria — é erro de atribuição.** Num app chamado **Clave**, feito por
+brasileiros, grafar a clave de rumba errada ou chamar de telecoteco uma coisa que não é seria ruim de
+um jeito que uma enarmonia trocada não é.
+
+**Portanto:**
+
+1. **Fonte obrigatória por padrão** — método, gravação ou pessoa. Sem fonte, o padrão não existe no
+   arquivo.
+2. **Revisão por quem conhece a tradição**, além da revisão do dono do produto (decisão 51).
+3. **Se o time não tiver essa pessoa para algum padrão, o padrão não entra** — fica em
+   [guardados.md](guardados.md), como tudo mais que falta uma peça.
+
+Não é escrúpulo decorativo: é o mesmo critério de todas as decisões deste arquivo. **Não afirmar o
+que não se pode sustentar.**
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1299,6 +1354,8 @@ Nenhuma família é publicada sem passar nos sete:
 5. **Alguém do time usaria de verdade amanhã** — não "é um exercício válido".
 6. **Teste automático** gerando centenas de perguntas e conferindo as invariantes.
 7. **Revisado pelo dono do produto** — ver decisão 51.
+8. **Fonte citada e revisão de tradição** — **só para padrões rítmicos tradicionais** (decisão 85).
+   Sem fonte, o padrão não entra.
 
 Os sete **não se aplicam todos no mesmo nível**: motor, família e preset têm portões diferentes.
 Ver a decisão 49 e [catalogo.md](catalogo.md#o-portão-de-qualidade-em-três-níveis).
