@@ -104,6 +104,42 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     stop = t + dur + 0.15;
   }
   oscs.forEach(o => { o.start(t); o.stop(stop); });
+  registrar(out, oscs, stop);
+}
+
+// ---------------------------------------------------------------------------
+// Parar o que está soando
+// ---------------------------------------------------------------------------
+
+/**
+ * O que ainda pode soar. Sem isto, tocar de novo enquanto o acorde anterior decai **sobrepõe os dois**
+ * — e quem está identificando um acorde de ouvido escuta a soma de dois acordes, que é outra coisa.
+ */
+const soando = new Set<{ out: GainNode; oscs: OscillatorNode[] }>();
+
+function registrar(out: GainNode, oscs: OscillatorNode[], stop: number) {
+  const nó = { out, oscs };
+  soando.add(nó);
+  // limpa sozinho quando a nota termina, para o conjunto não crescer para sempre
+  const atraso = Math.max(0, (stop - now()) * 1000) + 60;
+  setTimeout(() => soando.delete(nó), atraso);
+}
+
+/**
+ * Silencia tudo com um corte curto (25 ms) em vez de instantâneo: cortar o ganho de uma vez produz
+ * estalo, que é pior que o som sobreposto.
+ */
+export function pararTudo() {
+  const t = now();
+  for (const { out, oscs } of soando) {
+    try {
+      out.gain.cancelScheduledValues(t);
+      out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), t);
+      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+      oscs.forEach(o => o.stop(t + 0.03));
+    } catch { /* nó já parado: nada a fazer */ }
+  }
+  soando.clear();
 }
 
 /** Toca grupos de notas em sequência; cada grupo soa junto (acorde) ou arpejado. */

@@ -54,3 +54,34 @@ describe('toda configuração oferecida muda alguma coisa', () => {
     }
   });
 });
+
+// `soPresentation` diz que a configuração muda SÓ como o som é tocado. O Player confia nisso para não
+// sortear pergunta nova quando ela muda — então, se uma marcada assim for lida pelo `make`, mexer nela
+// deixaria de atualizar a pergunta e o app mentiria em silêncio.
+//
+// Não dá para inferir de `present`: o seletor de instrumento de `acorde-visual` tem `present` e TAMBÉM é
+// lido pelo `make`. Por isso é declarado — e por isso precisa de teste.
+describe('soPresentation: o que diz não mudar a pergunta, de fato não muda', () => {
+  const itens = EXERCISES.filter(isSeries);
+
+  it('nenhuma configuração marcada `soPresentation` é lida pelo `make`', () => {
+    for (const ex of itens) {
+      const soSom = ex.settings(ctx).filter(s => s.soPresentation).map(s => s.id);
+      if (!soSom.length) continue;
+      const lidas = leituras(ex.id);
+      for (const id of soSom) expect(lidas.has(id), `${ex.id}: \`${id}\` é \`soPresentation\` mas o make a lê`).toBe(false);
+    }
+  });
+
+  it('toda configuração `soPresentation` declara `present` — senão ela não muda nada', () => {
+    for (const ex of itens) {
+      for (const s of ex.settings(ctx).filter(x => x.soPresentation)) {
+        expect(s.present, `${ex.id}: ${s.id}`).toBeDefined();
+      }
+    }
+  });
+
+  it('e há pelo menos uma no catálogo, senão este teste não prova nada', () => {
+    expect(itens.flatMap(e => e.settings(ctx)).filter(s => s.soPresentation).length).toBeGreaterThan(0);
+  });
+});

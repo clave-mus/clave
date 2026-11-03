@@ -2,7 +2,7 @@
 // Só conhece o modelo da C1 (superfície, esperado, conteúdo sonoro). A conferência é de
 // validate.ts e o som, de presentation.ts.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { atTime, now } from '../audio/engine';
+import { atTime, now, pararTudo } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
 import { useContent } from '../data/localized';
 import { getState, recordAnswer, saveSettings, useStore } from '../state/store';
@@ -56,7 +56,18 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
   const locale = useLocale();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
-  const make = useCallback(() => def.make(settings, ctx), [def, settings, ctx]);
+  /**
+   * Só o que muda a PERGUNTA. Mexer em "arpejar" ou na duração não sorteia um acorde novo — antes
+   * sorteava, e a pessoa perdia o que estava tentando identificar.
+   */
+  const chaveDaPergunta = useMemo(() => {
+    const soSom = new Set(def.settings(ctx).filter(s => s.soPresentation).map(s => s.id));
+    return JSON.stringify(Object.entries(settings).filter(([k]) => !soSom.has(k)).sort());
+  }, [def, ctx, settings]);
+  // `settings` é lido pela ref, para a pergunta não ser refeita quando só a apresentação muda
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  const make = useCallback(() => def.make(settingsRef.current, ctx), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
   // Por que estas configurações não geram pergunta (decisão 13). Havendo motivo, `make` NUNCA é
   // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
   const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
@@ -109,6 +120,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const play = useCallback((question: Question, listening = false) => {
     const content = question.sound;
     if (!content || !getState().sound) return;
+    // Para o que ainda está soando: tocar de novo enquanto o acorde anterior decai sobrepõe os dois, e
+    // quem identifica de ouvido escuta a soma — que é outro acorde.
+    pararTudo();
     const dur = playContent(content, presentationFor(question));
     if (listening) {
       listens.current++;
@@ -203,7 +217,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           </div>
         </div>
         {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} temEscolha={Object.keys(pratica).length > 0} onReset={limpar} /> : null} />}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+          onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
     );
   }
@@ -235,9 +250,10 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
         <div className="row">
           {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
-          <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
         </div>
       </div>
+      {/* Fora da `row` do rodapé: ao lado do texto do exercício, o painel espremia os dois em largura média. */}
+      <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
 
       {confidenceFor && (
         <div className="panel" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>
@@ -252,7 +268,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       )}
 
       {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} temEscolha={Object.keys(pratica).length > 0} onReset={limpar} /> : null} />}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+        onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
   );
 }
@@ -392,7 +409,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange, extra }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; extra?: ReactNode }) {
+function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; extra?: ReactNode; onReset: () => void }) {
   const t = useT();
   return (
     <div className="settings">
@@ -428,7 +445,8 @@ function SettingsPanel({ def, ctx, values, onChange, extra }: { def: SeriesItem;
         </div>
       ))}
       {extra}
-      <div className="row"><Btn small tone="ghost" onClick={() => onChange({ ...def.defaults })}>{t('player.resetDefaults')}</Btn></div>
+      {/* UM botão só: antes o painel de prática trazia o seu, e apareciam dois lado a lado. */}
+      <div className="row"><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>
     </div>
   );
 }

@@ -111,6 +111,17 @@ export interface Setting {
   format?: (v: number) => string;
   /** Se a configuração muda só como o som é tocado, diz o que ela muda na apresentação. */
   present?: (v: SettingValue) => Partial<Presentation>;
+  /**
+   * A configuração muda **só** como o som é tocado, nunca a pergunta.
+   *
+   * O Player usa isto para **não sortear uma pergunta nova** quando ela muda: mexer em "arpejar" ou na
+   * duração no meio de um acorde trocava o acorde, e a pessoa perdia o que estava tentando identificar.
+   *
+   * **Não dá para inferir de `present`:** o seletor de instrumento de `acorde-visual` tem `present` e
+   * TAMBÉM é lido pelo `make` (decide violão ou piano). Por isso é declarado, e há teste conferindo que
+   * uma configuração marcada assim de fato não é lida pelo `make`.
+   */
+  soPresentation?: true;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {

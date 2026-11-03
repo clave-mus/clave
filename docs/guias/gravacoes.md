@@ -51,15 +51,15 @@ Marque conforme for gravando. **Cada linha é gravada duas vezes: celular e note
 
 ### Voz — é o caso mais importante, porque é o mais fácil de medir e o primeiro a entrar
 
-- [ ] **Voz grave, nota sustentada e afinada.** Segure uma nota confortável por ~5 s. Anote qual é.
-- [ ] **Voz grave, a mesma nota ~30 cents desafinada.** Afine pelo app, depois suba *um
+- [x] **Voz grave, nota sustentada e afinada.** Segure uma nota confortável por ~5 s. Anote qual é.
+- [x] **Voz grave, a mesma nota ~30 cents desafinada.** Afine pelo app, depois suba *um
       pouquinho* de propósito — menos de um semitom. Anote para que lado.
-- [ ] **Voz grave, com vibrato.** Oscilando como se estivesse cantando de verdade.
-- [ ] **Voz grave, cantando baixinho.** Quase sussurrado, para testar o limiar de volume.
-- [ ] **Voz aguda, nota sustentada e afinada.** Peça para alguém, ou cante em falsete.
-- [ ] **Voz aguda, desafinada e com vibrato** — mesmas duas variações de cima.
-- [ ] **Voz grave, com ruído de fundo.** Televisão ou conversa noutro cômodo, volume normal.
-- [ ] **Uma escala cantada, devagar.** Dó ré mi fá sol lá si dó, uma nota por segundo, dizendo o
+- [x] **Voz grave, com vibrato.** Oscilando como se estivesse cantando de verdade.
+- [x] **Voz grave, cantando baixinho.** Quase sussurrado, para testar o limiar de volume.
+- [x] **Voz aguda, nota sustentada e afinada.** Peça para alguém, ou cante em falsete.
+- [x] **Voz aguda, desafinada e com vibrato** — mesmas duas variações de cima.
+- [x] **Voz grave, com ruído de fundo.** Televisão ou conversa noutro cômodo, volume normal.
+- [x] **Uma escala cantada, devagar.** Dó ré mi fá sol lá si dó, uma nota por segundo, dizendo o
       nome. É o caso real de "solfejar escalas".
 
 ### Baixo — para o afinador e para "notas isoladas no instrumento"

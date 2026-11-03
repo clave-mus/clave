@@ -6,6 +6,7 @@ import { useStore } from '../state/store';
 import {
   buildScale, chordSymbol, CHORDS, harmonicField, majorTonic, mod, note, noteName, pc, transpose,
   type ChordId, type Convention, type Note, type ScaleId,
+  type ModoDoCampo,
 } from '../theory/core';
 import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
@@ -15,7 +16,7 @@ import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 
 interface Item { deg: number; type?: ChordId; flat?: boolean }
 type Style = 'rock' | 'balada' | 'bossa' | 'samba' | 'swing' | 'shuffle' | 'baiao' | 'nenhum';
-interface Preset { id: string; name: MessageKey; mode: 'maior' | 'menor'; items: Item[]; style: Style; bpm: number; tetrads: boolean }
+interface Preset { id: string; name: MessageKey; mode: ModoDoCampo; items: Item[]; style: Style; bpm: number; tetrads: boolean }
 
 const P = (deg: number, type?: ChordId, flat?: boolean): Item => ({ deg, type, flat });
 export const PRESETS: Preset[] = [
@@ -56,7 +57,7 @@ function romanFor(deg: number, type: ChordId, flat: boolean, conv: Convention) {
   const suf: Partial<Record<ChordId, string>> = { '7': '7', '7M': conv === 'pt' ? '7M' : 'maj7', m7: '7', m7b5: 'ø', dim: '°', dim7: '°7', aum: '+' };
   return r + (suf[type] ?? '');
 }
-function resolve(item: Item, tonic: Note, mode: 'maior' | 'menor', tetrads: boolean, conv: Convention): Resolved {
+function resolve(item: Item, tonic: Note, mode: ModoDoCampo, tetrads: boolean, conv: Convention): Resolved {
   const field = harmonicField(tonic, mode, tetrads, conv);
   const f = field[item.deg - 1];
   const root = item.flat ? { ...f.root, acc: f.root.acc - 1 } : f.root;
@@ -64,7 +65,13 @@ function resolve(item: Item, tonic: Note, mode: 'maior' | 'menor', tetrads: bool
   const roman = !item.type && !item.flat ? f.roman : romanFor(item.deg, type, !!item.flat || (mode === 'menor' && [3, 6, 7].includes(item.deg)), conv);
   return { root, type, symbol: chordSymbol(root, type, conv), roman, scales: suggestScales(root, type, item.deg, mode, !!item.type || !!item.flat) };
 }
-function suggestScales(root: Note, type: ChordId, deg: number, mode: 'maior' | 'menor', borrowed: boolean): Resolved['scales'] {
+/**
+ * Que escala usar sobre cada acorde. **Só para maior e menor natural**: as sugestões para a menor
+ * harmônica e a melódica são conteúdo musical que ainda não foi curado (decisão 13 — item ambíguo não
+ * afirma), e sugerir errado é pior que não sugerir. Elas chegam com a revisão do Paulo.
+ */
+function suggestScales(root: Note, type: ChordId, deg: number, mode: ModoDoCampo, borrowed: boolean): Resolved['scales'] {
+  if (mode !== 'maior' && mode !== 'menor') return [];
   const s = (id: ScaleId, why: MessageKey) => ({ id, root, why });
   if (type === '7') return [s('mixolidio', 'backing.whyDominant'), s('blues', 'backing.whyBlues')];
   if (type === 'm7b5' || type === 'dim' || type === 'dim7') return [s('locrio', 'backing.whyHalfDim')];
@@ -103,11 +110,12 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [bar, setBar] = useState(0);
   const [view, setView] = useState<'teclado' | 'braco'>(instrument === 'piano' ? 'teclado' : 'braco');
   const clock = useRef<Clock | null>(null);
-  const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);
+  const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);  // menor, harmônica e melódica partem da relativa menor
   // O que a pessoa praticou: a tonalidade e o andamento. Só a tonalidade vai em `params`, porque é só
   // ela que esta ferramenta usa — gravar região e material seria afirmar o que ela ignora.
   useToolLog('backing', 'Backing track', 'perception.harmonic', running, {
-    settings: { bpm }, params: { key: { tonic: pc(tonic), mode } },
+    // `key.mode` só tem maior e menor; o modo exato (harmônica, melódica) vai nas configurações
+    settings: { bpm, campo: mode }, params: { key: { tonic: pc(tonic), mode: mode === 'maior' ? 'maior' : 'menor' } },
   });
   const chords = useMemo(() => items.map(i => resolve(i, tonic, mode, tetrads, conv)), [items, tonic, mode, tetrads, conv]);
   const field = useMemo(() => harmonicField(tonic, mode, tetrads, conv), [tonic, mode, tetrads, conv]);
@@ -177,8 +185,11 @@ export default function Backing({ presetId }: { presetId?: string }) {
           <select className="sel" value={fifths} onChange={e => setFifths(Number(e.target.value))} aria-label={t('backing.tonality')} id="bk-tom">
             {Array.from({ length: 13 }, (_, i) => i - 6).map(f => <option key={f} value={f}>{noteName(mode === 'maior' ? majorTonic(f) : transpose(majorTonic(f), { num: 6, semis: 9 }), naming)}</option>)}
           </select>
-          <Chip on={mode === 'maior'} onClick={() => setMode('maior')}>{t('backing.major')}</Chip>
-          <Chip on={mode === 'menor'} onClick={() => setMode('menor')}>{t('backing.minor')}</Chip>
+          {/* As duas menores alteradas entraram a pedido do Paulo: o campo delas traz o III aumentado,
+              o V maior na menor, e os acordes m(7M) e 7M(♯5). */}
+          {(['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as const).map(m => (
+            <Chip key={m} on={mode === m} onClick={() => setMode(m)}>{t(`backing.mode_${m}`)}</Chip>
+          ))}
           <Chip on={tetrads} onClick={() => setTetrads(v => !v)}>{t('backing.tetrads')}</Chip>
         </div>
       </section>

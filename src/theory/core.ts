@@ -204,7 +204,11 @@ export const CHORDS = {
   menor: { suffix: { pt: 'm', en: 'm' }, degs: [[1, 0], [3, 3], [5, 7]] as Deg[] },
   aum: { suffix: { pt: '(♯5)', en: '+' }, degs: [[1, 0], [3, 4], [5, 8]] as Deg[] },
   dim: { suffix: { pt: '°', en: 'dim' }, degs: [[1, 0], [3, 3], [5, 6]] as Deg[] },
+  sus2: { suffix: { pt: 'sus2', en: 'sus2' }, degs: [[1, 0], [2, 2], [5, 7]] as Deg[] },
   sus4: { suffix: { pt: 'sus4', en: 'sus4' }, degs: [[1, 0], [4, 5], [5, 7]] as Deg[] },
+  // Exigidos pelos campos da menor harmônica e da melódica (grau i e grau ♭III) — ver `harmonicField`.
+  m7M: { suffix: { pt: 'm(7M)', en: 'm(maj7)' }, degs: [[1, 0], [3, 3], [5, 7], [7, 11]] as Deg[] },
+  '7M#5': { suffix: { pt: '7M(♯5)', en: 'maj7♯5' }, degs: [[1, 0], [3, 4], [5, 8], [7, 11]] as Deg[] },
   '7M': { suffix: { pt: '7M', en: 'maj7' }, degs: [[1, 0], [3, 4], [5, 7], [7, 11]] as Deg[] },
   '7': { suffix: { pt: '7', en: '7' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10]] as Deg[] },
   m7: { suffix: { pt: 'm7', en: 'm7' }, degs: [[1, 0], [3, 3], [5, 7], [7, 10]] as Deg[] },
@@ -280,18 +284,52 @@ export interface Degree {
   roman: string;
   symbol: string;
 }
-export function harmonicField(tonic: Note, mode: 'maior' | 'menor', tetrads = false, conv: Convention = 'pt'): Degree[] {
+/**
+ * Os modos que têm campo harmônico no app. As duas menores alteradas entraram a pedido do Paulo, e com
+ * elas vieram dois acordes novos ao catálogo: `m7M` (grau i) e `7M#5` (grau ♭III).
+ */
+export type ModoDoCampo = 'maior' | 'menor' | 'menor-harmonica' | 'menor-melodica';
+
+/** Tríades e tétrades de cada grau, por modo. Conferidos nota a nota em Lá. */
+const CAMPOS: Record<ModoDoCampo, { triades: ChordId[]; tetrades: ChordId[]; bemol: number[] }> = {
+  maior: {
+    triades: ['maior', 'menor', 'menor', 'maior', 'maior', 'menor', 'dim'],
+    tetrades: ['7M', 'm7', 'm7', '7M', '7', 'm7', 'm7b5'],
+    bemol: [],
+  },
+  menor: {
+    triades: ['menor', 'dim', 'maior', 'menor', 'menor', 'maior', 'maior'],
+    tetrades: ['m7', 'm7b5', '7M', 'm7', 'm7', '7M', '7'],
+    bemol: [2, 5, 6],
+  },
+  // Lá menor harmônica: Am · B° · C+ · Dm · E · F · G#°
+  'menor-harmonica': {
+    triades: ['menor', 'dim', 'aum', 'menor', 'maior', 'maior', 'dim'],
+    tetrades: ['m7M', 'm7b5', '7M#5', 'm7', '7', '7M', 'dim7'],
+    bemol: [2, 5],
+  },
+  // Lá menor melódica: Am · Bm · C+ · D · E · F#° · G#°
+  'menor-melodica': {
+    triades: ['menor', 'menor', 'aum', 'maior', 'maior', 'dim', 'dim'],
+    tetrades: ['m7M', 'm7', '7M#5', '7', '7', 'm7b5', 'm7b5'],
+    bemol: [2],
+  },
+};
+
+export function harmonicField(tonic: Note, mode: ModoDoCampo, tetrads = false, conv: Convention = 'pt'): Degree[] {
+  const campo = CAMPOS[mode];
   const scale = buildScale(tonic, mode);
-  const types: ChordId[] = mode === 'maior'
-    ? (tetrads ? ['7M', 'm7', 'm7', '7M', '7', 'm7', 'm7b5'] : ['maior', 'menor', 'menor', 'maior', 'maior', 'menor', 'dim'])
-    : (tetrads ? ['m7', 'm7b5', '7M', 'm7', 'm7', '7M', '7'] : ['menor', 'dim', 'maior', 'menor', 'menor', 'maior', 'maior']);
+  const types = tetrads ? campo.tetrades : campo.triades;
   return scale.map((root, i) => {
     const chord = types[i];
-    const minorish = ['menor', 'm7', 'dim', 'm7b5', 'dim7'].includes(chord);
+    const minorish = ['menor', 'm7', 'm7M', 'dim', 'm7b5', 'dim7'].includes(chord);
     let roman = ROMAN[i];
     if (minorish) roman = roman.toLowerCase();
-    if (mode === 'menor' && [2, 5, 6].includes(i)) roman = '♭' + roman;
-    const suffix = chord === 'dim' ? '°' : chord === 'm7b5' ? 'ø' : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7' : '';
+    if (campo.bemol.includes(i)) roman = '♭' + roman;
+    const suffix = chord === 'dim' ? '°' : chord === 'dim7' ? '°7' : chord === 'm7b5' ? 'ø'
+      : chord === 'aum' ? '+' : chord === '7M#5' ? '+' + (conv === 'pt' ? '7M' : 'maj7')
+      : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7'
+      : chord === 'm7M' ? (conv === 'pt' ? '(7M)' : '(maj7)') : '';
     return { degree: i + 1, root, chord, roman: roman + suffix, symbol: chordSymbol(root, chord, conv) };
   });
 }

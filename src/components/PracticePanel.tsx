@@ -12,7 +12,7 @@
 import type { GlobalParams, ParametroDePratica, ParametrosDePratica } from '../catalog/params';
 import { REGIOES, regiaoDe } from '../catalog/regioes';
 import { keyName } from '../theory/core';
-import { Btn, Chip } from './ui';
+import { Chip } from './ui';
 import { useNaming, useT } from '../i18n';
 
 const MODOS = ['maior', 'menor'] as const;
@@ -22,12 +22,9 @@ interface Props {
   /** Os valores em vigor, já resolvidos. */
   params: GlobalParams;
   onChange: (patch: ParametrosDePratica) => void;
-  /** Há alguma escolha explícita para desfazer? */
-  temEscolha: boolean;
-  onReset: () => void;
 }
 
-export default function PracticePanel({ respeita, params, onChange, temEscolha, onReset }: Props) {
+export default function PracticePanel({ respeita, params, onChange }: Props) {
   const t = useT();
   const naming = useNaming();
   // o material só faz sentido ao lado de uma tonalidade, e a tonalidade pode vir só por causa dele
@@ -89,7 +86,6 @@ export default function PracticePanel({ respeita, params, onChange, temEscolha, 
         </div>
       )}
 
-      {temEscolha && <div><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>}
     </div>
   );
 }

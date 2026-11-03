@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildChord, buildScale, chordSymbol, fromMidi, harmonicField, intervalBetween, keyAccidentals,
-  majorTonic, midi, note, noteName, quality, relativeMinor, transpose, keyName } from './core';
+  majorTonic, midi, note, noteName, quality, relativeMinor, transpose, keyName, mod } from './core';
 
 const names = (ns: { letter: number; acc: number }[]) => ns.map(n => noteName(n as never, 'en')).join(' ');
 
@@ -99,5 +99,76 @@ describe('keyName: a grafia convencional da tonalidade', () => {
   it('respeita o idioma dos nomes de nota', () => {
     expect(keyName(10, 'pt')).toBe('Si♭');
     expect(keyName(5, 'pt')).toBe('Fá');
+  });
+});
+
+describe('campo harmônico das menores alteradas (pedido do Paulo)', () => {
+  const la = note(5, 0, 4); // Lá
+  const simbolos = (m: Parameters<typeof harmonicField>[1], tetrades = false) =>
+    harmonicField(la, m, tetrades, 'en').map(d => d.symbol);
+  const romanos = (m: Parameters<typeof harmonicField>[1], tetrades = false) =>
+    harmonicField(la, m, tetrades, 'en').map(d => d.roman);
+
+  // Lá menor harmônica: A B C D E F G#. Conferido grau a grau.
+  it('menor harmônica em Lá: Am B° C+ Dm E F G#°', () => {
+    expect(simbolos('menor-harmonica')).toEqual(['Am', 'Bdim', 'C+', 'Dm', 'E', 'F', 'G♯dim']);
+  });
+
+  it('e o V é MAIOR — é a razão de existir da menor harmônica', () => {
+    expect(harmonicField(la, 'menor-harmonica')[4].chord).toBe('maior');
+    expect(harmonicField(la, 'menor')[4].chord).toBe('menor');
+  });
+
+  // Lá menor melódica: A B C D E F# G#
+  it('menor melódica em Lá: Am Bm C+ D E F#° G#°', () => {
+    expect(simbolos('menor-melodica')).toEqual(['Am', 'Bm', 'C+', 'D', 'E', 'F♯dim', 'G♯dim']);
+  });
+
+  it('o IV é maior na melódica e menor na harmônica — é a 6ª elevada', () => {
+    expect(harmonicField(la, 'menor-melodica')[3].chord).toBe('maior');
+    expect(harmonicField(la, 'menor-harmonica')[3].chord).toBe('menor');
+  });
+
+  it('as tétrades usam os dois acordes novos: m(maj7) no i e maj7♯5 no ♭III', () => {
+    expect(harmonicField(la, 'menor-harmonica', true).map(d => d.chord)).toEqual(['m7M', 'm7b5', '7M#5', 'm7', '7', '7M', 'dim7']);
+    expect(harmonicField(la, 'menor-melodica', true).map(d => d.chord)).toEqual(['m7M', 'm7', '7M#5', '7', '7', 'm7b5', 'm7b5']);
+  });
+
+  it('os graus romanos marcam o que é menor e o que é bemol', () => {
+    expect(romanos('menor-harmonica')).toEqual(['i', 'ii°', '♭III+', 'iv', 'V', '♭VI', 'vii°']);
+    expect(romanos('menor-melodica')).toEqual(['i', 'ii', '♭III+', 'IV', 'V', 'vi°', 'vii°']);
+  });
+
+  it('maior e menor natural continuam como estavam', () => {
+    expect(simbolos('maior')).toEqual(['A', 'Bm', 'C♯m', 'D', 'E', 'F♯m', 'G♯dim']);
+    expect(simbolos('menor')).toEqual(['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G']);
+  });
+
+  it('todo campo tem sete graus, em todo modo e nas duas formas', () => {
+    for (const m of ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as const) {
+      for (const t of [false, true]) expect(harmonicField(la, m, t), `${m}/${t}`).toHaveLength(7);
+    }
+  });
+
+  it('as notas de cada acorde pertencem à escala do modo', () => {
+    for (const m of ['menor-harmonica', 'menor-melodica'] as const) {
+      const daEscala = new Set(buildScale(la, m).map(n => mod(midi(n), 12)));
+      for (const d of harmonicField(la, m, true)) {
+        for (const n of buildChord(d.root, d.chord)) {
+          expect(daEscala.has(mod(midi(n), 12)), `${m}: ${d.symbol} tem nota fora da escala`).toBe(true);
+        }
+      }
+    }
+  });
+});
+
+describe('sus2', () => {
+  it('é fundamental, segunda e quinta', () => {
+    expect(buildChord(note(0, 0, 4), 'sus2').map(n => mod(midi(n), 12))).toEqual([0, 2, 7]);
+  });
+
+  it('difere de sus4 na nota do meio', () => {
+    const c = note(0, 0, 4);
+    expect(buildChord(c, 'sus4').map(n => mod(midi(n), 12))).toEqual([0, 5, 7]);
   });
 });

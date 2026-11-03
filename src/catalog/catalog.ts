@@ -518,9 +518,9 @@ export const EXERCISES: CatalogItem[] = [
     respeita: ['key', 'range'],
     publicacao: LEGADO,
     settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ALL_CHORDS) },
-      { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
-      { id: 'duracao', label: ctx.t('settings.chordDuration'), type: 'range', min: 0.5, max: 3, step: 0.1, format: v => `${v.toFixed(1)} s`, present: v => ({ dur: Number(v) }) }],
-    defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 0.9 },
+      { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true, present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
+      { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1, format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) }],
+    defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2 },
     presentation: { gap: 0.45 },
     make(s, ctx): Question {
       const types = arr(s.tipos, ['maior', 'menor']) as ChordId[];
