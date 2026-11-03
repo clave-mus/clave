@@ -233,7 +233,7 @@ impedir.
 
 ---
 
-## FM-5 · Enumerador de rearmonizações
+## FM-5 · Enumerador de rearmonizações ✅ *enumerador feito em 03/11/2026; falta a tela*
 
 **Decisão de origem:** 69. **Depende de:** `A12` (quais transformações entram — curadoria do Paulo).
 
@@ -274,6 +274,22 @@ que o torna utilizável. E `medir` conferida contra casos escritos à mão.
 
 **Não faça:** nada de gerar a progressão inteira por gênero. É o que o Reharmonist do Band-in-a-Box
 faz, e é justamente o que não ensina nada.
+
+### ❓ Em aberto, e é decisão de produto: onde a nota da melodia cai na subdivisão
+
+Três das sete transformações — **interpolar o II**, **dominante secundário** e **diminuto de
+passagem** — **subdividem o espaço do acorde**. E `melodia` não diz em que ponto do compasso cada
+nota cai, então não há como saber qual acorde soa sob qual nota.
+
+O enumerador resolve isso pela **regra estrita**: *todo* acorde da sequência tem que acomodar a
+melodia. Nunca produz choque, e é o único critério defensável sem informação de ritmo.
+
+**Custa opções.** Um ii interpolado é descartado quando não acomoda a nota que soava sobre o V — e
+musicalmente ele poderia servir, porque passa antes dela.
+
+Resolver isso exige decidir **como a melodia se posiciona dentro do espaço do acorde**, o que é
+desenho do exercício, não do enumerador. Até lá, a regra estrita fica — e está comentada no código
+com este mesmo motivo.
 
 ---
 
