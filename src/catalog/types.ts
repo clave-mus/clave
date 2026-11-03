@@ -82,11 +82,27 @@ export interface Question {
 }
 
 export type SettingValue = string | string[] | boolean | number;
+
+/** Uma opção de uma configuração de lista. */
+export interface SettingOption {
+  id: string;
+  label: string;
+  /**
+   * Dica de dificuldade relativa, só para a variação automática PRÉ-MARCAR o que costuma ser o
+   * próximo passo (F2-2, decisão 9). `1` costuma vir primeiro.
+   *
+   * **Nunca ordena, nunca bloqueia, nunca esconde.** Ausente quer dizer "sem opinião", e é o caso
+   * da maioria: não existe "clave de sol mais fácil que clave de fá". Forçar uma ordem onde ela
+   * não existe é erro pedagógico — por isso o app abre o menu inteiro e só sugere.
+   */
+  tier?: 1 | 2 | 3;
+}
+
 export interface Setting {
   id: string;
   label: string;
   type: 'single' | 'multi' | 'toggle' | 'range';
-  options?: { id: string; label: string }[];
+  options?: SettingOption[];
   /** Para 'range': limites, passo e como mostrar o valor (ex.: v => `${v} s`). */
   min?: number;
   max?: number;

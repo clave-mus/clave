@@ -7,7 +7,7 @@ Arquitetura-alvo em [arquitetura.md § 3.2](../arquitetura.md#32-a-cascata-de-pa
 
 ---
 
-## F2-1 · Resolver parâmetros em cinco camadas, com origem
+## F2-1 · Resolver parâmetros em cinco camadas, com origem ✅ *feita em 03/11/2026*
 
 **Decisão de origem:** 7, 8. **Depende de:** F1-1. **Bloqueia:** F3 inteira.
 
@@ -43,12 +43,24 @@ function resolveParams(layers: { origin: Origin; values: Partial<ParamValues> }[
 2. Um item novo se declara sem tocar no motor.
 3. Um teste monta as cinco camadas e confere valor **e** origem de cada chave.
 
+**Feito.** `src/catalog/params.ts` ganhou `resolveCamadas`, `valoresDe`, `camadaDoPerfil` e
+`herdado`; 13 testes em `cascata.test.ts`. Duas regras que **não** são "a última vence", e que
+estão travadas em teste:
+
+- **`timbres` se fundem.** Escolher o timbre do baixo numa rotina não pode apagar o do piano que a
+  pessoa escolheu no perfil.
+- **`tuning` segue o `instrument`** quando ninguém a declarou, e herda a origem de quem mudou o
+  instrumento. Sem isso, trocar de instrumento numa rotina deixaria o braço com as cordas erradas.
+
+O critério 1 está travado por um teste que percorre **todos** os exercícios com som e confere que
+o volume e o timbre do perfil chegam neles — sem o catálogo saber que esses parâmetros existem.
+
 **Não faça:** não implemente a interface da herança visível aqui — é F3-2. Esta tarefa entrega a
 função e os testes.
 
 ---
 
-## F2-2 · Tipo de parâmetro com dica de dificuldade
+## F2-2 · Tipo de parâmetro com dica de dificuldade ✅ *feita em 03/11/2026*
 
 **Decisão de origem:** 9. **Depende de:** F2-1. **Bloqueia:** F7-1.
 
@@ -73,6 +85,17 @@ interface ParamOption {
 
 **Pronto quando:** o tipo existe, está preenchido onde faz sentido e **vazio onde não faz**, e um
 teste garante que nenhuma tela usa `tier` para ordenar ou esconder opção.
+
+**Feito.** `SettingOption.tier` em `types.ts`; 6 testes em `tiers.test.ts`. Preenchido em
+intervalos (oitava, quinta e terças antes de segundas e sétimas; trítono por último), número
+máximo de acidentes, extensão da pauta e região do braço. **Deixado ausente de propósito** em
+clave, instrumento, superfície de resposta, direção e forma — não existe "clave de sol mais fácil
+que clave de fá".
+
+Os testes vigiam os dois lados: que a maioria das opções **não** tem tier, que uma lista com ordem
+tem tier em **todas** as opções (meia dica é pior que nenhuma), e que a ordem declarada **não** é
+a ordem do tier — a lista não se reordena sozinha, e a pessoa continua vendo os intervalos na
+ordem musical que ela reconhece.
 
 **Não faça:** não crie escada rígida nem "níveis" por exercício. A decisão 9 é explícita: o app
 abre o menu inteiro, com algumas opções pré-marcadas.

@@ -16,26 +16,37 @@ type S = Record<string, SettingValue>;
 const arr = (v: SettingValue | undefined, fallback: string[]) => (Array.isArray(v) && v.length ? v : fallback);
 
 // ---------------- configurações reaproveitadas ----------------
+// CLEFS, INST e as superfícies de resposta ficam SEM `tier` de propósito: não existe "clave de sol
+// mais fácil que clave de fá" nem "violão mais fácil que baixo". Inventar ordem onde ela não existe
+// é o erro que a decisão 9 proíbe.
 const CLEFS = ({ t }: Ctx): Setting => ({ id: 'claves', label: t('settings.clefs'), type: 'multi', options: [{ id: 'sol', label: t('settings.clefSol') }, { id: 'fa', label: t('settings.clefFa') }] });
-const EXT = ({ t }: Ctx): Setting => ({ id: 'extensao', label: t('settings.range'), type: 'single', options: [{ id: 'pauta', label: t('settings.rangeStaff') }, { id: 'suplementares', label: t('settings.rangeLedger') }] });
+const EXT = ({ t }: Ctx): Setting => ({ id: 'extensao', label: t('settings.range'), type: 'single', options: [{ id: 'pauta', label: t('settings.rangeStaff'), tier: 1 }, { id: 'suplementares', label: t('settings.rangeLedger'), tier: 2 }] });
 const ACC = ({ t }: Ctx): Setting => ({ id: 'acidentes', label: t('settings.accidentals'), type: 'toggle' });
 const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.instrument'), type: 'single', options: [
   { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
 const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
-  { id: '0-5', label: t('settings.frets05') }, { id: '5-9', label: t('settings.frets59') }, { id: '0-12', label: t('settings.frets012') }] });
+  { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
 const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));
 const ALL_CHORDS = Object.keys(CHORDS) as ChordId[];
 const ALL_SCALES = Object.keys(SCALES) as ScaleId[];
 
-const INTERVALS: { id: string; num: number; q: Quality }[] = [
-  { id: 'm2', num: 2, q: 'm' }, { id: 'M2', num: 2, q: 'M' }, { id: 'm3', num: 3, q: 'm' }, { id: 'M3', num: 3, q: 'M' },
-  { id: 'J4', num: 4, q: 'J' }, { id: 'A4', num: 4, q: 'A' }, { id: 'd5', num: 5, q: 'd' }, { id: 'J5', num: 5, q: 'J' },
-  { id: 'm6', num: 6, q: 'm' }, { id: 'M6', num: 6, q: 'M' }, { id: 'm7', num: 7, q: 'm' }, { id: 'M7', num: 7, q: 'M' }, { id: 'J8', num: 8, q: 'J' },
+// O `tier` é dica de dificuldade relativa, só para a variação automática pré-marcar (F2-2).
+// Aqui existe ordem defensável: oitava, quinta e terças antes das segundas e sétimas, e o trítono
+// por último. Onde não houver ordem defensável, o tier fica ausente — ver abaixo.
+const INTERVALS: { id: string; num: number; q: Quality; tier: 1 | 2 | 3 }[] = [
+  { id: 'J8', num: 8, q: 'J', tier: 1 }, { id: 'J5', num: 5, q: 'J', tier: 1 }, { id: 'J4', num: 4, q: 'J', tier: 1 },
+  { id: 'M3', num: 3, q: 'M', tier: 1 }, { id: 'm3', num: 3, q: 'm', tier: 1 },
+  { id: 'M6', num: 6, q: 'M', tier: 2 }, { id: 'm6', num: 6, q: 'm', tier: 2 },
+  { id: 'M2', num: 2, q: 'M', tier: 2 }, { id: 'm2', num: 2, q: 'm', tier: 2 },
+  { id: 'm7', num: 7, q: 'm', tier: 3 }, { id: 'M7', num: 7, q: 'M', tier: 3 },
+  { id: 'A4', num: 4, q: 'A', tier: 3 }, { id: 'd5', num: 5, q: 'd', tier: 3 },
 ];
 const ivLabel = (id: string, ctx: Ctx) => { const iv = INTERVALS.find(i => i.id === id)!; return intervalName({ num: iv.num, semis: semisFor(iv.num, iv.q) }, ctx.conv); };
 const semiOptions = (ctx: Ctx): ChoiceOption[] => Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), label: semitoneName(i + 1, ctx.conv) }));
+/** A mesma ordem de dificuldade dos intervalos escritos, em semitons (F2-2). */
+const SEMI_TIER: Record<number, 1 | 2 | 3> = { 12: 1, 7: 1, 5: 1, 4: 1, 3: 1, 9: 2, 8: 2, 2: 2, 1: 2, 10: 3, 11: 3, 6: 3 };
 const ROOTS: Note[] = [note(0), note(1, -1), note(1), note(2, -1), note(2), note(3), note(3, 1), note(4), note(5, -1), note(5), note(6, -1), note(6)];
 const spellPc = (p: number, oct = 4): Note => ({ ...ROOTS[mod(p, 12)], oct });
 const MODES: ScaleId[] = ['maior', 'dorico', 'frigio', 'lidio', 'mixolidio', 'menor', 'locrio'];
@@ -112,7 +123,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['key.major', 'key.minor', 'key.signatures', 'clef.treble', 'clef.bass'],
     kind: 'serie', mobile: true,
     settings: ctx => [CLEFS(ctx), { id: 'modo', label: ctx.t('settings.keyMode'), type: 'single', options: [{ id: 'maior', label: ctx.t('settings.major') }, { id: 'menor', label: ctx.t('settings.minor') }, { id: 'ambos', label: ctx.t('settings.both') }] },
-      { id: 'max', label: ctx.t('settings.maxAccidentals'), type: 'single', options: [{ id: '2', label: '2' }, { id: '4', label: '4' }, { id: '7', label: '7' }] }],
+      { id: 'max', label: ctx.t('settings.maxAccidentals'), type: 'single', options: [{ id: '2', label: '2', tier: 1 }, { id: '4', label: '4', tier: 2 }, { id: '7', label: '7', tier: 3 }] }],
     defaults: { claves: ['sol'], modo: 'maior', max: '4' },
     make(s, ctx) {
       const max = Number(s.max ?? 4);
@@ -134,7 +145,7 @@ export const EXERCISES: CatalogItem[] = [
     primaryModule: 'theory', skillTags: ['theory.interval_naming', 'notation.pitch_reading'],
     contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
     kind: 'serie', mobile: true,
-    settings: ctx => [CLEFS(ctx), { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx) })) },
+    settings: ctx => [CLEFS(ctx), { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
       { id: 'forma', label: ctx.t('settings.form'), type: 'single', options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] }],
     defaults: { claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico' },
     make(s, ctx) {
@@ -381,7 +392,7 @@ export const EXERCISES: CatalogItem[] = [
     primaryModule: 'perception.melodic', skillTags: ['ear.interval_identification'],
     contentTags: ['interval.simple'],
     kind: 'serie', mobile: true,
-    settings: ctx => [{ id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx) },
+    settings: ctx => [{ id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx).map(o => ({ ...o, tier: SEMI_TIER[Number(o.id)] })) },
       { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] }],
     defaults: { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' },
     make(s, ctx) {
