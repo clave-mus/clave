@@ -49,7 +49,8 @@ consertar nem padrões a seguir:
 | [docs/catalogo.md](docs/catalogo.md) | Como o catálogo é organizado: objeto × tarefa, os oito motores, o portão em três níveis, e o inventário das ~95 famílias. |
 | [docs/arquitetura.md](docs/arquitetura.md) | O que existe, o que diverge, e a arquitetura-alvo. |
 | [docs/tarefas/](docs/tarefas/) | **O que fazer agora**, em tarefas pequenas com "Pronto quando". |
-| [docs/equipe.md](docs/equipe.md) | Quem é quem, donos musicais, e o teste do Schultz. |
+| [docs/equipe.md](docs/equipe.md) | Quem é quem e quem responde pelo catálogo. |
+| [docs/guias/](docs/guias/) | Passo a passo das tarefas 👤: gravar as amostras de áudio, escrever as digitações. |
 | [CLAUDE.md](CLAUDE.md) | Como trabalhar aqui com o Claude Code. **Regra nº 1: não decidir produto.** |
 
 ---

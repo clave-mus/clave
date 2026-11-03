@@ -132,9 +132,9 @@ exercício de internalizar o braço, a digitação mais confortável é a errada
 **Pronto quando:** o contrato bate, e o motor enumera as digitações da escala maior e da menor
 natural no baixo e na guitarra, com os rankings funcionando.
 
-**👤 Bloqueia:** o Paulo precisa escrever **10 a 15 digitações à mão** — maior, menor natural,
-pentatônicas e um ou dois modos, nas posições que ele realmente usa. Sem elas o contrato 2 e 3 não
-existem, e o motor não tem como provar nada.
+**👤 Bloqueia:** o Paulo precisa escrever **10 a 15 digitações à mão** — o formato e a lista estão
+em [guias/digitacoes.md](../guias/digitacoes.md). Sem elas os contratos 2 e 3 não existem, e o
+motor não tem como provar nada.
 
 **Não faça:** não tente achar "a melhor". Não invente heurística de conforto. Não use o motor para
 piano — lá são dedilhados convencionais fixos (e isso ainda é questão aberta `C4`).

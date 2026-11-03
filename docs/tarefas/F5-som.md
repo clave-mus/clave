@@ -21,7 +21,8 @@ frentes** — dá para pegar a qualquer momento.
 **Esta tarefa não produz interface nenhuma. Produz um número.** Se o número for ruim, o microfone
 sai do beta e a tarefa terminou com sucesso.
 
-**Primeiro, 👤 o Paulo grava as amostras** (uma hora com o celular e um notebook). Sem elas nada
+**Primeiro, 👤 o Paulo grava as amostras** — o passo a passo está em
+[guias/gravacoes.md](../guias/gravacoes.md). Uma hora, com o celular e um notebook. Sem elas nada
 aqui existe, e sem elas as tarefas seguintes não têm teste automático:
 
 | Amostra | Variações |
