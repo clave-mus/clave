@@ -141,7 +141,7 @@ piano — lá são dedilhados convencionais fixos (e isso ainda é questão aber
 
 ---
 
-## FM-3 · Reclassificar o catálogo por objeto e tarefa
+## FM-3 · Reclassificar o catálogo por objeto e tarefa ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 40, 41. **Depende de:** F1-3.
 
@@ -168,3 +168,17 @@ Substituir `areas: AreaId[]` por **`objetos: ObjetoId[]`** (o primeiro é a casa
 
 **Pronto quando:** dá para recuperar, sem inferir nada do nome, o objeto e a tarefa de qualquer
 item; e a matriz impressa bate com a de curadoria.
+
+**Feito.** `OBJETOS` e `TAREFAS` em `taxonomy.ts`, `TAXONOMY_VERSION` subiu para 2, e os 26 itens
+mais as 9 aulas estão classificados.
+
+Uma separação que apareceu ao implementar: **aula tem assunto, mas não tem tarefa** — ninguém
+"toca" nem "ouve" uma aula. Por isso o tipo se partiu em `Assunto` (objetos + etiquetas, vale para
+item e para aula) e `Classification` (que acrescenta `tarefas`, só para item).
+
+**O buraco foi tapado:** "achar no braço/teclado a nota que você ouviu" tinha Escalas e Intervalos
+como casa, e agora tem **Notas e o braço**. Há um teste afirmando que a casa `notas` cobre a
+tarefa `ouvir` — se alguém reclassificar de volta, a porta carro-chefe volta a ficar vazia e o
+teste acusa.
+
+O contrato dos **8 objetivos com 4+ itens** fica para quando `goals[]` existir (bloqueado em `A4`).

@@ -34,7 +34,7 @@ Mantenha esta tarefa puramente estrutural, para o PR ser revisável.
 
 ---
 
-## F1-2 · Tipo de término, requisitos e modos de validação
+## F1-2 · Tipo de término, requisitos e modos de validação ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 5, 6. **Depende de:** F1-1.
 
@@ -57,13 +57,31 @@ validation: ('deterministic' | 'self_report' | 'microphone')[];  // o primeiro �
 **Pronto quando:** todo item declara `kind`, `requires` e `validation`; um teste trava a lista de
 ids com o `kind` de cada um; e nenhum item do tipo `ambiente` ou `tarefa` grava `outcome: 'correct'`.
 
+**Feito.** `kind` entrou na F1-1; agora entraram `requires` e `validation`, mais
+`src/catalog/context.ts` com os cinco contextos. 15 testes.
+
+O que eles vigiam, e é o que importa: **nenhum item exige microfone**, nenhum tem `midi` como modo
+padrão, e todo item com `requires.instrumento` tem **autoavaliação** como padrão (decisão 37).
+O dia em que um exercício depender de microfone ou MIDI, o teste acusa.
+
+**Achado:** o contexto **"De bolso" tem zero itens hoje** — o único habitante previsto é o
+treinamento auditivo hands-free (`F6-1`), que ainda não existe. Há um teste afirmando isso, com a
+instrução de virá-lo para `toBeGreaterThan(0)` quando a F6-1 entrar. Enquanto isso, a Praticar
+estaria oferecendo um contexto que não leva a lugar nenhum — o que torna a `F6-1` mais urgente do
+que parecia.
+
 **Não faça:** não implemente ainda a autoavaliação na tela (é F3-2) nem o microfone (A7).
 
 ---
 
-## F1-3 · Áreas, objetivos e contextos
+## F1-3 · Áreas, objetivos e contextos ⚠️ *parcialmente absorvida pela FM-3 em 03/11/2026*
 
 **Decisões de origem:** 19, 20. **Depende de:** F1-1.
+
+> **O que já foi feito, pela [FM-3](FM-motores.md):** a classificação virou **objeto × tarefa**
+> (decisão 40), que é melhor que `areas[]` e a substitui; `fitsContext` existe como
+> `cabeNoContexto`, em `src/catalog/context.ts`. **O que resta aqui é só `goals[]`** — e ele
+> depende dos textos das oito portas (`A4`).
 
 - `primaryModule: ModuleId` vira **`areas: AreaId[]`** — plural. Acaba a regra de "uma localização
   principal".

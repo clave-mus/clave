@@ -151,10 +151,35 @@ export interface ScreenProps {
 // Exercício e ferramenta são O MESMO TIPO (decisão 17): registro unificado, tela separada quando
 // precisa. Assim o braço virtual não tem duas implementações, e uma ferramenta entra numa etapa
 // de rotina sem nenhum caso especial no código.
+/**
+ * O que o item exige do mundo (F1-2). **Só três são declarados**, porque só estes são fato do
+ * mundo; olhos, mãos e áudio são DEDUZIDOS em src/catalog/context.ts, para não desatualizarem.
+ */
+export interface Requisitos {
+  /** Precisa do instrumento em mãos. */
+  instrumento?: true;
+  /** Precisa captar som. Nenhum item pode EXIGIR isto — é sempre acréscimo opcional. */
+  microfone?: true;
+  /** Precisa cantar ou vocalizar. */
+  voz?: true;
+}
+
+/**
+ * Como a resposta pode ser conferida. **O primeiro é o padrão**, e com instrumento o padrão é
+ * sempre `self_report` (decisão 37): o app apresenta, a pessoa julga.
+ *
+ * `microphone` e `midi` são acréscimos **experimentais e opcionais** (decisões 43 e 44).
+ * Nenhum item pode depender deles.
+ */
+export type ModoDeValidacao = 'deterministic' | 'self_report' | 'microphone' | 'midi' | 'none';
+
 export interface CatalogItem extends Classification {
   id: string;
   kind: Termination;
-  /** Dá para fazer sem o instrumento (no ônibus, por exemplo). Vira `requires` na F1-3. */
+  requires: Requisitos;
+  /** Os modos que o item aceita; o primeiro é o padrão. */
+  validation: ModoDeValidacao[];
+  /** @deprecated Use `requires.instrumento`. Fica até as telas migrarem. */
   mobile: boolean;
   settings: (ctx: Ctx) => Setting[];
   defaults: Record<string, SettingValue>;

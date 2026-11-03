@@ -11,7 +11,46 @@
 // de quando ela existe. As descrições abaixo são a definição de cada etiqueta, para o time; o app
 // não as mostra.
 
-export const TAXONOMY_VERSION = 1;
+export const TAXONOMY_VERSION = 2;
+
+// ---------------------------------------------------------------------------
+// Objeto musical × tarefa (FM-3, decisão 40)
+//
+// Dois eixos, os dois no PLURAL. O primeiro objeto é a casa do item; os outros são etiqueta.
+//
+// A regra que decide item ou itens:
+//   objeto muda e tarefa igual  → UM item, dois objetos
+//   tarefa muda                 → DOIS itens
+//
+// Os dois eixos são independentes de `requires`: "tocar" num braço virtual, na tela, continua
+// sendo a tarefa tocar — ela só não exige o instrumento.
+// ---------------------------------------------------------------------------
+
+export const OBJETOS = {
+  notas: 'Notas e o braço: onde as notas estão no instrumento.',
+  intervalos: 'Intervalos: a distância entre duas notas.',
+  escalas: 'Escalas e modos, e os graus dentro de uma tonalidade.',
+  acordes: 'Acordes e arpejos: tríades, tétrades, extensões, inversões, desenhos.',
+  harmonia: 'Harmonia e progressões: campo harmônico, cadências, condução, linhas de baixo.',
+  ritmo: 'Ritmo e tempo: figuras, subdivisões, pulso, groove.',
+  melodia: 'Melodia e frase: desenho melódico, motivo, improviso.',
+  notacao: 'Notação e símbolos: pauta, claves, armaduras, cifras.',
+  som: 'Som, timbre e dinâmica.',
+  motor: 'Controle motor: digitação, independência, coordenação.',
+} as const;
+export type ObjetoId = keyof typeof OBJETOS;
+
+export const TAREFAS = {
+  ouvir: 'Ouvir e identificar.',
+  tocar: 'Tocar — no instrumento ou numa superfície na tela.',
+  cantar: 'Cantar: a voz é a resposta.',
+  ler: 'Ler notação.',
+  escrever: 'Escrever ou transcrever.',
+  nomear: 'Nomear ou calcular, sem tocar nem ouvir.',
+  explorar: 'Explorar livremente, sem pergunta.',
+  criar: 'Criar ou improvisar.',
+} as const;
+export type TarefaId = keyof typeof TAREFAS;
 
 export const MODULES = {
   theory: 'Teoria: notação e símbolos, escalas, acordes, harmonia e o mapa das notas no instrumento.',
@@ -104,12 +143,25 @@ export const CONTENT_TAGS = {
 } as const;
 export type ContentTag = keyof typeof CONTENT_TAGS;
 
-/** Onde um exercício ou aula mora e o que ele testa. */
-export interface Classification {
+/**
+ * Sobre o que um conteúdo é. Vale para item de catálogo **e** para aula.
+ *
+ * Aula não tem tarefa — ninguém "toca" nem "ouve" uma aula; ela é sobre um objeto e pronto.
+ * Quem tem tarefa é o item, em `Classification`.
+ */
+export interface Assunto {
+  /** **O primeiro é a casa**; os outros são etiqueta (decisão 40). */
+  objetos: ObjetoId[];
+  /** Mantido para a análise e para o registro de tentativas; é `objetos[0]` traduzido. */
   primaryModule: ModuleId;
   /** Habilidades que a tarefa exige, da principal para as secundárias. */
   skillTags: SkillTag[];
   /** Material que o exercício PODE cobrir em alguma configuração. O que cada tentativa usou de
    *  fato fica no parameters_snapshot dela (C2). */
   contentTags: ContentTag[];
+}
+
+/** Um item de catálogo: além do assunto, declara **o que se faz** com ele. */
+export interface Classification extends Assunto {
+  tarefas: TarefaId[];
 }

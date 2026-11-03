@@ -3,7 +3,7 @@ import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
 import { EXERCISES } from './catalog';
 import { AMBIENTES } from './index';
-import { CONTENT_TAGS, MODULES, SKILL_TAGS, type Classification } from './taxonomy';
+import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type Classification } from './taxonomy';
 
 // exercise_id é estável: rotinas, tentativas e configurações salvas apontam para ele. Renomear ou
 // tirar um id quebra esses dados em silêncio. Para mudar esta lista, migre os dados antes.
@@ -13,9 +13,15 @@ const STABLE_IDS = [
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
 ];
 
+// Aula tem assunto mas não tem tarefa — ninguém "toca" uma aula.
+const assuntos: [string, Assunto][] = [
+  ...EXERCISES.map(e => [`exercício ${e.id}`, e as Assunto] as [string, Assunto]),
+  ...AMBIENTES.map(a => [`ambiente ${a.id}`, a as Assunto] as [string, Assunto]),
+  ...LESSONS.map(l => [`aula ${l.id}`, l as Assunto] as [string, Assunto]),
+];
 const items: [string, Classification][] = [
   ...EXERCISES.map(e => [`exercício ${e.id}`, e] as [string, Classification]),
-  ...LESSONS.map(l => [`aula ${l.id}`, l] as [string, Classification]),
+  ...AMBIENTES.map(a => [`ambiente ${a.id}`, a] as [string, Classification]),
 ];
 
 describe('taxonomia', () => {
@@ -41,7 +47,7 @@ describe('taxonomia', () => {
   });
 
   it('toda etiqueta do vocabulário é usada por algum exercício ou aula', () => {
-    const used = new Set<string>(items.flatMap(([, c]) => [...c.skillTags, ...c.contentTags]));
+    const used = new Set<string>(assuntos.flatMap(([, c]) => [...c.skillTags, ...c.contentTags]));
     expect([...Object.keys(SKILL_TAGS), ...Object.keys(CONTENT_TAGS)].filter(t => !used.has(t))).toEqual([]);
   });
 
@@ -56,5 +62,56 @@ describe('taxonomia', () => {
       }
     }
     expect(orphans).toEqual([]);
+  });
+});
+
+// ===========================================================================
+// FM-3 · objeto × tarefa
+// ===========================================================================
+
+describe('objeto e tarefa', () => {
+  it.each(assuntos)('%s tem pelo menos um objeto, e todos do vocabulário', (_, c) => {
+    expect(c.objetos.length).toBeGreaterThan(0);
+    c.objetos.forEach(o => expect(Object.keys(OBJETOS)).toContain(o));
+  });
+
+  it.each(items)('%s tem pelo menos uma tarefa, e todas do vocabulário', (_, c) => {
+    expect(c.tarefas.length).toBeGreaterThan(0);
+    c.tarefas.forEach(t => expect(Object.keys(TAREFAS)).toContain(t));
+  });
+
+  it.each(assuntos)('%s não repete objeto', (_, c) => {
+    expect(new Set(c.objetos).size).toBe(c.objetos.length);
+  });
+
+  it('o buraco de "Notas e o braço × Ouvir" está tapado', () => {
+    // "achar no braço/teclado a nota que você ouviu" existia, mas etiquetada em Escalas e
+    // Intervalos — quem entrava por "quero conhecer o braço" não a encontrava (catalogo.md)
+    const naCasaNotas = [...EXERCISES, ...AMBIENTES].filter(i => i.objetos[0] === 'notas' && i.tarefas.includes('ouvir'));
+    expect(naCasaNotas.length).toBeGreaterThan(0);
+  });
+
+  it('todo objeto com item tem pelo menos uma tarefa coberta', () => {
+    const porObjeto = new Map<string, Set<string>>();
+    for (const i of [...EXERCISES, ...AMBIENTES]) {
+      for (const o of i.objetos) {
+        porObjeto.set(o, new Set([...(porObjeto.get(o) ?? []), ...i.tarefas]));
+      }
+    }
+    for (const [objeto, tarefas] of porObjeto) {
+      expect(tarefas.size, `${objeto} sem tarefa`).toBeGreaterThan(0);
+    }
+  });
+
+  it('a matriz de hoje, impressa, para conferir contra a curadoria', () => {
+    const linhas: string[] = [];
+    for (const o of Object.keys(OBJETOS)) {
+      const conta = Object.keys(TAREFAS).map(t =>
+        [...EXERCISES, ...AMBIENTES].filter(i => i.objetos[0] === o && i.tarefas.includes(t as never)).length,
+      );
+      linhas.push(`${o.padEnd(12)} ${conta.join(' ')}`);
+    }
+    // não é asserção de valor: é o retrato que o time compara com a matriz de curadoria
+    expect(linhas).toHaveLength(Object.keys(OBJETOS).length);
   });
 });
