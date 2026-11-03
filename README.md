@@ -47,6 +47,8 @@ consertar nem padrões a seguir:
 | [docs/decisoes.md](docs/decisoes.md) | As decisões, com data e motivo, e a lista do que ainda está em aberto. |
 | [docs/beta.md](docs/beta.md) | O que o beta é, tela a tela. |
 | [docs/catalogo.md](docs/catalogo.md) | Como o catálogo é organizado: objeto × tarefa, os oito motores, o portão em três níveis, e o inventário das ~95 famílias. |
+| **[docs/camadas.md](docs/camadas.md)** | **O mapa: como o produto é montado**, do item à rotina. As cinco camadas de parâmetro, as três variações (embaralhar, rodízio, rotação), publicação, o que fica gravado, e onde cada coisa mora no código. |
+| [docs/novo-item.md](docs/novo-item.md) | **O checklist para incluir um item no catálogo.** Metade tem teste automático; o resto é leitura. Inclui o passo "olhar o todo", que é o que evita ponta solta. |
 | [docs/revisao-pendente.md](docs/revisao-pendente.md) | **Publicação.** Os três estados (`rascunho`, `legado`, `publicado`), como ver um rascunho (`?revisao=1`), como o Paulo publica, e a lista do que está em rascunho. Leia antes de achar que algo está "pronto". |
 | [docs/guardados.md](docs/guardados.md) | **O que foi tirado do beta e não descartado** — com o motivo e com o que traria cada ideia de volta. Também registra o que foi proposto cortar e mantido, para o mesmo corte não voltar à mesa. |
 | [docs/arquitetura.md](docs/arquitetura.md) | O que existe, o que diverge, e a arquitetura-alvo. |

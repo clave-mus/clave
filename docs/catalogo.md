@@ -221,7 +221,7 @@ misturar as duas coisas erra o exercício inteiro.
 
 ## O portão de qualidade, em três níveis
 
-Os sete itens (ver [decisoes.md](decisoes.md#o-portão-de-qualidade-de-exercício)) não se aplicam
+Os oito itens (ver [decisoes.md](decisoes.md#o-portão-de-qualidade-de-exercício)) não se aplicam
 todos no mesmo lugar — exigir os sete de 95 famílias inviabilizaria o catálogo largo.
 
 | Nível | Quais itens | Quantas vezes |

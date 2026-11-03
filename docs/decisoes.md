@@ -1630,6 +1630,63 @@ por exemplo) é parte do treino que se perde. Com grupos de vizinhas, "saltar" s
 
 ---
 
+### 95 · O rodízio varia o exercício E as variantes dele, e o agrupamento é por propósito
+
+Fecha o escopo do "motor de variabilidade" das rotinas. Três coisas entram:
+
+**a) Rodízio montado à mão.** A pessoa põe vários itens do catálogo numa etapa, como escolhe qualquer
+etapa. Sempre possível, sem depender de nada.
+
+**b) Gerador de variantes do mesmo item.** "Pôr no rodízio uma variante para cada tonalidade" — ou para
+cada região, ou cada corda. **Era o caso principal e eu quase o perdi:** medi só o assistente de *itens
+diferentes*, concluí que servia pouco, e tratei isso como se fosse o valor do rodízio inteiro. O Paulo
+apontou. `Instancia` é `{ itemId, settings, params }` e nada exige `itemId` diferente — três variantes
+de `braco-ache` em Fá, Sol e Dó sempre foram uma etapa válida. **16 dos 20 exercícios** respeitam
+tonalidade, região ou material, então variantes valem em quase todos.
+
+**c) Grupos por propósito**, em `src/catalog/grupos.ts`. E aqui o critério mudou: eu tinha proposto
+derivar de `skillTags` ("itens que treinam a mesma habilidade"), e o Paulo mostrou que o critério certo é
+**"serve ao mesmo propósito agora"**. Um aquecimento de mão junta exercícios de motricidade porque é
+isso que a pessoa quer fazer agora, não porque eles treinem a mesma habilidade — `technique.tempo_control`
+junta metrônomo com "sustentar e cortar" porque os dois usam clique.
+
+A objeção que o próprio Paulo levantou — *um exercício serve a vários propósitos, e qual importa?* — se
+resolve com o critério certo: **um item entra em vários grupos**, sem eleger um principal.
+
+**Os grupos são curadoria do Paulo.** O botão só aparece onde há o que oferecer: item sem grupo, ou único
+visível do grupo, não mostra nada.
+
+**Na tela, duas políticas, não três.** O modelo tem `ordem`, `sorteio-sem-repetir` e `sorteio`; a tela
+oferece *em ordem* e *sorteado* (que usa `sorteio-sem-repetir`). O sorteio puro fica no modelo sem
+controle: oferecê-lo é oferecer "pode cair o mesmo de novo", que é o que o rodízio existe para evitar.
+
+**Rodízio, embaralhar e rotação são três coisas** — ver [camadas.md](camadas.md#3-as-três-variações-que-fazem-coisas-diferentes).
+
+---
+
+### 96 · O mapa das camadas e o checklist de item novo
+
+Pedido do Paulo, e ele tinha razão: *"esse projeto está ficando bem complexo e eu espero que esteja muito
+bem documentado, senão daqui a umas semanas eu não vou conseguir entender tudo que foi feito."*
+
+Os números davam razão a ele: **1.692 linhas e 96 decisões** em `decisoes.md`, e as camadas do produto
+existindo **só como decisões em ordem cronológica** — entender como a cascata conversa com o rodízio, a
+rotação e o registro exigia ler seis decisões espalhadas entre a 7 e a 94.
+
+**[camadas.md](camadas.md)** é o mapa: os quatro níveis (item → instância → etapa → rotina), as cinco
+camadas de parâmetro e quem escreve em cada, as três variações, publicação, o que fica gravado, os
+enumeradores, e onde cada coisa mora no código. **Sem história:** só o estado atual, com link para a
+decisão. Quando divergirem, a decisão vence.
+
+**[novo-item.md](novo-item.md)** é o checklist de inclusão, também pedido dele — incluindo o passo que ele
+nomeou: **"olhar o todo"**, ver se o item novo cria grupo, revela duplicata ou devia ser parâmetro de um
+item que já existe. Metade dos passos tem teste automático, e o checklist aponta para o teste em vez de
+pedir fé.
+
+**O portão de qualidade dizia "sete" e listava oito** desde a decisão 85. Corrigido em três documentos.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1645,7 +1702,7 @@ usaram o Clave como lugar para estudar ou ficaram navegando sem entrar numa prá
 
 ### O portão de qualidade de exercício
 
-Nenhuma família é publicada sem passar nos sete:
+Nenhuma família é publicada sem passar nos oito:
 
 1. **Resposta única e defensável** — alguém tentou responder de outro jeito e não conseguiu.
 2. **Os parâmetros que importam existem** — tonalidade, região, material, andamento.
@@ -1657,7 +1714,7 @@ Nenhuma família é publicada sem passar nos sete:
 8. **Fonte citada e revisão de tradição** — **só para padrões rítmicos tradicionais** (decisão 85).
    Sem fonte, o padrão não entra.
 
-Os sete **não se aplicam todos no mesmo nível**: motor, família e preset têm portões diferentes.
+Os oito **não se aplicam todos no mesmo nível**: motor, família e preset têm portões diferentes.
 Ver a decisão 49 e [catalogo.md](catalogo.md#o-portão-de-qualidade-em-três-níveis).
 
 ---

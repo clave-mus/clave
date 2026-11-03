@@ -228,7 +228,7 @@ sai do aparelho** — e isso precisa estar escrito na tela e na política de pri
 ## O catálogo do beta
 
 **O trabalho aqui é curadoria e fusão, não adição.** Hoje são 20 exercícios e 6 ferramentas; depois
-das fusões e de três itens novos ficam **23 candidatos**, e a meta é **~18 passando nos sete itens
+das fusões e de três itens novos ficam **23 candidatos**, e a meta é **~18 passando nos oito itens
 do portão de qualidade**.
 
 ### Fusões (decisão 16) — 10 itens viram 4

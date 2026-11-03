@@ -25,6 +25,9 @@ O que **não é**: nome de variável, estrutura de pasta, qual algoritmo, como t
 ## Antes de começar: ler nesta ordem
 
 1. **[docs/visao.md](docs/visao.md)** — a fonte de verdade do produto.
+   E **[docs/camadas.md](docs/camadas.md)**, o mapa de como o produto é montado — item, instância,
+   etapa, rotina, as cinco camadas de parâmetro e as três variações. A maioria dos erros deste
+   projeto veio de não saber em que camada uma coisa morava.
 2. **A decisão citada na tarefa**, em [docs/decisoes.md](docs/decisoes.md).
 3. **A seção correspondente de [docs/arquitetura.md](docs/arquitetura.md)**. Se a tarefa mexe em
    catálogo, exercício ou validação, leia também **[docs/catalogo.md](docs/catalogo.md)**.
@@ -65,6 +68,8 @@ caras, **avisar e esperar a decisão** antes de começar.
   única coisa que impede o catálogo de virar 95 telas. São ~95 famílias sobre **oito motores**.
 - **Nenhuma tarefa publica uma família de exercício.** Você entrega o motor testado e o item
   declarado; a revisão musical é passo humano do Paulo (decisão 51).
+- **Para incluir um item no catálogo, siga [docs/novo-item.md](docs/novo-item.md).** É checklist, e
+  metade dele tem teste automático. O último passo — *olhar o todo* — é o que evita ponta solta.
 - **Todo item novo nasce `rascunho`** (decisão 91). Declare `publicacao: RASCUNHO` (de
   `src/catalog/publicacao.ts`) ou omita o campo — o padrão é escondido. **Nunca escreva `publicado`
   nem `legado`**: o primeiro é decisão do Paulo, o segundo é só para o que já existia. Liste o item
