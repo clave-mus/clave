@@ -8,77 +8,8 @@ import { TUNINGS } from '../components/music/Fretboard';
 import { Btn, Chip } from '../components/ui';
 import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
-import { useNaming, useT, type MessageKey } from '../i18n';
-
-interface Pos { s: number; f: number; finger?: number }
-
-/**
- * Eixo que o APP escolhe, não a pessoa — é o critério da decisão 81: *em técnica, a contribuição do
- * app é escolher o que você não escolheria.* Sozinha, a pessoa toca 1-2-3-4 e 4-3-2-1 e nunca
- * 2-4-1-3.
- *
- * O avanço é **manual** (decisão 38): o app mostra o valor e quais já passaram, e quem decide seguir
- * é quem está tocando.
- */
-interface Eixo { id: 'digitacao'; valores: string[]; rotulo: MessageKey }
-
-interface Routine {
-  id: string; name: MessageKey; desc: MessageKey; for: ('violao' | 'baixo' | 'piano')[];
-  build: (strings: number, valor: string) => Pos[];
-  eixo?: Eixo;
-}
-
-/**
- * As 24 ordenações de 1-2-3-4, em ordem lexicográfica.
- *
- * Geradas, e não escritas à mão, porque escrever 24 permutações à mão é como se esquece uma.
- */
-export const PERMUTACOES: string[] = (function permutar(restantes: number[], prefixo: number[] = []): string[] {
-  if (!restantes.length) return [prefixo.join('')];
-  return restantes.flatMap((d, i) => permutar([...restantes.slice(0, i), ...restantes.slice(i + 1)], [...prefixo, d]));
-})([1, 2, 3, 4]);
-
-const ROUTINES: Routine[] = [
-  {
-    id: 'tqo', name: 'technique.tqoName', desc: 'technique.tqoDesc', for: ['violao', 'baixo'],
-    build: () => [3, 5, 7, 8, 5, 3].flatMap((r, i) => {
-      const s = i % 2; // alterna raiz na corda mais grave e na seguinte
-      return [{ s, f: r, finger: 2 }, { s: s + 1, f: r + 2, finger: 4 }, { s: s + 2, f: r + 2, finger: 4 }, { s: s + 1, f: r + 2, finger: 4 }];
-    }),
-  },
-  {
-    id: 'aranha', name: 'technique.spiderName', desc: 'technique.spiderDesc', for: ['violao', 'baixo'],
-    build: n => {
-      const out: Pos[] = [];
-      for (let pos = 1; pos <= 3; pos++) {
-        for (let s = 0; s < n; s++) for (let k = 0; k < 4; k++) out.push({ s, f: pos + k, finger: k + 1 });
-        for (let s = n - 1; s >= 0; s--) for (let k = 3; k >= 0; k--) out.push({ s, f: pos + 1 + k, finger: k + 1 });
-      }
-      return out;
-    },
-  },
-  {
-    // T1 (decisão 81). "Independência dos dedos" é esta rotina com a ordem fixa, não item separado.
-    id: 'permutacoes', name: 'technique.permName', desc: 'technique.permDesc', for: ['violao', 'baixo'],
-    eixo: { id: 'digitacao', valores: PERMUTACOES, rotulo: 'technique.permOrder' },
-    build: (n, valor) => {
-      const ordem = [...(valor || PERMUTACOES[0])].map(Number);
-      // um dedo por casa a partir da casa 5: o dedo f mora em 4 + f
-      const naCorda = (s: number) => ordem.map(f => ({ s, f: 4 + f, finger: f }));
-      const subindo = Array.from({ length: n }, (_, s) => naCorda(s)).flat();
-      const descendo = Array.from({ length: n }, (_, s) => naCorda(n - 1 - s)).flat();
-      return [...subindo, ...descendo];
-    },
-  },
-  {
-    id: 'cinco', name: 'technique.fiveName', desc: 'technique.fiveDesc', for: ['piano'],
-    build: () => [60, 62, 64].flatMap(r => {
-      const up = [0, 2, 4, 5, 7];
-      const seq = [...up, ...up.slice(0, -1).reverse()];
-      return seq.map((semi, i) => ({ s: 0, f: r + semi, finger: i < 5 ? i + 1 : 9 - i }));
-    }),
-  },
-];
+import { useNaming, useT } from '../i18n';
+import { ROUTINES } from './tecnica-rotinas';
 
 export default function Tecnica() {
   const instrument = useStore(s => s.profile.instrument);
@@ -88,7 +19,14 @@ export default function Tecnica() {
   const available = ROUTINES.filter(r => r.for.includes(instrument));
   const [routine, setRoutine] = useState(available[0] ?? ROUTINES[0]);
   // Posição no eixo e o que já passou. Avanço manual (decisão 38) — o app nunca anda sozinho.
-  const [eixoPos, setEixoPos] = useState(0);
+  // Guardada POR ROTINA, e não num estado único zerado num efeito: com um só, o primeiro render da
+  // rotina nova usava a posição da anterior — e o contador marcava como "visto" um valor que a pessoa
+  // nunca viu, mostrando "2 de 88" na primeira tela. Sem efeito de reset, e voltar a uma rotina
+  // devolve a pessoa ao ponto em que estava.
+  const [posicoes, setPosicoes] = useState<Record<string, number>>({});
+  const eixoPos = posicoes[routine.id] ?? 0;
+  const setEixoPos = (f: number | ((p: number) => number)) =>
+    setPosicoes(m => ({ ...m, [routine.id]: typeof f === 'function' ? f(m[routine.id] ?? 0) : f }));
   const [vistos, setVistos] = useState<Record<string, string[]>>({});
   const [bpm, setBpm] = useState(70);
   const [sub, setSub] = useState(2);
@@ -102,13 +40,14 @@ export default function Tecnica() {
   // `%` de negativo em JS devolve negativo, e `valores[-1]` é undefined — "Anterior" a partir de
   // zero quebrava a tela. O eixo é circular nos dois sentidos.
   const noCiclo = (i: number, n: number) => ((i % n) + n) % n;
-  const valorDoEixo = routine.eixo ? routine.eixo.valores[noCiclo(eixoPos, routine.eixo.valores.length)] : '';
+  const valoresDoEixo = useMemo(() => routine.eixo?.valores(tuning.length) ?? [], [routine, tuning.length]);
+  const valorDoEixo = valoresDoEixo.length ? valoresDoEixo[noCiclo(eixoPos, valoresDoEixo.length)] : '';
   const seq = useMemo(() => routine.build(tuning.length, valorDoEixo), [routine, tuning.length, valorDoEixo]);
   // O que ficou no histórico: qual rotina e, quando há, qual ordem de dedos. O ANDAMENTO fica de fora de
   // propósito: com "subir 4 bpm a cada volta" ligado não existe um valor único para gravar, e
   // escolher o inicial ou o final seria inventar (A16 — decisão do Paulo).
   useToolLog('tecnica', 'Rotinas de técnica', 'technique', running, {
-    settings: { rotina: routine.id, ...(valorDoEixo ? { ordemDosDedos: valorDoEixo } : {}) },
+    settings: { rotina: routine.id, ...(routine.eixo && valorDoEixo ? { [routine.eixo.id]: valorDoEixo } : {}) },
   });
   // Passar por um valor conta como tê-lo visto, mesmo sem tocar até o fim — é informação, não meta
   // (decisões 11 e 82). Guardado POR ROTINA, e não zerado na troca: se você voltar, o que já passou
@@ -126,7 +65,7 @@ export default function Tecnica() {
   live.current = { seq, hear, climb, voice: params.timbres[instrument] };
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
-  useEffect(() => { clock.current?.stop(); setRunning(false); setIdx(-1); setEixoPos(0); }, [routine]);
+  useEffect(() => { clock.current?.stop(); setRunning(false); setIdx(-1); }, [routine]);
 
   const toggle = () => {
     if (running) { clock.current?.stop(); setRunning(false); setIdx(-1); return; }
@@ -166,15 +105,15 @@ export default function Tecnica() {
         <div className="panel" style={{ display: 'grid', gap: 10 }} aria-label={t(routine.eixo.rotulo)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="muted">{t(routine.eixo.rotulo)}</span>
-            <span className="muted">{t('technique.axisSeen', { done: (vistos[routine.id] ?? []).length, total: routine.eixo.valores.length })}</span>
+            <span className="muted">{t('technique.axisSeen', { done: (vistos[routine.id] ?? []).length, total: valoresDoEixo.length })}</span>
           </div>
           <b className="num" style={{ fontFamily: 'var(--display)', fontSize: 34, letterSpacing: '0.12em' }}>
-            {[...valorDoEixo].join(' ')}
+            {routine.eixo.mostrar(valorDoEixo, t)}
           </b>
           <div className="row">
             <Btn small tone="ghost" onClick={() => setEixoPos(p => p - 1)}>{t('technique.axisPrev')}</Btn>
             <Btn small onClick={() => setEixoPos(p => p + 1)}>{t('technique.axisNext')}</Btn>
-            <Btn small tone="ghost" onClick={() => setEixoPos(Math.floor(Math.random() * (routine.eixo?.valores.length ?? 1)))}>{t('technique.axisShuffle')}</Btn>
+            <Btn small tone="ghost" onClick={() => setEixoPos(Math.floor(Math.random() * Math.max(1, valoresDoEixo.length)))}>{t('technique.axisShuffle')}</Btn>
           </div>
         </div>
       )}

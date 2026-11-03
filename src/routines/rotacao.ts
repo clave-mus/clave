@@ -27,6 +27,8 @@ export const ALVO_DA_ROTACAO: Record<Rotacionavel, { kind: 'param'; key: 'key' |
   // que as duas famílias custaram pouco: `digitacao` percorre as 24 ordenações de 1-2-3-4,
   // `deslocamento` percorre os modos de um padrão rítmico de um tempo.
   digitacao: { kind: 'setting', id: 'digitacao' },
+  ordemDeCordas: { kind: 'setting', id: 'ordemDeCordas' },
+  trocaDePosicao: { kind: 'setting', id: 'trocaDePosicao' },
   deslocamento: { kind: 'setting', id: 'deslocamento' },
 };
 
