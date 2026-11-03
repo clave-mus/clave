@@ -1,444 +1,472 @@
 # Decisões do Clave
 
-Registro das decisões de produto e plataforma.
-Quando uma decisão mudar, edite aqui e anote a data e o motivo.
+Registro das decisões de produto e plataforma: **o que foi decidido, quando, e por quê.**
+Quando uma decisão mudar, edite aqui e anote a data e o motivo — o motivo é o que impede alguém
+de desfazer sem saber o que está desfazendo.
 
-- **22/10/2026** — primeira sessão de perguntas e respostas.
-- **29/10/2026** — revisão a partir de sete documentos novos (catálogo de exercícios v0.5,
-  guia de rotinas v1.1, protótipo de diagnóstico v0.2, guia do gerador de partituras,
-  objetivos e perfis, considerações gerais e revisões da versão piloto). Esta revisão
-  **substitui** várias decisões de 22/10; cada uma está marcada abaixo.
+Este documento **não repete** a visão. Ele registra escolhas e justificativas; a descrição do
+produto está em [visao.md](visao.md).
+
+---
+
+## Histórico do documento
+
+- **22/10/2026** — primeira versão, gerada numa sessão de perguntas e respostas.
+- **29/10/2026** — revisão a partir de sete documentos novos.
+- **02/11/2026 — reescrito do zero.** As duas versões anteriores foram **descartadas**.
+
+> ### Por que a reescrita
+>
+> As versões de 22/10 e 29/10 tinham 33 decisões escritas e justificadas, e o código as seguiu com
+> disciplina. O problema é que elas foram produzidas **sem planejamento humano genuíno** — o time
+> "vibe-codou" o começo, houve falha de comunicação, e decisões que ninguém tomou de propósito
+> viraram código.
+>
+> O resultado mais visível foi a **metáfora de academia**, que nunca foi uma decisão de produto e
+> ainda assim chegou ao título da aba, à navegação, aos textos e às cinquenta ilustrações.
+>
+> **Nem tudo ali estava errado.** Oito decisões sobreviveram por mérito e estão marcadas abaixo
+> com **↻ mantida de 29/10**. As outras 25 foram descartadas ou substituídas.
+
+---
 
 ## Produto
 
-### 1. Identidade: ambiente de estudo, não academia · *revisado em 29/10*
+### 1 · O Clave é um ambiente de rotina de estudo
 
-O Clave é um **ambiente de estudo configurável**, não uma academia que mede carga e ranqueia.
-A metáfora de academia continua servindo ao **ritual** (abrir e já ter o que fazer), mas não à
-**medição**: tempo estudado e etapas concluídas descrevem a sessão, não comprovam fluência.
+A rotina é o objeto central: a identidade do produto, não uma funcionalidade dele. A
+configurabilidade é o mecanismo que torna a rotina pessoal; a profundidade pedagógica é a prova de
+seriedade. Ver [visao.md](visao.md).
 
-Saem como mecânica central: ranking entre pessoas, streak punitivo, XP, níveis derivados de
-acertos e qualquer "percentual de domínio".
+**Motivo:** "ter tudo num lugar só" é conveniência de agregação, fácil de copiar e já entregue por
+catálogos de percepção maduros e por visualizadores de braço bons. Montar e executar a própria
+rotina é a única coisa que nenhum concorrente faz — e portanto a única hipótese cuja resposta não
+se obtém olhando para o mercado.
 
-**Motivo da mudança:** os três documentos novos atacam a medição quantificada de forma
-convergente e explícita — "não confundir realização com domínio", "não confundir minutos com
-domínio", "uma camada discreta de orientação da prática, não um jogo que distribui pontos".
-Um ranking de carga autodeclarada ensinaria a pessoa a configurar o exercício mais fácil.
+**Substitui:** a decisão 1 de 29/10 ("ambiente de estudo, não academia") e a metáfora de academia
+inteira, que não era decisão e sim resíduo.
 
-### 2. Aposta de retenção · *revisado em 29/10*
+### 2 · Metáfora de academia descartada · identidade **Campo**
 
-A pessoa volta por **utilidade e fricção zero para começar**, não por mecânica de engajamento:
+Nada de "grupo muscular", haltere, medalha, "arsenal" ou `Clave: academia musical`.
 
-1. A home resolve "o que eu estudo hoje?" em dois toques.
-2. O nivelamento inicial entrega algo adequado já no primeiro acesso — nem fácil demais,
-   nem difícil demais.
-3. **Consistência não-punitiva:** dias praticados, meta diária escolhida pela própria pessoa,
-   dias de descanso configuráveis. Registro, não cobrança.
+**Direção escolhida em 02/11/2026: Campo**, entre três propostas (Campo, Régua, Horta). Um campo
+de cor granulado como **único** elemento decorativo, por trás de uma base tipográfica muito quieta.
+A cor do produto vem do campo, em vez de ser um acento solto por cima dele.
 
-A métrica de sucesso da Fase 1 continua a mesma: 25% de quem cria conta ainda estuda na
-4ª semana, com 3 ou mais sessões por semana.
+| | Claro | Escuro |
+|---|---|---|
+| fundo | `#fbf8f4` | `#100f11` |
+| superfície | `#ffffff` | `#1a181b` |
+| texto | `#1b1917` | `#f1ece6` |
+| acento | `#c14a2b` | `#f08a4b` |
+| acento sobre destaque sutil | `#9e3c20` | `#f3a575` |
 
-### 3. Primeiro público
+Tipografia: **Instrument Sans**, servida pelo próprio app (`@fontsource`), nunca por CDN — nada do
+uso vaza para terceiro. Título e corpo são a mesma família; o que separa é peso e *tracking*.
 
-O intermediário autodidata de cordas (violão, guitarra, baixo). Já toca, mas estuda sem
-estrutura e se distrai. Iniciantes absolutos ficam para quando houver conteúdo de curso.
-Não nos vendemos como curso do zero: isso afastaria quem já sabe algo.
+**A regra que define a direção, e que não se quebra:** o campo aparece **só** em fundo de tela,
+cabeçalho e estado vazio. **Nunca** em botão, cartão, ícone ou qualquer coisa que se toque. Sem ela
+o Clave vira "mais um app com gradiente", que é o risco declarado desta direção.
 
-### 4. Piano: representação, não instrumento paralelo · *novo em 29/10*
+**Tema claro e tema escuro, os dois de primeira classe**, com escolha explícita no Perfil (claro /
+escuro / seguir o sistema). Todos os pares de cor passam em AA (≥4,5:1) nos dois temas — conferido
+com elemento recém-criado, porque trocar `data-theme` por script não recalcula a árvore já
+renderizada.
 
-**Representação musical e instrumento principal são configurações separadas.** Pauta, teclado
-e braço são **superfícies de resposta** disponíveis a qualquer pessoa — um baixista pode querer
-responder vendo um teclado. Não existe um exercício por instrumento: o conteúdo musical é
-compartilhado e só a execução e as particularidades técnicas (digitação, posições, cordas,
-afinação) são específicas.
+**Motivo:** decisão inicial mal planejada que afetou demais o código. O dono do produto não gosta
+da ideia de academia e nunca a escolheu.
 
-Consequência: exercícios que hoje são a mesma tarefa em superfícies diferentes se fundem num
-só com seletor de superfície. O piano não é cortado, mas também não recebe investimento
-específico — as cordas ficam com a profundidade de instrumento.
+**Custo conhecido:** vaza por 13 arquivos de `src/`, por `index.html`, e pelo gerador de arte
+inteiro (`design/art.mjs`, 463 linhas, 50 SVGs).
 
-### 5. Quem decide o treino: a pessoa · *revisado em 29/10*
+### 3 · Princípio-mestre: estrutura sem rigidez, maleabilidade sem desorientar
 
-**A escolha lidera.** A home é a paleta pessoal: os exercícios e rotinas que a pessoa priorizou,
-a um toque de começar. O gerador automático de sessão foi **removido**.
+É o critério de aceite de toda decisão de interface. Ver [visao.md](visao.md).
 
-Tempo disponível e com/sem instrumento são **contexto da home inteira**, não entrada de um
-gerador: escolhido "5 min, sem instrumento", a paleta já aparece filtrada pelo que cabe.
+### 4 · Dois regimes de prática, um objeto
 
-Para o catálogo não ficar invisível, a home mostra **um** card de novidade fora da paleta, com
-motivo explícito ("você nunca treinou nada de Percepção Harmônica") e botão de pôr na paleta.
-Não é sorteio.
+Uma rotina com **dois modos de execução** (livre e guiado), e não dois objetos diferentes.
+O conceito de "paleta" / `arsenal` **morre**: rotinas o absorvem.
 
-**Motivo da mudança:** 22/10 previa um modelo híbrido em que o Clave montava a sessão a partir
-do arsenal. A decisão de 29/10 dá o controle à pessoa.
+**Motivo:** o dado por baixo é idêntico nos dois regimes — uma lista de itens com parâmetros. Só a
+postura da execução muda. Dois objetos significariam dois editores, dois executores, e a dúvida
+permanente de "isto eu salvo como paleta ou como rotina?".
 
-### 6. Navegação e taxonomia · *revisado em 29/10*
+**O `arsenal` atual é uma pasta de favoritos fingindo ser prática:** guarda *qual* exercício, não
+*como ele estava configurado*. O valor está no preset, não no favorito.
 
-A navegação de aprendizagem passa a ser **Teoria · Técnica · Percepção**, com Percepção dividida
-em **Melódica, Harmônica e Rítmica**. **Rotinas** é camada de organização da prática, não área de
-conhecimento. Leitura deixa de ser área: notação e símbolos vão para Teoria; ler algo novo para
-ouvir, cantar ou tocar vai para as áreas de Percepção. Técnica tem escopo restrito a controle
-motor, coordenação, digitação, articulação e regularidade.
+### 5 · A etapa declara o seu tipo de término
 
-Cinco abas: **Hoje · Treinar · Rotinas · Progresso · Perfil**. Teoria absorve a antiga área
-"Estudar": aulas e quizzes ficam lado a lado, que é a conexão aula↔exercício que queríamos.
-Comunidade e Mentor saem da navegação na Fase 1 — não devem aparecer portas que não abrem.
+Três tipos — **Série**, **Ambiente**, **Tarefa** — e o tipo é propriedade do item no catálogo, não
+escolha de configuração. Ver [visao.md](visao.md).
 
-**Princípio que acompanha:** um exercício tem **uma localização principal e várias etiquetas**.
-Nunca duplicar uma implementação para ela aparecer em mais de um módulo.
+**Motivo:** é o único desenho que cobre o catálogo inteiro. Quiz termina por contagem; metrônomo
+não termina nunca; "toque esta escala limpo" termina quando a pessoa diz. Uniformizar em tempo
+transforma o Clave em app de pomodoro; uniformizar em contagem deixa metade do catálogo de fora.
 
-### 7. Porta por objetivo · *novo em 29/10*
+**Benefício secundário:** o tipo já diz que tipo de prova a etapa gera, então o Progresso não tem
+como misturar atividade com evidência por acidente — os dados nascem separados.
 
-A organização interna do catálogo **não é** a organização mental de quem estuda. A pessoa não
-pensa "percepção melódica"; pensa "quero conhecer as notas no braço", "quero tirar música de
-ouvido", "quero acompanhar uma harmonia".
+### 6 · Validação é escolha da pessoa, não imposição do exercício
 
-Existe uma **porta por objetivo** que traduz uma coisa na outra, construída sobre a lista de
-objetivos do documento de perfis. A mesma superfície serve duas vezes: encontrar exercício e
-personalizar a paleta inicial no onboarding.
+O item declara quais modos aceita; o padrão é **autoavaliação**. Microfone é acréscimo opcional.
 
-Sem essa porta, a nossa função principal — mapear o braço — fica atrás de uma palavra de
-conservatório, e o nosso público principal não a encontra.
+**Motivo:** nem sempre há instrumento, microfone ou silêncio. Muita gente vai querer praticar com
+a tela mostrando o material e julgando por conta própria.
 
-### 8. Rotinas · *novo em 29/10*
+**Consequência de escopo:** o microfone sai do caminho crítico do beta, exceto pelo afinador.
 
-Uma rotina é uma **lista ordenada de instâncias de exercícios**, cada uma com parâmetros
-próprios. Não é uma área de aprendizagem nem exercício novo. A rotina referencia o
-`exercise_id` estável do catálogo e guarda apenas a configuração, nunca a lógica do exercício.
+### 7 · Etapa é um conjunto de instâncias (ciclagem)
 
-Parâmetros como instrumento, afinação, tonalidade e andamento podem ser definidos na rotina e
-**herdados** pelas etapas, com substituição explícita e visível ("Tonalidade: Dó maior (da rotina)").
+Uma instância é item + configuração. Uma etapa guarda um conjunto delas e cicla a cada execução.
+Conjunto de uma instância = etapa comum, então não existem dois tipos de etapa no modelo.
 
-Comportamento padrão: **cronômetro crescente por etapa, avanço manual, pausa disponível**.
-O cronômetro informa, não encerra o exercício nem bloqueia o avanço. Nada de avanço automático.
+- A rodada é resolvida **quando a etapa abre**, com botão discreto de **"trocar"**.
+- O "último usado" fica guardado na etapa e **sobrevive entre sessões**.
+- Política por etapa: em ordem (padrão), sorteado, ou sorteado sem repetir o último.
 
-Na Fase 1 entregamos estrutura de dados, executor e **presets publicados pelo time** — incluindo
-"Mapear o braço do baixo" nas versões curta, padrão e completa, com tonalidade configurável.
-O **editor** de rotinas fica para a Fase 2.
+**A consulta por etiqueta ("exercícios que treinam a mesma habilidade") é assistente de montagem,
+não mecanismo de execução.** O app nunca substitui em tempo de execução por algo que a pessoa não
+pôs ali, e rotinas não mudam de comportamento sozinhas quando o catálogo cresce.
 
-### 9. Diagnóstico: registrar primeiro, recomendar depois · *novo em 29/10*
+### 8 · Editor de rotinas entra no beta
 
-A Fase 1 implementa só a **instrumentação**: cada tentativa grava `exercise_id`,
-`primary_module`, `skill_tags`, `content_tags`, `validation_type`, `parameters_snapshot`,
-`outcome`, `error_code` quando a evidência permitir, tempo de resposta, pistas e repetições.
-Não mostra nada e não recomenda nada ainda.
+Era Fase 2 na versão anterior.
 
-**Razão da ordem:** recomendação se adiciona depois e se aplica retroativamente aos dados
-gravados; histórico que não foi gravado não se recupera. Sem isso, toda a prática do beta e dos
-primeiros meses nasce inútil para diagnóstico.
+**Motivo:** sem editor, a rotina é a que o time escolheu, com os presets que o time achou bons — e
+o produto inteiro perde o sentido. A rotina pessoal **é** a proposta de valor.
 
-Princípios que valem desde já:
+### 9 · Variação automática por sugestão, nunca por imposição
 
-- **Registrar evidência, não rotular a pessoa.** "Padrão de erro observado", "vale revisar",
-  "ainda há pouca evidência". Nunca "ouvido ruim" nem nota global.
-- **A navegação não é o modelo de habilidade.** O módulo serve para achar o exercício no app;
-  a análise usa `skill_tags`, conteúdo, etapa da tarefa e canal de validação.
-- **Não comparar medidas incompatíveis** (tempo de um quiz de teoria com o de uma tarefa de
-  técnica; precisão automática com autoavaliação).
-- **Não prometer validação que não existe.** Canto e execução acústica começam em
-  autoavaliação. Falha técnica de detecção é validação incerta, nunca erro musical.
+O app propõe em linguagem clara e **abre o menu de opções**; a pessoa escolhe. Sem escada rígida.
+Quatro guardas obrigatórias. Recorte do beta: **por exercício**, não por habilidade. Ver
+[visao.md](visao.md).
 
-Resumo de padrões, regras de recomendação e a tela "vale revisar / está ficando mais consistente
-/ ainda não sabemos" ficam para a Fase 2, quando houver dados reais para calibrar os limiares.
+**Motivo:** é a resposta direta ao princípio-mestre — a pessoa começa estreito e o Clave *oferece*
+abrir, em vez de exigir que ela configure doze parâmetros no primeiro dia.
 
-### 10. Arquitetura dos exercícios · *novo em 29/10*
+**Por que sem escada:** forçar progressão linear onde a ordem é variável é erro pedagógico. A
+maioria dos parâmetros não tem ordem (não existe "clave de sol mais fácil que clave de fá").
 
-Modelar separadamente **conteúdo musical**, **apresentação**, **superfície de resposta** e
-**validação**. Tonalidade, timbre, extensão, andamento, material permitido, região do instrumento
-e modo de resposta são **parâmetros**, não ferramentas novas.
+### 10 · bpm é contexto registrado, nunca pontuação
 
-A camada é construída e migrada aos poucos, sem tentar resolver toda a lista de revisões de uma
-vez. Os quatro cortes concretos no código atual:
+**Motivo:** aumentar o metrônomo é a métrica mais fácil de medir e uma das piores de perseguir.
+Muita coisa só se aprende devagar, e transformar bpm em recorde ensina a tocar rápido e sujo.
 
-1. Separar superfície de resposta de regra de validação (hoje fundidas), para permitir
-   equivalência semântica — enarmonias, cifras equivalentes, posições diferentes com a mesma altura.
-2. Tirar timbre, volume e forma de apresentação de dentro da geração da pergunta, para que
-   timbre possa ser configuração global por instrumento.
-3. Criar tipo de parâmetro numérico (faixa), que hoje não existe — é o que bloqueia pesos de
-   figuras, limite de salto e extensão de linhas suplementares.
-4. Pôr os parâmetros globais no contexto compartilhado, de onde os exercícios os herdam — a
-   mesma herança que as rotinas usam.
+**Substitui:** a decisão 14 de 29/10, que mantinha "carga em bpm" com recorde pessoal e linha de
+evolução. Cancelada inteira.
 
-**Critério de pronto:** adicionar um parâmetro global novo (timbre, por exemplo) faz todo
-exercício com áudio respeitá-lo sem editar o catálogo, e um exercício novo se declara sem tocar
-no motor.
+### 11 · Progresso não é aba, e não é central
 
-### 11. Crescimento do catálogo · *novo em 29/10*
+Vive dentro do Perfil e de cada item. Medida principal: **tempo estudado**. Fora: badges, streaks,
+XP, níveis, ranking, percentual de domínio, comparação entre pessoas.
 
-O catálogo de referência tem cerca de 60 famílias; não é lista de funcionalidades obrigatórias.
+**Motivo:** o Clave é plataforma de estudo séria. Progresso em destaque traz ideia de gamificação,
+e o produto não precisa dele tanto quanto a versão anterior supunha.
 
-**Reuso por padrão:** antes de adicionar uma família, verificar se ela pode ser um modo ou
-configuração de um motor existente. Uma família nova se justifica quando muda o objetivo
-cognitivo, a regra de validação ou a estrutura da tarefa — não quando muda a tonalidade, o
-instrumento, o timbre, o número de notas ou o formato da resposta.
+### 12 · O registro de tentativas é infraestrutura interna ↻ *mantida de 29/10, com novo motivo*
 
-**Código novo por exceção**, com justificativa escrita respondendo: *esta capacidade é essencial
-para validar o produto na Fase 1?* Se sim, entra com a justificativa registrada. Se não, Fase 1.5.
+O formato e a gravação ficam. O que muda é a justificativa: **não** existe para alimentar tela de
+progresso, e sim porque (a) a variação automática é impossível sem ele e (b) é como o time
+descobre que um exercício está quebrado.
 
-**Não perseguir paridade entre módulos.** Deixar os cinco módulos igualmente cheios seria meta
-artificial. O que importa é cada módulo ter uma experiência inicial coerente e útil.
+**Motivo da mudança de justificativa:** o argumento original era "sem dado gravado não há
+diagnóstico depois", e ele perdeu força quando o progresso deixou de ser central. Os dois motivos
+novos se sustentam sozinhos.
 
-### 12. Ambiguidade teórica é preocupação estrutural · *novo em 29/10*
+### 13 · Ambiguidade teórica é preocupação estrutural ↻ *mantida de 29/10*
 
-Em teoria musical é comum haver mais de uma resposta defensável, por enarmonia, semelhança entre
-escalas e convenções. Antes de publicar uma família, alguém com conhecimento teórico tenta
-respondê-la de formas alternativas, verificando: há mais de uma resposta defensável? o estímulo
-tem informação suficiente para escolher uma? a questão depende de um contexto que não foi
-informado? a correção automática distingue erro conceitual de erro de interpretação?
+Antes de publicar uma família, alguém com conhecimento teórico tenta respondê-la de formas
+alternativas: há mais de uma resposta defensável? o estímulo tem informação suficiente? a correção
+distingue erro conceitual de erro de interpretação?
 
-Itens ambíguos ou sem solução única não devem gerar "erro do usuário".
+**Item ambíguo nunca gera "erro do usuário".**
 
-### 13. Nivelamento inicial · *revisado em 29/10*
+**Motivo:** o catálogo tem vários pontos cinzentos marcados pelo próprio autor ("cuidar
+enarmonia", "não há melhor absoluto", "cuidar com os pontos cinzas"). É também algo que quase
+nenhum concorrente faz, e portanto diferencial real.
 
-Perguntar o nível não basta, e **não existe nível global**: alguém pode ter experiência de
-instrumento e pouca teoria, ou harmonia avançada e dificuldade de leitura.
+### 14 · Nunca confundir atividade com evidência de aprendizagem ↻ *mantida de 29/10*
 
-O onboarding passa a ter, no lugar da autoavaliação por área, **desafios diagnósticos curtos por
-objetivo**: para cada objetivo escolhido, 4 a 6 itens em duas ou três configurações de
-dificuldade, usando exercícios que já existem. O resultado escolhe a configuração inicial da
-paleta.
+Tocar no instrumento sem validação é **atividade**. Só resposta validada é **evidência**.
+Autoavaliação é uma terceira coisa, marcada como tal. Sempre mostrar a quantidade de tentativas
+junto de qualquer proporção.
 
-É **pulável sem penalidade** — quem pula não é marcado como iniciante e nada é bloqueado; a
-estimativa começa com menos evidência e evolui com as tentativas. O resultado é por
-objetivo/habilidade, nunca "você é intermediário". A calibração é julgamento do time, corrigido
-com os relatos do beta.
+### 15 · Reuso por padrão, código novo por exceção ↻ *mantida de 29/10*
 
-### 14. Como medir evolução no instrumento · *revisado em 29/10*
+Antes de adicionar uma família, verificar se ela pode ser **modo ou configuração** de um motor
+existente. Uma família nova se justifica quando muda o objetivo cognitivo, a regra de validação ou
+a estrutura da tarefa — não quando muda tonalidade, instrumento, timbre, número de notas ou
+formato da resposta.
 
-Três tipos de progresso, nunca misturados:
+**Motivo:** o catálogo de referência tem cerca de 60 famílias. Sem essa regra, são 60 telas.
 
-- **Consistência** — dias praticados, meta própria, dias de descanso.
-- **Atividade** — o que praticou, com quais configurações, por quanto tempo.
-- **Evidência de aprendizagem** — só onde houve validação real. Na Fase 1, isso significa
-  exercícios de resposta por seleção. Execução no instrumento é **atividade, não evidência**.
+### 16 · Representação musical ≠ instrumento ↻ *mantida de 29/10*
 
-**Carga em bpm** sobrevive, simplificada: recorde "limpo a X bpm" por rotina com data, linha de
-evolução, próximo degrau já preenchido ao abrir a rotina, e rótulo **"autodeclarado"** visível
-junto do número. Saem: insígnias, sequências por exercício, celebração de recorde, total
-agregado, e qualquer comparação — entre rotinas da própria pessoa ou entre pessoas, agora ou na
-Fase 2.
+Pauta, teclado e braço são **superfícies de resposta** disponíveis a qualquer pessoa — um baixista
+pode querer responder vendo um teclado. Não existe um exercício por instrumento: o conteúdo
+musical é compartilhado, e só execução e particularidades técnicas são específicas.
 
-**Ranking verificável: cancelado.** Era a razão declarada de levar o microfone aos exercícios na
-Fase 1; sem ele, a dependência caiu.
+**Consequência:** exercícios que são a mesma tarefa em superfícies diferentes **se fundem** num só
+com seletor de superfície.
 
-### 15. Microfone · *revisado em 29/10*
+### 17 · Ferramenta e exercício são o mesmo tipo de objeto
 
-Detecção de altura e afinador entram na **Fase 1**; microfone **nos exercícios** vai para a
-Fase 1.5.
+Registro unificado, tela separada quando precisar. Itens do tipo Série usam o Player comum; itens
+do tipo Ambiente podem ter tela própria.
 
-O afinador é o melhor uso de microfone deste produto: mede uma nota sustentada monofônica — a
-única coisa que detecção de altura faz bem — e não tem pretensão pedagógica anexada. Também é um
-motivo diário de abrir o app para quem toca cordas.
+**Motivo:** três problemas resolvidos de uma vez — o braço virtual deixa de ter duas
+implementações (explorar e identificar), a ferramenta entra em rotina sem exceção no código, e
+solfejo e ditado entram sem precisar ser espremidos dentro dos tipos `Visual`/`Surface`.
 
-Levar o microfone aos exercícios depende do registro de tentativas com tipo de validação e
-qualidade de medição, para distinguir "errou a nota" de "o microfone não entendeu". Acordes
-polifônicos continuam fora. Reconhecimento por câmera não está no plano.
+**Substitui:** a separação `ExerciseDef` / `ToolDef` do código atual.
 
-### 16. Preço
+### 18 · O gerador de partituras é infraestrutura ↻ *mantida de 29/10*
 
-Tudo grátis. Nenhuma infraestrutura de plano, nenhum selo "Clave+". A monetização se decide com
-dados de uso.
+Não é uma ferramenta entre outras: alimenta leitura melódica, leitura rítmica, ditado, canto à
+primeira vista e localização de notas. Os dois leitores atuais se fundem em um só — **motores
+duplicados são proibidos**.
 
-**Princípio guardado para quando a hora chegar:** vender profundidade, não a possibilidade de
-estudar. Em particular, tonalidade, andamento e dificuldade não ficam atrás de pagamento — são
-o que torna um exercício adequado à pessoa. A camada de parâmetros compartilhados não é o
-produto pago.
+### 19 · Catálogo plano com várias portas
 
-### 17. Afinador
+O catálogo é um conjunto de itens etiquetados. A interface oferece várias entradas sobre o mesmo
+conjunto: **por objetivo (padrão)**, por área, por contexto, por instrumento, e busca.
 
-Entra na Fase 1: cromático, com predefinições para violão, guitarra, baixo de 4 e 5 cordas, e
-afinações alternativas comuns (Drop D, meio tom abaixo).
+**A regra de "uma localização principal" é derrubada.** Um item pode aparecer em três portas sem
+problema. O que continua proibido é **duplicar a implementação** — duplicata em visão é
+conveniência, duplicata em implementação é dívida.
 
-### 18. Idiomas
+**Motivo:** a regra antiga produziu o desequilíbrio visível no app de hoje — Teoria com 14 itens,
+Técnica com 2, Harmônica com 2, Rítmica com 2 —, porque tudo que era notação, braço, teclado e
+escala precisou escolher um módulo só e caiu em Teoria.
 
-Português e inglês desde o lançamento. As cifras seguem a convenção de cada idioma (C7M e
-Cm7(♭5) em português; Cmaj7 e Cm7♭5 em inglês). O quiz de teoria monta as frases com gramática
-própria de cada idioma, sem tradução literal. Espanhol não entra na Fase 1.
+**Substitui:** a decisão 6 de 29/10.
 
-### 19. Aulas · *revisado em 29/10*
+### 20 · Oito portas por objetivo no beta
 
-As aulas vivem em **Teoria**, ao lado dos quizzes — não em uma área "Estudar" separada. Texto e
-interatividade na Fase 1 (por que importa, como encaixar, passo a passo, pratique), com guias
-práticos modulares conectados a exercícios da plataforma.
+Uma porta só existe se tiver **pelo menos 4 itens atrás dela e pelo menos um deles bom**.
 
-Os **vídeos do YouTube** vão para a Fase 1.5: curar 1 a 3 vídeos por aula em dois idiomas antes
-de a estrutura das aulas ser reorganizada seria retrabalho garantido. Quando entrarem: player em
-modo de privacidade reforçada dentro do Clave, crédito do canal sempre visível, botão "Abrir no
-YouTube", nada baixado nem reenviado.
+Dominar as notas no instrumento *(carro-chefe)* · Melhorar o ouvido · Acompanhar e entender
+harmonia · Aprender teoria musical · Aprender a ler partitura · Melhorar ritmo e groove · Melhorar
+técnica e precisão *(entra sabendo que enche depois)* · Improvisar e solar *(redigida como "o que
+prepara o improviso", porque não existe exercício de improvisar)* · mais a saída **"Não sei por
+onde começar"**, que leva ao diagnóstico.
 
-### 20. Mentor com IA · *revisado em 29/10*
+**Cortadas por falta de catálogo:** "compor e desenvolver criatividade" (zero itens) e "tocar
+melhor com outras pessoas" (é comportamento de conjunto; o backing track arranha e só).
+**Cortada por não ser objetivo:** "organizar meus estudos" — isso é o produto, não uma porta.
 
-Vai para a **Fase 1.5**, e sai da navegação na Fase 1. Modelo pequeno rodando no aparelho,
-opcional e marcado como experimental; a pessoa ativa e baixa o modelo, e se o aparelho não
-aguentar fica o mentor por regras. A IA só conversa: fatos de teoria vêm do motor do Clave e o
-progresso vem dos dados reais. Escopo fechado em estudo de música e no próprio Clave.
+### 20b · Três abas: Praticar · Catálogo · Perfil
 
-**Motivo do adiamento:** é a tarefa mais caro-e-experimental do plano, exige comparar modelos em
-dois idiomas, detecção de capacidade do aparelho e um fluxo de download, e não contribui para a
-aposta de retenção.
+| Aba | O que é |
+|---|---|
+| **Praticar** | A home. As rotinas da pessoa, incluindo "De bolso". Filtro de contexto no topo. Um toque para começar. |
+| **Catálogo** | Todos os itens, entrando por objetivo (padrão), área, contexto, instrumento ou busca. É daqui que se monta rotina. |
+| **Perfil** | Conta, instrumento, afinação, idioma, timbres, volume — **e o histórico**, quieto, sem ser porta de entrada. |
 
-### 21. Nome
+O **afinador** é atalho fixo no cabeçalho: uso de 30 segundos não merece navegação.
 
-"Clave" fica, com nome composto nas lojas ("Clave: academia musical" / "Clave: music gym").
-A busca rápida não achou conflito direto, mas há marcas parecidas nos EUA (ver pendências).
+**Motivo:** cada aba é uma promessa de que há algo ali, e o Clave tem três coisas — praticar,
+encontrar e configurar. "Rotinas" não é aba separada porque rotinas **são** a home; "Teoria" não é
+aba porque as notas moram dentro dos exercícios; "Progresso" não é aba pela decisão 11.
 
-## Plataforma
+**Substitui:** as cinco abas de 29/10 (Hoje · Treinar · Rotinas · Progresso · Perfil).
 
-### 22. Um código só
+### 21 · Personas são ferramenta do time, nunca da tela
 
-O mesmo React vira site, PWA (site instalável e offline) e apps de iOS e Android via Capacitor.
-Se a latência de áudio virar problema, escreve-se só o módulo de áudio como plugin nativo.
+As sete personas de referência servem para revisar decisões ("o Leitor Lento acharia isto?"). O app
+**nunca rotula a pessoa**.
 
-**A Fase 1 lança site e PWA.** Os apps de loja vão para a Fase 1.5 — ver decisão 27.
+**Motivo:** remover o `ProfileKind` do onboarding foi acerto. Não existe nível global — alguém pode
+ter harmonia avançada e dificuldade de leitura —, e dizer "você é o autodidata sem direção" é
+constrangedor e errado.
 
-### 23. Contas
+### 22 · Nivelamento sugere, não decide
 
-Opcionais, com Supabase. Login por e-mail (link mágico), Google e Apple. O progresso local migra
-para a conta no primeiro login. A conta pode ser apagada de dentro do app.
+Um diagnóstico curto por objetivo, com itens em duas ou três configurações de dificuldade, usando
+exercícios que já existem. O resultado **sugere** rotinas e configuração inicial. É **pulável sem
+penalidade**: quem pula não é marcado como iniciante e nada é bloqueado.
 
-### 24. Análise de uso
+Resultado **por objetivo e habilidade, nunca um nível único**.
 
-PostHog, com hospedagem dos dados na Europa.
+**Motivo:** o gerador de sessão anterior foi removido por ser aleatório, central demais e rígido.
+A pessoa é quem decide; mas um nivelamento que produz **sugestões** de rotina é útil e não tira
+controle de ninguém.
 
-- Só eventos definidos pelo time (sessão, exercício, ferramenta, afinador, carga).
-- Sem gravação de sessão, sem captura automática de cliques, sem cookie de rastreamento.
-- Usuários com conta são identificados pelo ID interno, nunca pelo e-mail.
-- Opção "Não enviar estatísticas de uso" no perfil; política de privacidade explica a coleta.
-- Pessoas de 13 a 17 anos só entram no agregado, sem identificação individual.
+**Substitui:** a decisão 5 de 29/10, que removeu qualquer forma de sugestão.
 
-### 25. Código e hospedagem
+### 23 · Compartilhar rotina por link, sem biblioteca pública
 
-Repositório privado no GitHub, com testes automáticos no GitHub Actions e mudanças por pull
-request. Site e PWA no Cloudflare Pages, com link de prévia por pull request. Supabase no plano
-gratuito. Build de iOS no Mac com Xcode e de Android no Android Studio.
+No beta: exportar rotina, mandar o link, a outra pessoa abre e ganha uma cópia para adaptar.
+**Nada é publicado** — sem listagem, sem perfil, sem busca, sem conta necessária para receber.
+Crédito à rotina de origem.
 
-**Linha de trabalho · definida em 29/10:** `main` é a linha estável e `dev` é onde o trabalho se
-integra. Os pull requests vão para `dev`; `dev` entra em `main` quando a release fecha. As duas
-branches são protegidas e só recebem mudança por pull request.
+**Motivo:** a diferença entre link e biblioteca é **jurídica, não técnica**. Publicar texto escrito
+por usuário onde outro usuário lê herda, de uma vez: moderação de texto livre (nome e descrição de
+rotina são texto livre), botão de denúncia, fila de revisão, termos de uso, LGPD, ECA Digital,
+faixas etárias valendo e alguém de plantão.
 
-**Atenção:** em 29/10 constatamos que o repositório estava **público** e que a `main` **não tinha
-proteção nenhuma**, ao contrário do que esta decisão e o F1-00 afirmavam. Ver pendências.
+**E o link já é o diferencial:** entrega exatamente "compartilhar maneiras de estudar", funciona com
+quatro usuários, e "meu professor me mandou uma rotina do Clave" é melhor boca a boca do que uma
+biblioteca vazia — que é o que uma listagem pública com 30 pessoas no beta seria.
 
-### 26. Gerador de partituras · *novo em 29/10*
+**Consequência técnica obrigatória:** o **formato da rotina precisa ser versionado desde a primeira
+versão**, com migração escrita. Link compartilhado é dado que sai do controle do app; mudança de
+formato quebra links antigos.
 
-O gerador é **infraestrutura**, não uma ferramenta entre outras: ele alimenta leitura melódica,
-leitura rítmica, ditado, canto à primeira vista e localização de notas. Os dois leitores atuais
-(gerador de leitura e leitura rítmica) se fundem em um só — motores duplicados são proibidos.
+### 24 · Aulas de teoria são nota de rodapé, não curso
 
-Construído por **fusão**, sem reescrever nenhum dos dois lados:
+Nota curta anexada ao exercício ("o que é um dominante secundário", três parágrafos, dentro do
+exercício que pergunta sobre isso). As aulas longas que já existem ficam acessíveis, sem
+investimento novo.
 
-- **Fica o que o Clave já tem e tem teste:** fórmulas de compasso simples, compostas e ímpares,
-  quiálteras, ligaduras de prolongação entre subdivisões diferentes, figuras pontuadas, células
-  rítmicas e validação de coerência das configurações.
-- **Entra do protótipo** (JavaScript puro, VexFlow 4.2.2 — a mesma versão que já usamos, licença
-  MIT): os modos de geração melódica (aleatório, arpejos com cifra, groove I–IV–V–I, nove padrões
-  de escala incluindo Hanon, nota pivô, enclosures), rolagem contínua com âncoras de tempo (muda
-  o andamento sem reiniciar a partitura), agendador de áudio com lookahead, grafia enarmônica
-  correta por tonalidade e agrupamento de hastes.
+**Motivo:** a visão pede "explicações teóricas para ajudar a entender e realizar os exercícios".
+Isso é nota de rodapé. Trilha de aprendizado é outro produto.
 
-Fica para depois: páginas estáticas de 2/3/4 linhas, biblioteca de timbres, espanhol, ghost notes
-e staccato, posições de braço e seleção de cordas.
+### 25 · Afinador entra no beta
 
-**Atenção:** o guia do gerador descreve uma versão mais avançada do que o protótipo entregue —
-o protótipo é só 4/4, sem idiomas, sem quiálteras além de tercinas e sem células rítmicas. O guia
-é especificação, não relato.
+Cromático, com predefinições para violão/guitarra padrão, Drop D, meio tom abaixo, e baixo de 4 e
+5 cordas.
 
-### 27. Fases · *revisado em 29/10*
+**Motivo:** detectar uma **nota sustentada monofônica** é o caso mais fácil de detecção de altura,
+e o afinador **não precisa de baixa latência nem de detecção de ataques** — que é a parte cara.
+É trabalho de dias. E é motivo diário de abrir o app para quem toca cordas.
 
-**Fase 1 — o núcleo.** Site e PWA. A escolha na home, a camada de parâmetros, a instrumentação
-de tentativas, a taxonomia e a navegação novas, o gerador unificado, rotinas como presets, o
-nivelamento no onboarding, afinador, contas e sincronização, PostHog, português e inglês, carga
-simplificada. O beta fechado roda aqui.
-**Sucesso:** 25% de quem cria conta ainda estuda na 4ª semana, com 3 ou mais sessões por semana.
+*(Correção registrada: numa estimativa anterior desta sessão o custo do afinador foi somado ao do
+microfone nos exercícios, que é um problema bem maior. São coisas diferentes.)*
 
-**Fase 1.5 — distribuição e extras.** Apps de iOS e Android via Capacitor, vídeos do YouTube nas
-aulas, mentor com IA local, microfone nos exercícios.
+### 26 · Monetização: doação, e só
 
-**Fase 2 — personalização e comunidade de rotinas.** Editor de rotinas; biblioteca comunitária de
-rotinas (copiar, adaptar, comentar, atribuir crédito à original); resumo de padrões observados e
-recomendações por regras transparentes; perfis, moderação de texto, painel de admin e faixas de
-idade valendo. **Sem ranking.**
+Pix e uma plataforma internacional (Ko-fi ou equivalente), já que o app sai em dois idiomas. Sem
+anúncios, sem plano, sem selo. Se um dia houver modelo pago: **vender profundidade, não a
+possibilidade de estudar** — tonalidade, andamento e dificuldade nunca ficam atrás de pagamento.
 
-**Fase 3 — comunidade completa.** Áudio, vídeo, comentários e fórum, moderação de mídia,
-checagem de abuso infantil e plantão de alertas.
+### 27 · Idiomas: português e inglês ↻ *mantida de 29/10*
 
-**Motivo da mudança:** a Fase 1 de 22/10 misturava refundação do núcleo com distribuição nas
-lojas. A aposta de retenção precisa do núcleo, mas não precisa das lojas: o beta fechado roda em
-PWA, e as lojas dependem de contas pagas e da busca de marca, que são fila externa. A Fase 2
-perdeu o ranking e ganhou o editor de rotinas.
+Com cifras por convenção de cada idioma e frases de quiz montadas com gramática própria, sem
+tradução literal. Espanhol fica para depois.
 
-## Comunidade e segurança
+### 28 · Nome
 
-### 28. Comunidade
+"Clave" fica. **Sem nome composto** — nada de "academia musical" nem "music gym".
 
-Biblioteca de rotinas compartilhadas na Fase 2; comunidade completa (feed, comentários, fórum,
-áudio e vídeo) só na Fase 3. A comunidade nasce de algo que serve à proposta central —
-compartilhar maneiras de estudar — e não de um fórum genérico.
+---
 
-Compartilhar conquista em story do Instagram ou imagem no WhatsApp fica para a Fase 2, junto da
-comunidade.
+## Plataforma e processo
 
-### 29. Faixas de idade
+### 29 · Um código só ↻ *mantida de 29/10*
 
-Data de nascimento no cadastro.
+O mesmo React vira site, PWA e, depois, apps de iOS e Android via Capacitor. Se a latência de áudio
+virar problema, só o módulo de áudio vira plugin nativo. **O beta lança site e PWA.**
 
-- Sem conta: qualquer idade, uso local, sem comunidade.
-- 13 a 17 anos: rotinas e pacotes da comunidade, curtidas. Perfil privado por padrão, sem
-  mensagens diretas, sem publicar áudio ou vídeo.
-- 18 anos ou mais: comunidade completa.
+### 30 · Repositório em organização do GitHub
 
-### 30. Moderação automática gratuita
+Criar uma organização (grátis) e **transferir** o repositório `bernardofens/clave` para ela, com
+Paulo e Bernardo como donos e os outros dois como membros.
 
-Em camadas, numa função no servidor:
+**Motivo:** o repositório está numa conta pessoal e o dono do produto não tem controle
+administrativo. A transferência preserva histórico, PRs, configurações e até redireciona os links
+antigos. Repositório novo custaria refazer CI, Cloudflare e Supabase e perder o histórico que
+explica as decisões.
 
-- Texto: lista de palavras proibidas normalizada + API de moderação da OpenAI.
-- Imagem: API de moderação da OpenAI.
-- Vídeo (até 60 s): quadros extraídos no aparelho e checados na mesma API. Só contas com alguns
-  dias e e-mail confirmado podem postar vídeo; vídeo de conta nova entra oculto até a primeira
-  revisão. Áudio falado não é transcrito na primeira versão.
-- Abuso infantil: ferramenta de detecção por hash da Cloudflare e pedido de acesso ao PhotoDNA.
-- Gatilho: se os vídeos passarem de algumas centenas por dia, ou houver um caso grave, a parte de
-  vídeo migra para um serviço pago.
+**Repositório segue público.** Não há segredo (chaves ficam em variável de ambiente) e o valor de
+portfólio para quatro estudantes de programação é concreto.
 
-### 31. Painel de administração
+**Substitui:** a decisão 25 de 29/10, que mandava torná-lo privado.
 
-Papéis de admin e moderador, fila única de denúncias e alertas, ações (aprovar, ocultar, apagar,
-advertir, suspender, banir), registro de auditoria, recurso para quem teve conteúdo removido e
-formulário de remoção por direitos autorais.
+### 31 · Uma branch protegida: `main`
 
-### 32. Rotina de moderação do time de três pessoas
+A `dev` é derrubada. Cada tarefa vira branch curta a partir da `main`, com PR para a `main`, CI
+verde obrigatório e 1 aprovação. Sem force-push, sem exclusão.
 
-- Revisão semanal da fila normal.
-- Ocultação automática de: tudo que o filtro marca como grave, denúncias de nudez ou envolvendo
-  menor, e conteúdo com 3 denúncias de pessoas diferentes.
-- Plantão rotativo semanal que recebe alerta no celular só para abuso infantil ou nudez confirmada.
+**Motivo:** duas branches protegidas é cerimônia demais para quatro pessoas construindo um beta —
+ninguém está cortando release, e cada PR já ganha link de prévia próprio no Cloudflare. **Resolve
+de quebra a pendência** de qual branch o Cloudflare publica: produção é a `main`.
 
-### 33. Jurídico
+### 32 · Tarefas no repositório, draft PR como sinal de "peguei"
 
-Termos de uso, diretrizes da comunidade e regras de idade (ECA Digital, LGPD) revisados por
-advogado antes de abrir a Fase 2 (quando a biblioteca de rotinas compartilhadas começa) e
-revisados de novo antes da Fase 3.
+As tarefas vivem em [`docs/tarefas/`](tarefas/). Pegar uma tarefa é **abrir um pull request em
+rascunho** com o ID da tarefa no título. Se ninguém abriu draft, a tarefa está livre.
 
-## Deliberadamente em aberto
+**Motivo:** tarefa no repositório faz o agente de IA de cada pessoa ler a tarefa **e todo o
+contexto ao redor** na mesma leitura, que é a vantagem decisiva sobre issue no GitHub. E o draft PR
+dá o sinal de posse sem board, sem issue, sem ferramenta nova.
 
-Dependem do beta, não de decisão agora:
+### 33 · Decisão de produto é do dono do produto
 
-- **Limiares de evidência do diagnóstico.** O documento sugere, como ponto de partida para
-  experimentação, seis ou mais itens comparáveis distribuídos por ao menos duas sessões, e diz
-  explicitamente que são para calibrar com testes de usuário. Não há regra científica aqui.
-- **Calibração dos desafios diagnósticos.** Qual configuração corresponde a qual ponto de
-  partida é julgamento do time, corrigido com os relatos do beta.
-- **Se o produto é escolha ou sugestão.** A home aposta na escolha. Se o beta mostrar que as
-  pessoas querem que o Clave decida, a decisão 5 volta à mesa.
+Os colegas executam tarefas com apoio de agentes de IA e **não tomam decisões de escopo ou de
+produto**. Essas se tomam em conversa com o Paulo.
+
+O [CLAUDE.md](../CLAUDE.md) carrega a regra: **se a tarefa estiver ambígua, se faltar informação,
+ou se a solução óbvia contrariar a visão — parar e perguntar, nunca resolver por conta.**
+
+**Motivo:** é exatamente a falha que produziu as duas versões anteriores deste documento.
+
+### 34 · Análise de uso: adiada
+
+PostHog estava na Fase 1 anterior. Sai do beta.
+
+**Motivo:** a métrica que ele existia para medir era retenção semanal — métrica de app de
+engajamento, vinda da mesma cabeça que escreveu a metáfora de academia. A hipótese do beta agora é
+qualitativa (as pessoas montam e mantêm rotinas?), e se responde conversando com 20 a 30 pessoas.
+
+### 35 · Contas opcionais com Supabase ↻ *mantida de 29/10*
+
+Login por e-mail (link mágico), Google e Apple. Sem conta, tudo funciona local. O progresso local
+migra para a conta no primeiro login. A conta pode ser apagada de dentro do app. Menores de 13 anos
+seguem sem conta.
+
+---
+
+## A hipótese do beta
+
+> **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
+> rotina.**
+
+As duas metades são obrigatórias. A primeira sozinha permitiria encher a rotina com qualquer coisa;
+a segunda sozinha é corrida de catálogo contra concorrentes com anos de vantagem.
+
+**Como se responde:** beta fechado com 20 a 30 músicos, por duas semanas, pelo PWA. Conversa, não
+painel. As perguntas: montaram rotina própria ou só usaram as do time? voltaram à mesma rotina?
+em que momento ficaram olhando a interface em vez de praticar? qual opção foi difícil de achar?
+usaram o Clave como lugar para estudar ou ficaram navegando sem entrar numa prática?
+
+### O portão de qualidade de exercício
+
+Nenhuma família é publicada sem passar nos sete:
+
+1. **Resposta única e defensável** — alguém tentou responder de outro jeito e não conseguiu.
+2. **Os parâmetros que importam existem** — tonalidade, região, material, andamento.
+3. **Grafia e convenção corretas** — Si♭ em Fá maior; cifra na convenção do idioma.
+4. **Som decente** — timbre e volume que não soem como bipe de micro-ondas.
+5. **Alguém do time usaria de verdade amanhã** — não "é um exercício válido".
+6. **Teste automático** gerando centenas de perguntas e conferindo as invariantes.
+7. **Dono musical nomeado** — ver [equipe.md](equipe.md).
+
+---
+
+## Em aberto
+
+Decisões que ainda não foram tomadas, com quem precisa decidir.
+
+| # | Questão | Quem decide | Bloqueia |
+|---|---|---|---|
+| A3 | **Metade "com instrumento" do catálogo** — documento em elaboração | Paulo | Técnica e os exercícios de instrumento |
+| A4 | **Os textos das 8 portas por objetivo**, em dois idiomas, incluindo uma que o Schultz escolheria | Paulo | `D2` |
+| A5 | **Calibração do diagnóstico** — qual configuração corresponde a qual ponto de partida | time, corrigido no beta | `D4` |
+| A6 | **Limiar da variação automática** — quantos acertos, em quantas sessões | time, calibrado no beta | nada: é uma constante num arquivo |
+| A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
+| A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
+| A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
+| A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 
 ## Pendências fora do código
 
-- **Tornar o repositório privado.** Em 29/10 ele estava público, contra a decisão 25.
-- **Decidir qual branch o Cloudflare Pages publica como produção** (`main` ou `dev`). É
-  configuração no painel do Cloudflare, não no repositório.
-- Busca oficial da marca "Clave" no INPI e conferir no USPTO o status de "Clave Al Ingles, LLC"
-  (software educacional), antes de pagar as contas de desenvolvedor.
-- Contas de desenvolvedor Apple (US$ 99/ano) e Google Play (US$ 25, uma vez) — só na Fase 1.5.
-- Política de privacidade da Fase 1 (microfone, contas, PostHog, menores) e, antes da Fase 2,
-  termos de uso revisados por advogado.
-- Revisão de ambiguidade teórica das famílias de exercício antes de publicá-las (decisão 12).
-- Curadoria dos vídeos do YouTube por aula, em português e em inglês — Fase 1.5.
+- **Criar a organização no GitHub** e transferir o repositório (só o Bernardo pode transferir).
+- **Religar o Cloudflare Pages** à organização e marcar produção = `main`.
+- **Proteger a `main`**: PR obrigatório, CI verde, 1 aprovação, sem force-push.
+- **Revisão de ambiguidade teórica** de cada família antes de publicá-la (decisão 13).
+- **Política de privacidade** do beta: contas, microfone do afinador, menores.
+- **Busca da marca "Clave"** no INPI e no USPTO antes de pagar contas de desenvolvedor.
+- **Conta de doação** (Pix e Ko-fi ou equivalente).
