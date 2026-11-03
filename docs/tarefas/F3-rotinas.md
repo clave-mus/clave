@@ -158,6 +158,11 @@ definir a tonalidade na rotina, substituir a tonalidade numa etapa, reordenar, s
 Quatro rotinas prontas, que chegam com o app:
 
 - **De bolso** — modo livre; só itens sem instrumento, sem microfone e sem canto.
+- **Internalizar uma tonalidade** — modo guiado, **em rotação por tonalidade** (F3-8), com seis
+  etapas: referência tonal (armadura e sonoridade) · notas no braço · regiões do braço · modos ·
+  harmonia (tríades, arpejos, voicings diatônicos) · vocabulário melódico. É o plano de estudo
+  real do Paulo e é a rotina que melhor mostra o que o Clave é: morar numa tonalidade por vários
+  dias e atravessá-la na horizontal e na vertical.
 - **Mapear o braço do baixo** — modo guiado, tonalidade configurável e armadura visível, nas
   versões curta (15–20 min), padrão (35–45 min) e completa (50–70 min).
 - **Aquecimento de percepção** — modo guiado, 10 min.
@@ -193,3 +198,61 @@ com uma cópia que ela pode editar.
 **Não faça:** nenhuma listagem, nenhum perfil, nenhuma busca, nenhum comentário. O momento em que
 o Clave publica texto de usuário onde outro usuário lê, ele herda moderação, denúncia, termos de
 uso, LGPD e ECA — e isso é a decisão 23 inteira, não um detalhe.
+
+---
+
+## F3-8 · Rotação de parâmetro
+
+**Decisão de origem:** 38. **Depende de:** F3-1, F2-1.
+
+A rotina avança **um** parâmetro por uma lista de valores. É o que permite *morar numa tonalidade
+por uma semana* e atravessar várias frentes dentro dela antes de passar para a próxima.
+
+```ts
+interface Rotacao {
+  /** Qual parâmetro. Só os declarados rotacionáveis no catálogo. */
+  param: 'tonalidade' | 'regiao' | 'corda' | 'modo' | 'qualidadeAcorde';
+  /** A lista: ciclo de quartas, cromática, ou escolhida pela pessoa. */
+  valores: ParamValue[];
+  posicao: number;
+  /** Padrão: manual. */
+  avanco: { kind: 'manual' } | { kind: 'execucoes'; n: number };
+  /** Que valor, quando, quantas sessões. É o que responde "já passei por Sol?". */
+  visitas: { valor: ParamValue; em: number; sessoes: number }[];
+}
+```
+
+**O avanço é manual por padrão, e isso não é preguiça de desenho.** Avanço automático quebra o caso
+de uso que originou o recurso: no terceiro dia o app jogaria a pessoa na tonalidade seguinte quando
+ela ainda não está firme na atual. **Quem sabe se internalizou é ela.**
+
+O **conjunto de rotinas** (ciclo ABC) é o **mesmo objeto** com a lista sendo de rotinas em vez de
+valores. Uma lista, uma posição, uma regra de avanço — implemente uma vez.
+
+**Contrato de saída:** teste que percorre uma rotação de 12 tonalidades com avanço manual,
+fechando e reabrindo o app entre cada avanço, e confere que posição e histórico de visitas
+sobrevivem; e um teste que garante que **nenhum parâmetro não-declarado-rotacionável** pode entrar
+numa `Rotacao`.
+
+**Pronto quando:** dá para pôr "Mapear o braço do baixo" em rotação por tonalidade, praticar em Sol
+por três sessões, avançar para Ré quando quiser, e ver depois por quais tonalidades já passou.
+
+**Não faça:** nada de rotacionar andamento — isso é a camada *progressão de andamento*, e bpm não é
+pontuação (decisão 10). Nada de rotacionar vários parâmetros ao mesmo tempo.
+
+---
+
+## F3-9 · O histórico guarda os parâmetros
+
+**Decisão de origem:** 39. **Depende de:** F2-1. **Bloqueia:** F3-8 ser útil.
+
+Hoje `Activity` em `src/state/store.ts` guarda id, módulo, tempo e acertos — **nada dos
+parâmetros**. Sem isso, "em que tonalidade eu pratiquei isto?" não tem resposta, e itens sem
+validação não deixam rastro nenhum de conteúdo.
+
+- `Activity` ganha `parameters_snapshot`, no mesmo formato que `state/attempts.ts` já usa.
+- O histórico no Perfil passa a mostrar a configuração ao lado do item.
+- Migração: atividades antigas ficam sem o campo, e a tela lida com isso sem quebrar.
+
+**Contrato de saída:** teste que grava uma atividade sem validação nenhuma (um `ambiente`) e
+recupera depois em que tonalidade e região ela rodou.

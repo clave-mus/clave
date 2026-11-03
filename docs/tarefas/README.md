@@ -19,6 +19,8 @@ pessoa lê a tarefa **e todo o contexto ao redor** na mesma leitura (decisão 32
 
 Leia, nesta ordem: [visao.md](../visao.md) → a decisão citada na tarefa em
 [decisoes.md](../decisoes.md) → a seção correspondente de [arquitetura.md](../arquitetura.md).
+Se a tarefa mexe em catálogo, exercício ou validação, leia também
+[catalogo.md](../catalogo.md).
 
 **Você não toma decisão de produto.** Se a tarefa estiver ambígua, se faltar informação, ou se a
 solução óbvia contrariar a visão — **pare e pergunte ao Paulo**. Não escolha "um caminho
@@ -38,6 +40,7 @@ F2 Parâmetros                    │                             │
 F3 ROTINAS ◄── caminho crítico do beta                         │
    │                                                           │
    ├── F6 Exercícios novos e curadoria ────────────────────────┘
+   ├── FM Motores do catálogo (padrões, digitações, classificação)
    ├── F7 Variação automática
    ├── F8 Onboarding e nivelamento
    └── F9 Plataforma (sincronização, PWA, teoria, doação)
@@ -58,7 +61,8 @@ ver o risco registrado em [equipe.md](../equipe.md).
 | [F2-parametros.md](F2-parametros.md) | Cascata de parâmetros | F1-1 | Dependência de F3 |
 | [F3-rotinas.md](F3-rotinas.md) | **Rotinas** | F2-1 | **Caminho crítico** |
 | [F4-visual.md](F4-visual.md) | Identidade visual | A1 (Paulo) | Paralelo a tudo |
-| [F5-som.md](F5-som.md) | Afinador e partituras | — | Independente |
+| [F5-som.md](F5-som.md) | Microfone, MIDI e partituras | — | Independente. Começa pelo espigão `A0` |
+| [FM-motores.md](FM-motores.md) | Motores do catálogo | — | `FM-1` é uma tarde e destrava 8 famílias |
 | [F6-exercicios.md](F6-exercicios.md) | Exercícios novos e curadoria | F1 | Inclui tarefas 👤 de curadoria |
 | [F7-F9-resto.md](F7-F9-resto.md) | Variação, onboarding, plataforma | F3 | |
 
@@ -66,5 +70,10 @@ ver o risco registrado em [equipe.md](../equipe.md).
 
 - **👤** marca tarefa fora do código (curadoria, texto, decisão, configuração de painel).
 - Toda tarefa tem **Pronto quando** verificável e **Não faça** explícito.
+- Tarefas novas trazem também um **contrato de saída** (decisão 32): o que o código precisa
+  *provar* — um teste que existe e passa, um número medido, um arquivo com formato fixo. A revisão
+  confere o contrato, não a impressão.
+- **Nenhuma tarefa publica uma família de exercício.** Ela entrega o motor e a fiação; a revisão
+  musical é passo humano do Paulo (decisão 51).
 - Tarefa bloqueada numa questão em aberto cita o código dela (`A1`, `A3`…) — a lista está no fim
   de [decisoes.md](../decisoes.md).

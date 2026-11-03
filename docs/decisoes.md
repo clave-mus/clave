@@ -419,6 +419,210 @@ seguem sem conta.
 
 ---
 
+---
+
+## Catálogo
+
+*Decididas em 03/11/2026, na sessão sobre o catálogo. A descrição completa do modelo está em
+[catalogo.md](catalogo.md).*
+
+### 36 · O critério de um bom exercício
+
+**Um bom exercício é um que ajuda o músico a praticar de forma eficaz.** Não é um que o app
+consegue conferir, e **não é um que o app faz melhor que um papel**.
+
+**Motivo:** o valor do Clave está na **rotina**, não no átomo (decisão 1). Um exercício que é só
+"faça isto, aqui está o cronômetro" é uma etapa perfeitamente boa de uma rotina boa. Exercício
+simples pode ser mais poderoso que o complexo.
+
+**Consequência que protege a ideia:** *"o Clave acrescenta pouco a este exercício"* **não corta**.
+Faz o item ser barato — entra como **preset de um motor existente**, nunca como tela nova.
+
+*(Substitui um critério que eu havia proposto — "o que o Clave faz que um metrônomo e um papel não
+fariam?" — e que media valor no exercício em vez de na rotina.)*
+
+### 37 · Com instrumento, o padrão é autoavaliação
+
+O app apresenta a tarefa; a pessoa julga. Validação por áudio é **bônus**, nunca requisito.
+
+**Motivo:** quase todas as linhas de "Validação" do rascunho pedem microfone, e nenhum exercício
+pode depender de uma capacidade opcional (decisão 6). Na prática, quase toda a metade "com
+instrumento" é do tipo **Tarefa**.
+
+### 38 · Rotação de parâmetro
+
+A rotina avança **um** parâmetro por uma lista de valores, guardando **posição atual** e
+**histórico de visitas** (que valor, quando, quantas sessões). **Avanço manual por padrão**;
+"depois de N execuções" como opção.
+
+Só rotaciona o que o catálogo declarar rotacionável: **tonalidade · região do braço · corda · modo
+· qualidade de acorde**. Andamento **não** — isso é a camada *progressão de andamento*, e bpm não
+é pontuação (decisão 10).
+
+**O conjunto ABC é o mesmo mecanismo** com a lista sendo de rotinas em vez de valores. Um recurso,
+não dois.
+
+**Motivo:** vem de um plano real — estudar uma tonalidade por vez, por vários dias, atravessando
+seis frentes dentro dela. Avanço automático quebraria exatamente esse uso: no terceiro dia o app
+jogaria a pessoa na tonalidade seguinte quando ela ainda não está firme. **Quem sabe se
+internalizou é ela.**
+
+### 39 · O histórico guarda os parâmetros
+
+O registro de atividade passa a gravar o snapshot de parâmetros, como o registro de tentativas já
+faz.
+
+**Motivo:** "em que tonalidade eu pratiquei isto?" é a pergunta que torna a rotação utilizável, e
+hoje o `Activity` guarda id, módulo, tempo e acertos — nada dos parâmetros. Sem isso, itens sem
+validação não deixam rastro nenhum de conteúdo.
+
+### 40 · Classificação por objeto musical e tarefa
+
+Dois eixos, **os dois no plural**. O **primeiro objeto é a casa**; os outros são etiqueta.
+Dez objetos × oito tarefas. Ver [catalogo.md](catalogo.md).
+
+**Regra:** objeto muda e tarefa igual → um item com dois objetos. **Tarefa muda → dois itens.**
+
+**Motivo:** os dois documentos usavam princípios incompatíveis — um por faculdade cognitiva, outro
+por objeto musical — e os 5 módulos do código não acomodam nenhum dos dois (já produziram Teoria
+com 14 itens e Técnica com 2). Com (objeto, tarefa), seis itens de "intervalo" espalhados por
+quatro seções viram **um objeto com seis tarefas**.
+
+**Benefício secundário:** a matriz **mostra os buracos**. Nenhum dos dois documentos deixava isso
+visível.
+
+### 41 · Células vazias têm três tipos
+
+**Sem sentido** (ignorar) · **oportunidade** (faz sentido, ninguém prometeu) · **buraco** (deveria
+existir e não existe). Hoje há **um buraco**: *Notas e o braço × Ouvir* — e é erro de etiqueta, não
+falta de exercício.
+
+Nada disso aparece na tela: a pessoa entra por objetivo, não pela matriz.
+
+### 42 · Cantar é tarefa quando a voz é a resposta; camada quando acompanha o tocar
+
+"Solfejar escalas" no ônibus é tarefa (objeto escalas, tarefa cantar). "Solfejar enquanto percorre
+a escala no baixo" é a camada *solfejar* sobre (escalas, tocar).
+
+**Motivo:** os dois documentos discordavam — num, voz é bloco próprio; no outro, é só camada.
+A fronteira é operacional: **se dá para fazer sem o instrumento, é tarefa.**
+
+### 43 · Microfone entra no beta, só onde é tecnicamente sólido
+
+Ordem: **voz → ritmo relativo → notas no instrumento**. Tudo atrás de um interruptor
+**experimental, desligado por padrão**, e **depois de um espigão** que meça antes de prometer.
+
+- **Altura sustentada** é o caso fácil, e a **voz é o mais fácil de todos** — vogal tem fundamental
+  limpa e não há laço de tempo real.
+- **Ritmo é relativo:** medir os intervalos entre os ataques da própria pessoa **cancela a latência
+  do aparelho**, que é um deslocamento constante. **Classificar, não pontuar.**
+- **Ritmo absoluto (alinhado ao clique) fica fora** — é o que exige calibração de latência e é onde
+  nasce a fama de "glitchy".
+- **"Foi isto que eu ouvi"**: tocar de volta o ritmo detectado torna a percepção da máquina
+  inspecionável. Vale como exercício mesmo com a validação desligada.
+
+**Motivo da mudança:** a decisão 15 anterior tratava "microfone" como uma coisa só. São três
+problemas com dificuldades muito diferentes, e o afinador — que já está no beta — traz o motor de
+detecção de altura inteiro.
+
+### 44 · MIDI entra como quarto modo de validação
+
+Ao lado de `deterministic`, `self_report` e `microphone`. O item declara se aceita; opcional,
+experimental, **nunca requisito**.
+
+**Motivo:** MIDI é a validação **mais barata e mais exata** do produto — notas e tempo exatos, sem
+DSP, e é o **único** caminho para polifonia, que o microfone nunca vai resolver. Destrava *Tocar
+acordes*, *Ler cifras e tocar progressões* e mãos juntas, hoje marcados como não-validáveis.
+
+**O argumento contra é alcance, não custo:** o Safari não suporta Web MIDI, o que exclui iPhone e
+iPad; e exige teclado digital. Por isso é acréscimo, não caminho principal da trilha de piano —
+prometer a um pianista uma trilha que não funciona no iPhone dele seria pior que não prometer.
+
+**Ganho secundário:** se alguns testadores do beta usarem MIDI, serão os **únicos dados de alta
+fidelidade** disponíveis para calibrar os limiares da variação automática.
+
+### 45 · Motor de digitações: enumerador com rankings, nunca otimizador
+
+Enumerar o que é tocável é fácil e confiável. **Dizer qual é a melhor é impossível** — os pesos
+mudam o resultado e especialistas discordam entre si.
+
+**Mostrar várias, rankeadas, e a pessoa escolhe.** Rankings nomeados; **o exercício define o
+padrão, a pessoa troca, e a troca fica visível**. Marcado experimental, com botão de reportar — e
+os relatos viram curadoria.
+
+**Motivo:** no estudo de referência de digitação de acordes (Radicioni & Lombardo), 100% das
+soluções do modelo foram consideradas viáveis por especialistas, mas a primeira opção coincidiu com
+a deles em **66,6%** dos casos. Uma em três vezes a sugestão do topo não é a escolhida — devastador
+se você mostra uma, irrelevante se mostra cinco.
+
+**E o mais importante: a função de custo pertence ao exercício, não ao motor.** Num exercício de
+internalizar o braço, a digitação ergonomicamente ótima é a **errada** — o objetivo é tirar a
+pessoa do shape conhecido. Um motor que sempre devolve a mais confortável trabalha contra a função
+carro-chefe do Clave.
+
+**Regras de viabilidade (baixo elétrico moderno):** posição P = casa do dedo 1; dedo *f* em
+`P+(f−1)`; **o dedo 1 alcança `P−1`**; 2-3-4 não esticam; movimento maior é mudança de posição, de
+preferência com o mesmo dedo, deslizando.
+
+### 46 · Digitações não têm nome
+
+Id estável para guardar, **desenho para reconhecer**, texto gerado só como legenda de
+acessibilidade e linha de histórico apertada.
+
+**Motivo:** digitação é objeto visual. Ninguém reconhece "a espaçada de três cordas" — reconhece o
+desenho, e músico aponta em vez de nomear. A lista curada não vira "as nomeadas": vira **as que
+aparecem primeiro**.
+
+### 47 · Número de cordas, afinação e canhoto são perfil, não exercício
+
+O exercício é agnóstico; o braço desenhado é o **seu**. **O catálogo não menciona número de cordas
+em lugar nenhum** — nada de "baixo de 4 cordas" num cartão, para não afastar quem toca de 5.
+
+Canhoto é espelho horizontal do desenho. **A convenção exata precisa ser conferida com um canhoto
+de verdade** — ninguém no time é.
+
+### 48 · Beta largo
+
+Muitos itens, cobrindo os três instrumentos e as duas metades da matriz, aceitando que o baixo
+fique mais bem trabalhado.
+
+**Motivo:** o beta é o começo de uma expansão, não o produto final. Com guitarristas e pianistas
+usando, vem o retorno que falta.
+
+**Como isso é afordável: largura se mede em motores, não em exercícios.** As ~95 famílias são
+presets sobre **nove motores**, e quatro já existem.
+
+### 49 · O portão de qualidade se aplica em três níveis
+
+**Motor** (grafia, som, teste automático) — 9 vezes. **Família** (ambiguidade teórica, parâmetros
+que importam, "eu usaria amanhã") — ~95 vezes, julgamento musical. **Preset** — nada.
+
+**Motivo:** exigir os sete itens de 95 famílias inviabilizaria o catálogo largo. Teste automático
+sobe para o motor; **ambiguidade teórica fica na família e não se move** — é o único que não dá
+para automatizar nem delegar.
+
+### 50 · Piano ganha trilha própria
+
+Não só superfície. A metade agnóstica do catálogo (~60%) já serve ao piano sem trabalho extra; o
+que falta é **declarar** e acrescentar visualizador de teclado, leitura em duas pautas, campo
+harmônico ao teclado, voicings, mãos juntas e separadas e dedilhados.
+
+**Motivo:** num beta largo, "piano é representação, não instrumento" faz um pianista abrir o app,
+ver teclado em todo lugar e descobrir que nada é para ele. A diferença entre "piano não é foco" e
+"piano tem isto, isto e isto" é a diferença entre desistir no primeiro minuto e dar retorno útil.
+
+**Substitui** a decisão 16 (representação ≠ instrumento) na parte em que ela limitava o piano. O
+princípio de que superfícies de resposta são compartilhadas continua valendo.
+
+### 51 · Não há dono musical por área
+
+**O Paulo responde por todas as famílias.** O item 7 do portão muda de "dono nomeado" para "revisão
+do dono do produto".
+
+**Consequência operacional, proposital:** **tarefa delegada constrói o motor e a fiação; publicar a
+família é passo humano dele.** É a proteção direta contra o que deu errado na primeira versão deste
+projeto — IA executando bem uma decisão que ninguém tomou.
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -442,7 +646,10 @@ Nenhuma família é publicada sem passar nos sete:
 4. **Som decente** — timbre e volume que não soem como bipe de micro-ondas.
 5. **Alguém do time usaria de verdade amanhã** — não "é um exercício válido".
 6. **Teste automático** gerando centenas de perguntas e conferindo as invariantes.
-7. **Dono musical nomeado** — ver [equipe.md](equipe.md).
+7. **Revisado pelo dono do produto** — ver decisão 51.
+
+Os sete **não se aplicam todos no mesmo nível**: motor, família e preset têm portões diferentes.
+Ver a decisão 49 e [catalogo.md](catalogo.md#o-portão-de-qualidade-em-três-níveis).
 
 ---
 
@@ -452,12 +659,12 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 
 | # | Questão | Quem decide | Bloqueia |
 |---|---|---|---|
-| A3 | **Metade "com instrumento" do catálogo** — documento em elaboração | Paulo | Técnica e os exercícios de instrumento |
-| A4 | **Os textos das 8 portas por objetivo**, em dois idiomas, incluindo uma que o Schultz escolheria | Paulo | `D2` |
+| A4 | **Os textos das 8 portas por objetivo**, em dois idiomas | Paulo | `D2` |
 | A5 | **Calibração do diagnóstico** — qual configuração corresponde a qual ponto de partida | time, corrigido no beta | `D4` |
 | A6 | **Limiar da variação automática** — quantos acertos, em quantas sessões | time, calibrado no beta | nada: é uma constante num arquivo |
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
+| C1–C7 | **Miudezas do catálogo** — notas-pivô, arpejos sorteados, saídas do walking bass, digitação no piano, o objeto "Som", harmonização de melodia, convenção de canhoto. Ver [catalogo.md](catalogo.md#questões-abertas-do-catálogo) | Paulo, em sessão futura | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

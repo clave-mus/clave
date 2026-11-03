@@ -1,8 +1,12 @@
 # F6 · Exercícios novos e curadoria
 
-**O trabalho aqui é curadoria e fusão, não adição.** A meta do beta é ~18 famílias passando nos
-sete itens do [portão de qualidade](../decisoes.md#o-portão-de-qualidade-de-exercício) — não 40
-passando em dois.
+**O beta é largo** (decisão 48): o catálogo cobre os três instrumentos e as duas metades da
+matriz. Isso é afordável porque **largura se mede em motores, não em exercícios** — as ~95 famílias
+são presets sobre nove motores, e quatro já existem. Ver [catalogo.md](../catalogo.md).
+
+**O trabalho aqui é curadoria e fusão, não adição.** O portão de qualidade se aplica em três
+níveis (decisão 49): pesado no **motor**, de julgamento musical na **família**, nenhum no
+**preset**.
 
 A regra que vale em toda esta frente é a decisão 15: **reuso por padrão, código novo por exceção
 justificada por escrito.** Antes de criar família nova, verifique se ela pode ser modo ou
@@ -129,8 +133,8 @@ Coisas que a reforma da camada não resolve sozinha, levantadas no uso real:
 
 **Decisão de origem:** 13. **Bloqueia a publicação de cada família.**
 
-Antes de uma família ir para o beta, o **dono musical** dela tenta respondê-la de formas
-alternativas e verifica:
+Antes de uma família ir para o beta, **o Paulo** tenta respondê-la de formas alternativas e
+verifica (não há dono musical por área — decisão 51):
 
 - Há mais de uma resposta defensável?
 - O estímulo tem informação suficiente para escolher uma?
@@ -145,21 +149,27 @@ escalas; "escolha de escala sobre acorde"; harmonização de melodia (não há m
 caminho é tratar como laboratório de experimentação, com análise da relação de cada acorde com a
 melodia, e não como quiz).
 
-**Pronto quando:** cada família publicada tem o nome do dono e a data da revisão registrados.
+**Pronto quando:** cada família publicada tem a data da revisão registrada.
 
 ---
 
-## F6-8 · 👤 Metade "com instrumento" do catálogo
+## F6-8 · 👤 Metade "com instrumento" do catálogo ✅ *recebida e classificada em 03/11/2026*
 
-**Bloqueada em `A3`.** O documento está em elaboração pelo Paulo.
+O rascunho chegou e foi absorvido: as famílias estão em
+[catalogo.md](../catalogo.md#o-inventário), classificadas por objeto e tarefa, com o motor de cada
+uma e as fusões já aplicadas.
 
-Quando chegar, esperar que ela:
+O que resta são sete miudezas de leitura, em
+[Questões abertas do catálogo](../catalogo.md#questões-abertas-do-catálogo) — nenhuma bloqueia a
+construção dos motores.
 
-- Encha a área **Técnica**, que hoje tem 1 item.
-- Encha a porta **"ritmo e groove"**, que hoje tem 1 item de Série — e é uma das que o Schultz
-  usaria.
-- Seja quase toda do tipo **Tarefa** (autoavaliação), e não de Série. O executor de F3-2 já precisa
-  suportar isso.
+O que o rascunho confirmou:
 
-**Não comece a inventar exercícios de instrumento antes desse documento.** O catálogo tem viés
-teórico demais justamente por já ter acontecido uma vez.
+- Ele é quase todo do tipo **Tarefa** (autoavaliação), não de Série. O executor de `F3-2` precisa
+  suportar isso, e **o padrão de validação com instrumento é autoavaliação** (decisão 37).
+- Ele enche **Controle motor** e **Ritmo**, que estavam vazios.
+- Ele trouxe os dois motores compartilhados — padrões e digitações —, agora na frente
+  [FM](FM-motores.md).
+
+**Continua valendo: não invente exercício de instrumento fora do catálogo.** Se faltar alguma
+coisa, isso é conversa com o Paulo, não decisão de tarefa.

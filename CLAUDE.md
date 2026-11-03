@@ -26,7 +26,8 @@ O que **não é**: nome de variável, estrutura de pasta, qual algoritmo, como t
 
 1. **[docs/visao.md](docs/visao.md)** — a fonte de verdade do produto.
 2. **A decisão citada na tarefa**, em [docs/decisoes.md](docs/decisoes.md).
-3. **A seção correspondente de [docs/arquitetura.md](docs/arquitetura.md)**.
+3. **A seção correspondente de [docs/arquitetura.md](docs/arquitetura.md)**. Se a tarefa mexe em
+   catálogo, exercício ou validação, leia também **[docs/catalogo.md](docs/catalogo.md)**.
 4. A tarefa em [docs/tarefas/](docs/tarefas/), inclusive o **"Não faça"** dela.
 
 Toda tarefa tem um **"Pronto quando"** verificável. Se o que você fez não satisfaz aquela frase,
@@ -56,7 +57,11 @@ caras, **avisar e esperar a decisão** antes de começar.
 - **O motor musical não conhece a tela.** Nada em `src/theory/` importa React.
 - **Um item de catálogo é uma declaração, não uma tela.** Antes de escrever tela nova, veja se o
   que você quer não é **parâmetro ou modo** de um item que já existe — é a decisão 15, e ela é a
-  única coisa que impede o catálogo de virar 60 telas.
+  única coisa que impede o catálogo de virar 95 telas. São ~95 famílias sobre **nove motores**.
+- **Nenhuma tarefa publica uma família de exercício.** Você entrega o motor testado e o item
+  declarado; a revisão musical é passo humano do Paulo (decisão 51).
+- **Validação é opcional.** O padrão é autoavaliação. Microfone e MIDI são acréscimos
+  experimentais, e **nenhum exercício pode depender deles**.
 - **O relógio do áudio não é o relógio da tela.** Use o agendamento com antecedência de
   `src/audio/engine.ts`; `setTimeout` não serve para música.
 - **Motor duplicado é proibido.** Em particular, há **um** gerador de partituras (decisão 18) e

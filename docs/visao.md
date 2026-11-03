@@ -78,30 +78,30 @@ e querem uma prática mais intencional, flexível e personalizada.
 **Fora de escopo:** iniciantes absolutos. O Clave não é curso do zero, e se vender como tal
 afastaria quem já sabe algo.
 
-**Profundidade de instrumento:** cordas primeiro — **baixo à frente**, depois violão e guitarra.
-Piano e pauta continuam centrais como **superfícies de visualização e resposta**, disponíveis a
-qualquer pessoa, mas não recebem investimento específico de digitação e técnica no beta.
+**Instrumentos: baixo, violão/guitarra e piano, todos no beta** (decisão 48). O baixo vai ficar
+mais bem trabalhado que os outros, e tudo bem: **o beta é o começo de uma expansão, não o produto
+final.** Com guitarristas e pianistas usando, vem o retorno que hoje falta.
 
-A razão é competência de curadoria, não preferência: curar exercício de instrumento exige tocar
-o instrumento, e a composição do time (ver [equipe.md](equipe.md)) é de três cordas para um piano.
+O piano tem **trilha própria**, não é só superfície (decisão 50) — e sai mais barato do que parece,
+porque cerca de 60% do catálogo é agnóstico de instrumento e já serve a ele.
 
-### O teste do Schultz
-
-Um dos quatro do time é guitarrista de rock **sem interesse por teoria musical**. Ele é a melhor
-régua que o projeto tem.
-
-Use-o como pergunta de revisão em toda decisão de catálogo e de navegação: **"o Schultz acharia
-alguma coisa para ele aqui?"** Se a resposta for não, o Clave serve apenas a quem já gosta de
-estudar — um público bem menor, e justamente o que menos precisa de ajuda.
-
-Hoje a resposta é desconfortável: as portas que ele usaria (técnica, ritmo, braço) são as mais
-vazias do catálogo, e as mais cheias são notação e teoria.
+Pauta, teclado e braço continuam sendo **superfícies de resposta disponíveis a qualquer pessoa**:
+um baixista pode querer responder vendo um teclado.
 
 ---
 
 ## Os objetos do Clave
 
 ### Item de catálogo
+
+**Um bom exercício é um que ajuda o músico a praticar de forma eficaz** — não um que o app
+consegue conferir, nem um que o app faz melhor que um papel. Exercício simples pode ser
+poderosíssimo. Se o Clave só serve para instruir e mostrar um cronômetro, está bom: o valor está
+na rotina, não no átomo. Por isso "o Clave acrescenta pouco a este" nunca corta um item — faz ele
+entrar como **preset de um motor existente**, e não como tela nova.
+
+Cada item é classificado por **objeto musical** e **tarefa**, os dois no plural. Ver
+[catalogo.md](catalogo.md).
 
 Exercício e ferramenta são **o mesmo tipo de objeto**. Todo item declara classificação, requisitos
 de contexto, parâmetros e tipo de término. O que varia é quem desenha a tela.
@@ -146,6 +146,21 @@ Nos dois: pular para qualquer etapa, esconder o cronômetro, pausar. **O modo é
 jaula.** Há também a opção de **embaralhar** a ordem das etapas.
 
 **"Tempo total" só existe no modo guiado.** Somar os tempos de uma rotina livre seria mentira.
+
+## Rotação de parâmetro
+
+Uma rotina pode ter **um** parâmetro em rotação: uma lista de valores, uma posição atual, e um
+histórico de visitas (que valor, quando, quantas sessões). **O avanço é manual por padrão.**
+
+É o que permite *morar numa tonalidade por uma semana* e atravessar várias frentes dentro dela —
+notas no braço, regiões, modos, harmonia, vocabulário — e só então passar para a próxima. Avanço
+automático quebraria exatamente isso: **quem sabe se internalizou é a pessoa.**
+
+Rotacionam: **tonalidade · região do braço · corda · modo · qualidade de acorde.** Nada mais, para
+a rotina não virar um painel de opções.
+
+E o **conjunto de rotinas** (o ciclo ABC) é o mesmo mecanismo com a lista sendo de rotinas em vez
+de valores. Uma lista, uma posição, uma regra de avanço — um recurso, não dois.
 
 ---
 

@@ -30,11 +30,11 @@ As perguntas a fazer:
 |---|---|
 | Rotinas: modelo, executor nos dois modos, **editor**, presets do time | Biblioteca pública de rotinas |
 | Compartilhar rotina **por link** | Comunidade, perfis, comentários, feed |
-| Catálogo curado (~18 famílias no portão de qualidade) | Paridade entre áreas |
+| Catálogo **largo** (decisão 48), construído sobre nove motores | Paridade entre áreas |
 | Três abas: Praticar · Catálogo · Perfil | Progresso como aba |
 | Portas por objetivo | Trilhas de aprendizado |
 | Variação automática por sugestão | Diagnóstico de padrões de erro, recomendação automática |
-| Afinador cromático | Microfone **nos exercícios** (ambíguo — entra se o time se empolgar) |
+| Afinador, microfone (voz e ritmo relativo) e MIDI — **opcionais e experimentais** | Ritmo alinhado ao clique; polifonia por microfone |
 | Notas curtas de teoria dentro dos exercícios | Aulas longas novas, vídeos |
 | Contas opcionais (Supabase) e sincronização | Faixas etárias valendo, moderação |
 | PWA instalável e offline | Apps de iOS e Android |
@@ -267,8 +267,7 @@ Rotinas de técnica com metrônomo progressivo *(vira item registrável, a parti
   fora do beta porque depende de autoavaliação bem desenhada ou de microfone.
 - **Backing track não isola instrumentos**, que é o requisito da visão. Depende de A9 (produzir,
   licenciar ou cortar).
-- **Ritmo tem 1 item de Série**, mais o gerador. É pouco para a porta "ritmo e groove", que é uma
-  das que o Schultz usaria.
+- **Ritmo tem 1 item de Série**, mais o gerador. É pouco para a porta "ritmo e groove".
 
 ---
 
