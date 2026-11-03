@@ -277,7 +277,22 @@ pontuação (decisão 10). Nada de rotacionar vários parâmetros ao mesmo tempo
 
 ---
 
-## F3-9 · O histórico guarda os parâmetros ✅ *feita em 03/11/2026*
+## F3-9 · O histórico guarda os parâmetros ✅ *feita em 03/11/2026; corrigida e completada na faxina do mesmo dia*
+
+> **A marca ✅ estava só meio verdadeira.** O contrato pedia que uma atividade sem validação (um
+> `ambiente`) deixasse rastro do conteúdo, mas o teste provava apenas que o **armazenamento** aceita
+> um snapshot — e das cinco ferramentas só o `Ambiente` passava um, e só com a tônica do drone.
+> Corrigido: Backing grava **tonalidade e andamento**, Ritmo e Leitura gravam **andamento** e
+> compasso/modo, Técnica grava **rotina e ordem dos dedos**. **Cada ferramenta grava só o que usa**:
+> gravar região ou material onde a ferramenta os ignora seria afirmar o que não aconteceu.
+>
+> Dois outros defeitos que o histórico tinha, e que o teste da tarefa não pegava: o `Player` gravava
+> os parâmetros do momento em que **montou**, não os do fim (mudar a tonalidade no meio do exercício
+> gravava a antiga); e gravava o valor **resolvido** de tudo, então a região padrão entrava no
+> histórico de exercícios que não têm região (`paramsRegistraveis`, `respeita`).
+>
+> **Em aberto, e é do Paulo (`A16`):** a Técnica **não grava andamento**, porque com "subir 4 bpm a
+> cada volta" ligado não existe um valor único — escolher o inicial ou o final seria inventar.
 
 **Decisão de origem:** 39. **Depende de:** F2-1. **Bloqueia:** F3-8 ser útil.
 

@@ -5,7 +5,8 @@ import type { GoalId, Instrument } from '../data/modules';
 import type { ModuleId } from '../catalog/taxonomy';
 import type { Naming } from '../theory/core';
 import type { SettingValue } from '../catalog/types';
-import type { GlobalParams, ParametrosDePratica, PerfilGuardado } from '../catalog/params';
+import type { ParametrosDePratica, PerfilGuardado } from '../catalog/params';
+import type { ParamsRegistrados } from '../catalog/registro';
 import type { AgeGroup } from './age';
 import { migrateSaved } from './migrate';
 import { attemptLog } from './attemptLog';
@@ -37,7 +38,8 @@ export interface Stat {
  */
 export interface ActivityParams {
   settings?: Record<string, SettingValue>;
-  params?: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'material' | 'clef'>;
+  /** Só o que a atividade de fato usou — ver `paramsRegistraveis`. Uma ferramenta pode não ter nenhum. */
+  params?: Partial<ParamsRegistrados>;
 }
 
 export interface Activity {

@@ -9,7 +9,8 @@
 // - um registro gravado nunca muda; a confiança declarada é um registro à parte (AttemptFeedback).
 import type { Presentation } from '../audio/presentation';
 import type { Expected, Question, Response, SettingValue } from '../catalog/types';
-import type { GlobalParams } from '../catalog/params';
+import type { GlobalParams, ParametroDePratica } from '../catalog/params';
+import { paramsRegistraveis, type ParamsRegistrados } from '../catalog/registro';
 import { TAXONOMY_VERSION, type ContentTag, type ModuleId, type SkillTag } from '../catalog/taxonomy';
 import { parseChordSymbol } from '../catalog/validate';
 import { mod } from '../theory/core';
@@ -54,7 +55,7 @@ export interface Attempt {
   };
   parameters_snapshot: {
     settings: Record<string, SettingValue>;
-    params: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'material' | 'clef'>;
+    params: ParamsRegistrados;
     /** Como o som foi apresentado (sem o volume), quando houve som. */
     presentation?: Omit<Presentation, 'volume'>;
   };
@@ -136,6 +137,8 @@ export interface AttemptInput {
   locale: string;
   settings: Record<string, SettingValue>;
   params: GlobalParams;
+  /** Quais parâmetros de prática o item respeita — só esses vão para o registro. */
+  respeita?: readonly ParametroDePratica[];
   presentation?: Presentation;
   responseTimeMs: number;
   repetitions: number;
@@ -171,7 +174,7 @@ export function buildAttempt(i: AttemptInput): Attempt {
     },
     parameters_snapshot: {
       settings: { ...i.settings },
-      params: { instrument: p.instrument, tuning: p.tuning, key: p.key, range: p.range, material: p.material, clef: p.clef },
+      params: paramsRegistraveis(p, i.respeita),
       ...(presentation ? { presentation } : {}),
     },
     response: i.response,

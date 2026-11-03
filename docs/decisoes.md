@@ -1397,6 +1397,11 @@ gravavam nada. **O histórico estava errado nos dois sentidos.**
 configuração `claves`, e só caem na global se a pessoa desmarcar todas. Fica no tipo como último
 recurso, sem controle na tela.
 
+**O registro só afirma o que o item usa.** O histórico e as tentativas gravam `instrument`, `tuning` e,
+dos parâmetros de prática, **só os que o item respeita** (`paramsRegistraveis`). Gravar o valor
+resolvido de todos faria o histórico afirmar "região: Média" para um exercício de armadura — o padrão
+passando por escolha, o mesmo defeito do `tempo` global.
+
 **Estado antigo é limpo, não ignorado** (`migrateSaved`): se `key` continuasse em `params`, a
 tonalidade de ontem valeria em todo exercício, vinda de uma camada que não existe mais.
 
@@ -1510,6 +1515,7 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A16 | **"Subir 4 bpm a cada volta"** vem ligado por padrão na ferramenta de Técnica. Aumentar o andamento sozinho é tratar bpm como progressão e carga, que a decisão 82 diz que o app nunca faz — e o Paulo avisou que aumentar demais costuma ser prejudicial | Paulo | nada |
+| A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

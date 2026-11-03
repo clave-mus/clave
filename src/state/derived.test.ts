@@ -10,7 +10,7 @@ import sql from '../../supabase/migrations/20261102120000_attempts.sql?raw';
 const attempt = (exercise_id: string, outcome: Attempt['outcome'], at: number, validation_type: Attempt['validation_type'] = 'deterministic'): Attempt => ({
   schema: ATTEMPT_SCHEMA, id: newId(), at, session_id: 's', exercise_id, primary_module: 'theory', skill_tags: [], content_tags: [],
   taxonomy_version: 1, locale: 'pt', question: { surface: 'choices', expected: { kind: 'option', id: 'a' } },
-  parameters_snapshot: { settings: {}, params: { instrument: 'violao', tuning: [], key: null, range: { lo: 0, hi: 0 }, material: 'cromatico', clef: 'sol' } },
+  parameters_snapshot: { settings: {}, params: { instrument: 'violao', tuning: [], key: null, range: { lo: 0, hi: 0 }, material: 'cromatico' } },
   response: { kind: 'option', id: 'a' }, outcome, validation_type, error_code: outcome === 'incorrect' ? 'unclassified' : null,
   response_time_ms: 1000, hints: 0, repetitions: 0,
 });

@@ -130,8 +130,9 @@ quando não está** (`key: null` quer dizer "livre", e é o padrão).
 | `clef` | itens de pauta | hoje cada um tem o próprio seletor de claves; passa a ter o global como padrão |
 | `tempo` | itens com ritmo e metrônomo | o andamento vem de cima |
 
-**Também é aqui que entram os controles na tela.** Hoje só volume e timbre têm. Tonalidade, região,
-material e clave precisam aparecer — no Perfil como padrão da pessoa, e na rotina como herança.
+**Também é aqui que entram os controles na tela.** Tonalidade, região e material aparecem **no
+exercício** (decisão 87), e na rotina como herança. *(Este parágrafo dizia "no Perfil como padrão da
+pessoa" e incluía a clave; foi corrigido — ver a atualização no topo desta tarefa.)*
 
 **Contrato de saída:**
 
@@ -143,8 +144,8 @@ material e clave precisam aparecer — no Perfil como padrão da pessoa, e na ro
 4. Um teste que falha se algum item com som **não ler** `key` nem `range`. É o guarda contra a
    cascata voltar a ficar sem leitor.
 
-**Pronto quando:** escolher "Sol maior" no Perfil muda o que todo exercício de ouvido toca; e pôr
-uma rotina em rotação por tonalidade muda a tonalidade de todas as etapas dela.
+**Pronto quando:** escolher "Sol maior" **num exercício** muda o que ele toca; e pôr uma rotina em
+rotação por tonalidade muda a tonalidade de todas as etapas dela.
 
 **Não faça:** não engesse. Tonalidade livre (`key: null`) é o padrão e precisa continuar sendo —
 quem não escolheu tonalidade quer variedade, não Dó maior em tudo.

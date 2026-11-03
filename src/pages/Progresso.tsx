@@ -11,8 +11,8 @@ import { useContent } from '../data/localized';
 import { minutesByModule, useStore } from '../state/store';
 import { fmtMin, PageHead, SecTitle } from '../components/ui';
 import { itemText, localeTag, useLocale, useT } from '../i18n';
+import { descreverAtividade } from '../state/atividade';
 import { itemById } from '../catalog';
-import { pcName } from '../theory/core';
 import { useNaming } from '../i18n';
 
 export default function Progresso() {
@@ -24,12 +24,7 @@ export default function Progresso() {
   const naming = useNaming();
 
   /** Com que configuração a prática rodou. Vazio nas atividades de antes da F3-9. */
-  const comoFoi = (h: (typeof history)[number]) => {
-    const p = h.snapshot?.params;
-    const partes: string[] = [];
-    if (p?.key) partes.push(`${pcName(p.key.tonic, naming)} ${p.key.mode}`);
-    return partes.join(' · ');
-  };
+  const comoFoi = (h: (typeof history)[number]) => descreverAtividade(h.snapshot, { t, naming });
 
   const byModule = minutesByModule(history, 30);
   const totalMin = Object.values(byModule).reduce((a, b) => a + b, 0);

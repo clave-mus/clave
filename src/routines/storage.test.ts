@@ -202,7 +202,7 @@ describe('o histórico guarda os parâmetros (F3-9)', () => {
     resetAll();
     logActivity({
       id: 'ambiente', title: 'Solfejar e tocar', module: 'perception.melodic', seconds: 300,
-      snapshot: { settings: { tonica: 7 }, params: { instrument: 'baixo', tuning: [28, 33, 38, 43], key: { tonic: 7, mode: 'maior' }, range: { lo: 40, hi: 64 }, material: 'diatonico', clef: 'fa' } },
+      snapshot: { settings: { tonica: 7 }, params: { instrument: 'baixo', tuning: [28, 33, 38, 43], key: { tonic: 7, mode: 'maior' }, range: { lo: 40, hi: 64 }, material: 'diatonico' } },
     });
     const a = getState().history[0];
     // nenhuma tentativa foi gravada — é só isto que responde "em que tonalidade eu pratiquei?"

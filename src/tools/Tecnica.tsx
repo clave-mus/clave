@@ -98,15 +98,18 @@ export default function Tecnica() {
   const [idx, setIdx] = useState(-1);
   const [round, setRound] = useState(0);
   const clock = useRef<Clock | null>(null);
-  useToolLog('tecnica', 'Rotinas de técnica', 'technique', running);
-
   const tuning = instrument === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
   // `%` de negativo em JS devolve negativo, e `valores[-1]` é undefined — "Anterior" a partir de
   // zero quebrava a tela. O eixo é circular nos dois sentidos.
   const noCiclo = (i: number, n: number) => ((i % n) + n) % n;
   const valorDoEixo = routine.eixo ? routine.eixo.valores[noCiclo(eixoPos, routine.eixo.valores.length)] : '';
   const seq = useMemo(() => routine.build(tuning.length, valorDoEixo), [routine, tuning.length, valorDoEixo]);
-  // passar por um valor conta como tê-lo visto, mesmo sem tocar até o fim — é informação, não meta
+  // O que ficou no histórico: qual rotina e, quando há, qual ordem de dedos. O ANDAMENTO fica de fora de
+  // propósito: com "subir 4 bpm a cada volta" ligado não existe um valor único para gravar, e
+  // escolher o inicial ou o final seria inventar (A16 — decisão do Paulo).
+  useToolLog('tecnica', 'Rotinas de técnica', 'technique', running, {
+    settings: { rotina: routine.id, ...(valorDoEixo ? { ordemDosDedos: valorDoEixo } : {}) },
+  });
   // Passar por um valor conta como tê-lo visto, mesmo sem tocar até o fim — é informação, não meta
   // (decisões 11 e 82). Guardado POR ROTINA, e não zerado na troca: se você voltar, o que já passou
   // continua marcado. A primeira versão zerava num `useEffect([routine])` declarado DEPOIS deste, e

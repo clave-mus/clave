@@ -103,9 +103,12 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [bar, setBar] = useState(0);
   const [view, setView] = useState<'teclado' | 'braco'>(instrument === 'piano' ? 'teclado' : 'braco');
   const clock = useRef<Clock | null>(null);
-  useToolLog('backing', 'Backing track', 'perception.harmonic', running);
-
   const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);
+  // O que a pessoa praticou: a tonalidade e o andamento. Só a tonalidade vai em `params`, porque é só
+  // ela que esta ferramenta usa — gravar região e material seria afirmar o que ela ignora.
+  useToolLog('backing', 'Backing track', 'perception.harmonic', running, {
+    settings: { bpm }, params: { key: { tonic: pc(tonic), mode } },
+  });
   const chords = useMemo(() => items.map(i => resolve(i, tonic, mode, tetrads, conv)), [items, tonic, mode, tetrads, conv]);
   const field = useMemo(() => harmonicField(tonic, mode, tetrads, conv), [tonic, mode, tetrads, conv]);
   const live = useRef({ chords, style, bassOn, compVoice });

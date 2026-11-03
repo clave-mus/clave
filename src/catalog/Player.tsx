@@ -18,6 +18,7 @@ import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from '.
 import { optionResponse, validate } from './validate';
 import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
+import { paramsRegistraveis } from './registro';
 import PracticePanel from '../components/PracticePanel';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 
@@ -86,16 +87,24 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const [confidenceFor, setConfidenceFor] = useState<string[] | null>(null);
   useEffect(() => { askedAt.current = Date.now(); earReadyAt.current = null; listens.current = 0; }, [q]);
 
+  // O que valia no fim da prática, não no começo. O efeito abaixo só roda de novo quando `def`,
+  // `target` ou `t` mudam, então a limpeza dele enxerga as configurações e os parâmetros do render em
+  // que ele montou — e mudar a tonalidade no meio do exercício gravava a antiga no histórico. É
+  // justamente o dado que o histórico existe para guardar. A ref é reescrita a cada render.
+  const aoSair = useRef({ settings, params });
+  aoSair.current = { settings, params };
+
   // ao sair, registra a atividade no histórico
   useEffect(() => {
     const t0 = started.current;
     return () => {
       const s = scoreRef.current;
+      const { settings: st, params: p } = aoSair.current;
       if (s.total > 0 && !target) logActivity({
         id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule,
         seconds: Math.round((Date.now() - t0) / 1000), correct: s.correct, total: s.total,
         // a mesma forma do snapshot de uma tentativa (F3-9)
-        snapshot: { settings, params: { instrument: params.instrument, tuning: params.tuning, key: params.key, range: params.range, material: params.material, clef: params.clef } },
+        snapshot: { settings: st, params: paramsRegistraveis(p, def.respeita) },
       });
     };
   }, [def, target, t]);
@@ -142,7 +151,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     recordAnswer(def.id, ok);
     const readyAt = q.visual.kind === 'ear' ? earReadyAt.current ?? askedAt.current : askedAt.current;
     const attempt = buildAttempt({
-      exercise: def, question: q, response, correct: ok, sessionId: session.current, locale, settings, params,
+      exercise: def, question: q, response, correct: ok, sessionId: session.current, locale, settings, params, respeita: def.respeita,
       presentation: q.sound ? presentationFor(q) : undefined,
       responseTimeMs: Date.now() - readyAt, repetitions: Math.max(0, listens.current - 1),
     });

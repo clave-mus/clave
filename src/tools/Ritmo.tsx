@@ -76,7 +76,7 @@ export default function Ritmo() {
 
   const ex = history[idx];
   const m = METERS[ex.meter];
-  useToolLog('ritmo', 'Leitura rítmica', 'perception.rhythmic', true);
+  useToolLog('ritmo', 'Leitura rítmica', 'perception.rhythmic', true, { settings: { bpm, compasso: settings.meter } });
 
   const stop = useCallback(() => {
     clock.current?.stop();
