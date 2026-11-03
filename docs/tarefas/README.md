@@ -58,7 +58,7 @@ ver o risco registrado em [equipe.md](../equipe.md).
 |---|---|---|---|
 | [F0-limpeza.md](F0-limpeza.md) | Limpeza e base | — | Mecânico; bom primeiro PR de quem está chegando |
 | [F1-catalogo.md](F1-catalogo.md) | Modelo do catálogo | F0-4 | Mecânico, item por item |
-| [F2-parametros.md](F2-parametros.md) | Cascata de parâmetros | F1-1 | Dependência de F3 |
+| [F2-parametros.md](F2-parametros.md) | Cascata de parâmetros | F1-1 | **`F2-3` destrava a rotação — sem ela a F3-8 é teatro** |
 | [F3-rotinas.md](F3-rotinas.md) | **Rotinas** | F2-1 | **Caminho crítico** |
 | [F4-visual.md](F4-visual.md) | Identidade visual | A1 (Paulo) | Paralelo a tudo |
 | [F5-som.md](F5-som.md) | Microfone, MIDI e partituras | — | Independente. Começa pelo espigão `A0` |

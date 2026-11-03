@@ -200,6 +200,7 @@ const en: Shape<typeof pt> = {
   },
   player: {
     hits: 'correct',
+    inARow: 'in a row',
     progressOf: '{done} of {total}',
     answer: 'Answer:',
     right: 'Right!',

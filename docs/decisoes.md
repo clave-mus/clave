@@ -143,6 +143,8 @@ O app propõe em linguagem clara e **abre o menu de opções**; a pessoa escolhe
 Quatro guardas obrigatórias. Recorte do beta: **por exercício**, não por habilidade. Ver
 [visao.md](visao.md).
 
+**O gatilho é acertos seguidos, não taxa** — ver decisão 55.
+
 **Motivo:** é a resposta direta ao princípio-mestre — a pessoa começa estreito e o Clave *oferece*
 abrir, em vez de exigir que ela configure doze parâmetros no primeiro dia.
 
@@ -159,8 +161,12 @@ evolução. Cancelada inteira.
 
 ### 11 · Progresso não é aba, e não é central
 
-Vive dentro do Perfil e de cada item. Medida principal: **tempo estudado**. Fora: badges, streaks,
-XP, níveis, ranking, percentual de domínio, comparação entre pessoas.
+Vive dentro do Perfil e de cada item. Medida principal: **tempo estudado**. Fora: badges, XP,
+níveis, ranking, percentual de domínio, comparação entre pessoas, e **streak de dias praticados**.
+
+> **Qual streak sai.** O de **dias seguidos praticados** — aquilo é cobrança disfarçada. A
+> contagem de **acertos seguidos dentro de uma série** fica, e é visível: é informação útil, e é o
+> gatilho da sugestão de variação (decisão 55).
 
 **Motivo:** o Clave é plataforma de estudo séria. Progresso em destaque traz ideia de gamificação,
 e o produto não precisa dele tanto quanto a versão anterior supunha.
@@ -481,7 +487,7 @@ validação não deixam rastro nenhum de conteúdo.
 Dois eixos, **os dois no plural**. O **primeiro objeto é a casa**; os outros são etiqueta.
 Dez objetos × oito tarefas. Ver [catalogo.md](catalogo.md).
 
-**Regra:** objeto muda e tarefa igual → um item com dois objetos. **Tarefa muda → dois itens.**
+**Regra:** ver a **decisão 52**, que corrige esta redação — são três casos, e só um funde.
 
 **Motivo:** os dois documentos usavam princípios incompatíveis — um por faculdade cognitiva, outro
 por objeto musical — e os 5 módulos do código não acomodam nenhum dos dois (já produziram Teoria
@@ -623,6 +629,86 @@ do dono do produto".
 **Consequência operacional, proposital:** **tarefa delegada constrói o motor e a fiação; publicar a
 família é passo humano dele.** É a proteção direta contra o que deu errado na primeira versão deste
 projeto — IA executando bem uma decisão que ninguém tomou.
+
+### 52 · A regra de fusão tem três casos, não dois
+
+- Um item que **trabalha vários objetos ao mesmo tempo** → **um item, vários objetos**.
+- Itens que trabalham **objetos diferentes** na mesma tarefa → **itens diferentes**. Identificar
+  intervalo não é identificar acorde.
+- Itens que trabalham **o mesmo objeto e a mesma tarefa**, variando só a superfície ou o material →
+  **um item**, com a variação como parâmetro.
+
+**Só o terceiro caso funde.** *(Corrige a redação da decisão 40, que dizia "objeto muda, tarefa
+igual → um item" e, lida ao pé da letra, colapsaria o catálogo inteiro.)*
+
+### 53 · Mais quatro fusões, além das que a F1-4 previa
+
+Revisão item a item de 03/11. Além das três fusões por superfície já planejadas:
+
+- **"Que acorde é esse?"** passa a fundir **três**: `teclado-acorde` + `acorde-visual` +
+  **`pauta-acorde`**. O plano previa dois.
+- **"Que intervalo é esse?"** funde `pauta-intervalo` + `braco-intervalo`. A superfície escolhe o
+  **tipo de resposta**: na pauta é a qualidade (terça menor ≠ segunda aumentada, porque a grafia
+  distingue); no braço é o número de semitons (o desenho é o mesmo).
+  *Isso conserta de graça o `braco-intervalo`, que era o único exercício de intervalo **sem
+  seletor de intervalos** e sem região configurável — ele herda os de `pauta-intervalo`.*
+- **`quiz-teoria` se divide em quatro**, um por objeto: graus e modos · construção de acordes ·
+  campo harmônico e sub5 · tonalidades e armaduras. Era o único item ocupando quatro objetos ao
+  mesmo tempo, e ninguém que procura "campo harmônico" acha "quiz de teoria". O motor é o mesmo
+  (`theoryQuestion` já recebe o tópico): quatro declarações, zero código novo.
+- **`ambiente` deixa de existir.** **Não é exercício**: é uma sala com drone, metrônomo e
+  cronômetro, sem instrução nem tarefa. O **drone vira camada** disponível em qualquer item, o
+  **cronômetro com meta vai para o metrônomo**, e a sala genérica sai. **Nenhum exercício é
+  removido** — ao contrário: é o que permite criar os exercícios específicos sem duplicar drone e
+  metrônomo em cada um.
+
+Saldo: 26 itens viram **20**, com muito mais parâmetro.
+
+### 54 · Generalizar para todas as escalas, sempre que possível
+
+Onde um exercício aceita escala, aceita **todas**: maior, menor natural, **harmônica e melódica**,
+modos, pentatônicas. Nada de item preso a uma escala só por acidente de implementação.
+
+**Motivo:** `ouvido-celulas` era pentatônico-only sem razão, e o catálogo pede a mesma tarefa em
+diatônica. Generalizar custa um parâmetro e evita um item novo.
+
+### 55 · A sugestão de variação dispara em acertos seguidos, não em taxa
+
+*"Você acertou 15 seguidas. Quer incluir mais intervalos?"*
+
+**Motivo:** quando a pessoa escolhe praticar só duas alternativas — maior contra menor, por exemplo
+— a **taxa de acerto não significa nada** (o chute dá 50%), mas **15 seguidas significa**. E
+praticar só duas é legítimo: o objetivo dela é acertar 100%.
+
+*Substitui o gatilho por taxa da decisão 9.*
+
+**Distinção que precisa ficar clara, porque eu mesmo me confundi:** o que a decisão 11 proíbe é o
+**streak de dias praticados** — isso é cobrança disfarçada. **Acertos seguidos dentro de uma série
+é informação útil** e fica, inclusive visível. Foi removido por engano na `F0-2` e restaurado.
+
+### 56 · O histórico mostra quantas alternativas havia
+
+Junto da proporção, aparece **entre quantas opções** a pessoa respondeu. "17 de 20, entre 2 opções"
+é honesto; "85%" não é — e é o que permite saber depois que ela estava estudando *discernir maior
+de menor*.
+
+É a decisão 14 (*sempre mostrar a quantidade junto da proporção*) aplicada também ao número de
+alternativas.
+
+### 57 · A cascata de parâmetros precisa de leitores
+
+Conferido em 03/11: o catálogo lê `tuning` em **um** lugar e **nada mais**. `key`, `range`,
+`material`, `tempo` e `clef` estão declarados, estão na cascata, e **nenhum exercício os lê** — nem
+há controle para eles na tela.
+
+**A consequência é séria: a rotação de tonalidade (decisão 38), do jeito que está, não faria nada.**
+A rotina avançaria de Dó para Sol, o histórico registraria Sol, e todo exercício continuaria
+sorteando a tônica aleatoriamente.
+
+Por isso **ligar o catálogo na cascata é pré-requisito da rotação**, e vem antes de qualquer
+exercício novo. Tarefa `F2-3`.
+
+---
 
 ## A hipótese do beta
 

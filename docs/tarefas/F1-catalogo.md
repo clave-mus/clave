@@ -113,18 +113,28 @@ todo item tem ≥1 área.
 
 **Decisão de origem:** 16. **Depende de:** F1-3.
 
-Dez itens viram quatro:
+**Doze** itens viram **quatro** (decisão 53 acrescentou duas fusões ao plano original):
 
 | Vira | A partir de |
 |---|---|
 | `que-nota-e-essa` com seletor de superfície (pauta · teclado · braço) | `pauta-nota` + `teclado-nota` + `braco-nota` |
 | `ache-a-nota` com seletor de superfície | `pauta-construir` + `teclado-tecla` + `braco-ache` |
-| `que-acorde-e-esse` | `teclado-acorde` + `acorde-visual` |
+| `que-acorde-e-esse` | `teclado-acorde` + `acorde-visual` + **`pauta-acorde`** |
+| **`que-intervalo-e-esse`** | **`pauta-intervalo` + `braco-intervalo`** |
+
+**A fusão dos intervalos conserta um exercício de graça.** `braco-intervalo` era o único item de
+intervalo **sem seletor de intervalos** e sem região configurável — o intervalo saía de um passeio
+aleatório com distribuição descontrolada. Fundido, ele herda os parâmetros de `pauta-intervalo`.
 
 - A superfície vira **parâmetro** do item, não exercício separado.
 - Em `que-nota-e-essa`, a validação muda com a superfície: na pauta a pergunta é de **grafia**
   (`expected: spelled`, Dó♯ ≠ Ré♭); no teclado e no braço é de **altura** (`expected: pitch`).
   Isso já é suportado por `validate.ts` — só precisa ser escolhido pela superfície.
+- Em `que-intervalo-e-esse`, o mesmo princípio: na **pauta** a resposta é a **qualidade** (terça
+  menor ≠ segunda aumentada, porque a grafia distingue); no **braço** é o **número de semitons**
+  (o desenho é o mesmo para as duas).
+- **Unificar a extensão:** hoje o teclado usa `oitavas` e o braço usa `casas` para a mesma ideia.
+  Vira um parâmetro só, que cada superfície interpreta.
 - Incluir o braço de baixo **e** de guitarra em "que nota tocou?".
 - **Ids antigos:** rotinas, presets e tentativas apontam para eles. Escrever a migração em
   `state/migrate.ts` mapeando id antigo → id novo + parâmetro de superfície.

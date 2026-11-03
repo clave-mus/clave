@@ -200,6 +200,7 @@ const pt = {
   },
   player: {
     hits: 'acertos',
+    inARow: 'seguidas',
     progressOf: '{done} de {total}',
     answer: 'Resposta:',
     right: 'Certo!',

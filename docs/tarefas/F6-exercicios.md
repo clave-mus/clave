@@ -111,6 +111,63 @@ e nada no app apresenta o andamento como pontuação.
 
 ---
 
+## F6-9 · Dividir o quiz de teoria em quatro
+
+**Decisão de origem:** 53. **Depende de:** FM-3.
+
+`quiz-teoria` cobre seis tópicos e ocupa **quatro objetos ao mesmo tempo** — é o único assim. E o
+problema é de porta: quem procura campo harmônico não procura "quiz de teoria".
+
+Vira quatro itens, um por objeto:
+
+| Item | Objeto | Tópicos de hoje |
+|---|---|---|
+| Graus e modos | `escalas` | `graus`, `modos` |
+| Construção de acordes | `acordes` | `acordes` |
+| Campo harmônico | `harmonia` | `campo`, `sub5` |
+| Tonalidades e armaduras | `notacao` | `tonalidades` |
+
+**O motor é o mesmo:** `theoryQuestion(topico, ctx)` já recebe o tópico. São quatro declarações e
+zero código novo.
+
+**Atenção aos ids:** `quiz-teoria` está em `STABLE_IDS` e no `arsenal` padrão. A migração precisa
+mapear o id antigo para um dos novos — sugestão: o de **graus e modos**, que é o tópico padrão.
+
+**Contrato de saída:** o teste de ids estáveis passa com a migração; e um teste confere que cada um
+dos quatro tem **um objeto só**.
+
+---
+
+## F6-10 · Generalizar as escalas e as direções
+
+**Decisões de origem:** 54, e os achados da revisão de 03/11.
+
+Três consertos e uma generalização, todos em itens que já existem.
+
+**`ouvido-celulas` — dois bugs reais:**
+
+1. **As células repetem nota nas bordas.** O gerador é
+   `out.push(clamp(anterior + pick([-2,-1,1,2]), 0, 5))`; ao chegar no 0 ou no 5, o `clamp` devolve
+   o mesmo grau e sai `5 5 4`. Célula com nota repetida não é célula. **Sortear a direção dentro do
+   que cabe**, em vez de cortar depois.
+2. **Os distratores diferem demais.** Hoje são células sorteadas do zero. O documento de visão pede
+   o contrário: *"distratores que diferem em apenas uma nota"*. **Gerar alterando uma nota da
+   certa.**
+
+**Generalizar a escala (decisão 54):** `ouvido-celulas` é pentatônico-only sem razão. Passa a
+aceitar maior, menor natural, **harmônica e melódica**, modos e as duas pentatônicas. O mesmo vale
+para qualquer item preso a uma escala por acidente.
+
+**Direção como parâmetro:** `ouvido-escala` só toca **subindo** — e menor natural, harmônica e
+melódica se distinguem muito melhor **descendo**. Entra `sobe / desce / ambos`. Vale igual para
+`ouvido-celulas` e para os arpejos.
+
+**Contrato de saída:** teste que gera centenas de células e confere que **nenhuma repete nota**;
+teste que confere que **todo distrator difere da resposta certa em exatamente uma nota**; e o
+teste de catálogo rodando com todas as escalas novas.
+
+---
+
 ## F6-6 · Lote de correções do piloto
 
 **Depende de:** F1-4.
@@ -125,6 +182,11 @@ Coisas que a reforma da camada não resolve sozinha, levantadas no uso real:
 - Extensão de linhas suplementares configurável em "que nota é essa?".
 - Trocar entre intervalo harmônico junto e separado **sem resetar** o intervalo.
 - Remover a ferramenta "internalizar uma tonalidade" e o "copiar link", se ainda existirem.
+- **Tonalidade de referência em "que nota tocou?"**: hoje é um liga-desliga que sempre toca Dó.
+  Virando `nenhuma / tônica / cadência / escala`, ele **vira o "identificar graus"** do catálogo,
+  sem exercício novo.
+- **Inversões** e **arpejo ou bloco** valem para as três superfícies depois da fusão do grupo C;
+  hoje só `pauta-acorde` tem inversões e só `ouvido-acorde` tem arpejo.
 
 **Pronto quando:** a lista está fechada e cada item foi conferido num celular de verdade.
 

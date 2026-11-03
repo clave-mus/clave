@@ -42,12 +42,13 @@ Dois eixos, **os dois no plural**.
 | Som, timbre e dinâmica | | | | | | | | |
 | Controle motor | | | | | | | | |
 
-**A regra que decide quando é um item ou dois:**
+**A regra que decide quando é um item ou dois — são três casos, e só um funde** (decisão 52):
 
-- **Objeto muda, tarefa igual → um item, dois objetos.** "Tocar motivos em graus" usa material de
-  escala, mas o que treina é ouvir um desenho por dentro: casa em *melodia*, etiqueta em *escalas*.
-- **Tarefa muda → dois itens.** "Identificar intervalos de ouvido" e "Localizar intervalos no
-  braço" têm o mesmo objeto e tarefas diferentes.
+| Situação | Resultado |
+|---|---|
+| Um item **trabalha vários objetos ao mesmo tempo** | **um item, vários objetos.** "Tocar motivos em graus" usa material de escala, mas treina ouvir um desenho por dentro: casa em *melodia*, etiqueta em *escalas* |
+| Itens trabalham **objetos diferentes**, mesma tarefa | **itens diferentes.** Identificar intervalo não é identificar acorde |
+| Itens trabalham **o mesmo objeto e a mesma tarefa**, variando só a superfície ou o material | **um item**, com a variação como parâmetro |
 
 Aparecer em vários lugares é conveniência. **Duplicar a implementação é dívida** (decisão 19).
 

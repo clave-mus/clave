@@ -59,7 +59,10 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [acc, setAcc] = useState(0);
-  const [score, setScore] = useState({ correct: 0, total: 0 });
+  // `seguidas` é a contagem DENTRO da série. Não confundir com dias seguidos praticados, que
+  // saiu de propósito (decisão 11): aquilo é cobrança, isto é informação útil — e é o gatilho da
+  // sugestão de variação (F7-1), que dispara em acertos seguidos, não em taxa.
+  const [score, setScore] = useState({ correct: 0, total: 0, seguidas: 0 });
   const [playing, setPlaying] = useState(false);
   const [heard, setHeard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -125,7 +128,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const submit: Submit = useCallback((response, pickedId) => {
     if (phase !== 'ask') return;
     const ok = validate(q.expected, response);
-    const ns = { correct: score.correct + (ok ? 1 : 0), total: score.total + 1 };
+    const ns = { correct: score.correct + (ok ? 1 : 0), total: score.total + 1, seguidas: ok ? score.seguidas + 1 : 0 };
     setScore(ns);
     setPicked(pickedId);
     setPhase(ok ? 'right' : 'wrong');
@@ -183,6 +186,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         </div>
         <div className="score">
           <div><b className="num">{score.correct}/{score.total}</b><span>{t('player.hits')}</span></div>
+          {score.seguidas > 1 && <div><b className="num">{score.seguidas}</b><span>{t('player.inARow')}</span></div>}
         </div>
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}

@@ -99,3 +99,46 @@ ordem musical que ela reconhece.
 
 **Não faça:** não crie escada rígida nem "níveis" por exercício. A decisão 9 é explícita: o app
 abre o menu inteiro, com algumas opções pré-marcadas.
+
+---
+
+## F2-3 · Ligar o catálogo na cascata
+
+**Decisão de origem:** 57. **Depende de:** F2-1. **Bloqueia:** F3-8 fazer sentido.
+
+> **Esta tarefa existe porque a cascata não tem leitor.** Conferido em 03/11: o catálogo lê
+> `tuning` em **um** lugar e nada mais. `key`, `range`, `material`, `tempo` e `clef` estão
+> declarados e **nenhum exercício os lê**.
+>
+> **Sem isto, a rotação de tonalidade não faz nada:** a rotina avança de Dó para Sol, o histórico
+> registra Sol, e todo exercício continua sorteando a tônica aleatoriamente.
+
+Cada item passa a **respeitar o parâmetro global quando ele está definido, e sortear livremente
+quando não está** (`key: null` quer dizer "livre", e é o padrão).
+
+| Parâmetro | Quem passa a ler | O que muda |
+|---|---|---|
+| `key` | todo item de ouvido e de escala/acorde | a tônica deixa de ser `randInt(53, 64)` e passa a ser a da tonalidade, quando há uma |
+| `range` | todo item com altura | as faixas no código (`52–67`, `53–64`, `57–64`, `lo: 48, hi: 71`) saem |
+| `material` | itens de nota e de escala | `cromatico` sorteia qualquer nota; `diatonico` só as da tonalidade |
+| `clef` | itens de pauta | hoje cada um tem o próprio seletor de claves; passa a ter o global como padrão |
+| `tempo` | itens com ritmo e metrônomo | o andamento vem de cima |
+
+**Também é aqui que entram os controles na tela.** Hoje só volume e timbre têm. Tonalidade, região,
+material e clave precisam aparecer — no Perfil como padrão da pessoa, e na rotina como herança.
+
+**Contrato de saída:**
+
+1. Um teste que, para **todo** item com som, roda com `key: { tonic: 7, mode: 'maior' }` e confere
+   que **nenhuma nota sorteada está fora** da tonalidade quando `material: 'diatonico'`.
+2. Um teste que roda com `range: { lo: 48, hi: 60 }` e confere que **nenhuma altura sai da faixa**.
+3. Um teste que roda com `key: null` e confere que o item **continua sorteando livremente** — a
+   generalização não pode engessar quem não quer tonalidade fixa.
+4. Um teste que falha se algum item com som **não ler** `key` nem `range`. É o guarda contra a
+   cascata voltar a ficar sem leitor.
+
+**Pronto quando:** escolher "Sol maior" no Perfil muda o que todo exercício de ouvido toca; e pôr
+uma rotina em rotação por tonalidade muda a tonalidade de todas as etapas dela.
+
+**Não faça:** não engesse. Tonalidade livre (`key: null`) é o padrão e precisa continuar sendo —
+quem não escolheu tonalidade quer variedade, não Dó maior em tudo.
