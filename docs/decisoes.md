@@ -1083,6 +1083,80 @@ item novo.**
 
 ---
 
+### 78 · As sete transformações de rearmonização
+
+Resolve `A12`. O laboratório da decisão 69 oferece estas, e cada uma tem **nome de teoria** — é o
+que faz usá-lo ser estudar, e não só ouvir resultados bonitos. Exemplos em Dó maior, sobre
+`Dm7 | G7 | C`:
+
+| # | Transformação | O que faz | No exemplo |
+|---|---|---|---|
+| 1 | **Trocar a qualidade** | mesma fundamental, outra qualidade | `C` → `Cmaj7` → `C6` → `C7` |
+| 2 | **Substituição diatônica** | troca por outro acorde do campo que divide duas notas | `C` → `Am` ou `Em` · `F` → `Dm` |
+| 3 | **Interpolar o II** | transforma qualquer dominante num ii–V | `G7` → `Dm7 G7` |
+| 4 | **Dominante secundário** | antes de um acorde, põe o dominante *dele* | antes de `Dm7`, põe `A7` |
+| 5 | **Substituição por trítono** | troca o dominante pelo que está a um trítono | `G7` → `D♭7` |
+| 6 | **Diminuto de passagem** | liga dois acordes a um tom de distância | `C` → `C♯dim7` → `Dm` |
+| 7 | **Empréstimo modal** | pega um acorde do modo paralelo | `F` → `Fm` · ou `A♭` em Dó maior |
+
+A ordem é pedagógica, não arbitrária: 1 e 2 são o primeiro dia, 3 e 4 são o vocabulário básico, 5 a
+7 é onde fica interessante. **Todas são determinísticas de aplicar** — é o que permite o laboratório
+não ter correção e ainda assim não ser vago.
+
+**Duas ficaram fora, por motivos diferentes:**
+
+- **Aproximação cromática** (pôr `E♭m7` antes de `Dm7`) é caso particular das outras e depende de
+  estilo e de onde cai no compasso.
+- **Pedal de baixo** (o baixo parado enquanto os acordes andam) **não é rearmonização**: não troca
+  acorde nenhum, mexe no baixo. É outro eixo, e precisaria do modelo de vozes em vez do modelo de
+  acordes. Barata de acrescentar depois.
+
+---
+
+### 79 · Os textos das oito portas
+
+Resolve `A4`. A restrição seguida: **nenhum texto diz nada sobre quem a pessoa é** — todos dizem o
+que há atrás da porta. É a decisão 11 aplicada ao texto.
+
+| Porta | Linha de apoio |
+|---|---|
+| **Dominar as notas no instrumento** 🚩 | Saber onde cada nota está, sem procurar. |
+| **Melhorar o ouvido** | Reconhecer o que você ouve — intervalos, acordes, escalas, graus. |
+| **Acompanhar e entender harmonia** | Campo harmônico, cifras e condução: o que sustenta a música. |
+| **Aprender teoria musical** | Os nomes e as razões por trás do que você já toca. |
+| **Aprender a ler partitura** | Da nota escrita ao som, sem travar. |
+| **Melhorar ritmo e groove** | Subdivisão, leitura rítmica e tocar no tempo. |
+| **Melhorar técnica e precisão** | Coordenação, independência dos dedos e controle do som. |
+| **Improvisar e solar** | O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário. |
+| **Não sei por onde começar** | Três perguntas e uma rotina sugerida. Dá para mudar tudo depois. |
+
+**Duas coisas deliberadas nessas linhas.**
+
+A primeira: **nenhuma menciona cronômetro nem registro de prática.** Meu rascunho mencionava, na
+porta da técnica, e estava errado — **os dois são universais**, estão em toda rotina. Citá-los numa
+porta só sugere que é ali que eles moram.
+
+A segunda: **a última linha é a única que faz uma promessa em vez de descrever conteúdo** —
+*"dá para mudar tudo depois"*. Está ali de propósito: é o antídoto da rigidez, e é o que faz alguém
+topar responder três perguntas em vez de fechar a tela.
+
+**Falta a versão em inglês**, e ela não é tradução literal — "sem travar" e "sem procurar" não
+atravessam. É tarefa da `D2`.
+
+---
+
+### 80 · A porta do improviso se chama "Improvisar e solar"
+
+Mesmo não havendo exercício de improvisar — porque **ninguém procura por "preparar o improviso"**.
+A decisão 20 pedia que a porta fosse "redigida como o que prepara o improviso", e a redação honesta
+vai na **linha de apoio**, não no rótulo.
+
+O rótulo é como a pessoa encontra a porta; a linha é onde não se mente. Chamar a porta de "Preparar
+o improviso" seria honesto e **invisível** — e uma porta que ninguém abre não protege ninguém de
+nada.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1119,13 +1193,12 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 
 | # | Questão | Quem decide | Bloqueia |
 |---|---|---|---|
-| A4 | **Os textos das 8 portas por objetivo**, em dois idiomas | Paulo | `D2` |
+| A4b | **A versão em inglês** das 9 linhas das portas — não é tradução literal ("sem travar", "sem procurar" não atravessam). Os textos em português estão fechados na decisão 79 | Paulo | `D2` |
 | A5 | **Calibração do diagnóstico** — qual configuração corresponde a qual ponto de partida | time, corrigido no beta | `D4` |
 | A6 | **Limiar da variação automática** — quantos acertos, em quantas sessões | time, calibrado no beta | nada: é uma constante num arquivo |
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
-| A12 | **Quais transformações de rearmonização entram** no laboratório da decisão 69 — curadoria musical | Paulo | o laboratório |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 
