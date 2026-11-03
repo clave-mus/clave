@@ -46,7 +46,7 @@ consertar nem padrões a seguir:
 | **[docs/visao.md](docs/visao.md)** | **A fonte de verdade do produto.** Se o código discordar dela, o código está errado. |
 | [docs/decisoes.md](docs/decisoes.md) | As decisões, com data e motivo, e a lista do que ainda está em aberto. |
 | [docs/beta.md](docs/beta.md) | O que o beta é, tela a tela. |
-| [docs/catalogo.md](docs/catalogo.md) | Como o catálogo é organizado: objeto × tarefa, os nove motores, o portão em três níveis, e o inventário das ~95 famílias. |
+| [docs/catalogo.md](docs/catalogo.md) | Como o catálogo é organizado: objeto × tarefa, os oito motores, o portão em três níveis, e o inventário das ~95 famílias. |
 | [docs/arquitetura.md](docs/arquitetura.md) | O que existe, o que diverge, e a arquitetura-alvo. |
 | [docs/tarefas/](docs/tarefas/) | **O que fazer agora**, em tarefas pequenas com "Pronto quando". |
 | [docs/equipe.md](docs/equipe.md) | Quem é quem, donos musicais, e o teste do Schultz. |

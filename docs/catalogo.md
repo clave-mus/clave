@@ -72,24 +72,27 @@ só existe com 4+ itens atrás dela* já resolve.
 
 ---
 
-## Os nove motores
+## Os oito motores
 
-**Largura não se mede em exercícios. Mede-se em motores.** São ~95 famílias, mas elas são presets
-sobre nove motores — e **quatro já existem**.
+**Largura não se mede em exercícios. Mede-se em motores.** São ~95 famílias, e todas são presets
+sobre **oito motores de catálogo**, apoiados em **três bibliotecas que já existem**.
+
+**Bibliotecas de base, prontas e testadas:** `theory/core` (grafia por tonalidade, escalas,
+acordes, campo harmônico) · `audio/engine` (síntese e agendamento com antecedência) ·
+`rhythm-gen` (geração de compassos). Nada aqui precisa ser construído.
+
+**Os oito motores de catálogo:**
 
 | Motor | Estado | Serve a |
 |---|---|---|
-| **Perguntas** (`Player`) | ✅ pronto | ~35 famílias de Ouvir, Ler e Nomear |
-| **Teoria** (`theory/core`) | ✅ pronto | atravessa quase tudo: grafia, escalas, acordes, campo |
-| **Áudio** (`audio/engine`) | ✅ pronto | tudo que soa |
-| **Ritmo** (`rhythm-gen`) | ✅ pronto | geração de compassos |
-| **Partituras** | ⚠️ existe em dois, **falta fundir** (decisão 18) | ~10: leitura melódica e rítmica, ditado, leitura à primeira vista |
-| **Visualizador** de braço e teclado | ⚠️ componentes existem, falta a ferramenta | ~12: toda a coluna Explorar, e as superfícies de Tocar |
-| **Padrões** | ❌ não existe — **e é uma tarde** | ~8, nas duas metades da matriz |
-| **Tarefa com metrônomo** + autoavaliação | ❌ não existe | ~12: técnica, execução, groove |
-| **Digitações** | ❌ não existe | ~8 |
-| **Progressões** e harmonia aplicada | ⚠️ parcial | ~10: campo harmônico, cifras, walking, guide tones |
-| **Altura** (microfone e MIDI) | ❌ não existe | ~8, todas opcionais |
+| **Perguntas** (`Player`) | ✅ pronto | ~48 famílias de Ouvir, Ler e Nomear |
+| **Visualizador** de braço e teclado | ⚠️ componentes existem, falta a ferramenta | ~14: toda a coluna Explorar, e as superfícies de Tocar |
+| **Progressões** e harmonia aplicada | ⚠️ parcial | ~15: campo harmônico, cifras, walking, guide tones, improviso |
+| **Partituras** | ⚠️ existe em dois, **falta fundir** (decisão 18) | ~13: leitura melódica e rítmica, ditado |
+| **Padrões** | ❌ não existe — **e é uma tarde** | ~10, nas duas metades da matriz |
+| **Tarefa com metrônomo** + autoavaliação | ❌ não existe | ~9: técnica, execução, groove |
+| **Altura** (microfone e MIDI) | ❌ não existe | ~4, todas opcionais |
+| **Digitações** | ❌ não existe | ~3 diretamente, e é parâmetro de muitos outros |
 
 ### Motor de padrões
 
@@ -215,7 +218,7 @@ todos no mesmo lugar — exigir os sete de 95 famílias inviabilizaria o catálo
 
 | Nível | Quais itens | Quantas vezes |
 |---|---|---|
-| **Motor** | grafia e convenção corretas · som decente · teste automático | **9** |
+| **Motor** | grafia e convenção corretas · som decente · teste automático | **8** |
 | **Família** | resposta única e defensável · parâmetros que importam · "eu usaria amanhã" | ~95, julgamento musical, rápido por item |
 | **Preset** | nenhum | de graça |
 

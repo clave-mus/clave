@@ -1,8 +1,8 @@
 # FM · Motores do catálogo
 
-O catálogo do Clave tem ~95 famílias, mas elas são **presets sobre nove motores** — e quatro já
-existem. Esta frente constrói os que faltam do lado do catálogo. O microfone e o MIDI estão em
-[F5-som.md](F5-som.md); o gerador de partituras, em `F5-3`.
+O catálogo do Clave tem ~95 famílias, mas elas são **presets sobre oito motores de catálogo** — e
+metade deles já existe ou está parcial. Esta frente constrói dois dos que faltam. O microfone e o
+MIDI estão em [F5-som.md](F5-som.md); o gerador de partituras, em `F5-3`.
 
 Leia [catalogo.md](../catalogo.md) antes de pegar qualquer uma destas.
 

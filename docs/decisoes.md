@@ -590,11 +590,12 @@ fique mais bem trabalhado.
 usando, vem o retorno que falta.
 
 **Como isso é afordável: largura se mede em motores, não em exercícios.** As ~95 famílias são
-presets sobre **nove motores**, e quatro já existem.
+presets sobre **oito motores de catálogo**, apoiados em três bibliotecas que já existem
+(teoria, áudio e geração de ritmo). Dos oito, **dois estão prontos e dois estão parciais**.
 
 ### 49 · O portão de qualidade se aplica em três níveis
 
-**Motor** (grafia, som, teste automático) — 9 vezes. **Família** (ambiguidade teórica, parâmetros
+**Motor** (grafia, som, teste automático) — 8 vezes. **Família** (ambiguidade teórica, parâmetros
 que importam, "eu usaria amanhã") — ~95 vezes, julgamento musical. **Preset** — nada.
 
 **Motivo:** exigir os sete itens de 95 famílias inviabilizaria o catálogo largo. Teste automático

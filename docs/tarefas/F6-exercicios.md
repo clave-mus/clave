@@ -2,7 +2,8 @@
 
 **O beta é largo** (decisão 48): o catálogo cobre os três instrumentos e as duas metades da
 matriz. Isso é afordável porque **largura se mede em motores, não em exercícios** — as ~95 famílias
-são presets sobre nove motores, e quatro já existem. Ver [catalogo.md](../catalogo.md).
+são presets sobre oito motores de catálogo, e metade deles já existe ou está parcial.
+Ver [catalogo.md](../catalogo.md).
 
 **O trabalho aqui é curadoria e fusão, não adição.** O portão de qualidade se aplica em três
 níveis (decisão 49): pesado no **motor**, de julgamento musical na **família**, nenhum no

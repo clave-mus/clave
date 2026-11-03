@@ -30,7 +30,7 @@ As perguntas a fazer:
 |---|---|
 | Rotinas: modelo, executor nos dois modos, **editor**, presets do time | Biblioteca pública de rotinas |
 | Compartilhar rotina **por link** | Comunidade, perfis, comentários, feed |
-| Catálogo **largo** (decisão 48), construído sobre nove motores | Paridade entre áreas |
+| Catálogo **largo** (decisão 48), construído sobre oito motores | Paridade entre áreas |
 | Três abas: Praticar · Catálogo · Perfil | Progresso como aba |
 | Portas por objetivo | Trilhas de aprendizado |
 | Variação automática por sugestão | Diagnóstico de padrões de erro, recomendação automática |

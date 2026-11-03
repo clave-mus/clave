@@ -57,7 +57,7 @@ caras, **avisar e esperar a decisão** antes de começar.
 - **O motor musical não conhece a tela.** Nada em `src/theory/` importa React.
 - **Um item de catálogo é uma declaração, não uma tela.** Antes de escrever tela nova, veja se o
   que você quer não é **parâmetro ou modo** de um item que já existe — é a decisão 15, e ela é a
-  única coisa que impede o catálogo de virar 95 telas. São ~95 famílias sobre **nove motores**.
+  única coisa que impede o catálogo de virar 95 telas. São ~95 famílias sobre **oito motores**.
 - **Nenhuma tarefa publica uma família de exercício.** Você entrega o motor testado e o item
   declarado; a revisão musical é passo humano do Paulo (decisão 51).
 - **Validação é opcional.** O padrão é autoavaliação. Microfone e MIDI são acréscimos
