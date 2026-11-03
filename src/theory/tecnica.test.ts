@@ -95,3 +95,56 @@ describe('codificar e decodificar uma troca', () => {
     for (const lixo of ['', 'x', '5-8', '5-8-5', '5-8-0', '5--8-1', '5-8-1-2', '5-8-a']) expect(decodificarTroca(lixo), lixo).toBeNull();
   });
 });
+
+import { andamentoNaVolta, PASSO_DA_SUBIDA, TETO_PADRAO, VOLTAS_POR_PASSO } from './tecnica';
+
+describe('andamentoNaVolta', () => {
+  const liga = (teto = 100) => ({ ativa: true, teto });
+
+  it('sobe 4 bpm a cada 2 voltas — e não a cada volta', () => {
+    expect(PASSO_DA_SUBIDA).toBe(4);
+    expect(VOLTAS_POR_PASSO).toBe(2);
+    const bpm = (v: number) => andamentoNaVolta(70, v, liga());
+    expect([0, 1, 2, 3, 4, 5, 6].map(bpm)).toEqual([70, 70, 74, 74, 78, 78, 82]);
+  });
+
+  it('desligada, nunca muda o andamento, por mais voltas que passem', () => {
+    for (const v of [0, 1, 2, 50, 1000]) expect(andamentoNaVolta(70, v, { ativa: false, teto: 100 }), String(v)).toBe(70);
+  });
+
+  it('PARA no teto — e não passa dele, por mais voltas que passem', () => {
+    for (const v of [14, 15, 16, 100, 100000]) expect(andamentoNaVolta(70, v, liga(100)), String(v)).toBeLessThanOrEqual(100);
+    expect(andamentoNaVolta(70, 100000, liga(100))).toBe(100);
+  });
+
+  it('o teto vale mesmo quando não é múltiplo do passo', () => {
+    expect(andamentoNaVolta(70, 100000, liga(75))).toBe(75);
+  });
+
+  it('nunca baixa o que a pessoa escolheu: base acima do teto fica como está', () => {
+    expect(andamentoNaVolta(120, 0, liga(100))).toBe(120);
+    expect(andamentoNaVolta(120, 10, liga(100))).toBe(120);
+  });
+
+  it('nunca desce: o andamento é monótono em voltas', () => {
+    let anterior = 0;
+    for (let v = 0; v < 60; v++) {
+      const a = andamentoNaVolta(70, v, liga());
+      expect(a).toBeGreaterThanOrEqual(anterior);
+      anterior = a;
+    }
+  });
+
+  it('é calculado da base, sem estado: perguntar duas vezes dá a mesma resposta', () => {
+    expect(andamentoNaVolta(70, 7, liga())).toBe(andamentoNaVolta(70, 7, liga()));
+  });
+
+  it('o teto padrão é um número que deixa espaço para subir a partir do padrão da tela (70)', () => {
+    expect(TETO_PADRAO).toBeGreaterThan(70);
+    expect(TETO_PADRAO).toBeLessThanOrEqual(200);
+  });
+
+  it('voltas negativas ou zero não mexem em nada', () => {
+    expect(andamentoNaVolta(70, -3, liga())).toBe(70);
+  });
+});

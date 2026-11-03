@@ -74,3 +74,34 @@ export function decodificarTroca(texto: string): Troca | null {
   const m = /^(\d+)-(\d+)-([1-4])$/.exec(texto);
   return m ? { de: Number(m[1]), para: Number(m[2]), dedo: Number(m[3]) } : null;
 }
+
+// ---------------------------------------------------------------------------
+// Subida de andamento (decisões 82 e 93)
+// ---------------------------------------------------------------------------
+
+/**
+ * A subida de andamento é uma **opção da pessoa, nunca um padrão**: nasce desligada, sobe pouco e
+ * devagar, e **para num teto**. Aumentar o andamento demais costuma ser prejudicial, e para muita coisa
+ * o melhor é fazer bem devagar — então o app nunca trata bpm como progressão por conta própria.
+ */
+export const PASSO_DA_SUBIDA = 4;
+export const VOLTAS_POR_PASSO = 2;
+/** O teto sugerido quando a pessoa liga a subida. Ela escolhe o dela. */
+export const TETO_PADRAO = 100;
+
+export interface Subida { ativa: boolean; teto: number }
+
+/**
+ * O andamento depois de `voltas` voltas completas desde `base`.
+ *
+ * Calculado a partir da base, e não somando 4 a cada volta: sem estado acumulado não há deriva, e o
+ * resultado é o mesmo qualquer que seja o momento em que se pergunta.
+ *
+ * **Nunca baixa o que a pessoa escolheu.** Se a base já passa do teto, devolve a base — o teto limita
+ * a subida, não corrige a escolha dela.
+ */
+export function andamentoNaVolta(base: number, voltas: number, s: Subida): number {
+  if (!s.ativa || voltas <= 0) return base;
+  const subido = base + PASSO_DA_SUBIDA * Math.floor(voltas / VOLTAS_POR_PASSO);
+  return Math.max(base, Math.min(subido, s.teto));
+}

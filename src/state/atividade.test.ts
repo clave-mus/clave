@@ -32,6 +32,32 @@ describe('descreverAtividade', () => {
     expect(descreverAtividade(undefined, c())).toBe('');
   });
 
+  describe('andamento de início e de fim (Técnica com subida)', () => {
+    const com = (bpmInicio: number, bpmFim: number) => ({ settings: { bpmInicio, bpmFim } });
+
+    it('mostra de onde partiu e aonde chegou', () => {
+      expect(descreverAtividade(com(70, 82), c())).toBe('70 → 82 bpm');
+    });
+
+    it('sem mudança, mostra um número só — "70 → 70" seria ruído', () => {
+      expect(descreverAtividade(com(70, 70), c())).toBe('70 bpm');
+    });
+
+    it('a ordem é a do tempo: partida, depois chegada — nunca invertida, mesmo se o fim for menor', () => {
+      expect(descreverAtividade(com(90, 80), c())).toBe('90 → 80 bpm');
+    });
+
+    it('com só um dos dois, não inventa o outro', () => {
+      expect(descreverAtividade({ settings: { bpmInicio: 70 } }, c())).toBe('');
+      expect(descreverAtividade({ settings: { bpmFim: 82 } }, c())).toBe('');
+    });
+
+    it('convive com tonalidade, e o `bpm` único das outras ferramentas continua valendo', () => {
+      expect(descreverAtividade({ settings: { bpmInicio: 60, bpmFim: 68 }, params: { ...base, key: { tonic: 0, mode: 'maior' } } }, c())).toBe('Dó maior · 60 → 68 bpm');
+      expect(descreverAtividade({ settings: { bpm: 96 } }, c())).toBe('96 bpm');
+    });
+  });
+
   it('bpm que não é número é ignorado', () => {
     expect(descreverAtividade({ settings: { bpm: 'rápido' } }, c())).toBe('');
   });

@@ -1577,6 +1577,37 @@ comum e o custo de escrever no armazenamento a cada tick não se justifica sem u
 
 ---
 
+### 93 · A subida de andamento da Técnica: desligada, lenta, com teto, e gravada
+
+Resolve `A16`. A ferramenta de Técnica trazia **"subir 4 bpm a cada volta" ligado por padrão e sem teto** —
+o app aumentando o andamento sozinho, que é exatamente o que a decisão 82 diz que ele nunca faz: o Paulo
+avisou desde o começo que aumentar o bpm demais costuma ser prejudicial, e que para muita coisa o melhor é
+fazer bem devagar.
+
+**Agora:**
+
+- **Nasce desligada.** É uma opção da pessoa, nunca um padrão.
+- **Sobe 4 bpm a cada 2 voltas**, e não a cada uma: metade do ritmo, e a pessoa tem tempo de assentar.
+- **Para num teto**, que ela escolhe (sugestão inicial: ♩ = 100). Sem ele, o andamento passava do limite do
+  próprio controle da tela (200).
+- **Nunca baixa o que a pessoa escolheu.** Se o início já está acima do teto, nada sobe — e a tela diz isso
+  ("No teto: o andamento não sobe mais") em vez de deixar a pessoa sem saber por quê.
+- **Mexer no controle ou ligar a subida no meio da prática reinicia a base**: a subida continua do que a pessoa
+  escolheu, e ligar tarde não faz o andamento saltar pelas voltas que já passaram.
+
+O andamento é **calculado a partir da base** (`andamentoNaVolta`), não somando 4 a cada volta: sem estado
+acumulado não há deriva, e o resultado é testável por inteiro.
+
+**O histórico grava o andamento de início e o de fim** (`bpmInicio`, `bpmFim`) — porque com a subida ligada não
+existe um valor único, e gravar só um dos dois seria inventar. Aparece como "150 → 162 bpm", e como um número
+só quando não mudou. Informação neutra, nunca placar. A pergunta que prendia a gravação do andamento (`A16`)
+era exatamente essa.
+
+Verificado no navegador a 150 bpm: 150 → 154 (volta 3) → 158 (volta 5) → 162 (volta 7) e **para no teto** pelas
+10 voltas seguintes; ligada no meio da prática, ficou em 150 por mais 2 voltas antes de subir, sem saltar.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1624,7 +1655,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A13 | **O nome do visualizador**, agora que ele também toca (decisão 89). Hoje aparece como "visualizador" nos documentos e como "Exploração do braço e do teclado" no catálogo. Candidatas: *Instrumento virtual* (a mais direta) · *Braço e teclado* · outra | Paulo | `F6-3` |
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
-| A16 | **"Subir 4 bpm a cada volta"** vem ligado por padrão na ferramenta de Técnica. Aumentar o andamento sozinho é tratar bpm como progressão e carga, que a decisão 82 diz que o app nunca faz — e o Paulo avisou que aumentar demais costuma ser prejudicial | Paulo | nada |
 | A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
 | A20 | **720 ordens de cordas** na guitarra de seis (T2): percorrível, ou limitar a quatro cordas adjacentes? | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |

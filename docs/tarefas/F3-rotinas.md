@@ -291,8 +291,9 @@ pontuação (decisão 10). Nada de rotacionar vários parâmetros ao mesmo tempo
 > gravava a antiga); e gravava o valor **resolvido** de tudo, então a região padrão entrava no
 > histórico de exercícios que não têm região (`paramsRegistraveis`, `respeita`).
 >
-> **Em aberto, e é do Paulo (`A16`):** a Técnica **não grava andamento**, porque com "subir 4 bpm a
-> cada volta" ligado não existe um valor único — escolher o inicial ou o final seria inventar.
+> **A Técnica agora grava o andamento (decisão 93):** o de **início e o de fim** (`bpmInicio` e `bpmFim`),
+> porque com a subida ligada não existe um valor único. A subida nasce desligada, sobe 4 bpm a cada 2 voltas
+> e para num teto.
 
 **Decisão de origem:** 39. **Depende de:** F2-1. **Bloqueia:** F3-8 ser útil.
 

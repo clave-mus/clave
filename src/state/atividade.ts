@@ -12,7 +12,10 @@ export function descreverAtividade(snapshot: ActivityParams | undefined, ctx: Pi
   const { key, range, material } = snapshot.params ?? {};
   const partes = [resumoDaPratica({ key, range, material }, ctx)];
   // Andamento só quando a ferramenta o GRAVOU. Informação neutra, nunca placar (decisões 10 e 82).
-  const bpm = snapshot.settings?.bpm;
-  if (typeof bpm === 'number') partes.push(`${bpm} bpm`);
+  const { bpm, bpmInicio, bpmFim } = snapshot.settings ?? {};
+  if (typeof bpmInicio === 'number' && typeof bpmFim === 'number') {
+    // com a subida ligada o andamento muda durante a prática: diz de onde partiu e aonde chegou
+    partes.push(bpmInicio === bpmFim ? `${bpmFim} bpm` : `${bpmInicio} → ${bpmFim} bpm`);
+  } else if (typeof bpm === 'number') partes.push(`${bpm} bpm`);
   return partes.filter(Boolean).join(' · ');
 }

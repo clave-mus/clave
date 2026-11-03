@@ -12,6 +12,7 @@ import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
 import { useNaming, useT } from '../i18n';
 import { ROUTINES } from './tecnica-rotinas';
+import { andamentoNaVolta, TETO_PADRAO } from '../theory/tecnica';
 
 export default function Tecnica() {
   const instrument = useStore(s => s.profile.instrument);
@@ -35,7 +36,18 @@ export default function Tecnica() {
   const [vistos, setVistos] = useState<Record<string, string[]>>({});
   const [bpm, setBpm] = useState(70);
   const [sub, setSub] = useState(2);
-  const [climb, setClimb] = useState(true);
+  // A subida de andamento NASCE DESLIGADA (decisões 82 e 93): aumentar o bpm demais costuma ser
+  // prejudicial, e o app não trata andamento como progressão por conta própria. Quem quer, liga — e ela
+  // sobe pouco (4 bpm a cada 2 voltas) e PARA num teto.
+  const [climb, setClimb] = useState(false);
+  const [teto, setTeto] = useState(TETO_PADRAO);
+  // A base da subida: o andamento em que a pessoa a deixou por último e quantas voltas já tinham
+  // passado. O andamento é calculado a partir dela (`andamentoNaVolta`), e mexer no controle no meio
+  // da prática a reinicia — a subida continua do que a pessoa escolheu, nunca do que o app tinha.
+  const base = useRef({ bpm: 0, voltas: 0 });
+  const voltas = useRef(0);
+  // O andamento com que a prática COMEÇOU, para o histórico dizer de onde ela partiu e aonde chegou.
+  const inicioDaPratica = useRef<number | null>(null);
   const [hear, setHear] = useState(false);
   const [running, setRunning] = useState(false);
   const [idx, setIdx] = useState(-1);
@@ -48,11 +60,17 @@ export default function Tecnica() {
   const valoresDoEixo = useMemo(() => routine.eixo?.valores(tuning.length) ?? [], [routine, tuning.length]);
   const valorDoEixo = valoresDoEixo.length ? valoresDoEixo[noCiclo(eixoPos, valoresDoEixo.length)] : '';
   const seq = useMemo(() => routine.build(tuning.length, valorDoEixo), [routine, tuning.length, valorDoEixo]);
-  // O que ficou no histórico: qual rotina e, quando há, qual ordem de dedos. O ANDAMENTO fica de fora de
-  // propósito: com "subir 4 bpm a cada volta" ligado não existe um valor único para gravar, e
-  // escolher o inicial ou o final seria inventar (A16 — decisão do Paulo).
+  // O que ficou no histórico: a rotina, a ordem quando há, e o andamento — **de início e de fim**. Com a
+  // subida ligada não existe um valor único, e gravar só um dos dois seria inventar; os dois dizem de
+  // onde a prática partiu e aonde chegou. Informação neutra, nunca placar (decisão 82).
   useToolLog('tecnica', 'Rotinas de técnica', 'technique', running, {
-    settings: { rotina: routine.id, ...(routine.eixo && valorDoEixo ? { [routine.eixo.id]: valorDoEixo } : {}) },
+    settings: {
+      rotina: routine.id,
+      ...(routine.eixo && valorDoEixo ? { [routine.eixo.id]: valorDoEixo } : {}),
+      subida: climb,
+      ...(climb ? { teto } : {}),
+      ...(inicioDaPratica.current !== null ? { bpmInicio: inicioDaPratica.current, bpmFim: bpm } : {}),
+    },
   });
   // Passar por um valor conta como tê-lo visto, mesmo sem tocar até o fim — é informação, não meta
   // (decisões 11 e 82). Guardado POR ROTINA, e não zerado na troca: se você voltar, o que já passou
@@ -66,8 +84,8 @@ export default function Tecnica() {
     });
   }, [routine.id, valorDoEixo]);
   // o timbre é o escolhido para o instrumento no Perfil (ver SoundPanel)
-  const live = useRef({ seq, hear, climb, voice: params.timbres[instrument] });
-  live.current = { seq, hear, climb, voice: params.timbres[instrument] };
+  const live = useRef({ seq, hear, climb, teto, voice: params.timbres[instrument] });
+  live.current = { seq, hear, climb, teto, voice: params.timbres[instrument] };
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
   useEffect(() => { clock.current?.stop(); setRunning(false); setIdx(-1); }, [routine]);
@@ -75,6 +93,9 @@ export default function Tecnica() {
   const toggle = () => {
     if (running) { clock.current?.stop(); setRunning(false); setIdx(-1); return; }
     setRound(0);
+    voltas.current = 0;
+    base.current = { bpm, voltas: 0 };
+    if (inicioDaPratica.current === null) inicioDaPratica.current = bpm;
     const c = new Clock(bpm, sub, (i, t) => {
       const L = live.current;
       if (i % sub === 0) drum(Math.floor(i / sub) % 4 === 0 ? 'clique-forte' : 'clique', t, 0.8);
@@ -83,7 +104,9 @@ export default function Tecnica() {
       const n = k % L.seq.length;
       if (n === 0 && k > 0) {
         atTime(t, () => setRound(r => r + 1));
-        if (L.climb && clock.current) { clock.current.bpm += 4; atTime(t, () => setBpm(clock.current?.bpm ?? 0)); }
+        voltas.current += 1;
+        const novo = andamentoNaVolta(base.current.bpm, voltas.current - base.current.voltas, { ativa: L.climb, teto: L.teto });
+        if (clock.current && novo !== clock.current.bpm) { clock.current.bpm = novo; atTime(t, () => setBpm(novo)); }
       }
       atTime(t, () => setIdx(n));
       const p = L.seq[n];
@@ -144,14 +167,26 @@ export default function Tecnica() {
       <div className="row">
         <Btn onClick={toggle} tone={running ? 'mu' : undefined}>{t(running ? 'common.stop' : 'common.startPlay')}</Btn>
         <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 30 }}>♩ = {bpm}</span>
-        <input className="range" style={{ maxWidth: 200 }} type="range" min={40} max={200} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="tc-bpm" />
+        <input className="range" style={{ maxWidth: 200 }} type="range" min={40} max={200} value={bpm}
+          onChange={e => { const v = Number(e.target.value); setBpm(v); base.current = { bpm: v, voltas: voltas.current }; }} aria-label={t('common.tempo')} id="tc-bpm" />
         {!running && ([[1, '♩'], [2, '♫'], [4, '♬']] as const).map(([n, figure]) => <Chip key={n} on={sub === n} onClick={() => setSub(n)}>{t('technique.perNote', { figure })}</Chip>)}
       </div>
       <div className="row">
-        <label className="switch"><input type="checkbox" id="tc-climb" checked={climb} onChange={e => setClimb(e.target.checked)} />{t('technique.climb')}</label>
+        <label className="switch"><input type="checkbox" id="tc-climb" checked={climb}
+          // ligar no meio da prática recomeça a contagem DAQUI: sem isto o andamento saltaria pelas voltas
+          // que já passaram com a subida desligada
+          onChange={e => { setClimb(e.target.checked); base.current = { bpm, voltas: voltas.current }; }} />{t('technique.climb')}</label>
         <label className="switch"><input type="checkbox" id="tc-hear" checked={hear} onChange={e => setHear(e.target.checked)} />{t('technique.hear')}</label>
         {running && <span className="muted">{t('technique.round', { n: round + 1 })}</span>}
       </div>
+      {climb && (
+        <div className="row">
+          <span className="muted">{t('technique.climbCeiling', { bpm: teto })}</span>
+          <input className="range" style={{ maxWidth: 200 }} type="range" min={40} max={200} value={teto} onChange={e => setTeto(Number(e.target.value))} aria-label={t('technique.climbCeilingLabel')} id="tc-teto" />
+          {/* Teto no andamento atual ou abaixo: nada vai subir, e sem dizer isso a pessoa não saberia por quê. */}
+          {bpm >= teto && <span className="muted">{t('technique.climbAtCeiling')}</span>}
+        </div>
+      )}
     </div>
   );
 }
