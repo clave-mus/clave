@@ -126,5 +126,4 @@ export interface ToolDef {
   primaryModule: ModuleId;
   mobile: boolean;
   path: string;
-  art: string;
 }

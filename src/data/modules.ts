@@ -7,24 +7,22 @@ import type { ModuleId } from '../exercises/taxonomy';
 export interface ModuleBase {
   id: ModuleId;
   color: string; // token CSS
-  /** Emblema do módulo (design/art.mjs → public/art). */
-  art: string;
 }
 // As cinco cores são uma família do campo quente do estilo Campo, com duas âncoras frias para
 // as áreas se distinguirem entre si. Definidas como tokens em src/index.css, nos dois temas.
 export const MODULE_LIST: ModuleBase[] = [
-  { id: 'theory', color: 'var(--area-1)', art: 'modulo-teoria' },
-  { id: 'technique', color: 'var(--area-2)', art: 'modulo-tecnica' },
-  { id: 'perception.melodic', color: 'var(--area-3)', art: 'modulo-percepcao-melodica' },
-  { id: 'perception.harmonic', color: 'var(--area-4)', art: 'modulo-percepcao-harmonica' },
-  { id: 'perception.rhythmic', color: 'var(--area-5)', art: 'modulo-percepcao-ritmica' },
+  { id: 'theory', color: 'var(--area-1)' },
+  { id: 'technique', color: 'var(--area-2)' },
+  { id: 'perception.melodic', color: 'var(--area-3)' },
+  { id: 'perception.harmonic', color: 'var(--area-4)' },
+  { id: 'perception.rhythmic', color: 'var(--area-5)' },
 ];
 
 export type Instrument = 'piano' | 'violao' | 'baixo';
-export const INSTRUMENTS: { id: Instrument; art: string }[] = [
-  { id: 'piano', art: 'teclado' },
-  { id: 'violao', art: 'violao' },
-  { id: 'baixo', art: 'baixo' },
+export const INSTRUMENTS: { id: Instrument }[] = [
+  { id: 'piano' },
+  { id: 'violao' },
+  { id: 'baixo' },
 ];
 
 export type GoalId = 'improvisar' | 'harmonia' | 'tirar-de-ouvido' | 'ler-partitura' | 'agilidade' | 'jazz' | 'repertorio';

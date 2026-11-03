@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 300" ><defs><filter id="violino-gr" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="lo"/>
-<feDisplacementMap in="SourceGraphic" in2="lo" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
-<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
-<feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.86" result="dk"/>
-<feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.3 0 0 0 0.52" result="lt"/>
-<feComposite in="dk" in2="d" operator="in" result="dk2"/><feComposite in="lt" in2="d" operator="in" result="lt2"/>
-<feMerge><feMergeNode in="d"/><feMergeNode in="dk2"/><feMergeNode in="lt2"/></feMerge>
-</filter></defs><g filter="url(#violino-gr)"><g transform="translate(84,178) rotate(12) scale(1.25)"><path d="M0,-56 L22,-50 L26,-24 L16,-6 L30,10 L28,44 L0,58 L-28,44 L-30,10 L-16,-6 L-26,-24 L-22,-50 Z" fill="#b4512a" /><path d="M-10,-8 l-3,16 M10,-8 l3,16" fill="none" stroke="#100e0d" stroke-width="2.4" /><rect x="-5" y="-96" width="10" height="106" fill="#100e0d" /><rect x="-10" y="18" width="20" height="4" fill="#f4e8d0" /><path d="M-6,-96 L6,-96 L10,-112 L0,-120 L-8,-112 Z" fill="#b4512a" /><path d="M-2,-94 L-2,30 M2,-94 L2,30" fill="none" stroke="#fbf6ea" stroke-width="0.7" /><path d="M-24,20 L-14,40" fill="none" stroke="#8a3a1c" stroke-width="1.6" /></g><path d="M22,276 L150,36" fill="none" stroke="#f4e8d0" stroke-width="3.5" /><path d="M30,278 L154,44" fill="none" stroke="#fbf6ea" stroke-width="1" /></g></svg>

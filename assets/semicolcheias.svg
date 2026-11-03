@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 170" ><defs><filter id="semicolcheias-stk" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-<feMorphology in="SourceAlpha" operator="dilate" radius="9" result="o"/>
-<feMorphology in="SourceAlpha" operator="dilate" radius="7.5" result="w"/>
-<feFlood flood-color="#1a1714"/><feComposite in2="o" operator="in" result="oi"/>
-<feFlood flood-color="#fdfbf5"/><feComposite in2="w" operator="in" result="wi"/>
-<feGaussianBlur in="o" stdDeviation="5"/><feOffset dx="2" dy="7" result="bo"/>
-<feFlood flood-color="#000" flood-opacity=".38"/><feComposite in2="bo" operator="in" result="sh"/>
-<feMerge><feMergeNode in="sh"/><feMergeNode in="oi"/><feMergeNode in="wi"/><feMergeNode in="SourceGraphic"/></feMerge>
-</filter></defs><g filter="url(#semicolcheias-stk)" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="40" cy="136" rx="18" ry="13" transform="rotate(-20 40 136)" fill="#171513"/><ellipse cx="124" cy="120" rx="18" ry="13" transform="rotate(-20 124 120)" fill="#171513"/><path d="M56,130 L56,34 M140,114 L140,24" fill="none" stroke="#171513" stroke-width="7" /><path d="M54,30 L142,16 L142,30 L54,44 Z" fill="#171513" stroke="#171513" stroke-width="3.5" stroke-width="2"/><path d="M54,54 L142,40 L142,52 L54,66 Z" fill="#171513" stroke="#171513" stroke-width="3.5" stroke-width="2"/></g></svg>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 210"><defs><filter id="fones-gr" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="lo"/>
-<feDisplacementMap in="SourceGraphic" in2="lo" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
-<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
-<feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.86" result="dk"/>
-<feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.3 0 0 0 0.52" result="lt"/>
-<feComposite in="dk" in2="d" operator="in" result="dk2"/><feComposite in="lt" in2="d" operator="in" result="lt2"/>
-<feMerge><feMergeNode in="d"/><feMergeNode in="dk2"/><feMergeNode in="lt2"/></feMerge>
-</filter></defs><g filter="url(#fones-gr)"><path d="M40,120 L40,70 L80,30 L140,30 L180,70 L180,120" fill="none" stroke="#3a5bd8" stroke-width="13" stroke-linejoin="miter"/><path d="M22,98 L52,92 L56,158 L26,152 Z" fill="#e2522a" /><path d="M52,96 L62,98 L62,152 L56,154 Z" fill="#100e0d" /><path d="M198,98 L168,92 L164,158 L194,152 Z" fill="#e2522a" /><path d="M168,96 L158,98 L158,152 L164,154 Z" fill="#100e0d" /><path d="M40,156 L52,190 L112,184" fill="none" stroke="#f0bf5e" stroke-width="3" stroke-linejoin="miter"/><rect x="112" y="180" width="16" height="8" fill="#100e0d" /></g></svg>

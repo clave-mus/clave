@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><filter id="modulo-percepcao-melodica-gr" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="lo"/>
-<feDisplacementMap in="SourceGraphic" in2="lo" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
-<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
-<feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.86" result="dk"/>
-<feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.3 0 0 0 0.52" result="lt"/>
-<feComposite in="dk" in2="d" operator="in" result="dk2"/><feComposite in="lt" in2="d" operator="in" result="lt2"/>
-<feMerge><feMergeNode in="d"/><feMergeNode in="dk2"/><feMergeNode in="lt2"/></feMerge>
-</filter></defs><g filter="url(#modulo-percepcao-melodica-gr)"><path d="M8,14 L150,6 L152,146 L6,152 Z" fill="#3a5bd8" /><path d="M30,66 C30,38 70,30 76,60 C80,80 60,84 60,102 C60,118 46,124 38,114" fill="none" stroke="#f4e8d0" stroke-width="10" stroke-linecap="round"/><path d="M44,66 C46,52 62,52 62,66" fill="none" stroke="#f4e8d0" stroke-width="5" stroke-linecap="round"/><path d="M86,126 L110,104 L134,82" fill="none" stroke="#f4e8d0" stroke-width="2.4" stroke-dasharray="4 4"/><g transform="translate(86,126) scale(1)"><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f0bf5e" transform="rotate(-25)"/><rect x="7" y="-48" width="3.2" height="48" fill="#f0bf5e" /></g><g transform="translate(110,104) scale(1)"><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f4e8d0" transform="rotate(-25)"/><rect x="7" y="-48" width="3.2" height="48" fill="#f4e8d0" /></g><g transform="translate(134,82) scale(1)"><ellipse cx="0" cy="0" rx="10" ry="7" fill="#e2522a" transform="rotate(-25)"/><rect x="7" y="-48" width="3.2" height="48" fill="#e2522a" /></g></g></svg>

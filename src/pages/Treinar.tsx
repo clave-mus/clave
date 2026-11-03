@@ -11,7 +11,7 @@ import Backing from '../tools/Backing';
 import { Metronome } from '../tools/common';
 import Leitura from '../tools/Leitura';
 import Tecnica from '../tools/Tecnica';
-import { Art, PageHead, Tag } from '../components/ui';
+import { Field, PageHead, Tag } from '../components/ui';
 import NotFound from './NotFound';
 import { lessonProgress } from './Estudar';
 import { itemText, useT } from '../i18n';
@@ -74,7 +74,7 @@ export default function Treinar() {
           <section key={m.id} id={`mod-${m.id}`} className="sec mod">
             <h2 className="mod-h">
               <button type="button" className="mod-head" aria-expanded={isOpen} aria-controls={`mod-body-${m.id}`} onClick={() => toggle(m.id)}>
-                <Art name={m.art} style={{ width: 56, flex: 'none' }} />
+                <Field seed={m.id} color={m.color} className="field-square" style={{ width: 44, flex: 'none' }} />
                 <span><span className="name">{m.name}</span><span className="sub">{m.short}</span></span>
                 <span className="count">{counts}</span>
                 <span className="chev" aria-hidden="true">{isOpen ? '−' : '+'}</span>
@@ -127,7 +127,7 @@ export default function Treinar() {
                         return (
                           <Link key={id} to={tool.path} className="ex-card">
                             <span className="acc" style={{ background: m.color }} />
-                            <Art name={tool.art} style={{ width: 48, height: 48, objectFit: 'contain', flex: 'none' }} />
+                            <Field seed={tool.id} color={moduleById[tool.primaryModule].color} className="field-square" style={{ width: 40, flex: 'none' }} />
                             <div style={{ minWidth: 0 }}>
                               <h3>{itemText(t, id, 'title')}</h3>
                               <p>{itemText(t, id, 'desc')}</p>
@@ -181,7 +181,7 @@ export function ToolPage() {
       <Link to={`/treinar#${tool.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
       <header className="page-head" style={{ marginBottom: 0 }}>
         <div><div className="row"><Tag>{moduleById[tool.primaryModule].name}</Tag>{tool.mobile ? <Tag tone="dark">{t('common.mobile')}</Tag> : <Tag tone="co">{t('common.withInstrument')}</Tag>}</div><h1>{itemText(t, tool.id, 'title')}</h1><p>{itemText(t, tool.id, 'desc')}</p></div>
-        <Art name={tool.art} style={{ width: 110 }} />
+        <Field seed={tool.id} className="field-square" style={{ width: 88 }} />
       </header>
       <Comp />
     </div>

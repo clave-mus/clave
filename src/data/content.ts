@@ -79,7 +79,6 @@ export const LESSONS: LessonBase[] = [
 
 export interface RoadmapBase {
   id: string;
-  art: string;
   premium: boolean;
   lessons: string[];
 }
@@ -89,14 +88,13 @@ export interface Roadmap extends Omit<RoadmapBase, 'lessons'> {
   steps: { lesson: string; note: string }[];
 }
 export const ROADMAPS: RoadmapBase[] = [
-  { id: 'geral', art: 'haltere', premium: false, lessons: ['ler-partitura', 'leitura-ritmica', 'mapear-braco', 'escala-maior', 'ouvido', 'acordes', 'modos-gregos', 'harmonia-funcional'] },
-  { id: 'jazz', art: 'genero-jazz', premium: true, lessons: ['acordes', 'modos-gregos', 'harmonia-funcional', 'ouvido'] },
-  { id: 'erudito', art: 'genero-classico', premium: true, lessons: ['ler-partitura', 'leitura-ritmica', 'escala-maior', 'tecnica'] },
+  { id: 'geral', premium: false, lessons: ['ler-partitura', 'leitura-ritmica', 'mapear-braco', 'escala-maior', 'ouvido', 'acordes', 'modos-gregos', 'harmonia-funcional'] },
+  { id: 'jazz', premium: true, lessons: ['acordes', 'modos-gregos', 'harmonia-funcional', 'ouvido'] },
+  { id: 'erudito', premium: true, lessons: ['ler-partitura', 'leitura-ritmica', 'escala-maior', 'tecnica'] },
 ];
 
 export interface GenreBase {
   id: string;
-  art: string;
   cat: string;
   color: string;
   sides: { side: string; tracks: { id: string; min: number; to?: string }[] }[];
@@ -109,33 +107,33 @@ export interface Genre extends GenreBase {
 }
 export const GENRES: GenreBase[] = [
   {
-    id: 'samba', art: 'genero-samba', cat: 'CLV 1503', color: 'var(--mu)',
+    id: 'samba', cat: 'CLV 1503', color: 'var(--mu)',
     sides: [
       { side: 'a', tracks: [{ id: 'levada', min: 6, to: '/ferramentas/leitura' }, { id: 'toques', min: 9 }, { id: 'partido', min: 10 }, { id: 'teleco', min: 8 }] },
       { side: 'b', tracks: [{ id: 'progressao', min: 8, to: '/ferramentas/backing?p=samba' }, { id: 'secundarios', min: 10, to: '/estudar/harmonia-funcional' }] },
     ],
   },
   {
-    id: 'jazz', art: 'genero-jazz', cat: 'CLV 1501', color: 'var(--mu)',
+    id: 'jazz', cat: 'CLV 1501', color: 'var(--mu)',
     sides: [
       { side: 'a', tracks: [{ id: 'tetrades', min: 8, to: '/estudar/acordes' }, { id: 'iivi', min: 10, to: '/ferramentas/backing?p=ii-v-i' }, { id: 'sub5', min: 7, to: '/treinar/quiz-teoria' }] },
       { side: 'b', tracks: [{ id: 'blues', min: 12, to: '/ferramentas/backing?p=blues' }, { id: 'celulas', min: 8, to: '/treinar/ouvido-celulas' }] },
     ],
   },
   {
-    id: 'rock', art: 'genero-rock', cat: 'CLV 1502', color: 'var(--ve)',
+    id: 'rock', cat: 'CLV 1502', color: 'var(--ve)',
     sides: [{ side: 'a', tracks: [{ id: 'palhetada', min: 6, to: '/ferramentas/tecnica' }, { id: 'power', min: 8, to: '/treinar/braco-intervalo' }, { id: 'pop', min: 8, to: '/ferramentas/backing?p=pop' }] }],
   },
   {
-    id: 'classico', art: 'genero-classico', cat: 'CLV 1504', color: 'var(--co)',
+    id: 'classico', cat: 'CLV 1504', color: 'var(--co)',
     sides: [{ side: 'a', tracks: [{ id: 'ode', min: 8, to: '/ferramentas/leitura' }, { id: 'armaduras', min: 6, to: '/treinar/pauta-armadura' }, { id: 'escalas', min: 8, to: '/treinar/pauta-escala' }] }],
   },
   {
-    id: 'hiphop', art: 'genero-hiphop', cat: 'CLV 1505', color: 'var(--cream)',
+    id: 'hiphop', cat: 'CLV 1505', color: 'var(--cream)',
     sides: [{ side: 'a', tracks: [{ id: 'semis', min: 6, to: '/ferramentas/leitura' }, { id: 'ritmo', min: 6, to: '/treinar/ritmo-ouvido' }] }],
   },
   {
-    id: 'forro', art: 'genero-forro', cat: 'CLV 1506', color: 'var(--ve)',
+    id: 'forro', cat: 'CLV 1506', color: 'var(--ve)',
     sides: [{ side: 'a', tracks: [{ id: 'mixolidio', min: 8, to: '/estudar/modos-gregos' }, { id: 'levada', min: 6, to: '/ferramentas/backing?p=baiao' }] }],
   },
 ];

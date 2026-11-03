@@ -93,7 +93,7 @@ src/
     account.ts      conta no Supabase
   i18n/           português e inglês, com teste que falha se faltar tradução
   pages/          uma tela por rota
-design/art.mjs    gerador das ilustrações  ← sai em F4-3
+public/logo.svg   a marca: o campo com a letra em negativo (favicon e ícone do PWA)
 docs/             ver a tabela acima
 ```
 

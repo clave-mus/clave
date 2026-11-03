@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><filter id="modulo-percepcao-harmonica-gr" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="lo"/>
-<feDisplacementMap in="SourceGraphic" in2="lo" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
-<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
-<feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.86" result="dk"/>
-<feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.3 0 0 0 0.52" result="lt"/>
-<feComposite in="dk" in2="d" operator="in" result="dk2"/><feComposite in="lt" in2="d" operator="in" result="lt2"/>
-<feMerge><feMergeNode in="d"/><feMergeNode in="dk2"/><feMergeNode in="lt2"/></feMerge>
-</filter></defs><g filter="url(#modulo-percepcao-harmonica-gr)"><path d="M8,14 L150,6 L152,146 L6,152 Z" fill="#100e0d" stroke="#f4e8d0" stroke-width="3"/><circle cx="56" cy="64" r="26" fill="#3a5bd8" opacity=".9"/><circle cx="78" cy="64" r="26" fill="#e2522a" opacity=".9"/><circle cx="67" cy="86" r="26" fill="#f0bf5e" opacity=".9"/><path d="M108,54 Q118,75 108,96 M118,44 Q133,75 118,106 M128,36 Q146,75 128,114" fill="none" stroke="#f4e8d0" stroke-width="2.6" stroke-linecap="round"/></g></svg>

@@ -2,10 +2,48 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-export const art = (name: string) => `${import.meta.env.BASE_URL}art/${name}.svg`;
+/** Soma simples e estável do texto, para a mesma semente dar sempre o mesmo campo. */
+function hash(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h;
+}
 
-export function Art({ name, alt = '', className, style }: { name: string; alt?: string; className?: string; style?: React.CSSProperties }) {
-  return <img src={art(name)} alt={alt} className={className} style={style} draggable={false} loading="lazy" />;
+/**
+ * Um bloco de campo: a peça decorativa do estilo Campo, no lugar das ilustrações (decisão 2).
+ *
+ * Dois gradientes radiais numa cor, com granulação por cima. A `seed` move os centros, então
+ * cada módulo, gênero e instrumento ganha um campo próprio e **estável** — sem nenhum asset.
+ *
+ * A regra da direção vale aqui: isto é fundo e emblema, **nunca** botão, ícone ou cartão clicável.
+ */
+export function Field({ seed, color = 'var(--accent)', className, style, label }: {
+  seed: string;
+  color?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  label?: ReactNode;
+}) {
+  const h = hash(seed);
+  const x1 = 18 + (h % 60);
+  const y1 = 10 + ((h >> 6) % 55);
+  const x2 = 20 + ((h >> 12) % 65);
+  const y2 = 40 + ((h >> 18) % 55);
+  return (
+    <div
+      className={`field-block ${className ?? ''}`}
+      style={{
+        ...style,
+        // a cor entra duas vezes, em opacidades diferentes, para o campo ter profundidade
+        backgroundImage:
+          `radial-gradient(62% 62% at ${x1}% ${y1}%, color-mix(in srgb, ${color} 78%, transparent) 0%, transparent 68%),` +
+          `radial-gradient(54% 54% at ${x2}% ${y2}%, color-mix(in srgb, ${color} 34%, transparent) 0%, transparent 66%)`,
+      }}
+      aria-hidden={label ? undefined : true}
+    >
+      {label && <span className="field-label">{label}</span>}
+    </div>
+  );
 }
 export function Tag({ children, tone }: { children: ReactNode; tone?: 'co' | 've' | 'dark' }) {
   return <span className={`tag ${tone ?? ''}`}><span>{children}</span></span>;

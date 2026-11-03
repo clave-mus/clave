@@ -52,16 +52,36 @@ nenhuma cor tem a única definição dentro de um bloco de tema.
 
 ---
 
-## F4-3 · Arte nova
+## F4-3 · Arte nova ✅ *feita em 02/11/2026 — Campo puro*
 
 **Depende de:** F4-1. **Decisão de origem:** 2.
 
-- Apagar `design/art.mjs` (463 linhas), `design/kit*.html`, `assets/`, `assets-noturno/` e
-  `public/art/` (50 SVGs, 228 KB).
-- Produzir a arte nova na direção escolhida: logo, ícone do PWA, emblemas de área (se a direção
-  pedir), e as ilustrações que as telas realmente usarem — **não recriar 50 por recriar**.
-- Se a arte continuar sendo gerada em código, manter o script e o `npm run art`; se for desenhada
-  à mão, apagar o script e versionar os SVGs direto.
+**O que foi feito.** O Campo, como direção, praticamente não pede ilustração: o campo de cor é o
+único elemento decorativo. Então a arte não foi *substituída*, foi **trocada de natureza**.
+
+- Entrou `<Field>` em `src/components/ui.tsx`: um bloco com dois gradientes radiais e granulação,
+  com os centros derivados de uma **semente** (o id do módulo, do gênero, do instrumento). Cada
+  item ganha um campo próprio e estável, **sem nenhum asset**. Ocupa os mesmos espaços de layout
+  que as ilustrações ocupavam, então nenhuma tela ficou com buraco.
+- Entrou `public/logo.svg`: a marca, o campo com a letra em negativo. Serve de favicon e de ícone
+  do PWA.
+- Saíram, por serem do estilo Noturno e não terem mais uso: `design/`, `public/art/` (50 SVGs),
+  `assets/`, `assets-noturno/`, `kit.html`, `kit-noturno.html`, o sandbox de arte em `src/*.mjs` e
+  `src/*.html`, e o script `npm run art`. Cerca de 1 MB.
+- Saiu também o campo `art` de `ModuleBase`, `ToolDef`, `INSTRUMENTS`, `ROADMAPS` e `GENRES` — não
+  existe mais asset por item, e deixar o campo sugeriria que existe.
+
+**O mascote não se perdeu.** `design/art.mjs` era o **gerador**, não o resultado: as 50
+ilustrações saíam dele. Enquanto o arquivo estiver no histórico, elas são regeneráveis:
+
+```bash
+git show <commit-anterior>:design/art.mjs > design/art.mjs
+git show <commit-anterior>:design/build.mjs > design/build.mjs
+node design/build.mjs      # regera public/art/
+```
+
+Se um dia o gato voltar, ele volta redesenhado na paleta Campo — ver a conversa de 02/11, em que
+a opção escolhida foi "Campo puro por enquanto".
 
 **Pronto quando:** não há nenhum asset do estilo Noturno no repositório e nenhuma tela mostra
 imagem quebrada.
