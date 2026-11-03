@@ -104,11 +104,33 @@ export function intervalShort(iv: Interval) {
 
 // ---------------- escalas ----------------
 type Deg = [num: number, semis: number];
+
+/**
+ * Direção em que a escala é percorrida. Importa para **uma** escala — a menor melódica clássica,
+ * que é definida pela assimetria — e por isso `desc` é opcional.
+ */
+export type Direcao = 'sobe' | 'desce';
+
 export const SCALES = {
   maior: { degs: [[1, 0], [2, 2], [3, 4], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
   menor: { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[] },
   'menor-harmonica': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 11]] as Deg[] },
-  'menor-melodica': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
+  // As DUAS melódicas, e são duas escalas, não uma opção (decisão 70).
+  //
+  // A clássica é *definida* pela assimetria: sobe com 6ª e 7ª elevadas, desce como menor natural.
+  // É a definição que uma prova de conservatório cobra, e é o que `desc` registra.
+  //
+  // A do jazz é a forma ascendente usada nas duas direções, e é conceitualmente outra escala — é a
+  // que gera a alterada e a lídia dominante. Ela não tem `desc` porque desce igual.
+  //
+  // Mesmo nome, duas coisas: era daí que vinha a ambiguidade, e não da direção. E repare que
+  // **subindo as duas são idênticas** — por isso quem pede para distingui-las de ouvido só na
+  // subida está pedindo o impossível, e o item tem que recusar (decisão 70).
+  'menor-melodica': {
+    degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[],
+    desc: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[],
+  },
+  'menor-melodica-jazz': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
   dorico: { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 10]] as Deg[] },
   frigio: { degs: [[1, 0], [2, 1], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[] },
   lidio: { degs: [[1, 0], [2, 2], [3, 4], [4, 6], [5, 7], [6, 9], [7, 11]] as Deg[] },
@@ -119,9 +141,45 @@ export const SCALES = {
   blues: { degs: [[1, 0], [3, 3], [4, 5], [5, 6], [5, 7], [7, 10]] as Deg[] },
 } as const;
 export type ScaleId = keyof typeof SCALES;
+/** Todas as escalas, na ordem em que estão declaradas. É a lista que as telas oferecem. */
+export const ALL_SCALE_IDS = Object.keys(SCALES) as ScaleId[];
 
-export function buildScale(tonic: Note, id: ScaleId): Note[] {
-  return SCALES[id].degs.map(([num, semis]) => transpose(tonic, { num, semis }));
+/** Os graus da escala na direção pedida; `desce` só difere na melódica clássica. */
+export function scaleDegs(id: ScaleId, dir: Direcao = 'sobe'): Deg[] {
+  const e = SCALES[id] as { degs: Deg[]; desc?: Deg[] };
+  return dir === 'desce' && e.desc ? e.desc : e.degs;
+}
+
+export function buildScale(tonic: Note, id: ScaleId, dir: Direcao = 'sobe'): Note[] {
+  return scaleDegs(id, dir).map(([num, semis]) => transpose(tonic, { num, semis }));
+}
+
+/**
+ * O rótulo de um grau a partir do número e dos semitons: `3`, `♭3`, `♯4`.
+ *
+ * Mora aqui, e não no catálogo, porque é grafia de teoria — e porque o teste do catálogo precisa
+ * dela para conferir os distratores. Duas implementações disto divergiriam em silêncio.
+ */
+export function degreeLabel(num: number, semis: number): string {
+  const natural = [0, 2, 4, 5, 7, 9, 11][num - 1];
+  const delta = semis - natural;
+  return `${delta < 0 ? '♭'.repeat(-delta) : delta > 0 ? '♯'.repeat(delta) : ''}${num}`;
+}
+
+/** Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho. */
+export function scaleDegreeLabels(id: ScaleId, dir: Direcao = 'sobe'): string[] {
+  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), "1'"];
+}
+
+/**
+ * As alturas MIDI de uma escala, na direção pedida, **incluindo a oitava nas duas pontas**.
+ *
+ * `sobe` devolve tônica → oitava; `desce` devolve oitava → tônica, usando os graus descendentes
+ * quando a escala tem os seus. É o que os itens de ouvido toca.
+ */
+export function scaleMidi(tonic: number, id: ScaleId, dir: Direcao = 'sobe'): number[] {
+  const semis = scaleDegs(id, dir).map(([, s]) => tonic + s);
+  return dir === 'sobe' ? [...semis, tonic + 12] : [tonic + 12, ...semis.slice().reverse()];
 }
 
 // ---------------- acordes ----------------

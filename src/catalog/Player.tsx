@@ -51,11 +51,14 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const locale = useLocale();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
   const make = useCallback(() => def.make(settings, ctx), [def, settings, ctx]);
+  // Por que estas configurações não geram pergunta (decisão 13). Havendo motivo, `make` NUNCA é
+  // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
+  const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
   // o que as configurações da pessoa mudam no som (ex.: arpejar, duração do acorde)
   const settingsPresentation = useMemo(() => def.settings(ctx).reduce<Partial<Presentation>>(
     (acc, s) => (s.present && settings[s.id] !== undefined ? { ...acc, ...s.present(settings[s.id]) } : acc), {}), [def, ctx, settings]);
 
-  const [q, setQ] = useState<Question>(make);
+  const [q, setQ] = useState<Question | null>(() => (def.problema?.(settings, ctx) ? null : make()));
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [acc, setAcc] = useState(0);
@@ -114,19 +117,20 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   }, [presentationFor]);
 
   const next = useCallback(() => {
+    if (problema) return;
     const nq = make();
     setQ(nq);
     setPhase('ask');
     setPicked(null);
     setAcc(0);
     if (nq.autoplay && heard) window.setTimeout(() => play(nq, true), 250);
-  }, [make, heard, play]);
+  }, [make, heard, play, problema]);
 
   // configurações mudaram: recomeça
-  useEffect(() => { setQ(make()); setPhase('ask'); setPicked(null); }, [make]);
+  useEffect(() => { setQ(problema ? null : make()); setPhase('ask'); setPicked(null); }, [make, problema]);
 
   const submit: Submit = useCallback((response, pickedId) => {
-    if (phase !== 'ask') return;
+    if (phase !== 'ask' || !q) return;
     const ok = validate(q.expected, response);
     const ns = { correct: score.correct + (ok ? 1 : 0), total: score.total + 1, seguidas: ok ? score.seguidas + 1 : 0 };
     setScore(ns);
@@ -157,6 +161,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (!q) return;
       if (e.key === 'Enter' && phase === 'wrong') { e.preventDefault(); next(); }
       if (e.key === ' ' && q.sound && q.autoplay) { e.preventDefault(); play(q, true); }
       const n = Number(e.key);
@@ -176,6 +181,31 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
     try { await navigator.clipboard.writeText(url); setToast(t('player.copied')); } catch { setToast(url); }
     window.setTimeout(() => setToast(''), 2400);
   };
+
+  // Configuração que não gera pergunta: explica e abre as configurações. Nunca sorteia.
+  if (problema || !q) {
+    return (
+      <div className="player">
+        <div className="player-head">
+          <div>
+            <div className="row"><Tag>{area.name}</Tag></div>
+            <h1>{itemText(t, def.id, 'title')}</h1>
+          </div>
+        </div>
+        <div className="panel" role="alert" style={{ display: 'grid', gap: 10 }}>
+          <b>{t('player.cantAsk')}</b>
+          <span className="muted">{problema ?? t('player.cantAsk')}</span>
+        </div>
+        <div className="player-foot">
+          <div />
+          <div className="row">
+            <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
+          </div>
+        </div>
+        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={v => saveSettings(def.id, v)} />}
+      </div>
+    );
+  }
 
   return (
     <div className="player">

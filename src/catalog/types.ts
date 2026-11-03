@@ -187,6 +187,18 @@ export interface CatalogItem extends Classification {
   presentation?: Partial<Presentation>;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
   make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
+  /**
+   * Por que estas configurações não geram pergunta. Devolve a mensagem já traduzida, ou `null`.
+   *
+   * Existe para a decisão 13: **item ambíguo não pode gerar "erro do usuário"**. Quando a própria
+   * configuração torna a pergunta impossível de responder, o certo não é sortear e corrigir — é
+   * recusar e dizer por quê. O caso que criou isto: menor melódica clássica e jazz **soam idênticas
+   * subindo**, então pedir para distinguir as duas só com direção ascendente é pedir o impossível
+   * (decisão 70).
+   *
+   * O Player chama antes de `make` e, havendo mensagem, **não chama `make`**.
+   */
+  problema?: (s: Record<string, SettingValue>, ctx: Ctx) => string | null;
   /** Só em `ambiente` e `tarefa`: tela própria, carregada sob demanda. */
   screen?: () => Promise<{ default: ComponentType<ScreenProps> }>;
 }

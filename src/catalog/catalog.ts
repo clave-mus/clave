@@ -3,8 +3,8 @@
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
 import {
   buildChord, buildScale, CHORDS, chordSymbol, clefBottom, harmonicField,
-  majorTonic, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, semisFor, shuffle, transpose,
-  type ChordId, type Clef, type Note, type Quality, type ScaleId,
+  ALL_SCALE_IDS, majorTonic, scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
+  type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId,
 } from '../theory/core';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
@@ -28,11 +28,27 @@ const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.i
   { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
 const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
+/** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */
+const DIRECAO = ({ t }: Ctx): Setting => ({ id: 'direcao', label: t('settings.direction'), type: 'single', options: [
+  { id: 'sobe', label: t('settings.up') }, { id: 'desce', label: t('settings.down') }, { id: 'ambos', label: t('settings.upDown') }] });
+
+/**
+ * As alturas a tocar de uma escala, na direção escolhida.
+ *
+ * `ambos` sobe e desce, e é o único caso em que a melódica clássica **mostra o que ela é**: sobe
+ * com 6ª e 7ª elevadas e desce como menor natural. A oitava do topo não se repete na virada.
+ */
+function scaleSound(tonic: number, id: ScaleId, dir?: SettingValue): number[] {
+  const d = (dir ?? 'sobe') as Direcao | 'ambos';
+  if (d === 'ambos') return [...scaleMidi(tonic, id, 'sobe'), ...scaleMidi(tonic, id, 'desce').slice(1)];
+  return scaleMidi(tonic, id, d);
+}
+
 const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
 const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));
 const ALL_CHORDS = Object.keys(CHORDS) as ChordId[];
-const ALL_SCALES = Object.keys(SCALES) as ScaleId[];
+const ALL_SCALES = ALL_SCALE_IDS;
 
 // O `tier` é dica de dificuldade relativa, só para a variação automática pré-marcar (F2-2).
 // Aqui existe ordem defensável: oitava, quinta e terças antes das segundas e sétimas, e o trítono
@@ -489,14 +505,25 @@ export const EXERCISES: CatalogItem[] = [
     primaryModule: 'perception.melodic', skillTags: ['ear.scale_quality'],
     contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    settings: ctx => [{ id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) }],
-    defaults: { tipos: ['maior', 'menor', 'menor-harmonica'] },
+    settings: ctx => [
+      { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+      DIRECAO(ctx),
+    ],
+    defaults: { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe' },
     presentation: { gap: 0.3 },
+    // As duas melódicas são IDÊNTICAS subindo (decisão 70). Com as duas marcadas e direção só
+    // ascendente, a pergunta é fisicamente impossível de responder: é o mesmo áudio. Recusar é o
+    // que a decisão 13 manda — item ambíguo não pode gerar "erro do usuário".
+    problema(s, ctx) {
+      const types = arr(s.tipos, []) as ScaleId[];
+      const asDuas = types.includes('menor-melodica') && types.includes('menor-melodica-jazz');
+      return asDuas && (s.direcao ?? 'sobe') === 'sobe' ? ctx.t('player.sameAscending') : null;
+    },
     make(s, ctx) {
       const types = arr(s.tipos, ['maior', 'menor']) as ScaleId[];
       const type = pick(types);
       const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });
-      const ms = [...SCALES[type].degs.map(([, semi]) => tonic + semi), tonic + 12];
+      const ms = scaleSound(tonic, type, s.direcao);
       return {
         prompt: ctx.t('quiz.whatScale'), visual: { kind: 'ear' },
         surface: { kind: 'choices', options: types.map(t => ({ id: t, label: scaleName(ctx.t, t) })), wide: true }, expected: { kind: 'option', id: type },
@@ -508,28 +535,78 @@ export const EXERCISES: CatalogItem[] = [
     id: 'ouvido-celulas',
     objetos: ['escalas', 'melodia'], tarefas: ['ouvir'],
     primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees'],
-    contentTags: ['scale.pentatonic'],
+    contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    settings: ctx => [{ id: 'escala', label: ctx.t('settings.pentatonic'), type: 'single', options: [{ id: 'maior', label: ctx.t('settings.pentaMajor') }, { id: 'menor', label: ctx.t('settings.pentaMinor') }] },
+    // Era pentatônico-only sem razão (decisão 54): a célula é um desenho de graus, e graus existem
+    // em qualquer escala. Agora aceita todas, inclusive as duas melódicas.
+    settings: ctx => [{ id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
       { id: 'tamanho', label: ctx.t('settings.cellSize'), type: 'single', options: [{ id: '3', label: '3' }, { id: '4', label: '4' }] }],
-    defaults: { escala: 'maior', tamanho: '3' },
-    presentation: { gap: 0.55 },
+    defaults: { escala: 'penta-maior', tamanho: '3' },
+    presentation: { gap: 0.55},
     make(s, ctx) {
-      const minor = s.escala === 'menor';
-      const degs = minor ? ['1', '♭3', '4', '5', '♭7', "1'"] : ['1', '2', '3', '5', '6', "1'"];
-      const semis = minor ? [0, 3, 5, 7, 10, 12] : [0, 2, 4, 7, 9, 12];
+      const id = (ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId;
+      const degs = scaleDegreeLabels(id);
+      const semis = [...scaleDegs(id).map(([, semi]) => semi), 12];
+      const top = semis.length - 1;
       const size = Number(s.tamanho ?? 3);
+      // O que define uma célula: graus vizinhos distam 1 ou 2 posições, e **nunca se repetem**.
+      // Isto é uma só regra, e ela vale igual para a resposta certa e para os distratores — foi
+      // onde eu errei na primeira tentativa desta tarefa: consertei a certa e recriei o bug nos
+      // distratores, com 30% deles saindo `6 6 6`. Distrator que não é célula válida entrega a
+      // resposta.
+      const valida = (x: number[]) => x.every((v, k) => k === 0 || [1, 2].includes(Math.abs(v - x[k - 1])));
+
+      // BUG 1 (consertado): o gerador antigo era `clamp(anterior + pick([-2,-1,1,2]), 0, top)`, e
+      // nas bordas o clamp devolvia o MESMO grau — saía `5 5 4`. Agora o passo é sorteado DENTRO
+      // do que cabe, em vez de cortado depois.
       const cell = () => {
-        const out: number[] = [randInt(0, 5)];
-        while (out.length < size) out.push(Math.max(0, Math.min(5, out[out.length - 1] + pick([-2, -1, 1, 2]))));
+        const out: number[] = [randInt(0, top)];
+        while (out.length < size) {
+          const de = out[out.length - 1];
+          const cabem = [-2, -1, 1, 2].filter(d => de + d >= 0 && de + d <= top);
+          out.push(de + pick(cabem));
+        }
         return out;
       };
       const c = cell();
       const key = (x: number[]) => x.map(i => degs[i]).join(' ');
+
+      // BUG 2 (consertado): os distratores eram células sorteadas do zero e diferiam demais. A
+      // visão pede o contrário — "distratores que diferem em apenas uma nota".
+      //
+      // São ENUMERADOS, não sorteados: todas as células válidas que trocam uma posição da certa.
+      // Enumerar aqui é o certo porque o espaço é minúsculo (no máximo 8 posições × 4 notas), e
+      // sortear com tentativa e erro é o que produzia os casos inválidos.
+      const umaNotaDiferente = (base: number[]) => {
+        const out: number[][] = [];
+        for (let i = 0; i < base.length; i++) {
+          for (let v = 0; v <= top; v++) {
+            if (v === base[i]) continue;
+            const cand = base.slice(); cand[i] = v;
+            if (valida(cand)) out.push(cand);
+          }
+        }
+        return out;
+      };
       const others = new Set<string>();
-      while (others.size < 3) { const o = key(cell()); if (o !== key(c)) others.add(o); }
+      for (const v of shuffle(umaNotaDiferente(c))) {
+        if (others.size >= 3) break;
+        if (key(v) !== key(c)) others.add(key(v));
+      }
+      // Célula encurralada (bordas estreitas): abre para duas notas de diferença, ainda válidas.
+      // Melhor um distrator a duas notas do que três opções em vez de quatro.
+      if (others.size < 3) {
+        for (const base of shuffle(umaNotaDiferente(c))) {
+          for (const v of shuffle(umaNotaDiferente(base))) {
+            if (others.size >= 3) break;
+            if (key(v) !== key(c)) others.add(key(v));
+          }
+          if (others.size >= 3) break;
+        }
+      }
       const tonic = tonicaNaRegiao(ctx, { lo: 57, hi: 64 });
-      const triad = minor ? [tonic, tonic + 3, tonic + 7] : [tonic, tonic + 4, tonic + 7];
+      const terca = semis.find(x => x === 3 || x === 4) ?? 4;
+      const triad = [tonic, tonic + terca, tonic + 7];
       return {
         prompt: ctx.t('quiz.cells'), visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint') },
         surface: { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }, expected: { kind: 'option', id: key(c) },

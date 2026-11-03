@@ -138,7 +138,7 @@ dos quatro tem **um objeto só**.
 
 ---
 
-## F6-10 · Generalizar as escalas e as direções
+## F6-10 · Generalizar as escalas e as direções ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 54, e os achados da revisão de 03/11.
 
