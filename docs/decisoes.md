@@ -1467,6 +1467,49 @@ qualquer tela, uma hora de teste de som — avaliada pelo Paulo, porque a IA nã
 
 ---
 
+### 90 · A "tarefa com metrônomo": um motor, cinco famílias
+
+Implementa o motor que o catálogo listava como inexistente. **Uma tela** (`tools/Cadencia.tsx`) e **cinco
+famílias** declaradas sobre ela — deslocamento de acento (T3), subdivisão alternada (T4), sustentar e
+cortar (T6), legato e staccato (T7) e deslocamento de padrão rítmico (T8) —, pela decisão 15: o que muda
+de uma para outra são os controles e o **plano**, não a tela.
+
+**Um plano é um ciclo de compassos.** Cada compasso diz o que acontece em cada célula (acento, ataque,
+sustentação, corte, silêncio), o que a pessoa está fazendo e **o que muda no compasso seguinte**. A tela
+repete o ciclo.
+
+**Toda mudança é avisada um compasso antes, e só as mudanças.** É o ponto de T4 e T7 — fazer o que a pessoa
+não consegue sozinha (mudar a própria programação enquanto toca) sem pegá-la de surpresa —, e é uma
+propriedade **provada em todos os planos** por teste, não só implementada.
+
+**Só tocar, nunca ouvir.** O app não escuta nada: mostra o que fazer, marca o momento da mudança e deixa
+a avaliação com a pessoa (decisão 37). Por isso os cinco itens são `tarefa`.
+
+**O andamento é configuração neutra** (decisão 82): nenhum plano o carrega, e o motor **nunca o sobe sozinho**.
+Quatro cliques de contagem antes do primeiro compasso.
+
+**O relógio troca de subdivisão na primeira célula do compasso novo**, e não na última do anterior: o
+intervalo que vem depois da primeira célula já é o da subdivisão nova, e o que veio antes continuou sendo o
+da velha. Medido no navegador a 70 bpm: o compasso dura ~3,4 s tanto em colcheias quanto em tercinas e
+semicolcheias — o andamento não oscila na troca.
+
+**No deslocamento rítmico, andar pelos modos é manual** (decisão 38) e **para a execução**: mudar o modo
+muda o plano, e continuar com índices de outro plano seria tocar o que ninguém pediu.
+
+**Declaradas, não publicadas (decisão 51).** Ver [revisao-pendente.md](revisao-pendente.md).
+
+**Em aberto, e são do Paulo:**
+
+- `A18` — o histórico só é gravado quando a tela **desmonta**: quem fecha ou recarrega a aba no meio de uma
+  prática de vinte minutos **não deixa rastro**. Vale para todas as ferramentas e para o `Player`.
+- `A19` — **não existe "publicado"**. Todo item declarado aparece no catálogo. Antes do beta abrir é preciso
+  um mecanismo — por exemplo, um campo de revisão com data (a `F6-7` já fala em "data da revisão") e o
+  catálogo escondendo o que não a tem.
+- `A20` — **720 ordens de cordas** na guitarra de seis (T2): é percorrível? A alternativa é limitar a
+  quatro cordas adjacentes, o que exige escolher quais.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1516,6 +1559,9 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A16 | **"Subir 4 bpm a cada volta"** vem ligado por padrão na ferramenta de Técnica. Aumentar o andamento sozinho é tratar bpm como progressão e carga, que a decisão 82 diz que o app nunca faz — e o Paulo avisou que aumentar demais costuma ser prejudicial | Paulo | nada |
 | A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
+| A18 | **O histórico só é gravado quando a tela desmonta**: fechar ou recarregar a aba no meio de uma prática não deixa rastro, em todas as ferramentas e no Player (decisão 90) | Paulo | nada |
+| A19 | **Não existe "publicado"**: todo item declarado aparece no catálogo. Precisa de mecanismo antes do beta abrir — ver [revisao-pendente.md](revisao-pendente.md) | Paulo | abrir o beta |
+| A20 | **720 ordens de cordas** na guitarra de seis (T2): percorrível, ou limitar a quatro cordas adjacentes? | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

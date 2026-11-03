@@ -58,4 +58,52 @@ export const AMBIENTES: CatalogItem[] = [
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Tecnica'),
   },
+
+  // ---------------------------------------------------------------------------------------------
+  // A "tarefa com metrônomo" (decisão 15): UMA tela, cinco famílias. O que muda de uma para outra
+  // está em tools/cadencia-familias.ts — os controles e o plano. Todas terminam quando a pessoa se
+  // autoavalia (`tarefa`): o app não ouve, só marca o momento de cada coisa.
+  //
+  // Declaradas, NÃO publicadas (decisão 51): a revisão musical é passo do Paulo.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'acento-deslocado', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
+    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/Cadencia'),
+  },
+  {
+    id: 'subdivisao-alternada', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
+    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/Cadencia'),
+  },
+  {
+    id: 'sustentar-e-cortar', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['motor'], tarefas: ['tocar'],
+    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    contentTags: ['rhythm.quarter'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/Cadencia'),
+  },
+  {
+    id: 'legato-staccato', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['motor'], tarefas: ['tocar'],
+    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    contentTags: ['rhythm.quarter'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/Cadencia'),
+  },
+  {
+    id: 'deslocamento-ritmico', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['ritmo'], tarefas: ['tocar'],
+    primaryModule: 'perception.rhythmic', skillTags: ['technique.tempo_control'],
+    contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth', 'rhythm.rests'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/Cadencia'),
+  },
 ];

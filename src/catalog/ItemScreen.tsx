@@ -12,7 +12,7 @@ export default function ItemScreen({ item, ...props }: { item: CatalogItem } & S
   if (!Comp) return null;
   return (
     <Suspense fallback={<Loading />}>
-      <Comp {...props} />
+      <Comp itemId={item.id} {...props} />
     </Suspense>
   );
 }

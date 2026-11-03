@@ -142,6 +142,8 @@ export interface ScreenProps {
   compact?: boolean;
   onRunning?: (running: boolean) => void;
   presetId?: string;
+  /** Qual item abriu esta tela — é como uma mesma tela serve a várias famílias (decisão 15). */
+  itemId?: string;
 }
 
 // Título e descrição ficam nos textos de cada idioma (exercises.<id> e tools.<id> em src/i18n;

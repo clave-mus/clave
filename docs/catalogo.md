@@ -93,7 +93,7 @@ acordes, campo harmônico) · `audio/engine` (síntese e agendamento com anteced
 | **Progressões** e harmonia aplicada | ⚠️ parcial | ~15: campo harmônico, cifras, walking, guide tones, improviso |
 | **Partituras** | ⚠️ existe em dois, **falta fundir** (decisão 18) | ~13: leitura melódica e rítmica, ditado |
 | **Padrões** | ❌ não existe — **e é uma tarde** | ~10, nas duas metades da matriz |
-| **Tarefa com metrônomo** + autoavaliação | ❌ não existe | ~9: técnica, execução, groove |
+| **Tarefa com metrônomo** + autoavaliação | ✅ existe (`tools/Cadencia.tsx`) — serve a 5 famílias | ~9: técnica, execução, groove |
 | **Altura** (microfone e MIDI) | ❌ não existe | ~4, todas opcionais |
 | **Digitações** | ❌ não existe | ~3 diretamente, e é parâmetro de muitos outros |
 

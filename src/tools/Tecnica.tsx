@@ -6,6 +6,7 @@ import { pcName } from '../theory/core';
 import Keyboard from '../components/music/Keyboard';
 import { TUNINGS } from '../components/music/Fretboard';
 import { Btn, Chip } from '../components/ui';
+import EixoManual from '../components/EixoManual';
 import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
 import { useNaming, useT } from '../i18n';
@@ -102,20 +103,12 @@ export default function Tecnica() {
       <p className="muted">{t(routine.desc)}</p>
 
       {routine.eixo && (
-        <div className="panel" style={{ display: 'grid', gap: 10 }} aria-label={t(routine.eixo.rotulo)}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="muted">{t(routine.eixo.rotulo)}</span>
-            <span className="muted">{t('technique.axisSeen', { done: (vistos[routine.id] ?? []).length, total: valoresDoEixo.length })}</span>
-          </div>
-          <b className="num" style={{ fontFamily: 'var(--display)', fontSize: 34, letterSpacing: '0.12em' }}>
-            {routine.eixo.mostrar(valorDoEixo, t)}
-          </b>
-          <div className="row">
-            <Btn small tone="ghost" onClick={() => setEixoPos(p => p - 1)}>{t('technique.axisPrev')}</Btn>
-            <Btn small onClick={() => setEixoPos(p => p + 1)}>{t('technique.axisNext')}</Btn>
-            <Btn small tone="ghost" onClick={() => setEixoPos(Math.floor(Math.random() * Math.max(1, valoresDoEixo.length)))}>{t('technique.axisShuffle')}</Btn>
-          </div>
-        </div>
+        <EixoManual
+          rotulo={routine.eixo.rotulo} valor={routine.eixo.mostrar(valorDoEixo, t)}
+          vistos={(vistos[routine.id] ?? []).length} total={valoresDoEixo.length}
+          onAnterior={() => setEixoPos(p => p - 1)} onProximo={() => setEixoPos(p => p + 1)}
+          onSortear={() => setEixoPos(Math.floor(Math.random() * Math.max(1, valoresDoEixo.length)))}
+        />
       )}
 
       <div style={{ background: 'var(--co)', padding: 18, overflowX: 'auto' }}>
