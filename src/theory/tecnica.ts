@@ -105,3 +105,28 @@ export function andamentoNaVolta(base: number, voltas: number, s: Subida): numbe
   const subido = base + PASSO_DA_SUBIDA * Math.floor(voltas / VOLTAS_POR_PASSO);
   return Math.max(base, Math.min(subido, s.teto));
 }
+
+// ---------------------------------------------------------------------------
+// Grupos de cordas (T2)
+// ---------------------------------------------------------------------------
+
+/**
+ * A ordem das cordas (T2) é sempre de **quatro cordas vizinhas**. Com as seis da guitarra seriam 720
+ * ordens, e ninguém percorre 720: o contador de "já vi" perde o sentido, e a lista vira só um sorteio.
+ * Com quatro são 24 em qualquer instrumento — e o contador volta a valer.
+ *
+ * Na guitarra a pessoa escolhe QUAL grupo (E-A-D-G, A-D-G-B ou D-G-B-E); no baixo de quatro só há um.
+ */
+export const CORDAS_DO_GRUPO = 4;
+
+/** Quantos grupos de quatro cordas vizinhas o instrumento tem. */
+export const gruposDeCordas = (cordas: number) => Math.max(1, cordas - CORDAS_DO_GRUPO + 1);
+
+/**
+ * Os índices de corda (0 = a mais grave) do grupo `grupo`, da mais grave para a mais aguda. O grupo
+ * é preso ao que existe, para uma escolha antiga não apontar para fora do braço.
+ */
+export function indicesDoGrupo(grupo: number, cordas: number): number[] {
+  const g = Math.min(Math.max(0, Math.floor(grupo)), gruposDeCordas(cordas) - 1);
+  return Array.from({ length: Math.min(CORDAS_DO_GRUPO, cordas) }, (_, k) => g + k);
+}

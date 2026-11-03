@@ -12,7 +12,7 @@ import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
 import { useNaming, useT } from '../i18n';
 import { ROUTINES } from './tecnica-rotinas';
-import { andamentoNaVolta, TETO_PADRAO } from '../theory/tecnica';
+import { andamentoNaVolta, gruposDeCordas, indicesDoGrupo, TETO_PADRAO } from '../theory/tecnica';
 
 export default function Tecnica() {
   const instrument = useStore(s => s.profile.instrument);
@@ -30,10 +30,10 @@ export default function Tecnica() {
   // nunca viu, mostrando "2 de 88" na primeira tela. Sem efeito de reset, e voltar a uma rotina
   // devolve a pessoa ao ponto em que estava.
   const [posicoes, setPosicoes] = useState<Record<string, number>>({});
-  const eixoPos = posicoes[routine.id] ?? 0;
-  const setEixoPos = (f: number | ((p: number) => number)) =>
-    setPosicoes(m => ({ ...m, [routine.id]: typeof f === 'function' ? f(m[routine.id] ?? 0) : f }));
   const [vistos, setVistos] = useState<Record<string, string[]>>({});
+  // Qual grupo de quatro cordas vizinhas (0 = o mais grave). Só importa a rotina que declara `grupos`, e só
+  // há o que escolher onde o instrumento tem mais de quatro cordas.
+  const [grupo, setGrupo] = useState(0)
   const [bpm, setBpm] = useState(70);
   const [sub, setSub] = useState(2);
   // A subida de andamento NASCE DESLIGADA (decisões 82 e 93): aumentar o bpm demais costuma ser
@@ -54,12 +54,21 @@ export default function Tecnica() {
   const [round, setRound] = useState(0);
   const clock = useRef<Clock | null>(null);
   const tuning = instrument === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
+  const nGrupos = gruposDeCordas(tuning.length);
+  const grupoAtual = routine.grupos ? Math.min(grupo, nGrupos - 1) : 0;
+  const escolheGrupo = !!routine.grupos && nGrupos > 1;
+  // A posição no eixo e o que já passou valem POR GRUPO: a ordem 1-2-3-4 em Mi-Lá-Ré-Sol e em Lá-Ré-Sol-Si
+  // são exercícios diferentes na mão, e contar uma como "já vista" por causa da outra seria mentir.
+  const chave = escolheGrupo ? `${routine.id}:${grupoAtual}` : routine.id;
+  const eixoPos = posicoes[chave] ?? 0;
+  const setEixoPos = (f: number | ((p: number) => number)) =>
+    setPosicoes(m => ({ ...m, [chave]: typeof f === 'function' ? f(m[chave] ?? 0) : f }));
   // `%` de negativo em JS devolve negativo, e `valores[-1]` é undefined — "Anterior" a partir de
   // zero quebrava a tela. O eixo é circular nos dois sentidos.
   const noCiclo = (i: number, n: number) => ((i % n) + n) % n;
   const valoresDoEixo = useMemo(() => routine.eixo?.valores(tuning.length) ?? [], [routine, tuning.length]);
   const valorDoEixo = valoresDoEixo.length ? valoresDoEixo[noCiclo(eixoPos, valoresDoEixo.length)] : '';
-  const seq = useMemo(() => routine.build(tuning.length, valorDoEixo), [routine, tuning.length, valorDoEixo]);
+  const seq = useMemo(() => routine.build(tuning.length, valorDoEixo, grupoAtual), [routine, tuning.length, valorDoEixo, grupoAtual]);
   // O que ficou no histórico: a rotina, a ordem quando há, e o andamento — **de início e de fim**. Com a
   // subida ligada não existe um valor único, e gravar só um dos dois seria inventar; os dois dizem de
   // onde a prática partiu e aonde chegou. Informação neutra, nunca placar (decisão 82).
@@ -67,6 +76,7 @@ export default function Tecnica() {
     settings: {
       rotina: routine.id,
       ...(routine.eixo && valorDoEixo ? { [routine.eixo.id]: valorDoEixo } : {}),
+      ...(escolheGrupo ? { grupoDeCordas: grupoAtual } : {}),
       subida: climb,
       ...(climb ? { teto } : {}),
       ...(inicioDaPratica.current !== null ? { bpmInicio: inicioDaPratica.current, bpmFim: bpm } : {}),
@@ -79,10 +89,10 @@ export default function Tecnica() {
   useEffect(() => {
     if (!valorDoEixo) return;
     setVistos(v => {
-      const atual = v[routine.id] ?? [];
-      return atual.includes(valorDoEixo) ? v : { ...v, [routine.id]: [...atual, valorDoEixo] };
+      const atual = v[chave] ?? [];
+      return atual.includes(valorDoEixo) ? v : { ...v, [chave]: [...atual, valorDoEixo] };
     });
-  }, [routine.id, valorDoEixo]);
+  }, [chave, valorDoEixo]);
   // o timbre é o escolhido para o instrumento no Perfil (ver SoundPanel)
   const live = useRef({ seq, hear, climb, teto, voice: params.timbres[instrument] });
   live.current = { seq, hear, climb, teto, voice: params.timbres[instrument] };
@@ -129,10 +139,23 @@ export default function Tecnica() {
       </div>
       <p className="muted">{t(routine.desc)}</p>
 
+      {escolheGrupo && (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <span className="eyebrow">{t('technique.stringGroup')}</span>
+          <div className="row">
+            {Array.from({ length: nGrupos }, (_, g) => (
+              <Chip key={g} on={g === grupoAtual} onClick={() => setGrupo(g)}>
+                {indicesDoGrupo(g, tuning.length).map(s => pcName(tuning[s], naming, false)).join(' ')}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      )}
+
       {routine.eixo && (
         <EixoManual
           rotulo={routine.eixo.rotulo} valor={routine.eixo.mostrar(valorDoEixo, t)}
-          vistos={(vistos[routine.id] ?? []).length} total={valoresDoEixo.length}
+          vistos={(vistos[chave] ?? []).length} total={valoresDoEixo.length}
           onAnterior={() => setEixoPos(p => p - 1)} onProximo={() => setEixoPos(p => p + 1)}
           onSortear={() => setEixoPos(Math.floor(Math.random() * Math.max(1, valoresDoEixo.length)))}
         />

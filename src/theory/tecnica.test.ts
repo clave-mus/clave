@@ -96,7 +96,7 @@ describe('codificar e decodificar uma troca', () => {
   });
 });
 
-import { andamentoNaVolta, PASSO_DA_SUBIDA, TETO_PADRAO, VOLTAS_POR_PASSO } from './tecnica';
+import { andamentoNaVolta, CORDAS_DO_GRUPO, gruposDeCordas, indicesDoGrupo, PASSO_DA_SUBIDA, TETO_PADRAO, VOLTAS_POR_PASSO } from './tecnica';
 
 describe('andamentoNaVolta', () => {
   const liga = (teto = 100) => ({ ativa: true, teto });
@@ -146,5 +146,32 @@ describe('andamentoNaVolta', () => {
 
   it('voltas negativas ou zero não mexem em nada', () => {
     expect(andamentoNaVolta(70, -3, liga())).toBe(70);
+  });
+});
+
+describe('grupos de quatro cordas (T2)', () => {
+  it('o baixo de quatro tem um grupo; a de cinco, dois; a guitarra de seis, três', () => {
+    expect([4, 5, 6].map(gruposDeCordas)).toEqual([1, 2, 3]);
+  });
+
+  it('um grupo tem sempre quatro cordas vizinhas, da mais grave para a mais aguda', () => {
+    expect(CORDAS_DO_GRUPO).toBe(4);
+    expect(indicesDoGrupo(0, 6)).toEqual([0, 1, 2, 3]);
+    expect(indicesDoGrupo(1, 6)).toEqual([1, 2, 3, 4]);
+    expect(indicesDoGrupo(2, 6)).toEqual([2, 3, 4, 5]);
+  });
+
+  it('o grupo é preso ao que existe — nunca aponta para fora do braço', () => {
+    expect(indicesDoGrupo(9, 6)).toEqual([2, 3, 4, 5]);
+    expect(indicesDoGrupo(-3, 6)).toEqual([0, 1, 2, 3]);
+    expect(indicesDoGrupo(1, 4)).toEqual([0, 1, 2, 3]);
+  });
+
+  it('todos os grupos cobrem todas as cordas, e nenhum sai delas', () => {
+    for (const n of [4, 5, 6]) {
+      const usadas = new Set<number>();
+      for (let g = 0; g < gruposDeCordas(n); g++) for (const s of indicesDoGrupo(g, n)) { expect(s).toBeLessThan(n); usadas.add(s); }
+      expect(usadas.size).toBe(n);
+    }
   });
 });

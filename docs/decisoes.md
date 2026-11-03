@@ -1502,8 +1502,7 @@ muda o plano, e continuar com índices de outro plano seria tocar o que ninguém
 
 - `A18` e `A19` (o histórico perdido ao fechar a aba, e a falta de "publicado") **foram resolvidos** nas
   decisões 92 e 91.
-- `A20` — **720 ordens de cordas** na guitarra de seis (T2): é percorrível? A alternativa é limitar a
-  quatro cordas adjacentes, o que exige escolher quais.
+- `A20` (as 720 ordens de cordas na guitarra) **foi resolvido** na decisão 94.
 
 ---
 
@@ -1608,6 +1607,29 @@ Verificado no navegador a 150 bpm: 150 → 154 (volta 3) → 158 (volta 5) → 1
 
 ---
 
+### 94 · A ordem das cordas é sempre de quatro cordas vizinhas
+
+Resolve `A20`. A `T2` nomeia a ordem em que se atravessam as cordas ("4 2 3 1"). Na guitarra de seis seriam
+**720 ordens** (6×5×4×3×2×1), e ninguém as percorre: o contador de "já vi" perde o sentido, e o avanço manual
+da decisão 38 vira só um sorteio. No baixo de quatro são 24.
+
+**Agora são sempre 24, de quatro cordas vizinhas, em qualquer instrumento.** Na guitarra a pessoa escolhe **qual
+grupo**: Mi-Lá-Ré-Sol, Lá-Ré-Sol-Si ou Ré-Sol-Si-Mi (o baixo de quatro tem um só, e o seletor não aparece).
+
+- **Dentro do grupo, a corda 1 é a mais aguda do grupo** — a convenção de todo músico de cordas, aplicada ao
+  conjunto escolhido.
+- **A posição no eixo e o que já passou valem por grupo**: a ordem 1-2-3-4 em Mi-Lá-Ré-Sol e em Lá-Ré-Sol-Si são
+  exercícios diferentes na mão, e contar uma como "já vista" por causa da outra seria mentir. Voltar a um grupo
+  devolve a pessoa ao ponto em que estava.
+- **O histórico grava o grupo** (`grupoDeCordas`, 0 = o mais grave) quando há o que escolher.
+- **O padrão é o grupo mais grave** (Mi-Lá-Ré-Sol), o equivalente direto do baixo. A pessoa não escolheu um
+  padrão; ficou o mais óbvio, e trocar custa um toque.
+
+**Fica em aberto, e é pedagógico:** se quatro cordas vizinhas bastam, ou se atravessar saltando uma corda (Mi-Ré-Si,
+por exemplo) é parte do treino que se perde. Com grupos de vizinhas, "saltar" só existe dentro do grupo.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1656,7 +1678,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
-| A20 | **720 ordens de cordas** na guitarra de seis (T2): percorrível, ou limitar a quatro cordas adjacentes? | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

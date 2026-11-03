@@ -3,7 +3,7 @@
 import type { Publicacao } from '../catalog/publicacao';
 import { LEGADO, RASCUNHO } from '../catalog/publicacao';
 import type { MessageKey, Translate } from '../i18n';
-import { casasDaTroca, codificarTroca, decodificarTroca, indiceDaCorda, permutacoesDe, trocasDePosicao } from '../theory/tecnica';
+import { CORDAS_DO_GRUPO, casasDaTroca, codificarTroca, decodificarTroca, indiceDaCorda, indicesDoGrupo, permutacoesDe, trocasDePosicao } from '../theory/tecnica';
 
 export interface Pos { s: number; f: number; finger?: number }
 
@@ -29,7 +29,10 @@ const espacado = (v: string) => [...v].join(' ');
 
 export interface Routine {
   id: string; name: MessageKey; desc: MessageKey; for: ('violao' | 'baixo' | 'piano')[];
-  build: (strings: number, valor: string) => Pos[];
+  /** `grupo` só importa a quem declara `grupos`: qual conjunto de quatro cordas vizinhas (0 = o mais grave). */
+  build: (strings: number, valor: string, grupo: number) => Pos[];
+  /** A rotina trabalha com um grupo de quatro cordas, e a tela deixa escolher qual quando há mais de um. */
+  grupos?: true;
   eixo?: Eixo;
   /** Mesmo portão dos itens de catálogo (decisão 91): omitir é rascunho. */
   publicacao?: Publicacao;
@@ -75,11 +78,16 @@ export const ROUTINES: Routine[] = [
     // uma corda à vizinha — nunca 4 2 3 1. A corda 1 é a mais aguda (`indiceDaCorda`).
     publicacao: RASCUNHO,
     id: 'cordas', name: 'technique.cordsName', desc: 'technique.cordsDesc', for: ['violao', 'baixo'],
-    eixo: { id: 'ordemDeCordas', valores: n => permutacoesDe(n), rotulo: 'technique.cordsOrder', mostrar: espacado },
-    build: (n, valor) => {
-      const ordem = [...(valor || permutacoesDe(n)[0])].map(Number).filter(c => c >= 1 && c <= n);
+    grupos: true,
+    // sempre 24 ordens, de quatro cordas vizinhas: com as seis da guitarra seriam 720 (ver CORDAS_DO_GRUPO)
+    eixo: { id: 'ordemDeCordas', valores: () => permutacoesDe(CORDAS_DO_GRUPO), rotulo: 'technique.cordsOrder', mostrar: espacado },
+    build: (n, valor, grupo) => {
+      const indices = indicesDoGrupo(grupo, n);
+      const q = indices.length;
+      // dentro do grupo, 1 é a corda mais AGUDA DO GRUPO (indiceDaCorda); `indices[0]` é a mais grave
+      const ordem = [...(valor || permutacoesDe(q)[0])].map(Number).filter(c => c >= 1 && c <= q);
       // uma nota por corda, na casa 5, atravessando na ordem pedida — duas vezes, para dar ritmo
-      const volta = ordem.map(c => ({ s: indiceDaCorda(c, n), f: 5 }));
+      const volta = ordem.map(c => ({ s: indices[indiceDaCorda(c, q)], f: 5 }));
       return [...volta, ...volta];
     },
   },
