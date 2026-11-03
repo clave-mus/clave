@@ -282,21 +282,26 @@ faz, e é justamente o que não ensina nada.
 **Decisão de origem:** 76. **Depende de:** uma pessoa, não de código. **Candidato natural:** o
 Bernardo Garcia, pianista clássico do time.
 
-O motor de digitações (`FM-2`) é **só de cordas**, e isso não é lacuna: digitação de escala no piano
-é **convencional e fixa**. Dó maior na mão direita é `1-2-3-1-2-3-4` com passagem do polegar, e é
-isso que se ensina em todo lugar. Não há enumeração a fazer porque não há escolha genuína.
+**A tabela já existe, em [docs/digitacoes/piano.md](../digitacoes/piano.md) — esta tarefa é
+conferir, não escrever.**
 
-**É tabela.** Doze maiores e doze menores, duas mãos, mais os arpejos.
+Porque digitação de escala no piano é **convenção**, e não julgamento: o polegar nunca cai em tecla
+preta, e isso determina a digitação quase sozinho. Foi por isso que ela pôde ser produzida por
+consulta, sem um pianista — e é por isso que ainda precisa de um.
 
-Formato, em `docs/digitacoes/piano.md`:
+Estado: **as 12 maiores ✅** (convenção única), **7 menores ✅**, **2 menores 🟡** (há mais de uma
+edição em circulação) e **3 menores ❓ em branco** — Fá♯, Dó♯ e Sol♯ menor, as de mais teclas
+pretas, onde as edições divergem mais e onde eu não quis escrever linha com cara de certa.
 
-```md
-| escala | mão | digitação | observação |
-|---|---|---|---|
-| Dó maior | direita | 1 2 3 1 2 3 4 | polegar passa sob o 3 |
-| Dó maior | esquerda | 5 4 3 2 1 3 2 1 | — |
-```
+**O que falta:**
 
-**Pronto quando:** as 24 escalas têm as duas mãos preenchidas, e quem preencheu escreveu uma linha
-dizendo **qual tradição seguiu** — porque há mais de uma edição de referência e divergem em alguns
-casos. Sem essa linha a tabela não é verificável.
+1. As três ❓, com as duas mãos.
+2. Conferir as duas 🟡.
+3. **Os arpejos** — tríades e tétrades, duas mãos. Divergem mais que as escalas.
+4. **Uma linha dizendo qual tradição ou edição foi seguida.**
+
+**Pronto quando:** não há mais ❓, as 🟡 foram confirmadas ou corrigidas, os arpejos existem, e a
+linha de tradição está escrita — sem ela a tabela não é verificável.
+
+**E se o pianista discordar de uma linha ✅, a mão dele ganha.** A marca de confiança é a minha, e
+ela é consulta, não prática.
