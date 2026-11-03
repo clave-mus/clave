@@ -133,8 +133,22 @@ aleatório com distribuição descontrolada. Fundido, ele herda os parâmetros d
 - Em `que-intervalo-e-esse`, o mesmo princípio: na **pauta** a resposta é a **qualidade** (terça
   menor ≠ segunda aumentada, porque a grafia distingue); no **braço** é o **número de semitons**
   (o desenho é o mesmo para as duas).
-- **Unificar a extensão:** hoje o teclado usa `oitavas` e o braço usa `casas` para a mesma ideia.
-  Vira um parâmetro só, que cada superfície interpreta.
+- **A extensão não se unifica — e a instrução anterior desta tarefa estava errada.** Ela dizia
+  "vira um parâmetro só, que cada superfície interpreta". Não dá: as três unidades são
+  incomparáveis e as **listas de opções são diferentes** — `pauta / linhas suplementares` na pauta,
+  `1 / 2 oitavas` no teclado, faixas de casa (`0-5`, `0-12`, …) no braço. Um parâmetro só teria de
+  ter três listas de opções, o que é três parâmetros com um nome em comum.
+
+  São **três configurações**, cada uma visível só quando a sua superfície está ativa. **E isso exige
+  uma capacidade que o modelo não tem hoje:** `settings` recebe apenas o `Ctx`
+  (`src/catalog/types.ts:115`), que **não dá acesso ao valor das outras configurações** — então não
+  há como mostrar `casas` apenas quando `superficie === 'braco'`.
+
+  **A capacidade a acrescentar, e ela é pequena:** um campo `quando?: (s: Record<string, unknown>)
+  => boolean` em `Setting`, e a tela filtra por ele. Declarativo, sem acesso a valores dentro da
+  função `settings` — o que evitaria ordem de avaliação e re-render em cascata. Faça isto **antes**
+  das fusões: as quatro precisam dele, não só a extensão (a validação por superfície e as inversões
+  também).
 - Incluir o braço de baixo **e** de guitarra em "que nota tocou?".
 - **Ids antigos:** rotinas, presets e tentativas apontam para eles. Escrever a migração em
   `state/migrate.ts` mapeando id antigo → id novo + parâmetro de superfície.

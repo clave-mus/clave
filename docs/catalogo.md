@@ -255,7 +255,7 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Localizar notas | tocar | visualizador | R |
 | Localizar as notas de uma tonalidade | tocar | visualizador | R |
 | Percorrer uma tonalidade em uma corda | tocar | padrões | R |
-| Conectar regiões do braço | tocar | digitações | R |
+| Conectar regiões do braço · notas-pivô | tocar | digitações | R |
 | Exploração do braço e do teclado | explorar | visualizador | V |
 | Calculadora de digitações | explorar | digitações | R |
 | *(buraco)* Achar de ouvido no braço | ouvir | perguntas | — |
@@ -280,16 +280,17 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Família | Tarefa | Motor | Fonte |
 |---|---|---|---|
 | Identificar graus | ouvir | perguntas | V |
-| Reconhecer escalas e modos | ouvir | perguntas | V |
+| Reconhecer escalas e modos *(as duas melódicas são duas entradas — decisões 70 e 72)* | ouvir | perguntas | V |
 | Comparação de escalas | ouvir | perguntas | V |
-| Construção de escalas · Análise de escalas | nomear | perguntas | V |
+| Análise de escalas | ler · nomear | perguntas | V |
+| Construção de escalas *(inverso: dado o nome, escrever as notas — não existe ainda)* | escrever | perguntas | V |
 | Escolha de escala sobre acorde | nomear | progressões | V |
 | Cantar a tônica / cantar o grau | cantar | altura | V |
 | Solfejar escalas | cantar | padrões + altura | V |
 | Comparador de escalas | explorar | visualizador | V |
 | Percorrer escalas | tocar | padrões | R |
 | Percorrer modos | tocar | padrões | R |
-| Alternar entre escalas | tocar | digitações | R |
+| Alternar entre escalas *(notas comuns entre escalas)* | tocar | digitações | R |
 | Encontrar graus ouvidos · Achar a tônica tocando junto | ouvir · tocar | perguntas | R |
 | Improvisar com restrição | criar | progressões | R |
 
@@ -325,7 +326,8 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Análise harmônica | nomear | perguntas | V |
 | Exploração de tonalidades | explorar | visualizador | V |
 | Harmonização de melodia | criar | progressões | V |
-| Tocar o campo harmônico · guide tones · substituições · walking bass | tocar | progressões | R |
+| Tocar o campo harmônico · substituições | tocar | progressões | R |
+| Walking bass | ler · tocar | progressões + digitações | R ⏳ *fora do caminho crítico — decisão 75* |
 | Ler cifras e tocar progressões | ler · tocar | progressões | R |
 | Tirar linhas de baixo de ouvido | ouvir · tocar | perguntas | R |
 | Criar linhas de baixo | criar | progressões | R |
@@ -441,11 +443,7 @@ Para uma sessão futura. Nenhuma bloqueia a construção dos motores.
 
 | # | Questão |
 |---|---|
-| C1 | **"Notas-pivô"** — notas comuns entre duas *posições* (vai para Conectar regiões) ou entre duas *escalas* (vai para Alternar entre escalas)? |
-| C2 | **"Arpejos sorteados · todos acordes"** — campo harmônico, as 12 fundamentais de uma qualidade, ou uma progressão? |
-| C3 | **Saídas do walking bass** — partitura, braço com digitação, ou os dois? |
-| C4 | **Digitação no piano** — o motor vale para teclado, ou lá são dedilhados convencionais fixos? |
-| C7 | Convenção de canhoto no desenho do braço — **conferir com um canhoto de verdade**; ninguém no time é. |
+| C7 | **Convenção de canhoto no desenho do braço** — e isto **não é falta de decisão, é falta de pessoa.** Ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil, **sem afirmar convenção**, até alguém canhoto conferir |
 
 **Resolvidas em 03/11:** "descer em sextas" eram terças descendentes; em Relacionar cordas, as
 cordas são Lá, Ré e **Sol**; **`C5`** — o objeto "Som, timbre e dinâmica" sai do beta inteiro
@@ -455,3 +453,8 @@ cordas são Lá, Ré e **Sol**; **`C5`** — o objeto "Som, timbre e dinâmica" 
 **Respondidas na rodada seguinte** (decisão 66): voice leading é **quatro vozes em posição
 fechada**, nas **duas superfícies com seletor**. O corte de quatro vozes está marcado como
 revisável na própria decisão — foi tomado por quem não toca instrumento de cordas.
+
+**`C1` a `C4` resolvidos em 03/11:** notas-pivô são entre **posições**, e o conceito "entre escalas"
+já estava no catálogo como *Alternar entre escalas* (73) · a fonte das fundamentais dos arpejos é
+**parâmetro**, não três exercícios (74) · walking bass sai pela **partitura**, com o braço como
+camada, e fica fora do caminho crítico (75) · **digitação de piano é tabela, não motor** (76).

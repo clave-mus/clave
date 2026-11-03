@@ -62,7 +62,7 @@ ver o risco registrado em [equipe.md](../equipe.md).
 | [F3-rotinas.md](F3-rotinas.md) | **Rotinas** | F2-1 | **Caminho crítico** |
 | [F4-visual.md](F4-visual.md) | Identidade visual | A1 (Paulo) | Paralelo a tudo |
 | [F5-som.md](F5-som.md) | Microfone, MIDI e partituras | — | Independente. Começa pelo espigão `A0` |
-| [FM-motores.md](FM-motores.md) | Motores do catálogo | — | `FM-1` é uma tarde e destrava 8 famílias |
+| [FM-motores.md](FM-motores.md) | Motores e **enumeradores** do catálogo | — | `FM-1` feita. `FM-4` e `FM-5` são funções puras, sem interface — bom primeiro PR |
 | [F6-exercicios.md](F6-exercicios.md) | Exercícios novos e curadoria | F1 | Inclui tarefas 👤 de curadoria |
 | [F7-F9-resto.md](F7-F9-resto.md) | Variação, onboarding, plataforma | F3 | |
 

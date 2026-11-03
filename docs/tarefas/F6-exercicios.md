@@ -160,13 +160,13 @@ mesmo vale para qualquer item preso a uma escala por acidente.
 
 **As duas menores melódicas são duas entradas na lista, não um interruptor** (decisão 70):
 
-| Entrada | Subindo | Descendo |
-|---|---|---|
-| melódica **clássica** | 6ª e 7ª elevadas | menor natural |
-| melódica **jazz** | 6ª e 7ª elevadas | igual, 6ª e 7ª elevadas |
+| Entrada | Rótulo (pt · en) | Subindo | Descendo |
+|---|---|---|---|
+| `menor-melodica` | menor melódica (clássica) · melodic minor (classical) | 6ª e 7ª elevadas | menor natural |
+| `menor-melodica-jazz` | menor melódica (jazz) · melodic minor (jazz) | 6ª e 7ª elevadas | igual, 6ª e 7ª elevadas |
 
-O nome que a pessoa vê está em aberto (`A11`) — **implemente com as duas entradas e deixe o rótulo
-no `i18n`**, para trocar sem mexer no motor.
+**As duas levam parênteses** (decisão 72). Chamar uma delas de só "menor melódica" afirmaria que ela
+é a verdadeira e a outra o desvio — e é exatamente essa afirmação que criou a ambiguidade.
 
 **Direção como parâmetro:** `ouvido-escala` só toca **subindo** — e menor natural, harmônica e
 melódica se distinguem muito melhor **descendo**. Entra `sobe / desce / ambos`.

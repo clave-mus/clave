@@ -182,3 +182,121 @@ tarefa `ouvir` — se alguém reclassificar de volta, a porta carro-chefe volta 
 teste acusa.
 
 O contrato dos **8 objetivos com 4+ itens** fica para quando `goals[]` existir (bloqueado em `A4`).
+
+---
+
+## FM-4 · Enumerador de conduções de voz
+
+**Decisões de origem:** 64, 66, 71. **Depende de:** nada — é função pura.
+
+**Não é um motor.** É um enumerador, como o `percorrer` da `FM-1`: recebe material musical e
+devolve uma lista ordenada. Quem desenha é o motor de partituras ou o visualizador.
+
+**Escopo fechado: quatro vozes, posição fechada.** Está assim porque precisava caber no beta, e a
+decisão 66 registra que **é revisável sem defesa**: foi decidido por quem toca teclado e por quem
+escreve código, e nenhum dos dois julga se conjuntos de cordas e tríades abertas deveriam estar
+aqui. Se um guitarrista ou baixista do time disser que falta, muda.
+
+```ts
+// src/catalog/conducoes.ts
+export interface Voicing { vozes: [number, number, number, number] }  // MIDI, do baixo ao soprano
+export interface Medidas {
+  movimentoTotal: number;   // soma dos semitons percorridos pelas quatro vozes
+  notasComuns: number;      // alturas mantidas entre os dois acordes
+  maiorSalto: number;       // o maior movimento de uma voz só
+  cruzamento: boolean;      // alguma voz passou por cima da vizinha
+  noAmbito: boolean;        // todas as vozes dentro do âmbito declarado
+}
+export function conducoes(de: Voicing, paraAcorde: Acorde, ambitos: Ambito[]): Voicing[]
+export function medir(de: Voicing, para: Voicing): Medidas
+```
+
+**As cinco medidas são as únicas que não dependem de opinião.** As *regras de escrita* — quintas e
+oitavas paralelas, dobramento, resolução da sensível — **ficam fora** (ver
+[guardados.md](../guardados.md)): cada uma precisa de uma decisão sobre em que tradição ela vale,
+porque no jazz quintas paralelas são vocabulário.
+
+**O exercício não tem alternativas.** A pessoa escreve ou toca a condução dela, e o app diz **onde
+ela caiu**: *"você moveu 7 semitons; a mais econômica move 3; de 24 conduções válidas, 14 movem
+menos que a sua."* Medição, nunca julgamento.
+
+**Duas superfícies com seletor** (decisão 66): escrita na pauta (determinística, cabe no ônibus) e
+tocada no instrumento (autoavaliação, cabe com o instrumento). O contexto escolhe o padrão.
+
+**Contrato de saída:** teste que, para uma cadência V7→I em quatro vozes, prova que (a) a condução
+de movimento mínimo está na lista, (b) **nenhuma** condução listada cruza vozes ou sai do âmbito, e
+(c) `medir` é simétrica no que deve ser e assimétrica no que deve ser. E um teste de texto: **nenhuma
+string de interface deste item diz "errado" ou "correto"**.
+
+**Não faça:** não eleja uma condução como a certa. Isso é o erro que a decisão 64 existe para
+impedir.
+
+---
+
+## FM-5 · Enumerador de rearmonizações
+
+**Decisão de origem:** 69. **Depende de:** `A12` (quais transformações entram — curadoria do Paulo).
+
+O laboratório de harmonização de melodia. **Não oferece lista de acordes:** enumerar os acordes que
+contêm uma nota da melodia é interseção de conjuntos — trivial, e entrega 40 acordes sem hierarquia,
+porque **"interessante" não é computável.**
+
+**Oferece transformações pelo nome**, aplicadas ao acorde que já está ali:
+
+```ts
+// src/catalog/rearmonizacoes.ts
+export interface Transformacao {
+  id: string;                     // 'subv7' | 'interpolar-ii' | 'diminuto-passagem' | ...
+  aplicavel(ctx: ContextoHarmonico): boolean;
+  aplicar(ctx: ContextoHarmonico): Acorde[];
+}
+export function medir(acorde: Acorde, notaDaMelodia: number, tom: Tom): {
+  grauDaMelodia: 1|3|5|7|9|11|13;   // o eixo útil, e é exato
+  cromatico: boolean;
+  funcao: 'tonica' | 'subdominante' | 'dominante' | null;
+  movimentoDoBaixo: number;
+}
+```
+
+**Quais transformações entram é decisão do Paulo** (`A12`) — curadoria musical, não lista exaustiva.
+Candidatas levantadas na conversa: substituição por trítono (subV7) · interpolar um II antes do V ·
+diminuto de passagem · empréstimo modal · relativo · dominante secundário.
+
+**Sem correção nenhuma.** Termina por `tarefa`: a pessoa para quando quer. O app toca o resultado,
+ela mantém ou desfaz. **O custo aceito** (decisão 69): item sem resposta não gera evidência de
+progresso — entra no histórico como tempo praticado e os acordes escolhidos.
+
+**Fica para a Fase 2:** o navegador livre de acordes (ver todos os que contêm aquela nota).
+
+**Contrato de saída:** teste provando que **toda transformação aplicada mantém a nota da melodia
+pertencente ao acorde resultante** — é a única invariante que o laboratório precisa garantir, e é a
+que o torna utilizável. E `medir` conferida contra casos escritos à mão.
+
+**Não faça:** nada de gerar a progressão inteira por gênero. É o que o Reharmonist do Band-in-a-Box
+faz, e é justamente o que não ensina nada.
+
+---
+
+## FM-6 · 👤 Tabela de digitações de piano
+
+**Decisão de origem:** 76. **Depende de:** uma pessoa, não de código. **Candidato natural:** o
+Bernardo Garcia, pianista clássico do time.
+
+O motor de digitações (`FM-2`) é **só de cordas**, e isso não é lacuna: digitação de escala no piano
+é **convencional e fixa**. Dó maior na mão direita é `1-2-3-1-2-3-4` com passagem do polegar, e é
+isso que se ensina em todo lugar. Não há enumeração a fazer porque não há escolha genuína.
+
+**É tabela.** Doze maiores e doze menores, duas mãos, mais os arpejos.
+
+Formato, em `docs/digitacoes/piano.md`:
+
+```md
+| escala | mão | digitação | observação |
+|---|---|---|---|
+| Dó maior | direita | 1 2 3 1 2 3 4 | polegar passa sob o 3 |
+| Dó maior | esquerda | 5 4 3 2 1 3 2 1 | — |
+```
+
+**Pronto quando:** as 24 escalas têm as duas mãos preenchidas, e quem preencheu escreveu uma linha
+dizendo **qual tradição seguiu** — porque há mais de uma edição de referência e divergem em alguns
+casos. Sem essa linha a tabela não é verificável.

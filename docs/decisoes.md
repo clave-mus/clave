@@ -992,6 +992,97 @@ vezes. Quando aparecer a quarta, já se sabe o desenho.
 
 ---
 
+### 72 · As duas melódicas se chamam "(jazz)" e "(clássica)"
+
+Resolve `A11`. Na lista de escalas aparecem **"menor melódica (jazz)"** e **"menor melódica
+(clássica)"**, nessa forma: o nome comum primeiro, a tradição entre parênteses.
+
+Entre *clássica* e *erudita* — as duas corretas em português — fica **clássica**, por dois motivos
+práticos: é o par natural de *jazz* no uso corrente de músico, e **tem tradução direta**
+(`classical`), enquanto *erudita* não tem equivalente de uma palavra em inglês. Como todo texto vai
+para os dois idiomas, o rótulo que traduz sem nota de pé de página é o que serve.
+
+Nenhuma das duas fica sem parênteses. Chamar uma delas de só "menor melódica" afirmaria que **ela**
+é a verdadeira e a outra o desvio — e é justamente essa afirmação que criou a ambiguidade da
+decisão 70.
+
+---
+
+### 73 · "Notas-pivô" são as notas comuns entre duas posições
+
+Resolve `C1`. São dois conceitos reais com o mesmo nome: notas compartilhadas entre duas **regiões
+do braço**, usadas para trocar de região sem quebra; ou notas comuns entre duas **escalas**, usadas
+para modular.
+
+É o primeiro — é o uso corrente na pedagogia de cordas. **"Notas-pivô" é preset de *Conectar
+regiões do braço*.**
+
+E o segundo conceito **já estava no catálogo com outro nome**: *Alternar entre escalas*. Não havia
+escolha entre dois itens a fazer; havia um item duplicado por vocabulário.
+
+---
+
+### 74 · "De onde vêm as fundamentais" é parâmetro, não três exercícios
+
+Resolve `C2`. *"Arpejos sorteados · todos acordes"* podia significar o campo harmônico de uma
+tonalidade (os sete diatônicos), uma qualidade nas doze fundamentais, ou uma progressão.
+
+**São as três, como configuração** — a decisão 15 aplicada: `campo harmônico / doze fundamentais /
+progressão`. Os três casos são presets de um item.
+
+Efeito colateral útil: com a fonte das fundamentais declarada, o item **passa a ser rotacionável por
+tonalidade** (decisão 38) de graça. Com "doze fundamentais" a rotação não faz sentido; com "campo
+harmônico" faz todo.
+
+---
+
+### 75 · Walking bass: partitura é a saída, braço é camada — e sai do caminho crítico
+
+Resolve `C3`. Walking bass se lê e se toca: a **partitura é a saída principal**, e a digitação por
+cima é o motor de digitações aplicado, que já é parâmetro de vários outros itens. Não são duas
+saídas concorrentes.
+
+**E é o item mais caro de todo o motor de progressões.** Gerar walking bass defensável exige notas
+de aproximação, notas do acorde nos tempos fortes, condução por graus conjuntos e tratamento de
+cromatismo — é um gerador musical com requisitos reais, não um sorteio. Vale fazer, **mas não é o
+primeiro item do motor**, e fica fora do caminho crítico do beta.
+
+---
+
+### 76 · Digitação de piano é tabela, não motor
+
+Resolve `C4`. O motor de digitações (decisão 45) **não se estende ao teclado** — e não é corte de
+escopo: é que o problema lá é outro.
+
+Digitação de escala no piano é **convencional e fixa**. Dó maior na mão direita é `1-2-3-1-2-3-4`
+com passagem do polegar, e é isso que se ensina em todo lugar. **Não há enumeração a fazer porque
+não há escolha genuína** — é consulta a uma tabela.
+
+A tabela é pequena: doze maiores e doze menores, duas mãos, mais os arpejos. É **trabalho de digitar
+dados, não de algoritmo**, e cai naturalmente para o Bernardo Garcia, que é o pianista clássico do
+time.
+
+Consequência: o motor de digitações continua sendo **só de cordas**, e isso deixa de ser lacuna.
+
+---
+
+### 77 · Um item pode carregar mais de uma tarefa
+
+Estende a decisão 52, que dizia isso de **objetos** e calava sobre **tarefas**.
+
+O caso que revelou: `pauta-escala` mostra uma escala na pauta e pergunta qual é; o catálogo listava
+*"Análise de escalas"* como item separado, de `nomear`. **É o mesmo exercício** — o estímulo é
+notação (`ler`) e a resposta é um rótulo teórico (`nomear`), as duas coisas ao mesmo tempo. O
+modelo já aceita (`tarefas` é lista); estava só subpreenchido.
+
+**O que *não* se funde:** *Construção de escalas* é o caminho inverso — dado o nome, escrever as
+notas. Item de verdade, e **ainda não existe**.
+
+A regra, para a próxima vez: **aparecer em duas tarefas é etiqueta; inverter o sentido da pergunta é
+item novo.**
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1033,8 +1124,7 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A6 | **Limiar da variação automática** — quantos acertos, em quantas sessões | time, calibrado no beta | nada: é uma constante num arquivo |
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
-| C1–C7 | **Miudezas do catálogo** — notas-pivô, arpejos sorteados, saídas do walking bass, digitação no piano, o objeto "Som", harmonização de melodia, convenção de canhoto. Ver [catalogo.md](catalogo.md#questões-abertas-do-catálogo) | Paulo, em sessão futura | nada |
-| A11 | **Como chamar as duas menores melódicas** na lista de escalas (decisão 70). Opções: *"menor melódica"* + *"menor melódica (jazz)"* · *"menor melódica"* + *"menor jazz"* · *"melódica clássica"* + *"melódica jazz"* — a terceira é a mais clara e a menos econômica | Paulo | `F6-10` |
+| C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
 | A12 | **Quais transformações de rearmonização entram** no laboratório da decisão 69 — curadoria musical | Paulo | o laboratório |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
