@@ -28,6 +28,11 @@ O que **não é**: nome de variável, estrutura de pasta, qual algoritmo, como t
 2. **A decisão citada na tarefa**, em [docs/decisoes.md](docs/decisoes.md).
 3. **A seção correspondente de [docs/arquitetura.md](docs/arquitetura.md)**. Se a tarefa mexe em
    catálogo, exercício ou validação, leia também **[docs/catalogo.md](docs/catalogo.md)**.
+
+**Antes de propor cortar qualquer item do catálogo, leia
+[docs/guardados.md](docs/guardados.md).** A seção final dele lista o que já foi proposto cortar e
+**mantido**, com o motivo — e o motivo costuma valer mais que o item. Propor de novo um corte já
+recusado é desperdiçar uma rodada de decisão do Paulo.
 4. A tarefa em [docs/tarefas/](docs/tarefas/), inclusive o **"Não faça"** dela.
 
 Toda tarefa tem um **"Pronto quando"** verificável. Se o que você fez não satisfaz aquela frase,

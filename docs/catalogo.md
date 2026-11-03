@@ -61,8 +61,10 @@ declaração à parte no item (`requires`).
 Vazio não é tudo igual, e a distinção é o que torna a matriz útil:
 
 - **Sem sentido** — *Controle motor × Ouvir*. A célula não existe no mundo. Ignorar.
-- **Oportunidade** — *Ritmo × Cantar* (vocalizar ritmo), *Harmonia × Cantar* (cantar guide tones).
-  Fazem sentido, ninguém prometeu nada, a matriz as sugeriu de graça.
+- **Oportunidade** — fazem sentido, ninguém prometeu nada, a matriz as sugeriu de graça. As duas
+  primeiras **viraram itens** (decisão 63): *Ritmo × Cantar* (vocalizar ritmo) e *Harmonia ×
+  Cantar* (cantar guide tones). *Ritmo × Criar* (criar variações de groove) ficou fora: a restrição
+  é validável, mas o valor do exercício não está claro.
 - **Buraco** — deveria existir e não existe. Hoje há **um**: *Notas e o braço × Ouvir*. "Achar no
   braço a nota que você ouviu" existe no catálogo, mas etiquetada em Escalas e Intervalos — então
   quem entra por "quero conhecer o braço" não a encontra. É erro de etiqueta, não falta de item.
@@ -94,6 +96,11 @@ acordes, campo harmônico) · `audio/engine` (síntese e agendamento com anteced
 | **Tarefa com metrônomo** + autoavaliação | ❌ não existe | ~9: técnica, execução, groove |
 | **Altura** (microfone e MIDI) | ❌ não existe | ~4, todas opcionais |
 | **Digitações** | ❌ não existe | ~3 diretamente, e é parâmetro de muitos outros |
+
+**Dois enumeradores, que não são motores.** `percorrer` (padrões de escala) e `conduções` (voice
+leading) são **funções puras** sem interface nenhuma: recebem material musical e devolvem uma lista
+ordenada. Quem desenha é o motor de partituras ou o visualizador. Vale notar porque a tentação de
+contá-los como motores é real, e contar errado infla a estimativa de trabalho.
 
 ### Motor de padrões
 
@@ -312,7 +319,9 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Família | Tarefa | Motor | Fonte |
 |---|---|---|---|
 | Progressões · cadências · modulação · forma · função cromática · condução de vozes · acordes no campo | ouvir | perguntas | V |
-| Ditado harmônico · ditado da linha de baixo · voice leading escrito | escrever | partituras | V |
+| Ditado harmônico · ditado da linha de baixo | escrever | partituras | V |
+| Voice leading | escrever · tocar | partituras · visualizador | V |
+| Cantar guide tones | cantar | progressões | matriz |
 | Análise harmônica | nomear | perguntas | V |
 | Exploração de tonalidades | explorar | visualizador | V |
 | Harmonização de melodia | criar | progressões | V |
@@ -331,12 +340,19 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Família | Tarefa | Motor | Fonte |
 |---|---|---|---|
 | Figuras · compassos · subdivisões · acentuação · andamento · tempo forte · swing | ouvir | perguntas | V |
-| Leitura rítmica | ler | partituras | V |
+| Leitura rítmica | ler · tocar | partituras | V+R |
 | Ditado rítmico | escrever | partituras | V |
-| Reprodução de ritmos · pulso interno · polirritmia | tocar | tarefa-metrônomo | V |
-| Ler e tocar ritmos | ler · tocar | partituras | R |
-| Tocar em tempo | tocar | tarefa-metrônomo | R |
-| Manter um groove | tocar | tarefa-metrônomo | R ⚠️ |
+| Reprodução de ritmos · polirritmia | tocar | tarefa-metrônomo | V |
+| Tocar em tempo | tocar | tarefa-metrônomo | V+R |
+| Vocalizar ritmo | cantar | tarefa-metrônomo | matriz |
+| ~~Manter um groove~~ | tocar | — | [guardado](guardados.md) |
+
+> **Funde** (decisão 61): *Leitura rítmica* e *Ler e tocar ritmos* são a mesma tarefa — bater palma
+> ou tocar uma nota é **parâmetro de superfície**. E *Pulso interno (clique que some)* é **preset**
+> de *Tocar em tempo*, não item: o próprio rascunho dizia que o absorvia.
+
+> **Nova, da matriz** (decisão 63): *Vocalizar ritmo* preenchia a coluna *Cantar*, que era a mais
+> vazia de todas. Gerador de ritmo que já existe, mais autoavaliação.
 
 ### Melodia e frase
 
@@ -345,7 +361,7 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Reconhecimento de frases · cloze · imaginar e conferir | ouvir | perguntas | V |
 | Ditado melódico · ditado a duas vozes | escrever | partituras | V |
 | Detecção de erro | ler · ouvir | partituras | V |
-| Análise de forma e frase | nomear | perguntas | V |
+| ~~Análise de forma e frase~~ | nomear | — | [guardado](guardados.md): onde termina uma frase é interpretativo (decisão 13) |
 | Reprodução no instrumento virtual | tocar | visualizador | V |
 | Tocar motivos em graus | tocar · cantar | padrões | R |
 | Aproximar notas-alvo | tocar | progressões | R |
@@ -373,15 +389,20 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 
 ### Som, timbre e dinâmica
 
-| Família | Tarefa | Motor | Fonte |
-|---|---|---|---|
-| Julgamento de afinação · timbre · dinâmica e articulação | ouvir | perguntas | V |
-| Imitar fraseado e articulação | ouvir · tocar | tarefa-metrônomo | R ⚠️ |
-| Controlar a dinâmica | tocar | tarefa-metrônomo | R ⚠️ |
-| Afinar bends | tocar | altura | R |
+**Fora do beta inteiro** (decisão 60). Seis itens: três dependem de áudio gravado, dois têm
+validação duvidosa, e os dois que sobrariam são o afinador com uma pergunta em volta.
 
-> **Objeto órfão:** 7 itens, 3 de validação duvidosa, e não chega aos 4 itens bons que uma porta
-> exige. **Candidato a sair do beta inteiro** — ver questão aberta.
+| Família | Tarefa | Destino |
+|---|---|---|
+| Julgamento de afinação | ouvir | **preset do afinador** |
+| Afinar bends | tocar | **preset do afinador** |
+| Identificação de timbre | ouvir | [guardado](guardados.md) — depende de gravação |
+| Percepção de dinâmica e articulação | ouvir | [guardado](guardados.md) — depende de gravação |
+| Imitar fraseado e articulação | ouvir · tocar | [guardado](guardados.md) — gravação · validação duvidosa |
+| Controlar a dinâmica | tocar | [guardado](guardados.md) — mede contraste relativo, não volume |
+
+O objeto continua existindo como **assunto** (uma aula de teoria pode falar de articulação). O que
+saiu foram os itens.
 
 ### Controle motor
 
@@ -424,9 +445,14 @@ Para uma sessão futura. Nenhuma bloqueia a construção dos motores.
 | C2 | **"Arpejos sorteados · todos acordes"** — campo harmônico, as 12 fundamentais de uma qualidade, ou uma progressão? |
 | C3 | **Saídas do walking bass** — partitura, braço com digitação, ou os dois? |
 | C4 | **Digitação no piano** — o motor vale para teclado, ou lá são dedilhados convencionais fixos? |
-| C5 | **"Som, timbre e dinâmica"** — o objeto inteiro sai do beta? |
 | C6 | **Harmonização de melodia** — vira laboratório de experimentação em vez de quiz? |
 | C7 | Convenção de canhoto no desenho do braço — **conferir com um canhoto de verdade**; ninguém no time é. |
 
 **Resolvidas em 03/11:** "descer em sextas" eram terças descendentes; em Relacionar cordas, as
-cordas são Lá, Ré e **Sol**.
+cordas são Lá, Ré e **Sol**; e **`C5`** — o objeto "Som, timbre e dinâmica" sai do beta inteiro
+(decisão 60).
+
+**Pendente de resposta do Paulo, aberto na rodada de voice leading** (decisão 64): o corte de
+escopo é **quatro vozes em posição fechada**, ou o exercício já serve conjuntos de cordas e tríades
+abertas no baixo e na guitarra? E a resposta é **escrita na pauta, tocada, ou as duas com seletor
+de superfície** (padrão da decisão 58)?

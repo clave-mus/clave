@@ -741,7 +741,7 @@ pedindo que ela toque no baixo. O item seria o certo e a experiência, errada.
 
 ### 59 · Os itens que dependem de áudio gravado saem do beta
 
-Oito itens não são tocáveis com a síntese do `audio/engine.ts` — precisam de **material gravado**,
+Sete itens não são tocáveis com a síntese do `audio/engine.ts` — precisam de **material gravado**,
 produzido ou licenciado. E o documento de visão fecha a porta mais fácil: *música de IA está fora*,
 em qualquer forma.
 
@@ -760,6 +760,120 @@ timbre · percepção de dinâmica e articulação.
 
 **Pesquisa de estilo fica parada**, para conversa do grupo. Acompanhamento de música erudita é um
 candidato natural para o Bernardo Garcia, se ele quiser — mas é decisão dele e de outra rodada.
+
+---
+
+### 60 · O objeto "Som, timbre e dinâmica" sai inteiro do beta
+
+Seis itens, e nenhum caminho que sobrevivesse:
+
+| Item | O que é | Por que não fica |
+|---|---|---|
+| Julgamento de afinação | ouvir uma nota ou intervalo levemente desafinado e dizer se está alto ou baixo | **vira preset do afinador** |
+| Afinar bends | tocar um bend até a nota-alvo, com retorno em cents | **vira preset do afinador** |
+| Identificação de timbre | reconhecer instrumento, tipo de som e efeito | depende de gravação (decisão 59) |
+| Percepção de dinâmica e articulação | comparar duas execuções e dizer qual é mais legato, forte ou acentuada | depende de gravação |
+| Imitar fraseado e articulação | ouvir um fraseado e reproduzi-lo | depende de gravação · validação duvidosa |
+| Controlar a dinâmica | crescendo, decrescendo e acentos em tempos definidos | mede contraste **relativo**, nunca volume absoluto |
+
+Três dependem de gravação, dois têm validação duvidosa, e **os dois que sobram são o afinador com
+uma pergunta em volta**. Não chega aos quatro itens que uma porta por objetivo exige (decisão 20),
+e é o único objeto cuja metade depende de biblioteca de áudio gravado.
+
+Fecha a questão aberta `C5`. O que sai fica em [guardados.md](guardados.md).
+
+---
+
+### 61 · As duas duplicatas entre os documentos se fundem
+
+O `Clave.md` e o rascunho "com instrumento" foram escritos em momentos diferentes e repetem dois
+itens:
+
+- **"Pulso interno (clique que some)"** e **"Tocar em tempo"** são o mesmo exercício. O próprio
+  rascunho diz que absorve o pulso interno, mas o item continuou listado nos dois documentos. Um
+  item só, com **"clique que some" como preset**.
+- **"Leitura rítmica"** e **"Ler e tocar ritmos"** são a mesma tarefa. A diferença — bater palma ou
+  tocar uma nota — é **parâmetro de superfície de resposta**, exatamente como na decisão 58.
+
+---
+
+### 62 · O Clave não se restringe a baixo, guitarra e piano
+
+Eu propus cortar **leitura em claves alternativas** (clave de dó alto e tenor, transposição para
+Si♭, Mi♭ e Fá) com o argumento de que baixo, guitarra e piano resolvem tudo com clave de sol e
+clave de fá. O argumento foi recusado, e o motivo vale mais que o item:
+
+> **Cantores, instrumentistas de sopro e quem só quer desenvolver o ouvido e estudar teoria usam a
+> metade agnóstica do catálogo inteira** — que é cerca de 60% dele.
+
+O time ser de baixo, guitarra e piano explica **por onde começamos**, não **para quem o Clave
+serve**. Nenhum item sai do catálogo com a justificativa "não é para o nosso instrumento"; essa
+justificativa, isolada, não é válida.
+
+Claves alternativas ficam.
+
+---
+
+### 63 · Vocalizar ritmo e cantar guide tones entram no beta
+
+Duas células vazias da matriz que valem preencher, e a coluna *Cantar* era a mais vazia de todas.
+
+- **Vocalizar ritmo** *(Ritmo × Cantar)* — o app mostra ou toca um ritmo e a pessoa o vocaliza.
+  Usa o gerador de ritmo que já existe mais autoavaliação, e tapa uma coluna inteira.
+- **Cantar os guide tones de uma progressão** *(Harmonia × Cantar)* — cantar a 3ª e a 7ª enquanto a
+  progressão toca por baixo.
+
+**Eu havia adiado os guide tones com um argumento que se contradizia sozinho:** aleguei que
+dependiam de voz validada, mas **a voz validada está no beta** (`A3`), e a progressão por baixo o
+`backing` já toca. Foi corte por inércia, não por análise.
+
+**Criar variações de groove** *(Ritmo × Criar)* fica fora: a restrição é validável, mas o valor do
+exercício não está claro e o desenho é vago.
+
+---
+
+### 64 · Voice leading é medição, não julgamento — e é o mesmo padrão do motor de digitações
+
+Conectar acordes escolhendo inversões que minimizem o movimento das vozes **não tem resposta
+certa** — tem várias conduções igualmente válidas. Isso o colocaria sob a decisão 13, que proíbe
+item ambíguo gerar "erro do usuário".
+
+A saída é a mesma do motor de digitações (decisão 45), e vale a pena ver que é **literalmente o
+mesmo problema**: dado um acorde de destino, as vozes podem cair em várias disposições; as regras
+físicas filtram; e o que sobra **se ordena por critérios nomeados, nunca se reduz a uma resposta
+certa**.
+
+Então o exercício não tem alternativas. **A pessoa escreve ou toca a sua condução, e o app diz onde
+ela caiu:**
+
+> *"Você moveu 7 semitons no total. A condução mais econômica move 3. De 24 conduções válidas, 14
+> movem menos que a sua, e 9 mantêm mais notas comuns."*
+
+É a escolha do ponteiro do afinador e do ranking de digitações, aplicada à harmonia: **não há "a
+certa", há onde a sua está.**
+
+As cinco medidas que não dependem de opinião nenhuma: **movimento total** em semitons · **notas
+comuns** mantidas · **maior salto** de uma voz só · **cruzamento de vozes** · **âmbito** respeitado
+por voz.
+
+**O corte de escopo que o torna viável:** quatro vozes, posição fechada, e só essas cinco medidas.
+As *regras de escrita* — quintas e oitavas paralelas, dobramento, resolução da sensível — são
+**camada de Fase 2**, entram como aviso e nunca como erro, e cada uma precisa de uma decisão sobre
+**em que tradição ela vale**: no jazz, quintas paralelas são vocabulário.
+
+---
+
+### 65 · Ideia tirada do beta fica registrada, não apagada
+
+Toda ideia que sai do beta vai para [guardados.md](guardados.md), **com o motivo e com o que a
+traria de volta** — porque o motivo quase nunca é "a ideia é ruim", e sim "falta uma peça que ainda
+não existe".
+
+O arquivo também registra **o que eu propus cortar e foi mantido**, com o motivo da manutenção. Isso
+é o que impede o mesmo corte de ser proposto de novo três rodadas adiante.
+
+**Trazer algo de volta é decisão de produto** (regra 1 do `CLAUDE.md`) — não é algo que se faça
+dentro de uma tarefa.
 
 ---
 
