@@ -1358,11 +1358,107 @@ corrigido à parte (`reescreverRotaLegada`).
 as rotinas no Praticar, abre cada etapa com a configuração salva, tira uma etapa e apaga a rotina.
 Ordem, tempo por etapa, modo livre/guiado e rotação continuam sendo desenho do Paulo.
 
-**Fica em aberto, e é decisão de produto:** a **tonalidade** e a **região** moram nos parâmetros
-globais, não na configuração do item — então **não vão** na etapa salva. Hoje salvar "em Fá maior"
-não grava Fá maior. O caminho previsto é a rotação de tonalidade (decisão 38) e `Instancia.params`,
-mas **gravar os parâmetros globais de agora dentro da etapa** congelaria algo que a pessoa
-provavelmente quer que continue seguindo o perfil. Não decidi isso por conta própria.
+**Estava em aberto, e a decisão 87 fechou:** a tonalidade e a região moravam nos parâmetros globais do
+perfil, então **não iam** na etapa salva — "Salvar em Fá maior" não gravava Fá maior. Agora vão.
+---
+
+### 87 · Tonalidade, região e material não são do perfil
+
+Concordância do Paulo com uma crítica a uma decisão antiga — e o erro era em parte da cascata que eu
+mesmo tinha desenhado: o perfil era uma camada de **todos** os parâmetros. O critério correto:
+
+> **O perfil é quem a pessoa é. Tonalidade, região e material são o que ela está praticando agora.**
+> Trocam toda semana, e por morarem fora do exercício ficavam fora de tudo que se salva numa rotina.
+
+| É da pessoa (perfil) | É de prática (exercício → etapa → rotina → "agora") |
+|---|---|
+| instrumento · afinação · número de cordas · timbre · volume · nomes das notas · canhoto | tonalidade · região · material |
+
+**Onde se escolhe.** Dentro do exercício, no painel "Personalizar", **lembrado por exercício**
+(`State.pratica[itemId]`). A rotina, a etapa e a rotação continuam sobrescrevendo, como antes. O
+painel do Perfil, que eu tinha feito horas antes, saiu.
+
+**Só aparece o que o item respeita** (`CatalogItem.respeita`). Oferecer "região" num item que a
+ignora seria prometer o que não acontece — o mesmo erro de "material diatônico sem tonalidade". E
+**a lista é medida, não opinada**: `contexto-declarado.test.ts` instrumenta as funções de contexto e
+compara com o que cada `make` realmente chama. Cinco itens não respeitam nada (armadura, teoria,
+ritmo, acorde visual…) e isso é legítimo.
+
+**"Salvar numa rotina" passa a gravar a tonalidade.** Ela vai em `Instancia.params`, e abrir a etapa
+restaura **o que foi salvo** — inclusive "livre". Etapa é definição completa: "sem tonalidade" quer
+dizer livre, não "use a que o item guarda hoje".
+
+**`tempo` global morreu.** Nenhuma tela o lia (Técnica, Leitura, Ritmo, Backing e a comum têm cada
+uma o seu `bpm`), e ele ia para o histórico como se fosse o andamento praticado: o Progresso mostrava
+"80 bpm" até em exercício de ouvido, que não tem andamento — enquanto as ferramentas, que têm, não
+gravavam nada. **O histórico estava errado nos dois sentidos.**
+
+**`clef` global também não é de prática, e é resíduo.** Nenhum item a lê: todos os de pauta têm a
+configuração `claves`, e só caem na global se a pessoa desmarcar todas. Fica no tipo como último
+recurso, sem controle na tela.
+
+**Estado antigo é limpo, não ignorado** (`migrateSaved`): se `key` continuasse em `params`, a
+tonalidade de ontem valeria em todo exercício, vinda de uma camada que não existe mais.
+
+**Fica em aberto:** a **extensão da voz** é pessoal e volta ao perfil quando existir exercício de
+canto — hoje não há. Se o item precisar de "uma tonalidade para tudo de hoje", é a barra de foco que
+o Paulo descartou por ora (opção B).
+
+---
+
+### 88 · O arsenal sai
+
+Confirmado com o Paulo. O arsenal guardava só o **id** do exercício: um item guardado sem
+configuração é **uma rotina de uma etapa que não pode dizer o que a etapa faz.** Com "Salvar numa
+rotina" (decisão 86) ele virou segunda forma de salvar a mesma coisa.
+
+**Consequências, e duas delas são do Paulo:**
+
+- **Não há mais atalho de guardar no cartão do catálogo.** A estrela saiu; para guardar, abre-se o
+  exercício. Era um atalho conveniente e agora não existe.
+- **O Praticar da primeira abertura está vazio** até haver rotinas do time (`F3-6`), porque o
+  arsenal vinha com quatro exercícios de partida. Quem monta o conjunto inicial é **curadoria do
+  Paulo**, e é isso que enche a tela de quem chega.
+- O estado salvo de quem tinha arsenal é descartado (`migrateSaved`), sem conversão: não há usuários
+  fora do time.
+
+**Junto, sem ser decisão:** o cartão do catálogo mostrava o **percentual de acerto** por exercício
+(`correct / attempts`). "Percentual de domínio" está na lista do que nunca entra, e eu o tinha tirado
+do Player na `F0-2`; sobrou aqui. Removido. O cartão continua dizendo quantas vezes foi feito.
+
+---
+
+### 89 · O instrumento virtual é o visualizador, em modo "tocar"
+
+Ideia do Paulo: instrumentos virtuais (piano, violão, guitarra, baixo) como ferramenta — tocar
+melodias simples, bends, acordes **sem ter de usar vários dedos** (fixar as notas e depois arpejar,
+bater ou tocar em bloco), com parâmetros de cordas, afinação, timbre, intensidade, duração e efeitos.
+
+**Não é um item novo:** é o **mesmo componente** do visualizador de braço e teclado (`F6-3`,
+decisão 17), num modo em que ele **soa e responde ao toque**. Uma implementação, vários usos — a
+decisão 17 proíbe duas.
+
+**Quase todos os parâmetros já existem**, e não ganham sistema novo: timbre, intensidade, duração e
+"bloco ou arpejado" são a camada de apresentação (`audio/presentation.ts`); afinação e timbre por
+instrumento são do perfil. Falta o **strum** (arpejo com direção e velocidade).
+
+**A razão de existir, ligada à visão:** a visão diz que agregar ferramentas não segura ninguém, então
+um instrumento livre sozinho não diferencia o Clave. O que diferencia é ele ser **superfície de
+estudo** — tonalidade e escala marcadas sobre o braço, rótulos em nome/grau/intervalo, "só tocar
+notas da tonalidade" — e poder ser salvo numa rotina como tarefa.
+
+**Em aberto (o Paulo deixou assim):**
+
+- **O nome.** "Visualizador" deixa de servir para algo que toca; o nome é decisão de produto e ainda
+  não foi escolhido. Está registrado em `A13`.
+- **Timbres e efeitos** podem entrar, **com requisitos extras** — `A14`.
+- **O que entra no beta** do instrumento (melodias simples, marcações de tonalidade, fixar e
+  arpejar/strum/bloco; bends, pedais, looper e capo depois) — `A15`.
+
+**O risco que decide tudo é a qualidade do som:** as vozes são sintetizadas, e efeitos e bends sobre
+um timbre fraco soam brinquedo (portão 4 do catálogo). Para violão e baixo, síntese de corda pulsada
+(Karplus-Strong) dispensa amostras e dá bends e strums naturais; o piano é o difícil. **Antes de
+qualquer tela, uma hora de teste de som — avaliada pelo Paulo, porque a IA não ouve.**
 
 ---
 
@@ -1410,6 +1506,10 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
+| A13 | **O nome do visualizador**, agora que ele também toca (decisão 89). Hoje aparece como "visualizador" nos documentos e como "Exploração do braço e do teclado" no catálogo. Candidatas: *Instrumento virtual* (a mais direta) · *Braço e teclado* · outra | Paulo | `F6-3` |
+| A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
+| A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
+| A16 | **"Subir 4 bpm a cada volta"** vem ligado por padrão na ferramenta de Técnica. Aumentar o andamento sozinho é tratar bpm como progressão e carga, que a decisão 82 diz que o app nunca faz — e o Paulo avisou que aumentar demais costuma ser prejudicial | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

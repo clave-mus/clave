@@ -4,6 +4,7 @@
 // **Isto não é o editor de rotinas** (F3-5). Reordenar etapas, tempo por etapa, modo livre ou
 // guiado e configurar a rotação são desenho do Paulo, e ficam para lá. O que existe aqui é só o que
 // o botão "Salvar numa rotina" exige: criar uma rotina e pôr uma etapa nela.
+import type { ParametrosDePratica } from '../catalog/params';
 import type { SettingValue } from '../catalog/types';
 import { novaEtapa, novaRotina } from './storage';
 import type { Rotina } from './types';
@@ -24,8 +25,14 @@ export type Resultado =
  *
  * Não muta `rotinas`.
  */
-export function anexarInstancia(rotinas: Rotina[], destino: Destino, itemId: string, settings: Record<string, unknown>): Resultado {
+export function anexarInstancia(
+  rotinas: Rotina[], destino: Destino, itemId: string, settings: Record<string, unknown>, params: ParametrosDePratica = {},
+): Resultado {
   const etapa = novaEtapa(itemId, structuredClone(settings));
+  // Tonalidade, região e material vão NA INSTÂNCIA, e é isso que faz "salvar em Fá maior" gravar Fá
+  // maior (decisão 87). Sem escolha nenhuma, nada é gravado — e a etapa abre livre, não seguindo o
+  // que o item guarda hoje.
+  if (Object.keys(params).length) etapa.instancias[0].params = structuredClone(params);
 
   if ('rotinaId' in destino) {
     const alvo = rotinas.find(r => r.id === destino.rotinaId);
@@ -51,11 +58,22 @@ export function removerEtapa(rotinas: Rotina[], rotinaId: string, etapaId: strin
  * Vai no `state` do roteador e não na URL, de propósito: a configuração de uma etapa é dado da
  * rotina da pessoa, não algo para circular em endereço. Compartilhar é papel da rotina (decisão 23).
  */
-export interface EstadoDeAbertura { instancia: Record<string, unknown> }
+export interface EstadoDeAbertura { instancia: Record<string, unknown>; params?: ParametrosDePratica }
 
-/** Lê o `state` de uma navegação. Devolve `null` para qualquer coisa que não seja uma etapa aberta. */
-export function lerEstadoDeAbertura(state: unknown): Record<string, SettingValue> | null {
+/** O que a etapa traz ao abrir o item. */
+export interface Abertura { settings: Record<string, SettingValue>; params: ParametrosDePratica }
+
+/**
+ * Lê o `state` de uma navegação. Devolve `null` para qualquer coisa que não seja uma etapa aberta.
+ *
+ * `params` vem SEMPRE preenchido, ainda que vazio: uma etapa é a definição completa do exercício, e
+ * "sem tonalidade" quer dizer livre — não "use a que o item guarda hoje".
+ */
+export function lerAbertura(state: unknown): Abertura | null {
   if (!state || typeof state !== 'object') return null;
-  const i = (state as Partial<EstadoDeAbertura>).instancia;
-  return i && typeof i === 'object' && !Array.isArray(i) ? (i as Record<string, SettingValue>) : null;
+  const e = state as Partial<EstadoDeAbertura>;
+  const i = e.instancia;
+  if (!i || typeof i !== 'object' || Array.isArray(i)) return null;
+  const params = e.params && typeof e.params === 'object' && !Array.isArray(e.params) ? e.params : {};
+  return { settings: i as Record<string, SettingValue>, params };
 }

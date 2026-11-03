@@ -5,6 +5,9 @@
 //
 // **Só mostra o que difere do padrão do item.** O padrão é o que a pessoa já espera encontrar; repeti-lo
 // em toda linha esconderia o que ela mudou.
+import { keyName } from '../theory/core';
+import type { ParametrosDePratica } from './params';
+import { regiaoDe } from './regioes';
 import type { CatalogItem, Ctx, Setting, SettingValue } from './types';
 
 const igual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -30,5 +33,22 @@ export function resumoDaConfiguracao(item: CatalogItem, settings: Record<string,
     const texto = valorLegivel(s, v);
     if (texto) partes.push(s.type === 'toggle' ? texto : `${s.label}: ${texto}`);
   }
+  return partes.join(' · ');
+}
+
+/**
+ * Tonalidade, região e material que a pessoa escolheu, como texto: "Fá maior · Média · Só a tonalidade".
+ *
+ * Sem isto, duas etapas do mesmo exercício em tonalidades diferentes ficariam idênticas na lista —
+ * e a tonalidade é justamente o que a rotação percorre. Só escreve o que foi ESCOLHIDO: "livre" é o
+ * padrão e não precisa de legenda.
+ */
+export function resumoDaPratica(p: ParametrosDePratica | undefined, ctx: Pick<Ctx, 't' | 'naming'>): string {
+  if (!p) return '';
+  const partes: string[] = [];
+  if (p.key) partes.push(ctx.t(p.key.mode === 'maior' ? 'theory.keyMajor' : 'theory.keyMinor', { note: keyName(p.key.tonic, ctx.naming) }));
+  const regiao = p.range ? regiaoDe(p.range) : null;
+  if (regiao) partes.push(ctx.t(`practice.region_${regiao}`));
+  if (p.material === 'diatonico') partes.push(ctx.t('practice.materialDiatonic'));
   return partes.join(' · ');
 }

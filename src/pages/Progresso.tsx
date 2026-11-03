@@ -28,7 +28,6 @@ export default function Progresso() {
     const p = h.snapshot?.params;
     const partes: string[] = [];
     if (p?.key) partes.push(`${pcName(p.key.tonic, naming)} ${p.key.mode}`);
-    if (p?.tempo) partes.push(`${p.tempo} bpm`);
     return partes.join(' · ');
   };
 

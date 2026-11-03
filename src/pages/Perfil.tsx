@@ -6,7 +6,6 @@ import { detectLocale, LOCALES, useLocale, useT } from '../i18n';
 import { Btn, Chip, PageHead, SecTitle } from '../components/ui';
 import AccountPanel from '../components/AccountPanel';
 import SoundPanel from '../components/SoundPanel';
-import MusicalPanel from '../components/MusicalPanel';
 
 
 export default function Perfil() {
@@ -62,8 +61,6 @@ export default function Perfil() {
             </div>
           </div>
         </section>
-
-        <MusicalPanel />
 
         <SoundPanel />
 

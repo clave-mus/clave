@@ -1,6 +1,6 @@
 // Contrato do "Salvar numa rotina": criar uma rotina, anexar uma etapa, tirar uma etapa.
 import { describe, expect, it } from 'vitest';
-import { anexarInstancia, lerEstadoDeAbertura, removerEtapa } from './edicao';
+import { anexarInstancia, lerAbertura, removerEtapa } from './edicao';
 import { novaRotina, ehRotina } from './storage';
 import type { Rotina } from './types';
 
@@ -133,18 +133,65 @@ describe('removerEtapa', () => {
   });
 });
 
-describe('lerEstadoDeAbertura', () => {
-  it('devolve a configuração da etapa quando o state a traz', () => {
-    expect(lerEstadoDeAbertura({ instancia: { direcao: 'desce' } })).toEqual({ direcao: 'desce' });
+describe('anexarInstancia · tonalidade, região e material (decisão 87)', () => {
+  // O buraco que a decisão 87 fecha: "Salvar em Fá maior" não gravava Fá maior, porque a tonalidade
+  // morava no perfil, fora da instância.
+  it('grava o que a pessoa escolheu NA instância', () => {
+    const r = anexarInstancia([], { nome: 'R' }, 'ouvido-escala', {}, { key: { tonic: 5, mode: 'maior' }, material: 'diatonico' });
+    expect(r.ok && r.rotina.etapas[0].instancias[0].params).toEqual({ key: { tonic: 5, mode: 'maior' }, material: 'diatonico' });
+  });
+
+  it('sem escolha nenhuma, não grava params — a etapa fica livre, e não "o que o item guarda hoje"', () => {
+    const r = anexarInstancia([], { nome: 'R' }, 'ouvido-escala', {}, {});
+    expect(r.ok && 'params' in r.rotina.etapas[0].instancias[0]).toBe(false);
+  });
+
+  it('a etapa não divide o objeto com o estado da tela', () => {
+    const key = { tonic: 7, mode: 'menor' as const };
+    const r = anexarInstancia([], { nome: 'R' }, 'x', {}, { key });
+    if (!r.ok) throw new Error('falhou');
+    key.tonic = 0;
+    expect(r.rotina.etapas[0].instancias[0].params?.key?.tonic).toBe(7);
+  });
+
+  it('duas etapas do mesmo item em tonalidades diferentes são etapas diferentes', () => {
+    const a = anexarInstancia([], { nome: 'R' }, 'ouvido-escala', {}, { key: { tonic: 0, mode: 'maior' } });
+    if (!a.ok) throw new Error('falhou');
+    const b = anexarInstancia(a.rotinas, { rotinaId: a.rotina.id }, 'ouvido-escala', {}, { key: { tonic: 7, mode: 'maior' } });
+    expect(b.ok && b.rotina.etapas.map(e => e.instancias[0].params?.key?.tonic)).toEqual([0, 7]);
+  });
+
+  it('a rotina com params continua sendo uma rotina válida', () => {
+    const r = anexarInstancia([], { nome: 'R' }, 'x', {}, { range: { lo: 36, hi: 60 } });
+    expect(r.ok && ehRotina(r.rotina)).toBe(true);
+  });
+});
+
+describe('lerAbertura', () => {
+  it('devolve a configuração e os params da etapa', () => {
+    expect(lerAbertura({ instancia: { direcao: 'desce' }, params: { key: { tonic: 5, mode: 'maior' } } }))
+      .toEqual({ settings: { direcao: 'desce' }, params: { key: { tonic: 5, mode: 'maior' } } });
+  });
+
+  // "Sem tonalidade" numa etapa quer dizer LIVRE — não "use a que o item guarda hoje". Por isso
+  // `params` vem sempre preenchido, mesmo vazio: é o que faz o Player abrir em modo da etapa.
+  it('sem params na etapa, devolve params vazio e não null', () => {
+    expect(lerAbertura({ instancia: { a: 1 } })).toEqual({ settings: { a: 1 }, params: {} });
   });
 
   it('devolve null para qualquer coisa que não seja uma etapa aberta', () => {
     for (const lixo of [null, undefined, 42, 'x', [], {}, { instancia: null }, { instancia: 'x' }, { instancia: [1] }]) {
-      expect(lerEstadoDeAbertura(lixo), JSON.stringify(lixo)).toBeNull();
+      expect(lerAbertura(lixo), JSON.stringify(lixo)).toBeNull();
+    }
+  });
+
+  it('params malformado vira vazio, sem derrubar a abertura', () => {
+    for (const ruim of ['x', 7, [1, 2], null]) {
+      expect(lerAbertura({ instancia: {}, params: ruim })).toEqual({ settings: {}, params: {} });
     }
   });
 
   it('aceita configuração vazia — uma etapa de ferramenta não tem nenhuma', () => {
-    expect(lerEstadoDeAbertura({ instancia: {} })).toEqual({});
+    expect(lerAbertura({ instancia: {} })).toEqual({ settings: {}, params: {} });
   });
 });

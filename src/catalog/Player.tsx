@@ -1,7 +1,7 @@
 // Jogador de exercício: mostra a pergunta, toca o som, confere a resposta e guarda o progresso.
 // Só conhece o modelo da C1 (superfície, esperado, conteúdo sonoro). A conferência é de
 // validate.ts e o som, de presentation.ts.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { atTime, now } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
 import { useContent } from '../data/localized';
@@ -14,10 +14,11 @@ import Keyboard from '../components/music/Keyboard';
 import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
-import { globalPresentation, useGlobalParams } from './params';
+import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
 import { optionResponse, validate } from './validate';
 import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
+import PracticePanel from '../components/PracticePanel';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 
 type Phase = 'ask' | 'right' | 'wrong';
@@ -29,16 +30,19 @@ interface Props {
   target?: number;
   onDone?: (r: { correct: number; total: number; seconds: number }) => void;
   initialSettings?: Record<string, SettingValue> | null;
+  /** Tonalidade, região e material da etapa, quando o item foi aberto a partir de uma. */
+  initialParams?: ParametrosDePratica | null;
   /** Sessão de prática a que as tentativas pertencem (a sessão guiada passa a dela). */
   sessionId?: string;
 }
 
-export default function Player({ def, target, onDone, initialSettings, sessionId }: Props) {
+export default function Player({ def, target, onDone, initialSettings, initialParams, sessionId }: Props) {
   const naming = useNaming();
   const soundOn = useStore(s => s.sound);
   const t = useT();
   const { moduleById } = useContent();
-  const params = useGlobalParams();
+  // O perfil por baixo, e por cima o que a pessoa escolheu NESTE exercício (decisão 87).
+  const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams);
   const saved = useStore(s => s.settings[def.id]);
   // Aberto a partir de uma etapa de rotina, o item começa com a configuração DA ETAPA — não com a
   // que a pessoa deixou salva no item. E mexer nas configurações precisa continuar funcionando:
@@ -91,7 +95,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule,
         seconds: Math.round((Date.now() - t0) / 1000), correct: s.correct, total: s.total,
         // a mesma forma do snapshot de uma tentativa (F3-9)
-        snapshot: { settings, params: { instrument: params.instrument, tuning: params.tuning, key: params.key, range: params.range, tempo: params.tempo, material: params.material, clef: params.clef } },
+        snapshot: { settings, params: { instrument: params.instrument, tuning: params.tuning, key: params.key, range: params.range, material: params.material, clef: params.clef } },
       });
     };
   }, [def, target, t]);
@@ -194,10 +198,11 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
           <div />
           <div className="row">
             <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
-          <SalvarNaRotina itemId={def.id} settings={settings} />
+          <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
           </div>
         </div>
-        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} />}
+        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} temEscolha={Object.keys(pratica).length > 0} onReset={limpar} /> : null} />}
       </div>
     );
   }
@@ -229,7 +234,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         <div className="row">
           {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
-          <SalvarNaRotina itemId={def.id} settings={settings} />
+          <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
         </div>
       </div>
 
@@ -245,7 +250,8 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         </div>
       )}
 
-      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} />}
+      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} temEscolha={Object.keys(pratica).length > 0} onReset={limpar} /> : null} />}
     </div>
   );
 }
@@ -385,7 +391,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void }) {
+function SettingsPanel({ def, ctx, values, onChange, extra }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; extra?: ReactNode }) {
   const t = useT();
   return (
     <div className="settings">
@@ -420,6 +426,7 @@ function SettingsPanel({ def, ctx, values, onChange }: { def: SeriesItem; ctx: C
           })()}
         </div>
       ))}
+      {extra}
       <div className="row"><Btn small tone="ghost" onClick={() => onChange({ ...def.defaults })}>{t('player.resetDefaults')}</Btn></div>
     </div>
   );

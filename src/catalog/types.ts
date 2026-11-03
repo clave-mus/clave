@@ -4,7 +4,7 @@ import type { ChordId, Clef, Convention, Naming, Note } from '../theory/core';
 import type { Translate } from '../i18n';
 import type { Presentation } from '../audio/presentation';
 import type { Classification } from './taxonomy';
-import type { GlobalParams } from './params';
+import type { GlobalParams, ParametroDePratica } from './params';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
 
@@ -183,6 +183,15 @@ export interface CatalogItem extends Classification {
   mobile: boolean;
   settings: (ctx: Ctx) => Setting[];
   defaults: Record<string, SettingValue>;
+  /**
+   * Quais parâmetros de PRÁTICA este item de fato respeita (decisão 87). A tela só oferece o
+   * controle de tonalidade, região ou material onde ele muda alguma coisa — oferecer onde o item o
+   * ignora seria prometer o que não acontece, o mesmo erro de "material diatônico sem tonalidade".
+   *
+   * **Não é opinião: é medido.** `contexto-declarado.test.ts` confere contra as chamadas reais que o
+   * `make` faz, então esta lista não envelhece sem o teste acusar.
+   */
+  respeita?: readonly ParametroDePratica[];
   /** Apresentação própria do item (ex.: intervalo maior entre notas), por cima da global. */
   presentation?: Partial<Presentation>;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */

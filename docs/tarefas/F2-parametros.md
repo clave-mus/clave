@@ -104,6 +104,12 @@ abre o menu inteiro, com algumas opções pré-marcadas.
 
 ## F2-3 · Ligar o catálogo na cascata ✅ *feita em 03/11/2026*
 
+> **Atualização, mesma data (decisão 87):** os controles de tonalidade, região e material **não
+> ficam no Perfil**, como esta tarefa dizia. Moram dentro do exercício, lembrados por item, e só
+> aparecem onde o item os respeita (`CatalogItem.respeita`). `tempo` e `clef` saíram da lista:
+> `tempo` não tinha leitor e mentia no histórico, e `clef` é resíduo (os itens têm `claves`).
+> **Onde este texto diz "no Perfil", leia "no exercício".**
+
 **Decisão de origem:** 57. **Depende de:** F2-1. **Bloqueia:** F3-8 fazer sentido.
 
 > **Esta tarefa existe porque a cascata não tem leitor.** Conferido em 03/11: o catálogo lê
@@ -164,6 +170,6 @@ quem não escolheu tonalidade quer variedade, não Dó maior em tudo.
 aleatório. Além de ler a cascata, isso conserta a distribuição descontrolada que eu tinha
 apontado na revisão — alguns intervalos apareciam muito mais que outros.
 
-**O que falta:** os **controles na tela**. Tonalidade, região, material e clave ainda não têm
-seletor no Perfil. O motor já responde a eles; falta a pessoa poder escolher. É o que resta da
-`F2-3`, e é tela, não motor.
+**Os controles na tela** entraram depois, e **no exercício, não no Perfil** (decisão 87). Foi uma
+correção: a primeira versão pôs os seletores no Perfil, e isso repetia o erro de tratar o que se
+pratica como se fosse quem a pessoa é.

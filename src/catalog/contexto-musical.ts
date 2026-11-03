@@ -143,9 +143,6 @@ export function clave(ctx: Ctx, doItem?: Clef): Clef {
   return doItem ?? ctx.params.clef;
 }
 
-/** O andamento em vigor. */
-export const andamento = (ctx: Ctx) => ctx.params.tempo;
-
 /**
  * Uma nota escrita, grafada segundo a tonalidade quando há uma.
  *
@@ -165,6 +162,6 @@ export function notaGrafada(ctx: Ctx, m: number): Note {
 export function snapshotMusical(p: GlobalParams) {
   return {
     instrument: p.instrument, tuning: p.tuning, key: p.key, range: p.range,
-    tempo: p.tempo, material: p.material, clef: p.clef,
+    material: p.material, clef: p.clef,
   };
 }

@@ -54,7 +54,7 @@ export interface Attempt {
   };
   parameters_snapshot: {
     settings: Record<string, SettingValue>;
-    params: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'tempo' | 'material' | 'clef'>;
+    params: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'material' | 'clef'>;
     /** Como o som foi apresentado (sem o volume), quando houve som. */
     presentation?: Omit<Presentation, 'volume'>;
   };
@@ -171,7 +171,7 @@ export function buildAttempt(i: AttemptInput): Attempt {
     },
     parameters_snapshot: {
       settings: { ...i.settings },
-      params: { instrument: p.instrument, tuning: p.tuning, key: p.key, range: p.range, tempo: p.tempo, material: p.material, clef: p.clef },
+      params: { instrument: p.instrument, tuning: p.tuning, key: p.key, range: p.range, material: p.material, clef: p.clef },
       ...(presentation ? { presentation } : {}),
     },
     response: i.response,

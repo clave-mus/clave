@@ -13,6 +13,10 @@ import { isSeries } from './types';
 import { globalPresentation } from './params';
 import { resolvePresentation } from '../audio/presentation';
 
+// Um parâmetro de prática qualquer, só para provar precedência entre camadas. Era `tempo` até a
+// decisão 87 tirá-lo: ele não tinha leitor nenhum, e a prova de precedência vale igual para a região.
+const R = (lo: number) => ({ lo, hi: lo + 12 });
+
 describe('cascata de parâmetros', () => {
   it('sem camada nenhuma, tudo vem do item', () => {
     const r = resolveCamadas([]);
@@ -24,12 +28,12 @@ describe('cascata de parâmetros', () => {
 
   it('a camada mais específica vence, e a origem acompanha o valor', () => {
     const r = resolveCamadas([
-      { origin: 'perfil', values: { tempo: 90 } },
-      { origin: 'rotina', values: { tempo: 100, key: { tonic: 7, mode: 'maior' } } },
-      { origin: 'etapa', values: { tempo: 120 } },
+      { origin: 'perfil', values: { range: R(36) } },
+      { origin: 'rotina', values: { range: R(40), key: { tonic: 7, mode: 'maior' } } },
+      { origin: 'etapa', values: { range: R(48) } },
     ]);
-    expect(r.tempo.value).toBe(120);
-    expect(r.tempo.origin).toBe('etapa');
+    expect(r.range.value).toEqual(R(48));
+    expect(r.range.origin).toBe('etapa');
     expect(r.key.value).toEqual({ tonic: 7, mode: 'maior' });
     expect(r.key.origin).toBe('rotina');
     expect(r.material.origin).toBe('item');
@@ -37,23 +41,23 @@ describe('cascata de parâmetros', () => {
 
   it('a ordem em que as camadas chegam não importa — a precedência é a mesma', () => {
     const camadas: Camada[] = [
-      { origin: 'etapa', values: { tempo: 120 } },
-      { origin: 'item', values: { tempo: 60 } },
-      { origin: 'rotina', values: { tempo: 100 } },
+      { origin: 'etapa', values: { range: R(48) } },
+      { origin: 'item', values: { range: R(30) } },
+      { origin: 'rotina', values: { range: R(40) } },
     ];
     const a = resolveCamadas(camadas);
     const b = resolveCamadas([...camadas].reverse());
     expect(a).toEqual(b);
-    expect(a.tempo.value).toBe(120);
+    expect(a.range.value).toEqual(R(48));
   });
 
   it('"agora" vence tudo, inclusive a etapa', () => {
     const r = resolveCamadas([
-      { origin: 'etapa', values: { tempo: 120 } },
-      { origin: 'agora', values: { tempo: 72 } },
+      { origin: 'etapa', values: { range: R(48) } },
+      { origin: 'agora', values: { range: R(33) } },
     ]);
-    expect(r.tempo.value).toBe(72);
-    expect(r.tempo.origin).toBe('agora');
+    expect(r.range.value).toEqual(R(33));
+    expect(r.range.origin).toBe('agora');
   });
 
   it('`herdado` é o que a tela usa para escrever "(da rotina)"', () => {
@@ -68,11 +72,11 @@ describe('cascata de parâmetros', () => {
 
   it('valor `undefined` numa camada não apaga o de baixo', () => {
     const r = resolveCamadas([
-      { origin: 'rotina', values: { tempo: 100 } },
-      { origin: 'etapa', values: { tempo: undefined } },
+      { origin: 'rotina', values: { range: R(40) } },
+      { origin: 'etapa', values: { range: undefined } },
     ]);
-    expect(r.tempo.value).toBe(100);
-    expect(r.tempo.origin).toBe('rotina');
+    expect(r.range.value).toEqual(R(40));
+    expect(r.range.origin).toBe('rotina');
   });
 });
 
@@ -105,7 +109,7 @@ describe('as duas regras que não são "a última vence"', () => {
 describe('compatibilidade com o que já existia', () => {
   it('a cascata reproduz exatamente o `resolveParams` antigo', () => {
     for (const instrumento of ['piano', 'violao', 'baixo'] as const) {
-      for (const stored of [{}, { tempo: 100 }, { timbres: { piano: 'pad' as const } }, { clef: 'fa' as const }]) {
+      for (const stored of [{}, { range: R(40) }, { timbres: { piano: 'pad' as const } }, { clef: 'fa' as const }]) {
         const antigo = resolveParams(instrumento, stored);
         const novo = valoresDe(resolveCamadas([camadaDoPerfil(instrumento, stored)]));
         expect(novo).toEqual(antigo);

@@ -377,7 +377,6 @@ select.sel {
 .ex-card p { font-size: 13.5px; color: var(--ink-soft); margin-top: 3px; }
 .ex-card .meta { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .ex-card .acc { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
-.ex-card .pct { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--ink-faint); flex: none; }
 .ex-card-text { display: grid; gap: 3px; min-width: 0; }
 .ex-card-text b { font-family: var(--display); font-weight: 620; font-size: 17px; letter-spacing: -0.015em; }
 .ex-card-text small { font-size: 13px; color: var(--ink-soft); }

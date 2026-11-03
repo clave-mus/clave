@@ -7,6 +7,7 @@
 // **Não é o editor de rotinas** (F3-5). Só duas coisas: escolher uma rotina ou criar uma, e anexar
 // a etapa. Reordenar, dar tempo, modo livre/guiado e rotação são desenho do Paulo e ficam lá.
 import { useEffect, useRef, useState } from 'react';
+import type { ParametrosDePratica } from '../catalog/params';
 import { anexarInstancia, type Destino } from '../routines/edicao';
 import { useRotinas } from '../routines/hooks';
 import { gravarRotinas } from '../routines/storage';
@@ -17,9 +18,11 @@ interface Props {
   itemId: string;
   /** A configuração de AGORA — a que a pessoa está usando, não a que ficou guardada no item. */
   settings: Record<string, unknown>;
+  /** O que a pessoa escolheu de tonalidade, região e material — vai junto, na instância. */
+  params?: ParametrosDePratica;
 }
 
-export default function SalvarNaRotina({ itemId, settings }: Props) {
+export default function SalvarNaRotina({ itemId, settings, params }: Props) {
   const t = useT();
   const rotinas = useRotinas();
   const [aberto, setAberto] = useState(false);
@@ -29,7 +32,7 @@ export default function SalvarNaRotina({ itemId, settings }: Props) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const salvar = (destino: Destino) => {
-    const r = anexarInstancia(rotinas, destino, itemId, settings);
+    const r = anexarInstancia(rotinas, destino, itemId, settings, params);
     if (!r.ok) return;
     gravarRotinas(r.rotinas);
     setAberto(false);

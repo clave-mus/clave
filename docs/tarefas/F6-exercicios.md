@@ -65,6 +65,19 @@ superfície** usada pelos exercícios de identificação. Uma implementação, d
 - **Comparador de escalas** — ver duas escalas e as diferenças entre elas, cuidando da enarmonia.
 - Exploração de tonalidade: as notas, acordes e escalas que pertencem a ela.
 
+**Modo "tocar" (decisão 89).** O mesmo componente passa a **soar e responder ao toque**. Ideias do
+Paulo, **ainda não decididas para o beta** (`A15`): tocar melodias simples; **fixar notas** e depois
+**arpejar, bater (strum) ou tocar em bloco** — acorde sem vários dedos; bends ligados e desligados;
+parâmetros de cordas, afinação, timbre, intensidade e duração; efeitos e timbres com requisitos
+extras (`A14`). **Reaproveite a camada de apresentação** (`audio/presentation.ts`): timbre,
+intensidade, duração e "bloco ou arpejado" já existem. Só o strum é novo.
+
+**O nome está em aberto** (`A13`). Não escolha um: trate "visualizador" como nome provisório.
+
+**Antes de qualquer tela: um teste de som.** As vozes são sintetizadas, e efeitos e bends sobre um
+timbre fraco soam brinquedo. Violão e baixo podem usar síntese de corda pulsada (Karplus-Strong);
+o piano é o difícil. **Quem avalia o som é o Paulo** — uma IA não ouve.
+
 **Pronto quando:** o mesmo componente de braço serve à exploração livre **e** aos exercícios de
 identificar desenho, sem duas implementações.
 
@@ -130,7 +143,7 @@ Vira quatro itens, um por objeto:
 **O motor é o mesmo:** `theoryQuestion(topico, ctx)` já recebe o tópico. São quatro declarações e
 zero código novo.
 
-**Atenção aos ids:** `quiz-teoria` está em `STABLE_IDS` e no `arsenal` padrão. A migração precisa
+**Atenção aos ids:** `quiz-teoria` está em `STABLE_IDS` (e estava no `arsenal` padrão, que saiu na decisão 88). A migração precisa
 mapear o id antigo para um dos novos — sugestão: o de **graus e modos**, que é o tópico padrão.
 
 **Contrato de saída:** o teste de ids estáveis passa com a migração; e um teste confere que cada um

@@ -21,9 +21,19 @@ const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !
 /** Tira do estado salvo os campos que saíram e converte `area` em `module` no histórico. */
 export function migrateSaved(raw: unknown): Obj {
   if (!isObj(raw)) return {};
-  const { badges: _badges, plan: _plan, ...rest } = raw;
-  void _badges; void _plan;
+  // `arsenal` saiu (decisão 88): item guardado sem configuração é uma rotina de uma etapa.
+  const { badges: _badges, plan: _plan, arsenal: _arsenal, ...rest } = raw;
+  void _badges; void _plan; void _arsenal;
   const out: Obj = { ...rest };
+
+  // Tonalidade, região, material, clave e tempo SAÍRAM do perfil (decisão 87). Se ficassem em
+  // `params`, a tonalidade antiga continuaria valendo em silêncio, vinda de uma camada que não existe
+  // mais — o contrário do que a decisão quer.
+  if (isObj(out.params)) {
+    const { key: _k, range: _r, material: _m, clef: _c, tempo: _t, ...perfil } = out.params;
+    void _k; void _r; void _m; void _c; void _t;
+    out.params = perfil;
+  }
   if (isObj(out.profile)) {
     const { kind: _kind, levels: _levels, ...profile } = out.profile;
     void _kind; void _levels;

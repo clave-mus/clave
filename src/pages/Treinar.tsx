@@ -6,10 +6,10 @@ import { catalogByModule } from '../catalog/catalogView';
 import ItemScreen from '../catalog/ItemScreen';
 import Player from '../catalog/Player';
 import { isSeries } from '../catalog/types';
-import { toggleArsenal, useStore } from '../state/store';
+import { useStore } from '../state/store';
 import { Field, PageHead, Tag } from '../components/ui';
 import SalvarNaRotina from '../components/SalvarNaRotina';
-import { lerEstadoDeAbertura } from '../routines/edicao';
+import { lerAbertura } from '../routines/edicao';
 import NotFound from './NotFound';
 import { lessonProgress } from './Estudar';
 import { itemText, useT } from '../i18n';
@@ -24,7 +24,6 @@ export default function Treinar() {
   const t = useT();
   const { MODULES, moduleById, lessonById } = useContent();
   const stats = useStore(s => s.stats);
-  const arsenal = useStore(s => s.arsenal);
   const { hash } = useLocation();
   const [mobileOnly, setMobileOnly] = useState(false);
   const [open, setOpen] = useState<string[]>(loadOpen);
@@ -85,20 +84,16 @@ export default function Treinar() {
                     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
                       {entry.exercises.map(id => {
                         const st = stats[id];
-                        const pinned = arsenal.includes(id);
                         return (
                           <div key={id} style={{ position: 'relative' }}>
                             <Link to={`/catalogo/${id}`} className="ex-card">
                               <span className="acc" style={{ background: m.color }} />
-                              <div style={{ minWidth: 0, paddingRight: 26 }}>
+                              <div style={{ minWidth: 0 }}>
                                 <h3>{itemText(t, id, 'title')}</h3>
                                 <p>{itemText(t, id, 'desc')}</p>
                                 {st && <div className="meta"><span className="mini-tag">{t('train.done', { count: st.attempts })}</span></div>}
                               </div>
-                              {st && <span className="pct num">{Math.round((st.correct / st.attempts) * 100)}%</span>}
                             </Link>
-                            <button type="button" onClick={() => toggleArsenal(id)} aria-pressed={pinned} aria-label={t(pinned ? 'train.unpin' : 'train.pin')}
-                              style={{ position: 'absolute', right: 10, top: 10, border: 0, background: 'none', cursor: 'pointer', fontSize: 20, color: pinned ? 'var(--mu)' : 'var(--muted)' }}>{pinned ? '★' : '☆'}</button>
                           </div>
                         );
                       })}
@@ -143,7 +138,7 @@ export function ItemPage() {
   if (!item) return <NotFound />;
 
   // Aberto a partir de uma etapa de rotina: a configuração DA ETAPA, vinda no state da navegação.
-  const daEtapa = lerEstadoDeAbertura(location.state);
+  const daEtapa = lerAbertura(location.state);
   const lesson = LESSONS.find(l => l.exercises.includes(id));
   const area = moduleById[item.primaryModule];
 
@@ -155,7 +150,7 @@ export function ItemPage() {
       </div>
 
       {isSeries(item) ? (
-        <Player key={id + JSON.stringify(daEtapa)} def={item} initialSettings={daEtapa} />
+        <Player key={id + JSON.stringify(daEtapa)} def={item} initialSettings={daEtapa?.settings ?? null} initialParams={daEtapa?.params ?? null} />
       ) : (
         <>
           <header className="page-head" style={{ marginBottom: 0 }}>

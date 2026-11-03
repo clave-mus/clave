@@ -5,7 +5,7 @@ import type { GoalId, Instrument } from '../data/modules';
 import type { ModuleId } from '../catalog/taxonomy';
 import type { Naming } from '../theory/core';
 import type { SettingValue } from '../catalog/types';
-import type { GlobalParams, StoredParams } from '../catalog/params';
+import type { GlobalParams, ParametrosDePratica, PerfilGuardado } from '../catalog/params';
 import type { AgeGroup } from './age';
 import { migrateSaved } from './migrate';
 import { attemptLog } from './attemptLog';
@@ -37,7 +37,7 @@ export interface Stat {
  */
 export interface ActivityParams {
   settings?: Record<string, SettingValue>;
-  params?: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'tempo' | 'material' | 'clef'>;
+  params?: Pick<GlobalParams, 'instrument' | 'tuning' | 'key' | 'range' | 'material' | 'clef'>;
 }
 
 export interface Activity {
@@ -71,10 +71,15 @@ export interface State {
   /** Totais de antes do registro de tentativas (C2), que não têm tentativas por trás. Calculado uma vez. */
   legacyStats?: Record<string, Stat>;
   history: Activity[];
-  arsenal: string[];
   settings: Record<string, Record<string, SettingValue>>;
-  /** Parâmetros globais escolhidos pela pessoa (ver src/catalog/params.ts). */
-  params: StoredParams;
+  /**
+   * O que é DA PESSOA (ver src/catalog/params.ts): afinação, timbres, volume. **Tonalidade, região,
+   * material e clave não moram aqui** — são de prática, e ficam em `pratica`, por exercício
+   * (decisão 87).
+   */
+  params: PerfilGuardado;
+  /** O que a pessoa escolheu em CADA exercício: tonalidade, região, material, clave. Por item. */
+  pratica: Record<string, ParametrosDePratica>;
   account: Account | null;
   // Guardado para não perguntar a data de nascimento de novo; a data em si nunca fica aqui
   // (fica só no servidor, e só para quem tem conta — ver src/state/age.ts).
@@ -96,9 +101,9 @@ export const DEFAULT_STATE: State = {
   sound: true,
   stats: {},
   history: [],
-  arsenal: ['pauta-nota', 'ouvido-intervalo', 'braco-nota', 'quiz-teoria'],
   settings: {},
   params: {},
+  pratica: {},
   account: null,
   ageGroup: null,
 };
@@ -173,11 +178,20 @@ export function logActivity(a: Omit<Activity, 'at'>) {
   if (a.seconds < 5 && !a.total) return;
   setState(s => ({ ...s, history: [{ ...a, at: Date.now() }, ...s.history].slice(0, 500) }));
 }
-export function toggleArsenal(id: string) {
-  setState(s => ({ ...s, arsenal: s.arsenal.includes(id) ? s.arsenal.filter(x => x !== id) : [...s.arsenal, id] }));
-}
 export function saveSettings(id: string, values: Record<string, SettingValue>) {
   setState(s => ({ ...s, settings: { ...s.settings, [id]: values } }));
+}
+/** Apaga o que a pessoa escolheu neste exercício: ele volta a fazer o que faz por padrão. */
+export function limparPratica(id: string) {
+  setState(s => {
+    const { [id]: _fora, ...resto } = s.pratica;
+    void _fora;
+    return { ...s, pratica: resto };
+  });
+}
+/** Guarda o que a pessoa escolheu neste exercício (tonalidade, região, material). */
+export function setPratica(id: string, patch: ParametrosDePratica) {
+  setState(s => ({ ...s, pratica: { ...s.pratica, [id]: { ...s.pratica[id], ...patch } } }));
 }
 export function setAccount(account: Account | null) {
   setState(s => ({ ...s, account }));
@@ -195,8 +209,8 @@ export function applyTheme(theme: Theme | null) {
   if (theme) el.setAttribute('data-theme', theme);
   else el.removeAttribute('data-theme');
 }
-/** Guarda parâmetros globais escolhidos; os timbres se juntam aos já escolhidos, o resto substitui. */
-export function setParams(patch: StoredParams) {
+/** Guarda o que é da pessoa; os timbres se juntam aos já escolhidos, o resto substitui. */
+export function setParams(patch: PerfilGuardado) {
   setState(s => ({ ...s, params: { ...s.params, ...patch, ...(patch.timbres ? { timbres: { ...s.params.timbres, ...patch.timbres } } : {}) } }));
 }
 export function setAgeGroup(ageGroup: AgeGroup | null) {
