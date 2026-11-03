@@ -63,6 +63,7 @@ const pt = {
     hiddenText: 'Ele foi construído, mas ainda não foi publicado.',
   },
   editor: {
+    done: 'Pronto',
     back: '← Praticar',
     rename: 'Nome da rotina',
     mode: 'Modo',

@@ -63,6 +63,7 @@ const en: Shape<typeof pt> = {
     hiddenText: 'It has been built, but not published yet.',
   },
   editor: {
+    done: 'Done',
     back: '← Practice',
     rename: 'Routine name',
     mode: 'Mode',

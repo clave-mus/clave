@@ -27,7 +27,9 @@ import { apagarRotina, gravarRotinas } from '../routines/storage';
 import { tempoTotal, type Etapa, type Rotina } from '../routines/types';
 import { keyName } from '../theory/core';
 import { Btn, Chip, SecTitle } from '../components/ui';
-import { useRevisao, useStore } from '../state/store';
+import { useContent } from '../data/localized';
+import { MODULE_LIST } from '../data/modules';
+import { useRevisao } from '../state/store';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 import NotFound from './NotFound';
 
@@ -49,7 +51,7 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
   const params = useGlobalParams();
   const revisao = useRevisao();
   const navigate = useNavigate();
-  const instrumento = useStore(s => s.profile.instrument);
+  const { moduleById } = useContent();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
 
   const [aberta, setAberta] = useState<string | null>(null);
@@ -77,7 +79,11 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
 
   return (
     <div style={{ display: 'grid', gap: 24 }}>
-      <Link to="/" className="eyebrow" style={{ textDecoration: 'none' }}>{t('editor.back')}</Link>
+      {/* Tudo grava a cada mudança, então "Pronto" é só sair — mas a pessoa precisa de um fim claro. */}
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <Link to="/" className="eyebrow" style={{ textDecoration: 'none' }}>{t('editor.back')}</Link>
+        <Btn small to="/">{t('editor.done')}</Btn>
+      </div>
 
       <section style={{ display: 'grid', gap: 14 }}>
         <label style={{ display: 'grid', gap: 6, maxWidth: 420 }}>
@@ -249,9 +255,14 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
             <b>{t('editor.pick')}</b>
             <Btn small tone="ghost" onClick={() => setEscolhendo(null)}>{t('editor.cancel')}</Btn>
           </div>
-          <div className="row">
-            {ITEMS.filter(i => visivel(i.publicacao, revisao) && (i.mobile || i.requires.instrumento !== true || instrumento))
-              .map(i => (
+          {MODULE_LIST.map(m => {
+            const doModulo = ITEMS.filter(i => i.primaryModule === m.id && visivel(i.publicacao, revisao));
+            if (!doModulo.length) return null;
+            return (
+              <div key={m.id} style={{ display: 'grid', gap: 6 }}>
+                <span className="eyebrow">{moduleById[m.id].name}</span>
+                <div className="row">
+                  {doModulo.map(i => (
                 <Chip key={i.id} onClick={() => {
                   const alvo = escolhendo.etapaId;
                   grava(alvo
@@ -263,8 +274,11 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
                   {itemText(t, i.id, 'title')}
                   {estadoDe(i.publicacao) === 'rascunho' ? ` · ${t('review.draft')}` : ''}
                 </Chip>
-              ))}
-          </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </section>
       )}
 
