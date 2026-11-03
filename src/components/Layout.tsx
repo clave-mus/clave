@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { allNav, mainNav, PROFILE_ITEM } from './nav';
-import { art } from './ui';
+import { NAV } from './nav';
 import { useT } from '../i18n';
 
 const ICONS: Record<string, React.ReactNode> = {
-  hoje: <path d="M4,15 L16,4 L28,15 L24,15 L24,28 L19,28 L19,20 L13,20 L13,28 L8,28 L8,15 Z" fill="currentColor" />,
-  treinar: <g fill="currentColor"><rect x="3" y="11" width="6" height="10" /><rect x="23" y="11" width="6" height="10" /><rect x="8" y="14.5" width="16" height="3" /></g>,
-  rotinas: <g fill="currentColor"><rect x="4" y="6" width="24" height="4" /><rect x="4" y="14" width="24" height="4" /><rect x="4" y="22" width="16" height="4" /></g>,
-  progresso: <g fill="currentColor"><rect x="4" y="18" width="6" height="10" /><rect x="13" y="11" width="6" height="17" /><rect x="22" y="4" width="6" height="24" /></g>,
-  perfil: <path d="M6,27 L7,4 L13,10 L19,10 L25,4 L26,27 Z" fill="currentColor" />,
+  // onda de pulso: praticar
+  praticar: <path d="M2,16 H7 L10,7 L15,25 L19,13 L22,16 H30" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />,
+  // grade: catálogo
+  catalogo: <g fill="currentColor"><rect x="4" y="4" width="10" height="10" rx="2.5" /><rect x="18" y="4" width="10" height="10" rx="2.5" /><rect x="4" y="18" width="10" height="10" rx="2.5" /><rect x="18" y="18" width="10" height="10" rx="2.5" /></g>,
+  perfil: <g fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="16" cy="11" r="5.2" /><path d="M6,27 a10,10 0 0 1 20,0" /></g>,
 };
+
 export default function Layout() {
   const { pathname } = useLocation();
   const t = useT();
@@ -19,18 +19,18 @@ export default function Layout() {
     <div className="shell">
       <header className="topbar">
         <div className="in">
-          <Link to="/" className="brand" aria-label={t('nav.home')}><img src={art('logo')} alt="" /><b>Clave</b></Link>
+          <Link to="/" className="brand" aria-label={t('nav.home')}>Clave</Link>
           <nav className="nav" aria-label={t('nav.main')}>
-            {mainNav().map(n => <NavLink key={n.to} to={n.to} end={n.end}>{t(n.label)}</NavLink>)}
+            {NAV.filter(n => n.icon !== 'perfil').map(n => <NavLink key={n.to} to={n.to} end={n.end}>{t(n.label)}</NavLink>)}
           </nav>
           <div className="right">
-            <NavLink to={PROFILE_ITEM.to} className="streak-pill" aria-label={t(PROFILE_ITEM.label)}><span>{t(PROFILE_ITEM.label)}</span></NavLink>
+            <NavLink to="/perfil" className="nav-profile">{t('nav.profile')}</NavLink>
           </div>
         </div>
       </header>
       <main className="page"><Outlet /></main>
       <nav className="tabbar" aria-label={t('nav.main')}>
-        {allNav().map(n => (
+        {NAV.map(n => (
           <NavLink key={n.to} to={n.to} end={n.end}>
             <svg viewBox="0 0 32 32" aria-hidden="true">{ICONS[n.icon]}</svg>{t(n.label)}
           </NavLink>

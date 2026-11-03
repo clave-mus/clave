@@ -12,6 +12,8 @@ import { attemptLog } from './attemptLog';
 import { aggregateStats, mergeStats, subtractStats } from './attempts';
 import type { Locale } from '../i18n';
 
+export type Theme = 'light' | 'dark';
+
 export interface Profile {
   name: string;
   instrument: Instrument;
@@ -42,6 +44,8 @@ export interface State {
   profile: Profile;
   /** Idioma escolhido no perfil; null = automático, segue o navegador. */
   locale: Locale | null;
+  /** Tema escolhido no perfil; null = automático, segue o sistema (F4-2). */
+  theme: Theme | null;
   /** Nome das notas escolhido no perfil; null = segue o idioma. */
   naming: Naming | null;
   sound: boolean;
@@ -70,6 +74,7 @@ export const DEFAULT_STATE: State = {
     onboarded: false,
   },
   locale: null,
+  theme: null,
   naming: null,
   sound: true,
   stats: {},
@@ -163,6 +168,16 @@ export function setAccount(account: Account | null) {
 export function setLocale(locale: Locale | null) {
   setState(s => ({ ...s, locale }));
 }
+/** Tema claro, escuro, ou null para seguir o sistema. Escreve o atributo que src/index.css lê. */
+export function setTheme(theme: Theme | null) {
+  setState(s => ({ ...s, theme }));
+  applyTheme(theme);
+}
+export function applyTheme(theme: Theme | null) {
+  const el = document.documentElement;
+  if (theme) el.setAttribute('data-theme', theme);
+  else el.removeAttribute('data-theme');
+}
 /** Guarda parâmetros globais escolhidos; os timbres se juntam aos já escolhidos, o resto substitui. */
 export function setParams(patch: StoredParams) {
   setState(s => ({ ...s, params: { ...s.params, ...patch, ...(patch.timbres ? { timbres: { ...s.params.timbres, ...patch.timbres } } : {}) } }));
@@ -176,18 +191,8 @@ export function dayKey(t: number) {
   const d = new Date(t);
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
-/** Dias seguidos com alguma atividade, contando até hoje (ou ontem). */
-export function streakDays(history: Activity[]) {
-  const days = new Set(history.map(h => dayKey(h.at)));
-  let n = 0;
-  const d = new Date();
-  if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
-  while (days.has(dayKey(d.getTime()))) {
-    n++;
-    d.setDate(d.getDate() - 1);
-  }
-  return n;
-}
+// streakDays saiu na F0-2: sequência de dias é mecânica de engajamento, e o Clave não a usa
+// (decisão 11). `dayKey` fica, para a contagem de dias praticados sem punição.
 export function minutesByModule(history: Activity[], sinceDays = 30) {
   const since = Date.now() - sinceDays * 864e5;
   const out: Partial<Record<ModuleId, number>> = {};

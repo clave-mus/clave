@@ -59,7 +59,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [acc, setAcc] = useState(0);
-  const [score, setScore] = useState({ correct: 0, total: 0, streak: 0 });
+  const [score, setScore] = useState({ correct: 0, total: 0 });
   const [playing, setPlaying] = useState(false);
   const [heard, setHeard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -120,8 +120,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const submit: Submit = useCallback((response, pickedId) => {
     if (phase !== 'ask') return;
     const ok = validate(q.expected, response);
-    const streak = ok ? score.streak + 1 : 0;
-    const ns = { correct: score.correct + (ok ? 1 : 0), total: score.total + 1, streak };
+    const ns = { correct: score.correct + (ok ? 1 : 0), total: score.total + 1 };
     setScore(ns);
     setPicked(pickedId);
     setPhase(ok ? 'right' : 'wrong');
@@ -163,7 +162,6 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   }, [phase, q, next, play, submit]);
 
   const area = moduleById[def.primaryModule];
-  const pct = score.total ? Math.round((score.correct / score.total) * 100) : 0;
 
   const copyLink = async () => {
     const url = `${location.origin}/treinar/${def.id}?c=${encodeSettings(settings)}`;
@@ -180,8 +178,6 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         </div>
         <div className="score">
           <div><b className="num">{score.correct}/{score.total}</b><span>{t('player.hits')}</span></div>
-          <div><b className="num" style={{ color: 'var(--mu)' }}>{pct}%</b><span>{t('player.accuracy')}</span></div>
-          <div><b className="num">{score.streak}</b><span>{t('player.streak')}</span></div>
         </div>
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}
@@ -193,7 +189,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
           {phase === 'wrong' && <>{t('player.answer')} <b>{q.reveal}</b></>}
-          {phase === 'right' && <span className="muted">{t('player.right')} {score.streak >= 5 ? t('player.inARow', { n: score.streak }) : ''}</span>}
+          {phase === 'right' && <span className="muted">{t('player.right')}</span>}
           {phase === 'ask' && <span className="muted">{itemText(t, def.id, 'desc')}</span>}
         </div>
         <div className="row">

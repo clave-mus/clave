@@ -10,12 +10,14 @@ export interface ModuleBase {
   /** Emblema do módulo (design/art.mjs → public/art). */
   art: string;
 }
+// As cinco cores são uma família do campo quente do estilo Campo, com duas âncoras frias para
+// as áreas se distinguirem entre si. Definidas como tokens em src/index.css, nos dois temas.
 export const MODULE_LIST: ModuleBase[] = [
-  { id: 'theory', color: 'var(--mu)', art: 'modulo-teoria' },
-  { id: 'technique', color: 'var(--ve)', art: 'modulo-tecnica' },
-  { id: 'perception.melodic', color: 'var(--co)', art: 'modulo-percepcao-melodica' },
-  { id: 'perception.harmonic', color: 'var(--cream)', art: 'modulo-percepcao-harmonica' },
-  { id: 'perception.rhythmic', color: 'var(--mu)', art: 'modulo-percepcao-ritmica' },
+  { id: 'theory', color: 'var(--area-1)', art: 'modulo-teoria' },
+  { id: 'technique', color: 'var(--area-2)', art: 'modulo-tecnica' },
+  { id: 'perception.melodic', color: 'var(--area-3)', art: 'modulo-percepcao-melodica' },
+  { id: 'perception.harmonic', color: 'var(--area-4)', art: 'modulo-percepcao-harmonica' },
+  { id: 'perception.rhythmic', color: 'var(--area-5)', art: 'modulo-percepcao-ritmica' },
 ];
 
 export type Instrument = 'piano' | 'violao' | 'baixo';

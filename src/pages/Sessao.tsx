@@ -1,22 +1,45 @@
-// Sessão guiada: passa pelos blocos sugeridos, um de cada vez.
+// Executor guiado — BASE DA TAREFA F3-2, fora das rotas por enquanto.
+//
+// O gerador de sessão que alimentava esta tela saiu na F0-3 (decisão 1: quem escolhe é a pessoa).
+// O que sobrevive aqui e serve ao executor de rotinas: a barra de etapas, o cronômetro por etapa,
+// o avanço manual, o Player embutido e a tela final.
+//
+// O que precisa mudar na F3-2, segundo docs/tarefas/F3-rotinas.md:
+// - `Block` vira `Step` com conjunto de instâncias e política de ciclagem (decisão 7);
+// - o cronômetro passa a ser CRESCENTE e a informar sem bloquear, em vez de regressivo;
+// - os três tipos de término (Série, Ambiente, Tarefa) se comportam diferente no fim da etapa;
+// - a herança de parâmetros fica visível ("Tonalidade: Dó maior (da rotina)");
+// - a sessão é salva para fechar a página e retomar.
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useContent } from '../data/localized';
-import { moduleOf, type Block } from '../data/session';
 import { exerciseById } from '../exercises/catalog';
+import { toolById } from '../exercises/tools';
 import Player from '../exercises/Player';
 import { logActivity } from '../state/store';
 import { newId } from '../state/attempts';
 import { TOOL_COMPONENTS } from './Treinar';
-import { Art, Btn, Tag } from '../components/ui';
+import { Btn, Tag } from '../components/ui';
 import { fmtClock } from '../tools/common';
-import { PLAN_KEY } from './Hoje';
-import { itemText, useT } from '../i18n';
+import type { ModuleId } from '../exercises/taxonomy';
+import { itemText, useT, type MessageKey } from '../i18n';
+
+/** Uma etapa da sessão. Vira `Step` na F3-2. */
+export interface Block {
+  kind: 'exercise' | 'tool';
+  id: string;
+  minutes: number;
+  target?: number;
+  label?: MessageKey;
+}
+
+/** Em que módulo um item mora. Vira `areas[0]` quando a F1-3 pluralizar a classificação. */
+export function moduleOf(id: string): ModuleId {
+  return (exerciseById[id] ?? toolById[id])?.primaryModule ?? 'theory';
+}
 
 function loadPlan(state: unknown): Block[] {
-  const fromState = (state as { plan?: Block[] } | null)?.plan;
-  if (fromState) return fromState;
-  try { return JSON.parse(sessionStorage.getItem(PLAN_KEY) ?? '[]'); } catch { return []; }
+  return (state as { plan?: Block[] } | null)?.plan ?? [];
 }
 
 export default function Sessao() {
@@ -41,7 +64,7 @@ export default function Sessao() {
   }, [i, block]);
 
   if (!plan.length) {
-    return <div className="empty"><Art name="clave-dormindo" style={{ width: 180 }} /><div style={{ display: 'grid', gap: 12 }}><h1 style={{ fontSize: 48 }}>{t('session.none')}</h1><div><Btn to="/">{t('session.build')}</Btn></div></div></div>;
+    return <div className="empty"><h1>{t('session.none')}</h1><div><Btn to="/">{t('session.build')}</Btn></div></div>;
   }
 
   if (i >= plan.length) {
@@ -49,14 +72,11 @@ export default function Sessao() {
     const total = results.reduce((a, r) => a + r.total, 0);
     const minutes = plan.reduce((a, b) => a + b.minutes, 0);
     return (
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', alignItems: 'center' }}>
-        <div style={{ background: 'var(--ve)', padding: 30, display: 'grid', placeItems: 'center' }}><Art name="clave-regente" style={{ width: 260 }} /></div>
-        <div style={{ display: 'grid', gap: 16 }}>
-          <Tag>{t('session.done')}</Tag>
-          <h1 style={{ fontSize: 'clamp(52px, 8vw, 96px)' }}>{t('session.bravo')}</h1>
-          <p style={{ fontSize: 18 }}>{total ? t('session.summaryWithAnswers', { blocks: plan.length, minutes, correct: c, total }) : t('session.summary', { blocks: plan.length, minutes })}</p>
-          <div className="row"><Btn to="/">{t('common.backHome')}</Btn><Btn to="/progresso" tone="ghost">{t('common.seeProgress')}</Btn></div>
-        </div>
+      <div style={{ display: 'grid', gap: 16 }}>
+        <Tag>{t('session.done')}</Tag>
+        <h1>{t('session.bravo')}</h1>
+        <p style={{ fontSize: 18 }}>{total ? t('session.summaryWithAnswers', { blocks: plan.length, minutes, correct: c, total }) : t('session.summary', { blocks: plan.length, minutes })}</p>
+        <div className="row"><Btn to="/">{t('common.backHome')}</Btn><Btn to="/perfil/historico" tone="ghost">{t('common.seeProgress')}</Btn></div>
       </div>
     );
   }
@@ -73,7 +93,7 @@ export default function Sessao() {
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div style={{ display: 'flex', gap: 6 }} aria-label={t('session.blockOf', { i: i + 1, n: plan.length })}>
-        {plan.map((b, k) => <div key={k} title={b.label ? t(b.label) : itemText(t, b.id, 'title')} style={{ flex: b.minutes, height: 8, transform: 'skewX(-12deg)', background: k < i ? 'var(--mu)' : k === i ? 'var(--cream)' : 'var(--bk-3)' }} />)}
+        {plan.map((b, k) => <div key={k} title={b.label ? t(b.label) : itemText(t, b.id, 'title')} style={{ flex: b.minutes, height: 6, borderRadius: 3, background: k < i ? 'var(--accent)' : k === i ? 'var(--ink)' : 'var(--line)' }} />)}
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <span className="eyebrow">{t('session.blockOf', { i: i + 1, n: plan.length })} · {moduleById[moduleOf(block.id)].name}</span>
@@ -87,7 +107,7 @@ export default function Sessao() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <h1 style={{ fontSize: 'clamp(38px, 6vw, 70px)' }}>{block.label ? t(block.label) : itemText(t, block.id, 'title')}</h1>
             <div style={{ textAlign: 'right' }}>
-              <div className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 48, lineHeight: 0.9, color: left === 0 ? 'var(--mu)' : 'var(--cream)' }}>{fmtClock(left)}</div>
+              <div className="num" style={{ fontSize: 40, fontWeight: 650, lineHeight: 1, color: left === 0 ? 'var(--accent)' : 'var(--ink)' }}>{fmtClock(left)}</div>
               <span className="eyebrow">{t(left === 0 ? 'session.timeUp' : 'session.remaining')}</span>
             </div>
           </div>
