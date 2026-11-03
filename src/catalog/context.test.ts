@@ -104,3 +104,32 @@ describe('cobertura', () => {
     expect(new Set(ITEMS.map(i => i.id)).size).toBe(ITEMS.length);
   });
 });
+
+// O "Pronto quando" da F1-2 pedia dois travamentos, e só o da lista de ids existia.
+describe('o tipo de término de cada item está travado (decisão 5)', () => {
+  // `kind` é propriedade do item, não configuração: decide o executor E o que a etapa consegue
+  // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
+  // propósito, com a decisão na mão.
+  const ambientes: Record<string, string> = {
+    metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+  };
+
+  it('toda série declara `kind: serie`', () => {
+    for (const e of EXERCISES) expect(e.kind, e.id).toBe('serie');
+  });
+
+  it('cada ferramenta tem o `kind` esperado, e não há ferramenta fora da lista', () => {
+    expect(Object.fromEntries(AMBIENTES.map(a => [a.id, a.kind]))).toEqual(ambientes);
+  });
+
+  // A garantia que importa: só `serie` produz tentativa conferida. `ambiente` e `tarefa` não têm
+  // `make`, então nunca passam pelo Player e nunca gravam `outcome: 'correct'` — "feito" nunca vira
+  // "certo" (decisão 5).
+  it('nenhum item que não é série tem `make`, e portanto nenhum grava resposta certa', () => {
+    for (const i of ITEMS.filter(x => x.kind !== 'serie')) expect(i.make, i.id).toBeUndefined();
+  });
+
+  it('e toda série tem `make`', () => {
+    for (const i of ITEMS.filter(x => x.kind === 'serie')) expect(typeof i.make, i.id).toBe('function');
+  });
+});
