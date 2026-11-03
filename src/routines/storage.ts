@@ -146,7 +146,40 @@ export function lerRotinas(): Rotina[] {
 
 export function gravarRotinas(rotinas: Rotina[]) {
   gravarJSON(KEY, rotinas);
+  avisar();
 }
+
+// ---------------------------------------------------------------------------
+// Assinatura — para a tela acompanhar o disco sem reler a cada render
+// ---------------------------------------------------------------------------
+
+const ouvintes = new Set<() => void>();
+const avisar = () => ouvintes.forEach(f => f());
+
+/** Chama `f` sempre que as rotinas mudarem. Devolve a função que cancela. */
+export function aoMudarRotinas(f: () => void): () => void {
+  ouvintes.add(f);
+  return () => { ouvintes.delete(f); };
+}
+
+let ultimaLeitura: { raw: string | null; rotinas: Rotina[] } | null = null;
+
+/**
+ * As rotinas, **com a mesma referência enquanto o disco não mudar**.
+ *
+ * Existe porque `lerRotinas` devolve um array novo a cada chamada, e uma tela que o usasse direto
+ * como snapshot entraria em loop de render: o React compara por referência.
+ */
+export function rotinasEstaveis(): Rotina[] {
+  let raw: string | null = null;
+  try { raw = localStorage.getItem(KEY); } catch { /* sem armazenamento */ }
+  if (ultimaLeitura && ultimaLeitura.raw === raw) return ultimaLeitura.rotinas;
+  ultimaLeitura = { raw, rotinas: lerRotinas() };
+  return ultimaLeitura.rotinas;
+}
+
+/** O nome da chave de armazenamento, para a tela escutar mudanças vindas de outra aba. */
+export const CHAVE_ROTINAS = KEY;
 
 export function salvarRotina(r: Rotina): Rotina[] {
   const todas = lerRotinas();

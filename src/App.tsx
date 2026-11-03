@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
-import { REDIRECTS } from './components/nav';
+import { REDIRECTS, reescreverRotaLegada } from './components/nav';
 import Estudar, { GenrePage, LessonPage } from './pages/Estudar';
 import Praticar from './pages/Praticar';
 import Onboarding from './pages/Onboarding';
@@ -44,5 +44,5 @@ export default function App() {
 /** /treinar/:id e /ferramentas/:id viraram /catalogo/:id — exercício e ferramenta são o mesmo
  *  tipo de item desde a F1-1 (decisão 17), então a rota também é uma só. */
 function RedirectItem({ from }: { from: string }) {
-  return <Navigate to={window.location.pathname.replace(from, '/catalogo/')} replace />;
+  return <Navigate to={reescreverRotaLegada(window.location, from)} replace />;
 }

@@ -196,7 +196,7 @@ Coisas que a reforma da camada não resolve sozinha, levantadas no uso real:
   duas oitavas.
 - Extensão de linhas suplementares configurável em "que nota é essa?".
 - Trocar entre intervalo harmônico junto e separado **sem resetar** o intervalo.
-- Remover a ferramenta "internalizar uma tonalidade" e o "copiar link", se ainda existirem.
+- Remover a ferramenta "internalizar uma tonalidade" ~~e o "copiar link"~~ *(o "copiar link" saiu em 03/11/2026, decisão 86 — estava quebrado)*, se ainda existir.
 - **Tonalidade de referência em "que nota tocou?"**: hoje é um liga-desliga que sempre toca Dó.
   Virando `nenhuma / tônica / cadência / escala`, ele **vira o "identificar graus"** do catálogo,
   sem exercício novo.

@@ -29,3 +29,15 @@ export const REDIRECTS: Record<string, string> = {
   '/comunidade': '/',
   '/mentor': '/',
 };
+
+/**
+ * Para onde vai um endereço legado de item, **levando a query e o âncora junto**.
+ *
+ * O redirecionamento antigo reescrevia só o `pathname` e descartava `?...` e `#...`. Em silêncio:
+ * quem abria um link salvo caía no item certo, mas sem os parâmetros que o link carregava — e
+ * ninguém via erro nenhum. Vale para qualquer `/treinar/...` ou `/ferramentas/...` guardado, não só
+ * para o antigo "copiar link".
+ */
+export function reescreverRotaLegada(loc: { pathname: string; search: string; hash: string }, from: string): string {
+  return loc.pathname.replace(from, '/catalogo/') + loc.search + loc.hash;
+}

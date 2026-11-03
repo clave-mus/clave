@@ -143,6 +143,12 @@ o que a pessoa pôs ali (decisão 7).
 
 ## F3-5 · Editor de rotinas
 
+> **O que já existe (decisão 86):** "Salvar numa rotina" em todo item, a lista de rotinas no Praticar
+> abrindo cada etapa com a configuração salva, tirar etapa e apagar rotina. Em `src/routines/edicao.ts`
+> (`anexarInstancia`, `removerEtapa`) e `src/components/SalvarNaRotina.tsx`. **Não é o editor:** falta
+> reordenar, tempo por etapa, modo livre/guiado, conjuntos de instâncias e rotação — e o desenho disso
+> é do Paulo. Aproveite as funções puras; não reescreva.
+
 **Decisão de origem:** 8. **Depende de:** F3-1, F1-6.
 
 Mínimo, mas completo o bastante para a rotina ser de verdade da pessoa — sem editor, a proposta de

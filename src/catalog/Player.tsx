@@ -17,18 +17,11 @@ import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useGlobalParams } from './params';
 import { optionResponse, validate } from './validate';
 import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
+import SalvarNaRotina from '../components/SalvarNaRotina';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 
 type Phase = 'ask' | 'right' | 'wrong';
 type Submit = (r: Response, pickedId: string) => void;
-
-export function encodeSettings(v: Record<string, SettingValue>) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(v))));
-}
-export function decodeSettings(s: string | null): Record<string, SettingValue> | null {
-  if (!s) return null;
-  try { return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch { return null; }
-}
 
 interface Props {
   def: SeriesItem;
@@ -47,7 +40,14 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const { moduleById } = useContent();
   const params = useGlobalParams();
   const saved = useStore(s => s.settings[def.id]);
-  const settings = useMemo(() => ({ ...def.defaults, ...(initialSettings ?? saved ?? {}) }), [def, saved, initialSettings]);
+  // Aberto a partir de uma etapa de rotina, o item começa com a configuração DA ETAPA — não com a
+  // que a pessoa deixou salva no item. E mexer nas configurações precisa continuar funcionando:
+  // enquanto houver `local`, é nele que a mudança cai, e a configuração guardada do item não é
+  // tocada. (A primeira versão do link compartilhado deixava `initialSettings` mandar em tudo, e o
+  // painel de configurações virava decoração: gravava num lugar que ninguém lia.)
+  const [local, setLocal] = useState<Record<string, SettingValue> | null>(initialSettings ?? null);
+  const settings = useMemo(() => ({ ...def.defaults, ...(local ?? saved ?? {}) }), [def, saved, local]);
+  const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
   const locale = useLocale();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
   const make = useCallback(() => def.make(settings, ctx), [def, settings, ctx]);
@@ -69,7 +69,6 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
   const [playing, setPlaying] = useState(false);
   const [heard, setHeard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [toast, setToast] = useState('');
   const started = useRef(Date.now());
   const scoreRef = useRef(score);
   scoreRef.current = score;
@@ -176,11 +175,6 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
 
   const area = moduleById[def.primaryModule];
 
-  const copyLink = async () => {
-    const url = `${location.origin}/treinar/${def.id}?c=${encodeSettings(settings)}`;
-    try { await navigator.clipboard.writeText(url); setToast(t('player.copied')); } catch { setToast(url); }
-    window.setTimeout(() => setToast(''), 2400);
-  };
 
   // Configuração que não gera pergunta: explica e abre as configurações. Nunca sorteia.
   if (problema || !q) {
@@ -200,9 +194,10 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
           <div />
           <div className="row">
             <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
+          <SalvarNaRotina itemId={def.id} settings={settings} />
           </div>
         </div>
-        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={v => saveSettings(def.id, v)} />}
+        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} />}
       </div>
     );
   }
@@ -234,7 +229,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         <div className="row">
           {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
-          <Btn small tone="ghost" onClick={copyLink}>{t('player.copyLink')}</Btn>
+          <SalvarNaRotina itemId={def.id} settings={settings} />
         </div>
       </div>
 
@@ -250,8 +245,7 @@ export default function Player({ def, target, onDone, initialSettings, sessionId
         </div>
       )}
 
-      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={v => saveSettings(def.id, v)} />}
-      {toast && <div className="toast" role="status">{toast}</div>}
+      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} />}
     </div>
   );
 }

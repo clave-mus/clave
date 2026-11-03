@@ -1330,6 +1330,42 @@ que não se pode sustentar.**
 
 ---
 
+### 86 · Salvar o exercício com a configuração é salvar numa rotina — e o "copiar link" sai
+
+A configuração é o trabalho (só terças e sextas, linhas suplementares, Dórico e Lídio) e era a parte
+que evaporava: o arsenal guarda só o **id** do item. O "copiar link" era o único jeito de uma
+configuração sobreviver ao fim da sessão — **um atalho em volta da falta de rotina**.
+
+Então o botão é **"Salvar numa rotina"**: escolhe uma rotina existente ou cria uma, e grava a
+`Instância` (item + configuração) como etapa. **Não há preset solto**, de propósito: seria um terceiro
+conceito ao lado de item salvo e de rotina, três coisas na home fazendo quase o mesmo.
+
+**O botão grava a configuração *de agora*, não a que ficou guardada no item.** Por isso ele mora
+dentro do `Player`, que é quem a conhece: abrir uma etapa, mexer e salvar de novo grava o que a
+pessoa está vendo.
+
+**Abrir uma etapa restaura a configuração dela**, e mexer nas configurações continua funcionando sem
+sobrescrever nem a do item nem a da etapa. A configuração viaja no `state` da navegação e não na
+URL: é dado da rotina da pessoa, e compartilhar é papel da rotina (decisão 23).
+
+**O "copiar link" estava quebrado, e em silêncio.** O link apontava para `/treinar/:id`, que virou
+rota legada na `D1`, e o redirecionamento reescrevia só o `pathname` — **a query sumia**. Quem abria
+caía no exercício certo, rodando com as configurações *dele*, sem erro nenhum e sem aviso de
+configuração compartilhada. O mesmo defeito atingia qualquer link antigo com `?...` ou `#...`; foi
+corrigido à parte (`reescreverRotaLegada`).
+
+**O que isto NÃO é:** o editor de rotinas (`F3-5`) nem o executor (`F3-2`, `F3-3`). A tela só lista
+as rotinas no Praticar, abre cada etapa com a configuração salva, tira uma etapa e apaga a rotina.
+Ordem, tempo por etapa, modo livre/guiado e rotação continuam sendo desenho do Paulo.
+
+**Fica em aberto, e é decisão de produto:** a **tonalidade** e a **região** moram nos parâmetros
+globais, não na configuração do item — então **não vão** na etapa salva. Hoje salvar "em Fá maior"
+não grava Fá maior. O caminho previsto é a rotação de tonalidade (decisão 38) e `Instancia.params`,
+mas **gravar os parâmetros globais de agora dentro da etapa** congelaria algo que a pessoa
+provavelmente quer que continue seguindo o perfil. Não decidi isso por conta própria.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa

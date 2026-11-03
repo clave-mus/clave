@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NAV, REDIRECTS } from './nav';
+import { NAV, REDIRECTS, reescreverRotaLegada } from './nav';
 import pt from '../i18n/pt';
 
 describe('navegação', () => {
@@ -43,5 +43,32 @@ describe('endereços antigos', () => {
 
   it('nenhum redirecionamento aponta para si mesmo', () => {
     for (const [from, to] of Object.entries(REDIRECTS)) expect(from).not.toBe(to);
+  });
+});
+
+describe('reescreverRotaLegada', () => {
+  const loc = (pathname: string, search = '', hash = '') => ({ pathname, search, hash });
+
+  it('troca o prefixo antigo pelo novo', () => {
+    expect(reescreverRotaLegada(loc('/treinar/pauta-nota'), '/treinar/')).toBe('/catalogo/pauta-nota');
+    expect(reescreverRotaLegada(loc('/ferramentas/tecnica'), '/ferramentas/')).toBe('/catalogo/tecnica');
+  });
+
+  // O bug: o redirecionamento reescrevia só o pathname, e o link chegava no item certo mas sem os
+  // parâmetros que carregava — em silêncio, sem erro nenhum.
+  it('leva a query junto', () => {
+    expect(reescreverRotaLegada(loc('/treinar/pauta-nota', '?c=abc%3D'), '/treinar/')).toBe('/catalogo/pauta-nota?c=abc%3D');
+  });
+
+  it('leva o âncora junto', () => {
+    expect(reescreverRotaLegada(loc('/ferramentas/tecnica', '', '#topo'), '/ferramentas/')).toBe('/catalogo/tecnica#topo');
+  });
+
+  it('leva os dois, na ordem em que um endereço os escreve', () => {
+    expect(reescreverRotaLegada(loc('/treinar/x', '?a=1&b=2', '#h'), '/treinar/')).toBe('/catalogo/x?a=1&b=2#h');
+  });
+
+  it('sem query nem âncora, não acrescenta nada', () => {
+    expect(reescreverRotaLegada(loc('/treinar/x'), '/treinar/')).toBe('/catalogo/x');
   });
 });

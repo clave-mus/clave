@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
 import { catalogByModule } from '../catalog/catalogView';
 import ItemScreen from '../catalog/ItemScreen';
-import Player, { decodeSettings } from '../catalog/Player';
+import Player from '../catalog/Player';
 import { isSeries } from '../catalog/types';
 import { toggleArsenal, useStore } from '../state/store';
 import { Field, PageHead, Tag } from '../components/ui';
+import SalvarNaRotina from '../components/SalvarNaRotina';
+import { lerEstadoDeAbertura } from '../routines/edicao';
 import NotFound from './NotFound';
 import { lessonProgress } from './Estudar';
 import { itemText, useT } from '../i18n';
@@ -134,13 +136,14 @@ export default function Treinar() {
  */
 export function ItemPage() {
   const { id = '' } = useParams();
-  const [params] = useSearchParams();
+  const location = useLocation();
   const t = useT();
   const { LESSONS, moduleById } = useContent();
   const item = itemById[id];
   if (!item) return <NotFound />;
 
-  const shared = decodeSettings(params.get('c'));
+  // Aberto a partir de uma etapa de rotina: a configuração DA ETAPA, vinda no state da navegação.
+  const daEtapa = lerEstadoDeAbertura(location.state);
   const lesson = LESSONS.find(l => l.exercises.includes(id));
   const area = moduleById[item.primaryModule];
 
@@ -152,10 +155,7 @@ export function ItemPage() {
       </div>
 
       {isSeries(item) ? (
-        <>
-          {shared && <div className="panel" style={{ padding: 12 }}>{t('train.shared')}</div>}
-          <Player key={id + (shared ? 'c' : '')} def={item} initialSettings={shared} />
-        </>
+        <Player key={id + JSON.stringify(daEtapa)} def={item} initialSettings={daEtapa} />
       ) : (
         <>
           <header className="page-head" style={{ marginBottom: 0 }}>
@@ -169,6 +169,7 @@ export function ItemPage() {
             </div>
             <Field seed={item.id} color={area.color} className="field-square" style={{ width: 88 }} />
           </header>
+          <div className="row"><SalvarNaRotina itemId={item.id} settings={{}} /></div>
           <ItemScreen item={item} />
         </>
       )}

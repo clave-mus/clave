@@ -5,8 +5,8 @@
 // do controle do app.
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  apagarRotina, copiarRotina, ehRotina, gravarRotinas, gravarSessao, lerRotinas, lerSessao,
-  migrarRotina, novaEtapa, novaRotina, salvarRotina,
+  aoMudarRotinas, apagarRotina, copiarRotina, ehRotina, gravarRotinas, gravarSessao, lerRotinas, lerSessao,
+  migrarRotina, novaEtapa, novaRotina, rotinasEstaveis, salvarRotina,
 } from './storage';
 import { FORMATO_ROTINA, tempoTotal, valorDaRotacao, type Rotina } from './types';
 
@@ -216,5 +216,50 @@ describe('o histórico guarda os parâmetros (F3-9)', () => {
     resetAll();
     logActivity({ id: 'metronomo', title: 'Metrônomo', module: 'technique', seconds: 120 });
     expect(getState().history[0].snapshot).toBeUndefined();
+  });
+});
+
+describe('assinatura: a tela acompanha o disco', () => {
+  it('avisa quem escuta quando se grava, salva ou apaga', () => {
+    let avisos = 0;
+    const parar = aoMudarRotinas(() => { avisos++; });
+    const r = comEtapas();
+    salvarRotina(r);
+    expect(avisos).toBe(1);
+    apagarRotina(r.id);
+    expect(avisos).toBe(2);
+    gravarRotinas([]);
+    expect(avisos).toBe(3);
+    parar();
+  });
+
+  it('quem cancelou a assinatura não é mais avisado', () => {
+    let avisos = 0;
+    const parar = aoMudarRotinas(() => { avisos++; });
+    parar();
+    salvarRotina(comEtapas());
+    expect(avisos).toBe(0);
+  });
+
+  // `lerRotinas` devolve um array novo a cada chamada; usado direto como snapshot, o React compararia
+  // por referência, veria "mudou" a cada render e entraria em loop.
+  it('rotinasEstaveis devolve a MESMA referência enquanto o disco não muda', () => {
+    salvarRotina(comEtapas());
+    expect(rotinasEstaveis()).toBe(rotinasEstaveis());
+    expect(lerRotinas()).not.toBe(lerRotinas());
+  });
+
+  it('e uma referência nova quando o disco muda', () => {
+    salvarRotina(comEtapas('A'));
+    const antes = rotinasEstaveis();
+    salvarRotina(comEtapas('B'));
+    const depois = rotinasEstaveis();
+    expect(depois).not.toBe(antes);
+    expect(depois.map(r => r.nome)).toEqual(['A', 'B']);
+  });
+
+  it('sem nada gravado, devolve lista vazia e estável', () => {
+    expect(rotinasEstaveis()).toEqual([]);
+    expect(rotinasEstaveis()).toBe(rotinasEstaveis());
   });
 });
