@@ -111,7 +111,7 @@ acerto nos cartões.
 
 ---
 
-## F3-4 · Ciclagem
+## F3-4 · Ciclagem ✅ *lógica feita em 03/11/2026; falta a tela*
 
 **Decisão de origem:** 7. **Depende de:** F3-2, F3-3.
 
@@ -127,6 +127,14 @@ Uma etapa com várias instâncias resolve **uma ao abrir**:
 
 **Pronto quando:** abrir a mesma rotina três vezes seguidas entrega instâncias diferentes numa
 etapa com três instâncias, mesmo fechando o navegador entre uma e outra.
+
+**Feito (lógica).** `src/routines/ciclagem.ts`: `resolverInstancia`, `trocarInstancia` e
+`ordemDasEtapas`, com o gerador aleatório injetável para o teste ser determinístico. Falta ligar
+na tela, junto com F3-2 e F3-3.
+
+Detalhe de implementação que vale saber: `sorteio-sem-repetir` **sorteia entre as outras e
+remapeia**, em vez de sortear de novo até dar diferente. Laço de repetição com gerador ruim pode
+não terminar.
 
 **Não faça:** nenhuma substituição automática por etiqueta em tempo de execução. O app só entrega
 o que a pessoa pôs ali (decisão 7).
@@ -209,7 +217,7 @@ uso, LGPD e ECA — e isso é a decisão 23 inteira, não um detalhe.
 
 ---
 
-## F3-8 · Rotação de parâmetro
+## F3-8 · Rotação de parâmetro ✅ *lógica feita em 03/11/2026; falta a tela*
 
 **Decisão de origem:** 38. **Depende de:** F3-1, F2-1.
 
@@ -244,6 +252,19 @@ numa `Rotacao`.
 
 **Pronto quando:** dá para pôr "Mapear o braço do baixo" em rotação por tonalidade, praticar em Sol
 por três sessões, avançar para Ré quando quiser, e ver depois por quais tonalidades já passou.
+
+**Feito (lógica).** `src/routines/rotacao.ts`: `efeitoDaRotacao`, `registrarExecucao`, `avancar`,
+`voltar`, `irPara`, `jaPassouPor` e `aindaNaoVisitados`, mais as listas `CICLO_DE_QUARTAS` e
+`CROMATICA`. Falta ligar na tela.
+
+Duas coisas que o código trava:
+
+- **`registrarExecucao` nunca avança sozinho.** Com `avanco: 'execucoes'` ele devolve
+  `podeAvancar: true`, e quem avança continua sendo quem chama. O módulo não decide pela pessoa.
+- **`ALVO_DA_ROTACAO`** diz onde cada eixo aterrissa: tonalidade e região viram **parâmetro
+  global**; corda, modo e qualidade de acorde viram **configuração da instância**. Um item que
+  queira ser rotacionado por um eixo de configuração precisa usar aquele id — é convenção de
+  código, e está documentada no arquivo.
 
 **Não faça:** nada de rotacionar andamento — isso é a camada *progressão de andamento*, e bpm não é
 pontuação (decisão 10). Nada de rotacionar vários parâmetros ao mesmo tempo.
