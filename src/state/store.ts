@@ -2,10 +2,10 @@
 // a forma dos dados já pensa em subir isso para um servidor depois.
 import { useSyncExternalStore } from 'react';
 import type { GoalId, Instrument } from '../data/modules';
-import type { ModuleId } from '../exercises/taxonomy';
+import type { ModuleId } from '../catalog/taxonomy';
 import type { Naming } from '../theory/core';
-import type { SettingValue } from '../exercises/types';
-import type { StoredParams } from '../exercises/params';
+import type { SettingValue } from '../catalog/types';
+import type { StoredParams } from '../catalog/params';
 import type { AgeGroup } from './age';
 import { migrateSaved } from './migrate';
 import { attemptLog } from './attemptLog';
@@ -56,7 +56,7 @@ export interface State {
   history: Activity[];
   arsenal: string[];
   settings: Record<string, Record<string, SettingValue>>;
-  /** Parâmetros globais escolhidos pela pessoa (ver src/exercises/params.ts). */
+  /** Parâmetros globais escolhidos pela pessoa (ver src/catalog/params.ts). */
   params: StoredParams;
   account: Account | null;
   // Guardado para não perguntar a data de nascimento de novo; a data em si nunca fica aqui

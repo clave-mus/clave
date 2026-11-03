@@ -2,7 +2,7 @@
 // por que importa, como encaixar nos estudos, um tutorial curto e os exercícios/ferramentas.
 // Aqui fica a estrutura (ids, ligações, links); os textos estão em src/i18n/content.*.ts e chegam
 // às telas já no idioma da pessoa (useContent, em src/data/localized.ts).
-import type { Classification } from '../exercises/taxonomy';
+import type { Classification } from '../catalog/taxonomy';
 
 // Uma aula também tem módulo principal e etiquetas, para ligar aula e exercício pelo que ensinam
 // e não pelo nome.

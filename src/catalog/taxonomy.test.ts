@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
 import { EXERCISES } from './catalog';
-import { TOOLS } from './tools';
+import { AMBIENTES } from './index';
 import { CONTENT_TAGS, MODULES, SKILL_TAGS, type Classification } from './taxonomy';
 
 // exercise_id é estável: rotinas, tentativas e configurações salvas apontam para ele. Renomear ou
@@ -34,8 +34,8 @@ describe('taxonomia', () => {
   });
 
   it('toda ferramenta mora num módulo que existe, e todo módulo tem exercício ou ferramenta', () => {
-    TOOLS.forEach(t => expect(Object.keys(MODULES)).toContain(t.primaryModule));
-    const filled = new Set<string>([...EXERCISES.map(e => e.primaryModule), ...TOOLS.map(t => t.primaryModule)]);
+    AMBIENTES.forEach(t => expect(Object.keys(MODULES)).toContain(t.primaryModule));
+    const filled = new Set<string>([...EXERCISES.map(e => e.primaryModule), ...AMBIENTES.map(t => t.primaryModule)]);
     expect(Object.keys(MODULES).filter(m => !filled.has(m))).toEqual([]);
     expect(MODULE_LIST.map(m => m.id)).toEqual(Object.keys(MODULES));
   });

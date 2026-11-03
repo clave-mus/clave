@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { LESSONS as LESSON_BASE } from '../data/content';
 import { useContent } from '../data/localized';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
+import { exerciseById } from '../catalog/catalog';
+import { itemById } from '../catalog';
 import { useStore } from '../state/store';
 import { Btn, Field, PageHead, SecTitle, Tag } from '../components/ui';
 import NotFound from './NotFound';
@@ -118,8 +118,8 @@ export function LessonPage() {
           {m.exercises.map(e => exerciseById[e] && (
             <Link key={e} to={`/treinar/${e}`} className="ex-card"><span className="acc" style={{ background: moduleById[exerciseById[e].primaryModule].color }} /><div><h3>{itemText(t, e, 'title')}</h3><p>{itemText(t, e, 'desc')}</p></div></Link>
           ))}
-          {m.tools.map(id => toolById[id] && (
-            <Link key={id} to={toolById[id].path} className="ex-card"><span className="acc" style={{ background: moduleById[toolById[id].primaryModule].color }} /><div><h3>{itemText(t, id, 'title')}</h3><p>{itemText(t, id, 'desc')}</p></div></Link>
+          {m.tools.map(id => itemById[id] && (
+            <Link key={id} to={`/catalogo/${id}`} className="ex-card"><span className="acc" style={{ background: moduleById[itemById[id]!.primaryModule].color }} /><div><h3>{itemText(t, id, 'title')}</h3><p>{itemText(t, id, 'desc')}</p></div></Link>
           ))}
         </div>
       </section>

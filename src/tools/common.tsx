@@ -1,7 +1,7 @@
 // Partes comuns das ferramentas: registro de tempo no histórico e o metrônomo reaproveitável.
 import { useEffect, useRef, useState } from 'react';
 import { atTime, Clock, drum } from '../audio/engine';
-import type { ModuleId } from '../exercises/taxonomy';
+import type { ModuleId } from '../catalog/taxonomy';
 import { logActivity } from '../state/store';
 import { Btn, Chip } from '../components/ui';
 import { useT } from '../i18n';

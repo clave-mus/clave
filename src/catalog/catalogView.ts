@@ -3,9 +3,8 @@
 // exercícios do mesmo módulo.
 import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
-import { EXERCISES } from './catalog';
+import { AMBIENTES, EXERCISES } from './index';
 import type { ModuleId } from './taxonomy';
-import { TOOLS } from './tools';
 
 export interface ModuleEntry {
   module: ModuleId;
@@ -22,6 +21,6 @@ export function catalogByModule(opts: { mobileOnly?: boolean } = {}): ModuleEntr
     module: m.id,
     lessons: LESSONS.filter(l => l.primaryModule === m.id).map(l => l.id),
     exercises: EXERCISES.filter(e => e.primaryModule === m.id && (!opts.mobileOnly || e.mobile)).map(e => e.id),
-    tools: TOOLS.filter(t => t.primaryModule === m.id && (!opts.mobileOnly || t.mobile)).map(t => t.id),
+    tools: AMBIENTES.filter(t => t.primaryModule === m.id && (!opts.mobileOnly || t.mobile)).map(t => t.id),
   }));
 }

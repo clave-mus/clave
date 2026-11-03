@@ -3,7 +3,7 @@ import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
 import { EXERCISES } from './catalog';
 import { catalogByModule } from './catalogView';
-import { TOOLS } from './tools';
+import { AMBIENTES } from './index';
 
 describe('catálogo por módulo', () => {
   const all = catalogByModule();
@@ -17,7 +17,7 @@ describe('catálogo por módulo', () => {
     const tools = count(all.flatMap(e => e.tools));
     const lessons = count(all.flatMap(e => e.lessons));
     expect(Object.keys(exercises).sort()).toEqual(EXERCISES.map(e => e.id).sort());
-    expect(Object.keys(tools).sort()).toEqual(TOOLS.map(t => t.id).sort());
+    expect(Object.keys(tools).sort()).toEqual(AMBIENTES.map(t => t.id).sort());
     expect(Object.keys(lessons).sort()).toEqual(LESSONS.map(l => l.id).sort());
     [exercises, tools, lessons].forEach(c => Object.values(c).forEach(n => expect(n).toBe(1)));
   });
@@ -30,7 +30,7 @@ describe('catálogo por módulo', () => {
   it('o filtro "sem instrumento" tira exercícios e ferramentas que precisam dele, mas não as aulas', () => {
     const mobile = catalogByModule({ mobileOnly: true });
     mobile.flatMap(e => e.exercises).forEach(id => expect(EXERCISES.find(x => x.id === id)!.mobile).toBe(true));
-    mobile.flatMap(e => e.tools).forEach(id => expect(TOOLS.find(x => x.id === id)!.mobile).toBe(true));
+    mobile.flatMap(e => e.tools).forEach(id => expect(AMBIENTES.find(x => x.id === id)!.mobile).toBe(true));
     expect(mobile.flatMap(e => e.tools)).not.toContain('backing'); // precisa do instrumento
     expect(mobile.flatMap(e => e.lessons).sort()).toEqual(all.flatMap(e => e.lessons).sort());
   });

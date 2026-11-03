@@ -6,7 +6,7 @@ import { pcName } from '../theory/core';
 import Keyboard from '../components/music/Keyboard';
 import { TUNINGS } from '../components/music/Fretboard';
 import { Btn, Chip } from '../components/ui';
-import { useGlobalParams } from '../exercises/params';
+import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
 import { useNaming, useT, type MessageKey } from '../i18n';
 

@@ -1,7 +1,7 @@
 // Leitura de estado salvo por versões anteriores. A F1-01b trocou as áreas pelos módulos e tirou
 // perfil (kind), níveis, medalhas, maior sequência e plano de tonalidade; quem já tinha dados no
 // navegador não pode quebrar nem carregar campo que o app não conhece mais.
-import type { ModuleId } from '../exercises/taxonomy';
+import type { ModuleId } from '../catalog/taxonomy';
 
 /** Módulo mais próximo de cada área antiga. É aproximado (ex.: "ouvido" inclui acordes, que hoje
  *  são Percepção harmônica): serve ao resumo dos últimos 30 dias, não a diagnóstico. */

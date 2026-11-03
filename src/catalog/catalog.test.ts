@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { itemText, translate, type Locale, type MessageKey, type Vars } from '../i18n';
 import { EXERCISES } from './catalog';
+import { isSeries } from './types';
 import { globalPresentation, resolveParams } from './params';
 import { DEFAULT_PRESENTATION, resolvePresentation } from '../audio/presentation';
 import { optionResponse, validate } from './validate';
-import { TOOLS } from './tools';
+import { AMBIENTES } from './index';
 import type { Ctx } from './types';
 
 const ctxFor = (locale: Locale): Ctx => ({
@@ -14,7 +15,7 @@ const ctxFor = (locale: Locale): Ctx => ({
 const PT_CHARS = /[ãõçáéíóúâêô]/i;
 
 describe('catálogo de exercícios', () => {
-  for (const ex of EXERCISES) {
+  for (const ex of EXERCISES.filter(isSeries)) {
     it(`${ex.id} gera perguntas válidas`, () => {
       for (const locale of ['pt', 'en'] as const) {
         const ctx = ctxFor(locale);
@@ -73,7 +74,7 @@ describe('catálogo de exercícios', () => {
   // continuar saindo igual depois da migração, só que agora pela apresentação.
   describe('o som sai como antes da migração', () => {
     const final = (id: string, over: Record<string, unknown> = {}, instrument: 'violao' | 'baixo' = 'violao') => {
-      const ex = EXERCISES.find(e => e.id === id)!;
+      const ex = EXERCISES.filter(isSeries).find(e => e.id === id)!;
       const params = resolveParams(instrument);
       const ctx = { ...ctxFor('pt'), params };
       const values = { ...ex.defaults, ...over } as Record<string, never>;
@@ -112,7 +113,7 @@ describe('catálogo de exercícios', () => {
     // nenhum exercício pode sobrescrever o volume nem o timbre global; o timbre vem do instrumento do som
     const params = { ...resolveParams('baixo', { timbres: { piano: 'orgao', violao: 'pad', baixo: 'violao' } }), volume: 0.5 };
     const ctx = { ...ctxFor('pt'), params };
-    for (const ex of EXERCISES) {
+    for (const ex of EXERCISES.filter(isSeries)) {
       for (let i = 0; i < 20; i++) {
         const q = ex.make(ex.defaults, ctx);
         if (!q.sound) continue;
@@ -126,7 +127,7 @@ describe('catálogo de exercícios', () => {
 
   it('todo exercício e toda ferramenta têm título e descrição nos textos', () => {
     const t = ctxFor('pt').t;
-    for (const { id } of [...EXERCISES, ...TOOLS]) {
+    for (const { id } of [...EXERCISES, ...AMBIENTES]) {
       expect(itemText(t, id, 'title')).not.toMatch(/^(exercises|tools)\./);
       expect(itemText(t, id, 'desc')).not.toMatch(/^(exercises|tools)\./);
     }

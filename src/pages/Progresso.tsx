@@ -11,8 +11,7 @@ import { useContent } from '../data/localized';
 import { minutesByModule, useStore } from '../state/store';
 import { fmtMin, PageHead, SecTitle } from '../components/ui';
 import { itemText, localeTag, useLocale, useT } from '../i18n';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
+import { itemById } from '../catalog';
 
 export default function Progresso() {
   const stats = useStore(s => s.stats);
@@ -78,7 +77,7 @@ export default function Progresso() {
             {history.slice(0, 40).map((h, i) => (
               <div key={i} className="list-row">
                 <div style={{ minWidth: 0 }}>
-                  <b>{exerciseById[h.id] || toolById[h.id] ? itemText(t, h.id, 'title') : h.title}</b>
+                  <b>{itemById[h.id] ? itemText(t, h.id, 'title') : h.title}</b>
                   <span className="muted"> · {moduleById[h.module]?.name}</span>
                 </div>
                 <span className="num muted">{h.total ? `${h.correct}/${h.total}` : fmtMin(h.seconds)}</span>

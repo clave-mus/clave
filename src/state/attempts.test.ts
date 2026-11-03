@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { resolvePresentation } from '../audio/presentation';
-import { EXERCISES } from '../exercises/catalog';
-import { resolveParams } from '../exercises/params';
-import { TAXONOMY_VERSION } from '../exercises/taxonomy';
-import type { Ctx, Question, Response } from '../exercises/types';
-import { optionResponse, validate } from '../exercises/validate';
+import { EXERCISES } from '../catalog/catalog';
+import { isSeries } from '../catalog/types';
+import { resolveParams } from '../catalog/params';
+import { TAXONOMY_VERSION } from '../catalog/taxonomy';
+import type { Ctx, Question, Response } from '../catalog/types';
+import { optionResponse, validate } from '../catalog/validate';
 import { translate, type MessageKey, type Vars } from '../i18n';
 import { memoryLog } from './attemptLog';
 import { buildAttempt, classifyError, coverage, queryAttempts, type Attempt } from './attempts';
@@ -53,7 +54,7 @@ function answer(q: Question, wantCorrect: boolean): Response {
 
 function attemptsFromCatalog(perExercise = 6): Attempt[] {
   const out: Attempt[] = [];
-  for (const ex of EXERCISES) {
+  for (const ex of EXERCISES.filter(isSeries)) {
     for (let i = 0; i < perExercise; i++) {
       const q = ex.make(ex.defaults, ctx);
       const correct = i % 2 === 0;

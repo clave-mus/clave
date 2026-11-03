@@ -7,7 +7,7 @@ import Praticar from './pages/Praticar';
 import Onboarding from './pages/Onboarding';
 import Perfil from './pages/Perfil';
 import Progresso from './pages/Progresso';
-import Treinar, { ExercisePage, ToolPage } from './pages/Treinar';
+import Treinar, { ItemPage } from './pages/Treinar';
 import NotFound from './pages/NotFound';
 import { localeTag, useLocale } from './i18n';
 
@@ -21,8 +21,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<Praticar />} />
           <Route path="catalogo" element={<Treinar />} />
-          <Route path="catalogo/:id" element={<ExercisePage />} />
-          <Route path="ferramentas/:id" element={<ToolPage />} />
+          <Route path="catalogo/:id" element={<ItemPage />} />
           {/* As aulas longas seguem acessíveis, sem aba própria (decisão 24). */}
           <Route path="estudar/genero/:id" element={<GenrePage />} />
           <Route path="estudar/:id" element={<LessonPage />} />
@@ -33,7 +32,8 @@ export default function App() {
           {Object.entries(REDIRECTS).map(([from, to]) => (
             <Route key={from} path={from.slice(1)} element={<Navigate to={to} replace />} />
           ))}
-          <Route path="treinar/:id" element={<RedirectExercise />} />
+          <Route path="treinar/:id" element={<RedirectItem from="/treinar/" />} />
+          <Route path="ferramentas/:id" element={<RedirectItem from="/ferramentas/" />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -41,8 +41,8 @@ export default function App() {
   );
 }
 
-/** /treinar/:id virou /catalogo/:id. */
-function RedirectExercise() {
-  const path = window.location.pathname.replace('/treinar/', '/catalogo/');
-  return <Navigate to={path} replace />;
+/** /treinar/:id e /ferramentas/:id viraram /catalogo/:id — exercício e ferramenta são o mesmo
+ *  tipo de item desde a F1-1 (decisão 17), então a rota também é uma só. */
+function RedirectItem({ from }: { from: string }) {
+  return <Navigate to={window.location.pathname.replace(from, '/catalogo/')} replace />;
 }

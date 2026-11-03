@@ -16,7 +16,7 @@ import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useGlobalParams } from './params';
 import { optionResponse, validate } from './validate';
-import type { Ctx, ExerciseDef, Question, Response, SettingValue } from './types';
+import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 
 type Phase = 'ask' | 'right' | 'wrong';
@@ -31,7 +31,7 @@ export function decodeSettings(s: string | null): Record<string, SettingValue> |
 }
 
 interface Props {
-  def: ExerciseDef;
+  def: SeriesItem;
   /** Em sessão guiada: quantas perguntas até terminar. */
   target?: number;
   onDone?: (r: { correct: number; total: number; seconds: number }) => void;
@@ -352,7 +352,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange }: { def: ExerciseDef; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void }) {
+function SettingsPanel({ def, ctx, values, onChange }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void }) {
   const t = useT();
   return (
     <div className="settings">

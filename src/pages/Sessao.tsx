@@ -13,15 +13,15 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useContent } from '../data/localized';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
-import Player from '../exercises/Player';
+import { itemById } from '../catalog';
+import { isSeries } from '../catalog/types';
+import Player from '../catalog/Player';
 import { logActivity } from '../state/store';
 import { newId } from '../state/attempts';
-import { TOOL_COMPONENTS } from './Treinar';
+import ItemScreen from '../catalog/ItemScreen';
 import { Btn, Tag } from '../components/ui';
 import { fmtClock } from '../tools/common';
-import type { ModuleId } from '../exercises/taxonomy';
+import type { ModuleId } from '../catalog/taxonomy';
 import { itemText, useT, type MessageKey } from '../i18n';
 
 /** Uma etapa da sessão. Vira `Step` na F3-2. */
@@ -35,7 +35,7 @@ export interface Block {
 
 /** Em que módulo um item mora. Vira `areas[0]` quando a F1-3 pluralizar a classificação. */
 export function moduleOf(id: string): ModuleId {
-  return (exerciseById[id] ?? toolById[id])?.primaryModule ?? 'theory';
+  return itemById[id]?.primaryModule ?? 'theory';
 }
 
 function loadPlan(state: unknown): Block[] {
@@ -88,7 +88,8 @@ export default function Sessao() {
     }
     setI(n => n + 1);
   };
-  const Tool = block.kind === 'tool' ? TOOL_COMPONENTS[block.id] : null;
+  const item = itemById[block.id];
+  const ambiente = block.kind === 'tool' && item && !isSeries(item) ? item : null;
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -99,10 +100,10 @@ export default function Sessao() {
         <span className="eyebrow">{t('session.blockOf', { i: i + 1, n: plan.length })} · {moduleById[moduleOf(block.id)].name}</span>
         <Btn small tone="ghost" onClick={() => nextBlock()}>{t('session.skip')}</Btn>
       </div>
-      {block.kind === 'exercise' && exerciseById[block.id] && (
-        <Player key={i} def={exerciseById[block.id]} target={block.target} onDone={nextBlock} sessionId={sessionId} />
+      {block.kind === 'exercise' && item && isSeries(item) && (
+        <Player key={i} def={item} target={block.target} onDone={nextBlock} sessionId={sessionId} />
       )}
-      {Tool && (
+      {ambiente && (
         <>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <h1 style={{ fontSize: 'clamp(38px, 6vw, 70px)' }}>{block.label ? t(block.label) : itemText(t, block.id, 'title')}</h1>
@@ -111,7 +112,7 @@ export default function Sessao() {
               <span className="eyebrow">{t(left === 0 ? 'session.timeUp' : 'session.remaining')}</span>
             </div>
           </div>
-          <Tool key={i} />
+          <ItemScreen key={i} item={ambiente} />
           <div><Btn onClick={() => nextBlock()} tone={left === 0 ? 'mu' : 'ghost'}>{t('session.finish')}</Btn></div>
         </>
       )}

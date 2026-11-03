@@ -8,8 +8,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../data/localized';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
+import { itemById } from '../catalog';
 import { toggleArsenal, useStore } from '../state/store';
 import { Btn, Chip, SecTitle } from '../components/ui';
 import { itemText, useT } from '../i18n';
@@ -25,7 +24,7 @@ export default function Praticar() {
   const hello = hour < 12 ? 'home.helloMorning' : hour < 19 ? 'home.helloAfternoon' : 'home.helloEvening';
 
   const items = saved
-    .map(id => ({ id, item: exerciseById[id] ?? toolById[id] }))
+    .map(id => ({ id, item: itemById[id] }))
     .filter((x): x is { id: string; item: NonNullable<typeof x.item> } => !!x.item)
     .filter(({ item }) => withInst || item.mobile);
   const hidden = saved.length - items.length;
@@ -70,7 +69,7 @@ export default function Praticar() {
               const title = itemText(t, id, 'title');
               return (
                 <div key={id} className="card-wrap">
-                  <Link to={exerciseById[id] ? `/catalogo/${id}` : toolById[id].path} className="ex-card">
+                  <Link to={`/catalogo/${id}`} className="ex-card">
                     <span className="acc" style={{ background: moduleById[item.primaryModule].color }} />
                     <span className="ex-card-text">
                       <b>{title}</b>

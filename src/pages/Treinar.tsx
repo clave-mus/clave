@@ -1,37 +1,16 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { useContent } from '../data/localized';
-import { exerciseById } from '../exercises/catalog';
-import { catalogByModule } from '../exercises/catalogView';
-import Player, { decodeSettings } from '../exercises/Player';
-import { toolById } from '../exercises/tools';
+import { itemById } from '../catalog';
+import { catalogByModule } from '../catalog/catalogView';
+import ItemScreen from '../catalog/ItemScreen';
+import Player, { decodeSettings } from '../catalog/Player';
+import { isSeries } from '../catalog/types';
 import { toggleArsenal, useStore } from '../state/store';
-import Ambiente from '../tools/Ambiente';
-import Backing from '../tools/Backing';
-import { Metronome } from '../tools/common';
-import Leitura from '../tools/Leitura';
-import Tecnica from '../tools/Tecnica';
 import { Field, PageHead, Tag } from '../components/ui';
 import NotFound from './NotFound';
 import { lessonProgress } from './Estudar';
 import { itemText, useT } from '../i18n';
-
-// A leitura rítmica traz a VexFlow; só baixa quando a ferramenta abre.
-const Ritmo = lazy(() => import('../tools/Ritmo'));
-
-export const TOOL_COMPONENTS: Record<string, () => React.ReactElement> = {
-  metronomo: () => <Metronome />,
-  ambiente: () => <Ambiente />,
-  backing: () => <Backing />,
-  leitura: () => <Leitura />,
-  ritmo: () => <Suspense fallback={<LoadingScore />}><Ritmo /></Suspense>,
-  tecnica: () => <Tecnica />,
-};
-
-function LoadingScore() {
-  const t = useT();
-  return <p className="muted">{t('train.loadingScore')}</p>;
-}
 
 const OPEN_KEY = 'clave:treinar-abertos';
 /** Módulos abertos ficam lembrados neste navegador (só uma conveniência de tela). */
@@ -103,17 +82,16 @@ export default function Treinar() {
                     {entry.lessons.length > 0 && <div className="eyebrow" style={{ marginBottom: 8 }}>{t('train.items')}</div>}
                     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
                       {entry.exercises.map(id => {
-                        const e = exerciseById[id];
                         const st = stats[id];
                         const pinned = arsenal.includes(id);
                         return (
                           <div key={id} style={{ position: 'relative' }}>
-                            <Link to={`/treinar/${id}`} className="ex-card">
+                            <Link to={`/catalogo/${id}`} className="ex-card">
                               <span className="acc" style={{ background: m.color }} />
                               <div style={{ minWidth: 0, paddingRight: 26 }}>
                                 <h3>{itemText(t, id, 'title')}</h3>
                                 <p>{itemText(t, id, 'desc')}</p>
-                                <div className="meta"><span className="mini-tag">{t(`train.groups.${e.group}`)}</span>{st && <span className="mini-tag">{t('train.done', { count: st.attempts })}</span>}</div>
+                                {st && <div className="meta"><span className="mini-tag">{t('train.done', { count: st.attempts })}</span></div>}
                               </div>
                               {st && <span className="pct num">{Math.round((st.correct / st.attempts) * 100)}%</span>}
                             </Link>
@@ -123,11 +101,11 @@ export default function Treinar() {
                         );
                       })}
                       {entry.tools.map(id => {
-                        const tool = toolById[id];
+                        const tool = itemById[id]!;
                         return (
-                          <Link key={id} to={tool.path} className="ex-card">
+                          <Link key={id} to={`/catalogo/${id}`} className="ex-card">
                             <span className="acc" style={{ background: m.color }} />
-                            <Field seed={tool.id} color={moduleById[tool.primaryModule].color} className="field-square" style={{ width: 40, flex: 'none' }} />
+                            <Field seed={tool.id} color={m.color} className="field-square" style={{ width: 40, flex: 'none' }} />
                             <div style={{ minWidth: 0 }}>
                               <h3>{itemText(t, id, 'title')}</h3>
                               <p>{itemText(t, id, 'desc')}</p>
@@ -148,42 +126,52 @@ export default function Treinar() {
   );
 }
 
-export function ExercisePage() {
+/**
+ * A tela de um item do catálogo — qualquer item (decisão 17).
+ *
+ * Se tem `make`, quem roda é o Player, igual para todos. Se tem `screen`, é a tela própria do
+ * item, carregada sob demanda. Não existem mais duas rotas nem dois componentes de página.
+ */
+export function ItemPage() {
   const { id = '' } = useParams();
   const [params] = useSearchParams();
   const t = useT();
-  const { LESSONS } = useContent();
-  const def = exerciseById[id];
-  if (!def) return <NotFound />;
+  const { LESSONS, moduleById } = useContent();
+  const item = itemById[id];
+  if (!item) return <NotFound />;
+
   const shared = decodeSettings(params.get('c'));
   const lesson = LESSONS.find(l => l.exercises.includes(id));
+  const area = moduleById[item.primaryModule];
+
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <Link to={`/treinar#${def.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
-        {lesson && <Link to={`/estudar/${lesson.id}`} className="eyebrow" style={{ textDecoration: 'none', color: 'var(--mu)' }}>{t('train.lesson', { title: lesson.title })}</Link>}
+        <Link to={`/catalogo#${item.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
+        {lesson && <Link to={`/estudar/${lesson.id}`} className="eyebrow" style={{ textDecoration: 'none', color: 'var(--accent)' }}>{t('train.lesson', { title: lesson.title })}</Link>}
       </div>
-      {shared && <div className="panel" style={{ background: 'var(--bk-3)', padding: 12 }}>{t('train.shared')}</div>}
-      <Player key={id + (shared ? 'c' : '')} def={def} initialSettings={shared} />
-    </div>
-  );
-}
 
-export function ToolPage() {
-  const { id = '' } = useParams();
-  const t = useT();
-  const { moduleById } = useContent();
-  const tool = toolById[id];
-  const Comp = TOOL_COMPONENTS[id];
-  if (!tool || !Comp) return <NotFound />;
-  return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <Link to={`/treinar#${tool.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
-      <header className="page-head" style={{ marginBottom: 0 }}>
-        <div><div className="row"><Tag>{moduleById[tool.primaryModule].name}</Tag>{tool.mobile ? <Tag tone="dark">{t('common.mobile')}</Tag> : <Tag tone="co">{t('common.withInstrument')}</Tag>}</div><h1>{itemText(t, tool.id, 'title')}</h1><p>{itemText(t, tool.id, 'desc')}</p></div>
-        <Field seed={tool.id} className="field-square" style={{ width: 88 }} />
-      </header>
-      <Comp />
+      {isSeries(item) ? (
+        <>
+          {shared && <div className="panel" style={{ padding: 12 }}>{t('train.shared')}</div>}
+          <Player key={id + (shared ? 'c' : '')} def={item} initialSettings={shared} />
+        </>
+      ) : (
+        <>
+          <header className="page-head" style={{ marginBottom: 0 }}>
+            <div>
+              <div className="row">
+                <Tag>{area.name}</Tag>
+                {item.mobile ? <Tag tone="dark">{t('common.mobile')}</Tag> : <Tag tone="co">{t('common.withInstrument')}</Tag>}
+              </div>
+              <h1>{itemText(t, item.id, 'title')}</h1>
+              <p>{itemText(t, item.id, 'desc')}</p>
+            </div>
+            <Field seed={item.id} color={area.color} className="field-square" style={{ width: 88 }} />
+          </header>
+          <ItemScreen item={item} />
+        </>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useLocale, type Locale } from '../i18n';
 import enContent from '../i18n/content.en';
 import ptContent from '../i18n/content.pt';
-import type { ModuleId } from '../exercises/taxonomy';
+import type { ModuleId } from '../catalog/taxonomy';
 import { GENRES, LESSONS, ROADMAPS, type Genre, type Lesson, type Roadmap } from './content';
 import { GOALS, INSTRUMENTS, MODULE_LIST, type ModuleBase } from './modules';
 

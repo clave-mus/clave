@@ -8,10 +8,10 @@
 // - error_code só quando a evidência permite classificar; na dúvida, 'unclassified';
 // - um registro gravado nunca muda; a confiança declarada é um registro à parte (AttemptFeedback).
 import type { Presentation } from '../audio/presentation';
-import type { Expected, Question, Response, SettingValue } from '../exercises/types';
-import type { GlobalParams } from '../exercises/params';
-import { TAXONOMY_VERSION, type ContentTag, type ModuleId, type SkillTag } from '../exercises/taxonomy';
-import { parseChordSymbol } from '../exercises/validate';
+import type { Expected, Question, Response, SettingValue } from '../catalog/types';
+import type { GlobalParams } from '../catalog/params';
+import { TAXONOMY_VERSION, type ContentTag, type ModuleId, type SkillTag } from '../catalog/taxonomy';
+import { parseChordSymbol } from '../catalog/validate';
 import { mod } from '../theory/core';
 
 /** Versão do formato do registro; sobe quando um campo muda de sentido. */
