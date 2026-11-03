@@ -141,7 +141,7 @@ o que a pessoa pôs ali (decisão 7).
 
 ---
 
-## F3-5 · Editor de rotinas
+## F3-5 · Editor de rotinas ✅ *feita em 03/11/2026*
 
 > **O que já existe (decisão 86):** "Salvar numa rotina" em todo item, a lista de rotinas no Praticar
 > abrindo cada etapa com a configuração salva, tirar etapa e apagar rotina. Em `src/routines/edicao.ts`

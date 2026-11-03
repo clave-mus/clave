@@ -8,19 +8,21 @@
 // O seletor de contexto tem dois estados aqui; os cinco contextos chegam com a F1-3, quando o
 // catálogo passar a declarar requisitos em vez do `mobile: boolean` de hoje.
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
 import { useRevisao, useStore } from '../state/store';
 import { visivel } from '../catalog/publicacao';
 import { useGlobalParams } from '../catalog/params';
-import { resumoDaConfiguracao, resumoDaPratica } from '../catalog/resumo';
+import { resumoDaEtapa } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
+import { resolverInstancia } from '../routines/ciclagem';
 import { removerEtapa } from '../routines/edicao';
+import type { Etapa, Rotina } from '../routines/types';
 import { useRotinas } from '../routines/hooks';
-import { apagarRotina, gravarRotinas } from '../routines/storage';
+import { apagarRotina, gravarRotinas, novaRotina } from '../routines/storage';
 import { Btn, Chip, SecTitle } from '../components/ui';
-import { itemText, useLocale, useNaming, useT } from '../i18n';
+import { useLocale, useNaming, useT } from '../i18n';
 
 export default function Praticar() {
   const profile = useStore(s => s.profile);
@@ -33,6 +35,29 @@ export default function Praticar() {
   const locale = useLocale();
   const params = useGlobalParams();
   const ctx: Ctx = { naming, conv: locale, t, params };
+  const navigate = useNavigate();
+
+  /**
+   * Abre uma etapa: **resolve o rodízio** antes de navegar (decisão 7).
+   *
+   * É por isso que é um botão e não um link: a etapa precisa escolher a instância da vez e **gravar
+   * `ultimaUsada`** — se o rodízio reiniciasse a cada abertura, a pessoa cairia sempre na primeira, e o
+   * rodízio não existiria na prática. (Era o que acontecia antes desta correção: o Praticar abria sempre
+   * a instância 0.)
+   */
+  const abrirEtapa = (r: Rotina, e: Etapa) => {
+    const { instancia, etapa } = resolverInstancia(e);
+    gravarRotinas(rotinas.map(x => (x.id === r.id ? { ...x, etapas: x.etapas.map(y => (y.id === etapa.id ? etapa : y)) } : x)));
+    const item = itemById[instancia.itemId];
+    if (item) navigate(`/catalogo/${item.id}`, { state: { instancia: instancia.settings, params: instancia.params ?? {} } });
+  };
+
+  /** Cria uma rotina vazia e abre o editor — antes só dava para criar salvando um exercício. */
+  const criarVazia = () => {
+    const nova = novaRotina(t('routines.newName'));
+    gravarRotinas([...rotinas, nova]);
+    navigate(`/rotina/${nova.id}`);
+  };
 
   const hour = new Date().getHours();
   const hello = hour < 12 ? 'home.helloMorning' : hour < 19 ? 'home.helloAfternoon' : 'home.helloEvening';
@@ -89,7 +114,10 @@ export default function Praticar() {
                       <Btn small tone="mu" onClick={() => setApagando(null)}>{t('routines.cancel')}</Btn>
                     </div>
                   ) : (
-                    <Btn small tone="ghost" onClick={() => setApagando(r.id)}>{t('routines.deleteRoutine')}</Btn>
+                    <div className="row">
+                      <Btn small tone="ghost" to={`/rotina/${r.id}`}>{t('routines.edit')}</Btn>
+                      <Btn small tone="ghost" onClick={() => setApagando(r.id)}>{t('routines.deleteRoutine')}</Btn>
+                    </div>
                   )}
                 </div>
 
@@ -102,24 +130,23 @@ export default function Praticar() {
                     {etapasDe(r).filter(e => cabe(e.instancias[0].itemId)).map(e => {
                       // Uma etapa pode ter várias instâncias (ela cicla); o botão de salvar só cria
                       // com uma. Mostra a primeira e conta as outras, para nada sumir em silêncio.
-                      const inst = e.instancias[0];
-                      const item = itemById[inst.itemId];
+                      const item = itemById[e.instancias[0].itemId];
                       if (!item) return null;
-                      const title = itemText(t, item.id, 'title');
-                      const resumo = [resumoDaPratica(inst.params, ctx), resumoDaConfiguracao(item, inst.settings, ctx)].filter(Boolean).join(' · ');
-                      const mais = e.instancias.length > 1 ? ` +${e.instancias.length - 1}` : '';
+                      // A linha diz O QUE varia, nunca um valor que mudaria a cada execução: mostrar a
+                      // tonalidade da primeira variante mentiria em duas de três execuções.
+                      const { titulo, detalhe } = resumoDaEtapa(e.instancias, id => itemById[id], ctx);
                       return (
                         <div key={e.id} className="card-wrap">
-                          {/* a configuração da etapa vai no state, não na URL: é dado da rotina da pessoa */}
-                          <Link to={`/catalogo/${item.id}`} state={{ instancia: inst.settings, params: inst.params ?? {} }} className="ex-card">
+                          <button type="button" className="ex-card" style={{ textAlign: 'left', border: 0, font: 'inherit', cursor: 'pointer' }}
+                            onClick={() => abrirEtapa(r, e)}>
                             <span className="acc" style={{ background: moduleById[item.primaryModule].color }} />
                             <span className="ex-card-text">
-                              <b>{title}{mais}</b>
-                              <small>{resumo || moduleById[item.primaryModule].name}</small>
+                              <b>{titulo}</b>
+                              <small>{detalhe || moduleById[item.primaryModule].name}</small>
                             </span>
-                          </Link>
+                          </button>
                           <button type="button" className="card-x" onClick={() => gravarRotinas(removerEtapa(rotinas, r.id, e.id))}
-                            aria-label={t('routines.removeStep', { title })}>×</button>
+                            aria-label={t('routines.removeStep', { title: titulo })}>×</button>
                         </div>
                       );
                     })}
@@ -131,13 +158,22 @@ export default function Praticar() {
         </section>
       )}
 
+      {rotinas.length > 0 && (
+        <div className="row" style={{ padding: '0 var(--gutter)' }}>
+          <Btn small tone="ghost" onClick={criarVazia}>{t('routines.create')}</Btn>
+        </div>
+      )}
+
       {rotinas.length === 0 && (
         <section className="sec">
           <SecTitle link={{ to: '/catalogo', label: t('home.seeAll') }}>{t('routines.yours')}</SecTitle>
           <div className="empty">
             <h3>{t('home.emptyTitle')}</h3>
             <p className="muted">{t('home.emptyText')}</p>
-            <Btn to="/catalogo">{t('home.openCatalog')}</Btn>
+            <div className="row" style={{ justifyContent: 'center' }}>
+              <Btn to="/catalogo">{t('home.openCatalog')}</Btn>
+              <Btn tone="ghost" onClick={criarVazia}>{t('routines.create')}</Btn>
+            </div>
           </div>
         </section>
       )}

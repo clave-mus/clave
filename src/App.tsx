@@ -5,6 +5,7 @@ import { REDIRECTS, reescreverRotaLegada } from './components/nav';
 import Estudar, { GenrePage, LessonPage } from './pages/Estudar';
 import Praticar from './pages/Praticar';
 import Onboarding from './pages/Onboarding';
+import Editor from './pages/Editor';
 import Perfil from './pages/Perfil';
 import Progresso from './pages/Progresso';
 import Treinar, { ItemPage } from './pages/Treinar';
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="estudar/genero/:id" element={<GenrePage />} />
           <Route path="estudar/:id" element={<LessonPage />} />
           <Route path="estudar/todas" element={<Estudar />} />
+          <Route path="rotina/:id" element={<Editor />} />
           <Route path="perfil" element={<Perfil />} />
           <Route path="perfil/historico" element={<Progresso />} />
           {/* Endereços antigos que ainda chegam de link salvo (src/components/nav.ts). */}

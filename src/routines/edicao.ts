@@ -6,8 +6,8 @@
 // o botão "Salvar numa rotina" exige: criar uma rotina e pôr uma etapa nela.
 import type { ParametrosDePratica } from '../catalog/params';
 import type { SettingValue } from '../catalog/types';
-import { novaEtapa, novaRotina } from './storage';
-import type { Rotina } from './types';
+import { copiarRotina, novaEtapa, novaRotina } from './storage';
+import type { Etapa, Instancia, Rotina } from './types';
 
 /** Em que rotina gravar: uma que já existe, ou uma nova com este nome. */
 export type Destino = { rotinaId: string } | { nome: string };
@@ -77,3 +77,126 @@ export function lerAbertura(state: unknown): Abertura | null {
   const params = e.params && typeof e.params === 'object' && !Array.isArray(e.params) ? e.params : {};
   return { settings: i as Record<string, SettingValue>, params };
 }
+
+// ---------------------------------------------------------------------------
+// O editor (F3-5, decisões 95 e 97)
+// ---------------------------------------------------------------------------
+
+/** Altera campos da rotina. Não muta. */
+export function alterarRotina(rotinas: Rotina[], id: string, patch: Partial<Omit<Rotina, 'id' | 'formato' | 'etapas'>>): Rotina[] {
+  return rotinas.map(r => (r.id === id ? { ...r, ...patch } : r));
+}
+
+/**
+ * Move a etapa `de` para a posição `para`. Índices fora da lista são presos a ela, em vez de sumirem
+ * com a etapa — arrastar um pouco além da borda é gesto comum.
+ */
+export function moverEtapa(rotinas: Rotina[], rotinaId: string, de: number, para: number): Rotina[] {
+  return rotinas.map(r => {
+    if (r.id !== rotinaId) return r;
+    const n = r.etapas.length;
+    if (de < 0 || de >= n) return r;
+    const destino = Math.min(Math.max(0, para), n - 1);
+    if (destino === de) return r;
+    const etapas = [...r.etapas];
+    const [movida] = etapas.splice(de, 1);
+    etapas.splice(destino, 0, movida);
+    return { ...r, etapas };
+  });
+}
+
+/** Altera uma etapa (tempo sugerido, política de rodízio). */
+export function alterarEtapa(rotinas: Rotina[], rotinaId: string, etapaId: string, patch: Partial<Omit<Etapa, 'id' | 'instancias'>>): Rotina[] {
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r, etapas: r.etapas.map(e => (e.id === etapaId ? { ...e, ...patch } : e)),
+  }));
+}
+
+/** Acrescenta uma instância a uma etapa que já existe — é como o rodízio nasce. */
+export function acrescentarInstancia(
+  rotinas: Rotina[], rotinaId: string, etapaId: string, itemId: string,
+  settings: Record<string, unknown> = {}, params: ParametrosDePratica = {},
+): Rotina[] {
+  const nova: Instancia = { itemId, settings: structuredClone(settings) };
+  if (Object.keys(params).length) nova.params = structuredClone(params);
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r, etapas: r.etapas.map(e => (e.id === etapaId ? { ...e, instancias: [...e.instancias, nova] } : e)),
+  }));
+}
+
+/**
+ * Tira uma instância. **A última não sai**: etapa sem instância não existe no modelo (`resolverInstancia`
+ * lança), e a tela precisa de um gesto diferente — remover a etapa inteira.
+ */
+export function removerInstancia(rotinas: Rotina[], rotinaId: string, etapaId: string, indice: number): Rotina[] {
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r,
+    etapas: r.etapas.map(e => {
+      if (e.id !== etapaId || e.instancias.length <= 1) return e;
+      const instancias = e.instancias.filter((_, i) => i !== indice);
+      if (instancias.length === e.instancias.length) return e;
+      // `ultimaUsada` aponta para um índice que mudou de lugar: zerar é mais honesto que adivinhar
+      return { ...e, instancias, ultimaUsada: undefined };
+    }),
+  }));
+}
+
+/** Altera os parâmetros de prática de uma instância (a tonalidade de uma variante). */
+export function alterarInstancia(rotinas: Rotina[], rotinaId: string, etapaId: string, indice: number, params: ParametrosDePratica): Rotina[] {
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r,
+    etapas: r.etapas.map(e => (e.id !== etapaId ? e : {
+      ...e,
+      instancias: e.instancias.map((inst, i) => (i === indice ? { ...inst, params: { ...inst.params, ...structuredClone(params) } } : inst)),
+    })),
+  }));
+}
+
+/** "Aplicar a todas": o que substitui o `Etapa.params` que saiu (decisão 97). */
+export function aplicarATodas(rotinas: Rotina[], rotinaId: string, etapaId: string, params: ParametrosDePratica): Rotina[] {
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r,
+    etapas: r.etapas.map(e => (e.id !== etapaId ? e : {
+      ...e,
+      instancias: e.instancias.map(inst => ({ ...inst, params: { ...inst.params, ...structuredClone(params) } })),
+    })),
+  }));
+}
+
+/**
+ * Gera uma variante por valor de um parâmetro — "pôr uma variante para cada tonalidade" (decisão 95).
+ *
+ * Parte da instância `base` e **substitui** a etapa inteira: gerar 12 tonalidades a partir de uma
+ * instância em Fá produz 12, e não 13 com Fá repetido.
+ */
+export function gerarVariantes(
+  rotinas: Rotina[], rotinaId: string, etapaId: string, base: number, valores: ParametrosDePratica[],
+): Rotina[] {
+  if (!valores.length) return rotinas;
+  return rotinas.map(r => (r.id !== rotinaId ? r : {
+    ...r,
+    etapas: r.etapas.map(e => {
+      if (e.id !== etapaId) return e;
+      const modelo = e.instancias[Math.min(Math.max(0, base), e.instancias.length - 1)];
+      if (!modelo) return e;
+      return {
+        ...e,
+        ultimaUsada: undefined,
+        instancias: valores.map(p => ({
+          itemId: modelo.itemId,
+          settings: structuredClone(modelo.settings),
+          ...(Object.keys({ ...modelo.params, ...p }).length ? { params: { ...structuredClone(modelo.params ?? {}), ...structuredClone(p) } } : {}),
+        })),
+      };
+    }),
+  }));
+}
+
+/** Duplicar uma rotina para editar sem mexer na original. */
+export const duplicarRotina = (rotinas: Rotina[], id: string, nome: string): Resultado => {
+  const original = rotinas.find(r => r.id === id);
+  if (!original) return { ok: false, motivo: 'rotina-inexistente' };
+  if (!nome.trim()) return { ok: false, motivo: 'nome-vazio' };
+  const copia = { ...copiarRotina(original), nome: nome.trim(), origem: undefined };
+  return { ok: true, rotina: copia, rotinas: [...rotinas, copia] };
+};

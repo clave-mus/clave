@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { translate, type Locale, type MessageKey, type Vars } from '../i18n';
 import { EXERCISES } from './catalog';
 import { resolveParams } from './params';
-import { resumoDaConfiguracao, resumoDaPratica } from './resumo';
+import { resumoDaConfiguracao, resumoDaEtapa, resumoDaPratica } from './resumo';
 import type { Ctx } from './types';
 
 const ctx = (locale: Locale = 'pt'): Ctx => ({
@@ -80,5 +80,46 @@ describe('resumoDaPratica', () => {
 
   it('duas etapas em tonalidades diferentes ficam distinguíveis — é o motivo de existir', () => {
     expect(resumoDaPratica({ key: { tonic: 0, mode: 'maior' } }, c())).not.toBe(resumoDaPratica({ key: { tonic: 7, mode: 'maior' } }, c()));
+  });
+});
+
+describe('resumoDaEtapa', () => {
+  const porId = (id: string) => EXERCISES.find(e => e.id === id);
+  const inst = (itemId: string, params?: Record<string, unknown>) => ({ itemId, settings: {}, ...(params ? { params } : {}) });
+
+  it('com uma instância, mostra a tonalidade e a configuração dela', () => {
+    const r = resumoDaEtapa([inst('ouvido-escala', { key: { tonic: 5, mode: 'maior' } })], porId, ctx('pt'));
+    expect(r.titulo).toBe('Escalas de ouvido');
+    expect(r.detalhe).toBe('Fá maior');
+    expect(r.variantes).toBe(1);
+  });
+
+  // A mentira que isto evita: mostrar "Fá maior" numa etapa que rodizia entre Fá, Sol e Dó estaria
+  // errado em duas de três execuções. Era o que o Praticar fazia antes do editor.
+  it('com rodízio, NÃO mostra a tonalidade de nenhuma variante — diz quantas são', () => {
+    const r = resumoDaEtapa([
+      inst('ouvido-escala', { key: { tonic: 5, mode: 'maior' } }),
+      inst('ouvido-escala', { key: { tonic: 7, mode: 'maior' } }),
+      inst('ouvido-escala', { key: { tonic: 0, mode: 'maior' } }),
+    ], porId, ctx('pt'));
+    expect(r.detalhe).toBe('3 variantes');
+    expect(r.detalhe).not.toContain('Fá');
+    expect(r.variantes).toBe(3);
+  });
+
+  it('distingue variantes do mesmo item de itens diferentes', () => {
+    const mesmas = resumoDaEtapa([inst('ouvido-escala'), inst('ouvido-escala')], porId, ctx('pt'));
+    const outros = resumoDaEtapa([inst('ouvido-escala'), inst('ouvido-intervalo')], porId, ctx('pt'));
+    expect(mesmas.detalhe).toBe('2 variantes');
+    expect(outros.detalhe).toBe('2 itens');
+  });
+
+  it('nos dois idiomas', () => {
+    expect(resumoDaEtapa([inst('ouvido-escala'), inst('ouvido-escala')], porId, ctx('en')).detalhe).toBe('2 variants');
+  });
+
+  it('item que sumiu do catálogo não quebra', () => {
+    expect(() => resumoDaEtapa([inst('fantasma')], porId, ctx())).not.toThrow();
+    expect(resumoDaEtapa([inst('fantasma')], porId, ctx()).titulo).toBe('fantasma');
   });
 });

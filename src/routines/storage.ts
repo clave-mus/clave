@@ -29,6 +29,26 @@ type PassoDeMigracao = (raw: Record<string, unknown>) => Record<string, unknown>
 const PASSOS: Record<number, PassoDeMigracao> = {};
 
 /**
+ * Campos que saíram do modelo e precisam ser descartados na leitura.
+ *
+ * `Etapa.params` saiu na decisão 97 (a tonalidade mora na instância). Não é passo de migração porque o
+ * formato não mudou de versão: o campo nunca foi lido, então rotina antiga com ele vale igual sem ele —
+ * mas deixá-lo entrar faria `ehRotina` aceitar e `copiarRotina` propagar um campo morto.
+ */
+function limparCamposQueSairam(r: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(r.etapas)) return r;
+  return {
+    ...r,
+    etapas: r.etapas.map(e => {
+      if (!e || typeof e !== 'object') return e;
+      const { params: _fora, ...resto } = e as Record<string, unknown>;
+      void _fora;
+      return resto;
+    }),
+  };
+}
+
+/**
  * Lê uma rotina de qualquer formato conhecido e devolve no formato atual.
  * Devolve `null` quando o dado não é uma rotina — link adulterado, colagem errada, versão de um
  * app mais novo. **Nunca lança**: quem chama está lidando com dado de fora.
@@ -46,6 +66,7 @@ export function migrarRotina(raw: unknown): Rotina | null {
     r = passo(r);
   }
   r.formato = FORMATO_ROTINA;
+  r = limparCamposQueSairam(r);
   return ehRotina(r) ? r : null;
 }
 
@@ -108,7 +129,6 @@ export function copiarRotina(r: Rotina, autor?: string): Rotina {
       ...e,
       id: novoId(),
       ultimaUsada: undefined,
-      params: e.params ? { ...e.params } : undefined,
       // cópia profunda das configurações: rasa faria a cópia e a original dividirem o MESMO objeto,
       // e mexer numa alteraria a outra — justamente o que a decisão 9 proíbe
       instancias: e.instancias.map(i => ({ ...i, settings: { ...i.settings }, params: i.params ? { ...i.params } : undefined })),

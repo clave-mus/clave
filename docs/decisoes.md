@@ -1687,6 +1687,75 @@ pedir fé.
 
 ---
 
+### 97 · A tonalidade de uma etapa mora na instância; `Etapa.params` sai
+
+**Correção de uma recomendação minha, e ela estava errada pelo motivo que o próprio Paulo criou.** Eu
+havia proposto o contrário — "a tonalidade é da etapa, `Instancia.params` sai" — argumentando que o
+rodízio deve variar *o que* se faz, não a tonalidade. Mas na decisão 95 ele pediu exatamente **variantes
+do mesmo exercício em tonalidades diferentes** rodiziando numa etapa, e isso **só existe se a instância
+tiver tonalidade própria**.
+
+E o código já apontava para cá: **`Etapa.params` nunca foi lido por ninguém.** Era validado em `ehRotina`
+e copiado em `copiarRotina`, e nenhum código o consumia — só `Instancia.params` chega ao exercício. Mesma
+forma da decisão 57 (cascata sem leitores) e do arsenal (decisão 88): campo declarado que nada usa.
+
+**A tonalidade, a região e o material de uma etapa moram na instância.** `Etapa.params` sai do modelo.
+"Esta etapa inteira em Fá" vira **"aplicar a todas"**, um gesto — e o gerador de variantes da decisão 95 já
+existe para isso.
+
+Três razões para não manter os dois com a instância vencendo:
+
+1. **Não se perde capacidade:** tudo que `Etapa.params` faria, "aplicar a todas" faz.
+2. **Mantém cinco camadas.** Acrescentar uma sexta por um caso que talvez nunca apareça é o que torna
+   verdadeira a preocupação do Paulo com a complexidade (decisão 96).
+3. **Dois lugares para a mesma informação confundem na tela** — a pessoa teria de entender qual vence.
+
+E os dois quase nunca coexistem na prática: quem fixou a tonalidade da etapa provavelmente **não** está
+rodiziando tonalidade.
+
+**O custo, aceito:** trocar a tonalidade de uma etapa com três variantes é um "aplicar a todas" em vez de
+uma edição só.
+
+**`segundosSugeridos` continua na etapa**, e está certo: o tempo é da etapa, não da variante. Fosse da
+variante, o rodízio mudaria a duração da rotina guiada a cada execução.
+
+---
+
+### 98 · O editor de rotinas
+
+Fecha a `F3-5`, em `/rotina/:id`. Seis capacidades (decisão 95): criar, renomear, duplicar e apagar;
+modo e embaralhar; reordenar e remover etapas; tempo sugerido por etapa; tonalidade e região **da
+instância**; e o rodízio.
+
+**A lista nunca tem mais de dois níveis.** Era o desafio que a tarefa mandava discutir: mostrar
+etapa-com-várias-instâncias sem virar árvore de três níveis. A etapa é uma linha, e o rodízio é uma
+**gaveta dentro dela** — não um lugar para onde se navega.
+
+**A linha diz o que varia, nunca um valor que mudaria:** "3 variantes" ou "3 itens", nunca "Fá maior"
+numa etapa que rodizia entre Fá, Sol e Dó. **O Praticar fazia exatamente isso** antes desta leva: mostrava
+a tonalidade da primeira instância, o que mentia em duas de três execuções. Corrigido, com teste.
+
+**E o Praticar não resolvia o rodízio:** abria sempre a instância 0, então o rodízio não existia na
+prática. Agora a etapa resolve (`resolverInstancia`) e **grava `ultimaUsada`** ao abrir — conferido no
+navegador: Dó → Ré♭ → Ré → Dó, com a posição persistindo entre aberturas.
+
+**O rodízio não tem nome na interface**, por decisão do Paulo sobre o quanto nomear: a linha mostra o
+que varia e a gaveta mostra a lista. "Rotação" continua sendo o nome do outro mecanismo (decisão 38), e
+"rodízio" fica nos documentos e no código, onde a distinção precisa ser nomeada.
+
+**"Aplicar a todas"** e **"uma variante por tonalidade"** são os gestos que substituem o `Etapa.params`
+que saiu na decisão 97.
+
+**Criar rotina vazia** passou a existir: antes só dava para criar salvando um exercício.
+
+`src/pages/Rotinas.tsx` foi apagado — era um stub de 9 linhas sem rota, e ter `/rotinas` (redirecionamento
+legado) e `Rotinas.tsx` ao mesmo tempo era confuso, como o Paulo apontou. Ficou uma coisa só.
+
+**O que ainda não existe:** o executor. `F3-2` (guiado) e `F3-3` (livre) continuam pendentes — hoje a
+etapa abre o exercício direto, sem cronômetro por etapa nem tela final.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa

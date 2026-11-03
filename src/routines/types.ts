@@ -48,9 +48,12 @@ export interface Etapa {
    * guiada ficaria de duração variável sem motivo.
    */
   segundosSugeridos?: number;
-  /** Substituição explícita de parâmetro, visível na tela como "(da etapa)". */
-  params?: ValoresDeCamada;
 }
+
+// `Etapa.params` NÃO existe, de propósito (decisão 97). A tonalidade, a região e o material de uma
+// etapa moram na INSTÂNCIA — é o que permite três variantes do mesmo item em Fá, Sol e Dó rodiziarem.
+// "Esta etapa inteira em Fá" se faz com "aplicar a todas", um gesto, e não com mais uma camada.
+// O campo existiu e nunca foi lido por ninguém: era validado e copiado, e nenhum código o consumia.
 
 /** Os parâmetros que podem entrar em rotação (decisão 38). A lista é curada de propósito. */
 export const ROTACIONAVEIS = ['tonalidade', 'regiao', 'corda', 'modo', 'qualidadeAcorde', 'digitacao', 'ordemDeCordas', 'trocaDePosicao', 'deslocamento'] as const;

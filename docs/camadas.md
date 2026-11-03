@@ -45,7 +45,7 @@ que permite a tela escrever *"Tonalidade: Dó maior (da rotina)"* (decisões 7 e
 | 1 | `item` | o catálogo | o padrão do próprio item |
 | 2 | `perfil` | o Perfil | **só o que é da pessoa**: instrumento, afinação, timbres, volume |
 | 3 | `rotina` | o editor de rotinas · a rotação | herdado por todas as etapas |
-| 4 | `etapa` | o editor · a instância aberta | substituição explícita e visível |
+| 4 | `etapa` | **a instância** (o editor escreve nela) | a tonalidade de uma variante. `Etapa.params` não existe — decisão 97 |
 | 5 | `agora` | o painel dentro do exercício | o que a pessoa escolheu neste exercício, lembrado por item |
 
 A mais específica vence. Duas exceções que **não** são "a última vence": `timbres` se **funde** (escolher
@@ -153,6 +153,7 @@ Contá-los como motores infla a estimativa de trabalho: continuam sendo oito mot
 | O que os itens leem da cascata | `src/catalog/contexto-musical.ts` |
 | Publicação | `src/catalog/publicacao.ts` |
 | Grupos por propósito | `src/catalog/grupos.ts` |
+| Editor de rotinas | `src/pages/Editor.tsx` (`/rotina/:id`) |
 | Modelo de rotinas | `src/routines/types.ts` |
 | Rodízio | `src/routines/ciclagem.ts` |
 | Rotação | `src/routines/rotacao.ts` |

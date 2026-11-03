@@ -263,3 +263,45 @@ describe('assinatura: a tela acompanha o disco', () => {
     expect(rotinasEstaveis()).toBe(rotinasEstaveis());
   });
 });
+
+describe('Etapa.params saiu do modelo (decisão 97)', () => {
+  // A tonalidade de uma etapa mora na INSTÂNCIA. O campo da etapa nunca foi lido por ninguém: era
+  // validado e copiado, e nada o consumia. Rotina antiga com ele continua válida, mas o campo é
+  // descartado na leitura — senão `copiarRotina` propagaria um campo morto para sempre.
+  const antiga = {
+    formato: FORMATO_ROTINA, id: 'r1', nome: 'Antiga', modo: 'guiado', embaralhar: false, params: {},
+    etapas: [{
+      id: 'e1', politica: 'ordem', segundosSugeridos: 300,
+      params: { key: { tonic: 5, mode: 'maior' } },
+      instancias: [{ itemId: 'braco-ache', settings: {} }],
+    }],
+  };
+
+  it('a rotina antiga continua válida', () => {
+    expect(migrarRotina(antiga)).not.toBeNull();
+  });
+
+  it('e o campo é descartado na leitura', () => {
+    const r = migrarRotina(antiga)!;
+    expect(r.etapas[0]).not.toHaveProperty('params');
+  });
+
+  it('o que a etapa de fato guarda sobrevive', () => {
+    const r = migrarRotina(antiga)!;
+    expect(r.etapas[0].segundosSugeridos).toBe(300);
+    expect(r.etapas[0].instancias[0].itemId).toBe('braco-ache');
+  });
+
+  it('a instância mantém os seus params — é lá que a tonalidade mora agora', () => {
+    const comInstancia = {
+      ...antiga,
+      etapas: [{ ...antiga.etapas[0], instancias: [{ itemId: 'braco-ache', settings: {}, params: { key: { tonic: 7, mode: 'maior' } } }] }],
+    };
+    expect(migrarRotina(comInstancia)!.etapas[0].instancias[0].params).toEqual({ key: { tonic: 7, mode: 'maior' } });
+  });
+
+  it('a cópia para adotar não propaga o campo morto', () => {
+    const r = migrarRotina(antiga)!;
+    expect(copiarRotina(r).etapas[0]).not.toHaveProperty('params');
+  });
+});

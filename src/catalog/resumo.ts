@@ -5,6 +5,7 @@
 //
 // **Só mostra o que difere do padrão do item.** O padrão é o que a pessoa já espera encontrar; repeti-lo
 // em toda linha esconderia o que ela mudou.
+import { itemText } from '../i18n';
 import { keyName } from '../theory/core';
 import type { ParametrosDePratica } from './params';
 import { regiaoDe } from './regioes';
@@ -51,4 +52,34 @@ export function resumoDaPratica(p: ParametrosDePratica | undefined, ctx: Pick<Ct
   if (regiao) partes.push(ctx.t(`practice.region_${regiao}`));
   if (p.material === 'diatonico') partes.push(ctx.t('practice.materialDiatonic'));
   return partes.join(' · ');
+}
+
+/**
+ * O que uma etapa mostra numa lista — e o que ela **não** pode mostrar.
+ *
+ * Com rodízio, a linha diz **o que varia** ("3 variantes", "3 itens"), nunca um valor que mudaria a cada
+ * execução. Mostrar a tonalidade da primeira instância mentiria em duas de três execuções, e foi o que o
+ * Praticar fazia antes do editor existir.
+ */
+export function resumoDaEtapa(
+  instancias: readonly { itemId: string; settings: Record<string, unknown>; params?: ParametrosDePratica }[],
+  itemPorId: (id: string) => CatalogItem | undefined,
+  ctx: Ctx,
+): { titulo: string; detalhe: string; variantes: number } {
+  const [primeira] = instancias;
+  const item = primeira ? itemPorId(primeira.itemId) : undefined;
+  const titulo = item ? itemText(ctx.t, item.id, 'title') : (primeira?.itemId ?? '');
+  if (instancias.length <= 1) {
+    return {
+      titulo,
+      detalhe: item ? [resumoDaPratica(primeira.params, ctx), resumoDaConfiguracao(item, primeira.settings, ctx)].filter(Boolean).join(' · ') : '',
+      variantes: 1,
+    };
+  }
+  const umItemSo = new Set(instancias.map(i => i.itemId)).size === 1;
+  return {
+    titulo,
+    detalhe: ctx.t(umItemSo ? 'editor.variantsOf' : 'editor.itemsOf', { n: instancias.length }),
+    variantes: instancias.length,
+  };
 }
