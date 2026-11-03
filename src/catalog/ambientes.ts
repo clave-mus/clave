@@ -6,6 +6,7 @@
 //
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
+import { LEGADO, RASCUNHO } from './publicacao';
 import type { CatalogItem } from './types';
 
 /** Ambientes não têm configuração declarada: cada tela cuida das suas (serão migradas na F1-3). */
@@ -13,7 +14,8 @@ const noSettings = () => [];
 
 export const AMBIENTES: CatalogItem[] = [
   {
-    id: 'metronomo', kind: 'ambiente', requires: {}, validation: ['none'], mobile: true,
+    id: 'metronomo', kind: 'ambiente',
+    publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.triplets'],
@@ -21,28 +23,32 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/common').then(m => ({ default: m.Metronome })),
   },
   {
-    id: 'ambiente', kind: 'ambiente', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'ambiente', kind: 'ambiente',
+    publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['escalas'], tarefas: ['cantar', 'tocar'],
     primaryModule: 'perception.melodic', skillTags: ['ear.pitch_identification'], contentTags: ['key.major', 'key.minor'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Ambiente'),
   },
   {
-    id: 'backing', kind: 'ambiente', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'backing', kind: 'ambiente',
+    publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['harmonia'], tarefas: ['tocar'],
     primaryModule: 'perception.harmonic', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Backing'),
   },
   {
-    id: 'leitura', kind: 'ambiente', requires: {}, validation: ['none'], mobile: true,
+    id: 'leitura', kind: 'ambiente',
+    publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['notacao'], tarefas: ['ler'],
     primaryModule: 'perception.melodic', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Leitura'),
   },
   {
-    id: 'ritmo', kind: 'ambiente', requires: {}, validation: ['none'], mobile: true,
+    id: 'ritmo', kind: 'ambiente',
+    publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
     primaryModule: 'perception.rhythmic', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
     settings: noSettings, defaults: {},
@@ -50,7 +56,8 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Ritmo'),
   },
   {
-    id: 'tecnica', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'tecnica', kind: 'tarefa',
+    publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['motor'], tarefas: ['tocar'],
     primaryModule: 'technique',
     skillTags: ['technique.fingering', 'technique.finger_independence', 'technique.string_crossing', 'technique.tempo_control'],
@@ -67,7 +74,8 @@ export const AMBIENTES: CatalogItem[] = [
   // Declaradas, NÃO publicadas (decisão 51): a revisão musical é passo do Paulo.
   // ---------------------------------------------------------------------------------------------
   {
-    id: 'acento-deslocado', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'acento-deslocado', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
@@ -75,7 +83,8 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Cadencia'),
   },
   {
-    id: 'subdivisao-alternada', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'subdivisao-alternada', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
@@ -83,7 +92,8 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Cadencia'),
   },
   {
-    id: 'sustentar-e-cortar', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'sustentar-e-cortar', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['motor'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter'],
@@ -91,7 +101,8 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Cadencia'),
   },
   {
-    id: 'legato-staccato', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'legato-staccato', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['motor'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter'],
@@ -99,7 +110,8 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Cadencia'),
   },
   {
-    id: 'deslocamento-ritmico', kind: 'tarefa', requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    id: 'deslocamento-ritmico', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo'], tarefas: ['tocar'],
     primaryModule: 'perception.rhythmic', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth', 'rhythm.rests'],

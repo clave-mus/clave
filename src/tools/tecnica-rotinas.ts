@@ -1,5 +1,7 @@
 // As rotinas da ferramenta de técnica: dados e geradores, sem interface.
 // Separado do componente para poder ser testado — e para o arquivo da tela exportar só componente.
+import type { Publicacao } from '../catalog/publicacao';
+import { LEGADO, RASCUNHO } from '../catalog/publicacao';
 import type { MessageKey, Translate } from '../i18n';
 import { casasDaTroca, codificarTroca, decodificarTroca, indiceDaCorda, permutacoesDe, trocasDePosicao } from '../theory/tecnica';
 
@@ -29,10 +31,13 @@ export interface Routine {
   id: string; name: MessageKey; desc: MessageKey; for: ('violao' | 'baixo' | 'piano')[];
   build: (strings: number, valor: string) => Pos[];
   eixo?: Eixo;
+  /** Mesmo portão dos itens de catálogo (decisão 91): omitir é rascunho. */
+  publicacao?: Publicacao;
 }
 
 export const ROUTINES: Routine[] = [
   {
+    publicacao: LEGADO,
     id: 'tqo', name: 'technique.tqoName', desc: 'technique.tqoDesc', for: ['violao', 'baixo'],
     build: () => [3, 5, 7, 8, 5, 3].flatMap((r, i) => {
       const s = i % 2; // alterna raiz na corda mais grave e na seguinte
@@ -40,6 +45,7 @@ export const ROUTINES: Routine[] = [
     }),
   },
   {
+    publicacao: LEGADO,
     id: 'aranha', name: 'technique.spiderName', desc: 'technique.spiderDesc', for: ['violao', 'baixo'],
     build: n => {
       const out: Pos[] = [];
@@ -52,6 +58,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     // T1 (decisão 81). "Independência dos dedos" é esta rotina com a ordem fixa, não item separado.
+    publicacao: RASCUNHO,
     id: 'permutacoes', name: 'technique.permName', desc: 'technique.permDesc', for: ['violao', 'baixo'],
     eixo: { id: 'digitacao', valores: () => permutacoesDe(4), rotulo: 'technique.permOrder', mostrar: espacado },
     build: (n, valor) => {
@@ -66,6 +73,7 @@ export const ROUTINES: Routine[] = [
   {
     // T2 (decisão 81): o app nomeia a ORDEM em que se atravessam as cordas. Sozinha, a pessoa vai de
     // uma corda à vizinha — nunca 4 2 3 1. A corda 1 é a mais aguda (`indiceDaCorda`).
+    publicacao: RASCUNHO,
     id: 'cordas', name: 'technique.cordsName', desc: 'technique.cordsDesc', for: ['violao', 'baixo'],
     eixo: { id: 'ordemDeCordas', valores: n => permutacoesDe(n), rotulo: 'technique.cordsOrder', mostrar: espacado },
     build: (n, valor) => {
@@ -78,6 +86,7 @@ export const ROUTINES: Routine[] = [
   {
     // T5 (decisão 81): deslizar de uma posição para outra com UM dedo, e o app escolhe qual — porque
     // quase todo mundo desliza com o indicador e foge do anelar e do mindinho.
+    publicacao: RASCUNHO,
     id: 'troca', name: 'technique.swapName', desc: 'technique.swapDesc', for: ['violao', 'baixo'],
     eixo: {
       id: 'trocaDePosicao', valores: () => trocasDePosicao().map(codificarTroca), rotulo: 'technique.swapOrder',
@@ -93,6 +102,7 @@ export const ROUTINES: Routine[] = [
     },
   },
   {
+    publicacao: LEGADO,
     id: 'cinco', name: 'technique.fiveName', desc: 'technique.fiveDesc', for: ['piano'],
     build: () => [60, 62, 64].flatMap(r => {
       const up = [0, 2, 4, 5, 7];

@@ -6,7 +6,8 @@ import { catalogByModule } from './catalogView';
 import { AMBIENTES } from './index';
 
 describe('catálogo por módulo', () => {
-  const all = catalogByModule();
+  // Com o modo de revisão: é o catálogo INTEIRO. Sem ele, os rascunhos não aparecem (decisão 91).
+  const all = catalogByModule({ revisao: true });
 
   it('segue a ordem dos módulos', () => {
     expect(all.map(e => e.module)).toEqual(MODULE_LIST.map(m => m.id));
@@ -33,5 +34,27 @@ describe('catálogo por módulo', () => {
     mobile.flatMap(e => e.tools).forEach(id => expect(AMBIENTES.find(x => x.id === id)!.mobile).toBe(true));
     expect(mobile.flatMap(e => e.tools)).not.toContain('backing'); // precisa do instrumento
     expect(mobile.flatMap(e => e.lessons).sort()).toEqual(all.flatMap(e => e.lessons).sort());
+  });
+
+  describe('o portão de publicação (decisão 91)', () => {
+    const visiveis = catalogByModule();
+    const ids = (e: typeof visiveis) => e.flatMap(m => [...m.exercises, ...m.tools]);
+
+    it('quem usa o app não vê nenhum rascunho', () => {
+      const rascunhos = [...EXERCISES, ...AMBIENTES].filter(i => (i.publicacao?.estado ?? 'rascunho') === 'rascunho').map(i => i.id);
+      expect(rascunhos.length).toBeGreaterThan(0);
+      for (const id of rascunhos) expect(ids(visiveis), id).not.toContain(id);
+    });
+
+    it('e vê tudo o que não é rascunho — legado e publicado', () => {
+      const esperados = [...EXERCISES, ...AMBIENTES].filter(i => (i.publicacao?.estado ?? 'rascunho') !== 'rascunho').map(i => i.id);
+      expect(ids(visiveis).sort()).toEqual(esperados.sort());
+    });
+
+    it('o modo de revisão mostra os rascunhos, e só acrescenta: nada que era visível some', () => {
+      const todos = ids(catalogByModule({ revisao: true }));
+      for (const id of ids(visiveis)) expect(todos).toContain(id);
+      expect(todos.length).toBeGreaterThan(ids(visiveis).length);
+    });
   });
 });

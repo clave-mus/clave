@@ -65,6 +65,11 @@ caras, **avisar e esperar a decisão** antes de começar.
   única coisa que impede o catálogo de virar 95 telas. São ~95 famílias sobre **oito motores**.
 - **Nenhuma tarefa publica uma família de exercício.** Você entrega o motor testado e o item
   declarado; a revisão musical é passo humano do Paulo (decisão 51).
+- **Todo item novo nasce `rascunho`** (decisão 91). Declare `publicacao: RASCUNHO` (de
+  `src/catalog/publicacao.ts`) ou omita o campo — o padrão é escondido. **Nunca escreva `publicado`
+  nem `legado`**: o primeiro é decisão do Paulo, o segundo é só para o que já existia. Liste o item
+  em [docs/revisao-pendente.md](docs/revisao-pendente.md), pelo id entre crases: **um teste falha se
+  faltar.** Para ver o seu rascunho, abra o app com `?revisao=1`.
 - **Validação é opcional.** O padrão é autoavaliação. Microfone e MIDI são acréscimos
   experimentais, e **nenhum exercício pode depender deles**.
 - **O relógio do áudio não é o relógio da tela.** Use o agendamento com antecedência de

@@ -6,7 +6,8 @@ import { catalogByModule } from '../catalog/catalogView';
 import ItemScreen from '../catalog/ItemScreen';
 import Player from '../catalog/Player';
 import { isSeries } from '../catalog/types';
-import { useStore } from '../state/store';
+import { useRevisao, useStore } from '../state/store';
+import { estadoDe, visivel } from '../catalog/publicacao';
 import { Field, PageHead, Tag } from '../components/ui';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { lerAbertura } from '../routines/edicao';
@@ -26,6 +27,7 @@ export default function Treinar() {
   const stats = useStore(s => s.stats);
   const { hash } = useLocation();
   const [mobileOnly, setMobileOnly] = useState(false);
+  const revisao = useRevisao();
   const [open, setOpen] = useState<string[]>(loadOpen);
   useEffect(() => { try { localStorage.setItem(OPEN_KEY, JSON.stringify(open)); } catch { /* sem armazenamento: só não lembra */ } }, [open]);
   // /treinar#theory abre o módulo e rola até ele (é para onde voltam as telas de exercício e de aula)
@@ -44,7 +46,7 @@ export default function Treinar() {
         <label className="switch"><input type="checkbox" id="mobile-only" checked={mobileOnly} onChange={e => setMobileOnly(e.target.checked)} />{t('train.mobileOnly')}</label>
       </div>
 
-      {catalogByModule({ mobileOnly }).map(entry => {
+      {catalogByModule({ mobileOnly, revisao }).map(entry => {
         const m = moduleById[entry.module];
         const items = entry.exercises.length + entry.tools.length;
         if (!items && !entry.lessons.length) return null;
@@ -91,7 +93,7 @@ export default function Treinar() {
                               <div style={{ minWidth: 0 }}>
                                 <h3>{itemText(t, id, 'title')}</h3>
                                 <p>{itemText(t, id, 'desc')}</p>
-                                {st && <div className="meta"><span className="mini-tag">{t('train.done', { count: st.attempts })}</span></div>}
+                                {(st || estadoDe(itemById[id]?.publicacao) === 'rascunho') && <div className="meta">{st && <span className="mini-tag">{t('train.done', { count: st.attempts })}</span>}{estadoDe(itemById[id]?.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}</div>}
                               </div>
                             </Link>
                           </div>
@@ -106,7 +108,7 @@ export default function Treinar() {
                             <div style={{ minWidth: 0 }}>
                               <h3>{itemText(t, id, 'title')}</h3>
                               <p>{itemText(t, id, 'desc')}</p>
-                              <div className="meta"><span className="mini-tag">{t('train.toolTag')}</span><span className="mini-tag">{t(tool.mobile ? 'common.mobile' : 'common.withInstrument')}</span></div>
+                              <div className="meta"><span className="mini-tag">{t('train.toolTag')}</span><span className="mini-tag">{t(tool.mobile ? 'common.mobile' : 'common.withInstrument')}</span>{estadoDe(tool.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}</div>
                             </div>
                           </Link>
                         );
@@ -134,8 +136,19 @@ export function ItemPage() {
   const location = useLocation();
   const t = useT();
   const { LESSONS, moduleById } = useContent();
+  const revisao = useRevisao();
   const item = itemById[id];
   if (!item) return <NotFound />;
+  // Rascunho não abre para quem não está em modo de revisão, nem por endereço direto (decisão 91).
+  if (!visivel(item.publicacao, revisao)) {
+    return (
+      <div className="panel" role="status" style={{ display: 'grid', gap: 8 }}>
+        <b>{t('review.hiddenTitle')}</b>
+        <span className="muted">{t('review.hiddenText')}</span>
+        <div><Link to="/catalogo" className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link></div>
+      </div>
+    );
+  }
 
   // Aberto a partir de uma etapa de rotina: a configuração DA ETAPA, vinda no state da navegação.
   const daEtapa = lerAbertura(location.state);

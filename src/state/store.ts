@@ -52,6 +52,11 @@ export interface Activity {
   total?: number;
   /** Ausente nas atividades gravadas antes da F3-9; a tela lida com isso. */
   snapshot?: ActivityParams;
+  /**
+   * Identifica a prática. Uma sessão é UMA entrada, regravada no lugar a cada vez que a aba esconde ou
+   * fecha — e não uma entrada por gravação. Ausente nas atividades antigas.
+   */
+  sessao?: string;
 }
 /** Sessão da conta (Supabase). Null = sem conta, só localStorage. */
 export interface Account {
@@ -68,6 +73,12 @@ export interface State {
   /** Nome das notas escolhido no perfil; null = segue o idioma. */
   naming: Naming | null;
   sound: boolean;
+  /**
+   * Modo de revisão (decisão 91): mostra os itens em `rascunho`, que ninguém mais vê. É para quem
+   * constrói ou revisa itens. **Não há controle para isto no Perfil, de propósito**: quem testa o
+   * beta não deve esbarrar nele. Liga-se com `?revisao=1` no endereço e desliga com `?revisao=0`.
+   */
+  revisao: boolean;
   /** Totais por exercício: cache para as telas, refeito a partir do registro de tentativas (rebuildStats). */
   stats: Record<string, Stat>;
   /** Totais de antes do registro de tentativas (C2), que não têm tentativas por trás. Calculado uma vez. */
@@ -101,6 +112,7 @@ export const DEFAULT_STATE: State = {
   theme: null,
   naming: null,
   sound: true,
+  revisao: false,
   stats: {},
   history: [],
   settings: {},
@@ -180,6 +192,25 @@ export function logActivity(a: Omit<Activity, 'at'>) {
   if (a.seconds < 5 && !a.total) return;
   setState(s => ({ ...s, history: [{ ...a, at: Date.now() }, ...s.history].slice(0, 500) }));
 }
+/**
+ * Grava a atividade de uma sessão: cria a entrada na primeira vez e **a substitui nas seguintes**,
+ * mantendo o `at` original.
+ *
+ * Existe porque o registro só acontecia quando a tela desmontava — e fechar ou recarregar a aba no
+ * meio de vinte minutos de prática não desmonta nada, então não deixava rastro. Agora quem chama
+ * grava também ao esconder a aba, e isto o torna seguro de repetir: gravar de novo atualiza, nunca
+ * duplica.
+ */
+export function registrarAtividade(a: Omit<Activity, 'at'> & { sessao: string }) {
+  if (a.seconds < 5 && !a.total) return;
+  setState(s => {
+    const i = s.history.findIndex(h => h.sessao === a.sessao);
+    if (i < 0) return { ...s, history: [{ ...a, at: Date.now() }, ...s.history].slice(0, 500) };
+    const history = s.history.slice();
+    history[i] = { ...a, at: s.history[i].at };
+    return { ...s, history };
+  });
+}
 export function saveSettings(id: string, values: Record<string, SettingValue>) {
   setState(s => ({ ...s, settings: { ...s.settings, [id]: values } }));
 }
@@ -215,6 +246,9 @@ export function applyTheme(theme: Theme | null) {
 export function setParams(patch: PerfilGuardado) {
   setState(s => ({ ...s, params: { ...s.params, ...patch, ...(patch.timbres ? { timbres: { ...s.params.timbres, ...patch.timbres } } : {}) } }));
 }
+export function setRevisao(revisao: boolean) {
+  setState(s => ({ ...s, revisao }));
+}
 export function setAgeGroup(ageGroup: AgeGroup | null) {
   setState(s => ({ ...s, ageGroup }));
 }
@@ -232,3 +266,6 @@ export function minutesByModule(history: Activity[], sinceDays = 30) {
   history.filter(h => h.at >= since).forEach(h => (out[h.module] = (out[h.module] ?? 0) + h.seconds / 60));
   return out;
 }
+
+/** O modo de revisão está ligado? (decisão 91) */
+export const useRevisao = () => useStore(s => s.revisao);

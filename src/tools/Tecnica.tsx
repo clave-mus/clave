@@ -1,7 +1,8 @@
 // Rotinas de técnica com metrônomo progressivo. Sempre devagar e limpo antes de rápido.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { atTime, Clock, drum, tone } from '../audio/engine';
-import { useStore } from '../state/store';
+import { useRevisao, useStore } from '../state/store';
+import { estadoDe, visivel } from '../catalog/publicacao';
 import { pcName } from '../theory/core';
 import Keyboard from '../components/music/Keyboard';
 import { TUNINGS } from '../components/music/Fretboard';
@@ -17,8 +18,11 @@ export default function Tecnica() {
   const naming = useNaming();
   const t = useT();
   const params = useGlobalParams();
-  const available = ROUTINES.filter(r => r.for.includes(instrument));
-  const [routine, setRoutine] = useState(available[0] ?? ROUTINES[0]);
+  const revisao = useRevisao();
+  const available = ROUTINES.filter(r => r.for.includes(instrument) && visivel(r.publicacao, revisao));
+  const [escolhida, setRoutine] = useState(available[0] ?? ROUTINES[0]);
+  // Sair do modo de revisão com um rascunho selecionado não pode deixar o rascunho na tela.
+  const routine = available.includes(escolhida) ? escolhida : (available[0] ?? ROUTINES[0]);
   // Posição no eixo e o que já passou. Avanço manual (decisão 38) — o app nunca anda sozinho.
   // Guardada POR ROTINA, e não num estado único zerado num efeito: com um só, o primeiro render da
   // rotina nova usava a posição da anterior — e o contador marcava como "visto" um valor que a pessoa
@@ -98,7 +102,7 @@ export default function Tecnica() {
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div className="row">
-        {available.map(r => <Chip key={r.id} on={r.id === routine.id} onClick={() => setRoutine(r)}>{t(r.name)}</Chip>)}
+        {available.map(r => <Chip key={r.id} on={r.id === routine.id} onClick={() => setRoutine(r)}>{t(r.name)}{estadoDe(r.publicacao) === 'rascunho' ? ` · ${t('review.draft')}` : ''}</Chip>)}
       </div>
       <p className="muted">{t(routine.desc)}</p>
 

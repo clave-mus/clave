@@ -1500,13 +1500,80 @@ muda o plano, e continuar com índices de outro plano seria tocar o que ninguém
 
 **Em aberto, e são do Paulo:**
 
-- `A18` — o histórico só é gravado quando a tela **desmonta**: quem fecha ou recarrega a aba no meio de uma
-  prática de vinte minutos **não deixa rastro**. Vale para todas as ferramentas e para o `Player`.
-- `A19` — **não existe "publicado"**. Todo item declarado aparece no catálogo. Antes do beta abrir é preciso
-  um mecanismo — por exemplo, um campo de revisão com data (a `F6-7` já fala em "data da revisão") e o
-  catálogo escondendo o que não a tem.
+- `A18` e `A19` (o histórico perdido ao fechar a aba, e a falta de "publicado") **foram resolvidos** nas
+  decisões 92 e 91.
 - `A20` — **720 ordens de cordas** na guitarra de seis (T2): é percorrível? A alternativa é limitar a
   quatro cordas adjacentes, o que exige escolher quais.
+
+---
+
+### 91 · "Publicado" existe, e é imposto pelo código
+
+A decisão 51 dizia que *publicar a família é passo humano do Paulo* — mas era só um acordo: nada no código o
+fazia valer, e todo item declarado aparecia no catálogo. Com três colegas pondo IAs para construir itens, o
+acordo não segura. O mecanismo (`src/catalog/publicacao.ts`):
+
+| Estado | Quem vê | Significado |
+|---|---|---|
+| `rascunho` | ninguém, fora do modo de revisão | construído, não revisado |
+| `legado` | todo mundo | já estava no app antes do portão; **sem revisão formal** |
+| `publicado` | todo mundo | revisado pelo Paulo, com `revisadoEm` (AAAA-MM-DD) e `por` |
+
+**O padrão é o estado mais restritivo.** Omitir `publicacao` num item novo é o mesmo que `rascunho`, então
+esquecer de declarar nunca expõe nada — e uma IA que constrói um item sem saber desta regra produz um
+rascunho, não uma publicação.
+
+**`legado` existe por honestidade.** Os 26 itens que já estavam no app (20 exercícios e 6 ferramentas) não
+passaram por revisão formal — a `F6-7` está pendente. Chamá-los de `publicado` afirmaria uma revisão que não
+aconteceu; escondê-los esvaziaria o app. `legado` diz o que é verdade: visível, ainda não revisado. Quando o
+Paulo revisar um, troca para `publicado`.
+
+**Só o Paulo escreve `publicado`**, e o teste exige a data em ISO e o nome — sem eles, não passa.
+
+**Modo de revisão.** `?revisao=1` no endereço mostra os rascunhos, com uma faixa de aviso e a marca "rascunho"
+nos cartões; `?revisao=0` ou o botão "Sair" da faixa desligam. **Não há controle no Perfil, de propósito:**
+quem testa o beta não deve esbarrar nele.
+
+**Vale para o que o mecanismo alcança:** itens de catálogo (cartão, página, rotinas salvas no Praticar) e as
+rotinas da ferramenta de Técnica. Um rascunho aberto por endereço direto mostra "este item está em revisão",
+sem o exercício. Um rascunho some da rotina de quem não está em revisão **antes** do filtro de contexto, para
+não ser contado como "escondido porque pede o instrumento".
+
+**O documento não envelhece:** `docs/revisao-pendente.md` tem de listar, pelo id, todo rascunho — um teste
+falha se faltar um. É o que os colegas leem, e uma lista velha faria alguém achar que um item está pronto.
+
+**Fica fora do portão** o que não tem tela (os enumeradores de conduções e de rearmonizações): não há o que
+esconder, e entram quando ganharem uma.
+
+---
+
+### 92 · O histórico é gravado ao esconder a aba, e uma sessão é uma entrada
+
+Resolve `A18`. O registro só acontecia quando a tela **desmontava**, e fechar ou recarregar a aba no meio de
+vinte minutos de prática não desmonta nada: não deixava rastro, em todas as ferramentas e no `Player` — num
+produto cuja promessa é que o histórico diz a verdade sobre o que se praticou.
+
+Agora a prática é gravada em **três momentos**, e todos regravam a mesma entrada (`Activity.sessao`):
+
+1. a aba esconde (`visibilitychange`) — o único sinal confiável no celular, onde trocar de app costuma ser o
+   último aviso antes de o navegador descartar a aba;
+2. a página sai (`pagehide`) — fechar, recarregar, navegar para fora;
+3. a tela desmonta — sair para outra tela do app.
+
+**Uma sessão é uma entrada, regravada no lugar**, mantendo o horário original. Sem isso, gravar mais vezes
+contaria a mesma prática duas ou três vezes. (`registrarAtividade`, com testes de que repetir atualiza e nunca
+duplica.)
+
+**O mesmo mecanismo vale para o `Player` e para as ferramentas** (`useRegistroDePratica`), e lê o que vai gravar
+**no momento de gravar**: o que entra no histórico é o que valia no fim. Isso elimina por construção o defeito
+do dado velho que o `Player` tinha.
+
+Verificado no navegador: praticar e sair por navegação completa deixa a entrada (tonalidade, andamento,
+segundos); esconder e depois sair atualiza a mesma entrada, de 6 para 11 segundos, sem duplicar.
+
+**Limite honesto:** se o navegador matar o processo sem avisar (bateria, queda), os segundos desde a última
+gravação se perdem. Gravar a cada minuto fecharia isso; não fiz porque `visibilitychange` já cobre o caso
+comum e o custo de escrever no armazenamento a cada tick não se justifica sem um caso real.
 
 ---
 
@@ -1559,8 +1626,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A16 | **"Subir 4 bpm a cada volta"** vem ligado por padrão na ferramenta de Técnica. Aumentar o andamento sozinho é tratar bpm como progressão e carga, que a decisão 82 diz que o app nunca faz — e o Paulo avisou que aumentar demais costuma ser prejudicial | Paulo | nada |
 | A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
-| A18 | **O histórico só é gravado quando a tela desmonta**: fechar ou recarregar a aba no meio de uma prática não deixa rastro, em todas as ferramentas e no Player (decisão 90) | Paulo | nada |
-| A19 | **Não existe "publicado"**: todo item declarado aparece no catálogo. Precisa de mecanismo antes do beta abrir — ver [revisao-pendente.md](revisao-pendente.md) | Paulo | abrir o beta |
 | A20 | **720 ordens de cordas** na guitarra de seis (T2): percorrível, ou limitar a quatro cordas adjacentes? | Paulo | nada |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |

@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { atTime, now } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
 import { useContent } from '../data/localized';
-import { getState, logActivity, recordAnswer, saveSettings, useStore } from '../state/store';
+import { getState, recordAnswer, saveSettings, useStore } from '../state/store';
+import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
 import { fromStep, mod, noteName, type Note } from '../theory/core';
@@ -87,27 +88,18 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const [confidenceFor, setConfidenceFor] = useState<string[] | null>(null);
   useEffect(() => { askedAt.current = Date.now(); earReadyAt.current = null; listens.current = 0; }, [q]);
 
-  // O que valia no fim da prática, não no começo. O efeito abaixo só roda de novo quando `def`,
-  // `target` ou `t` mudam, então a limpeza dele enxerga as configurações e os parâmetros do render em
-  // que ele montou — e mudar a tonalidade no meio do exercício gravava a antiga no histórico. É
-  // justamente o dado que o histórico existe para guardar. A ref é reescrita a cada render.
-  const aoSair = useRef({ settings, params });
-  aoSair.current = { settings, params };
-
-  // ao sair, registra a atividade no histórico
-  useEffect(() => {
-    const t0 = started.current;
-    return () => {
-      const s = scoreRef.current;
-      const { settings: st, params: p } = aoSair.current;
-      if (s.total > 0 && !target) logActivity({
-        id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule,
-        seconds: Math.round((Date.now() - t0) / 1000), correct: s.correct, total: s.total,
-        // a mesma forma do snapshot de uma tentativa (F3-9)
-        snapshot: { settings: st, params: paramsRegistraveis(p, def.respeita) },
-      });
+  // ao esconder a aba, sair da página ou desmontar, registra a atividade no histórico — sempre a mesma
+  // entrada, com o que valia NO FIM (src/state/useRegistro.ts)
+  useRegistroDePratica(() => {
+    const s = scoreRef.current;
+    if (s.total <= 0 || target) return null;
+    return {
+      id: def.id, title: itemText(t, def.id, 'title'), module: def.primaryModule,
+      seconds: Math.round((Date.now() - started.current) / 1000), correct: s.correct, total: s.total,
+      // a mesma forma do snapshot de uma tentativa (F3-9)
+      snapshot: { settings, params: paramsRegistraveis(params, def.respeita) },
     };
-  }, [def, target, t]);
+  });
 
   // camadas: global (timbre do instrumento, volume) < exercício < configurações da pessoa
   const presentationFor = useCallback((question: Question) =>

@@ -52,6 +52,13 @@ const pt = {
     deleteRoutine: 'Apagar rotina',
     deleteConfirm: 'Apagar "{name}"? Não dá para desfazer.',
     cancel: 'Manter',  },
+  review: {
+    banner: 'Modo de revisão: você está vendo rascunhos, que ninguém mais vê.',
+    exit: 'Sair',
+    draft: 'rascunho',
+    hiddenTitle: 'Este item está em revisão',
+    hiddenText: 'Ele foi construído, mas ainda não foi publicado.',
+  },
   cadence: {
     accentOn: 'Acento na subdivisão {pos} de {of}',
     accentNext: 'Próximo compasso: o acento vai para a subdivisão {pos}',

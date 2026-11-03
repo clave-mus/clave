@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { NAV } from './nav';
+import { setRevisao, useRevisao } from '../state/store';
 import { useT } from '../i18n';
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -12,9 +13,17 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function Layout() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const t = useT();
+  const revisao = useRevisao();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  // `?revisao=1` liga o modo de revisão e `?revisao=0` desliga (decisão 91). Sem controle na tela, de
+  // propósito: quem testa o beta não deve esbarrar nele.
+  useEffect(() => {
+    const v = new URLSearchParams(search).get('revisao');
+    if (v === '1') setRevisao(true);
+    else if (v === '0') setRevisao(false);
+  }, [search]);
   return (
     <div className="shell">
       <header className="topbar">
@@ -28,6 +37,12 @@ export default function Layout() {
           </div>
         </div>
       </header>
+      {revisao && (
+        <div role="status" className="row" style={{ justifyContent: 'center', gap: 12, padding: '8px 16px', background: 'var(--accent-quiet)', color: 'var(--ink)' }}>
+          <span>{t('review.banner')}</span>
+          <button type="button" className="btn small ghost" onClick={() => setRevisao(false)}><span>{t('review.exit')}</span></button>
+        </div>
+      )}
       <main className="page"><Outlet /></main>
       <nav className="tabbar" aria-label={t('nav.main')}>
         {NAV.map(n => (

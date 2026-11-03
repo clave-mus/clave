@@ -52,6 +52,13 @@ const en: Shape<typeof pt> = {
     deleteRoutine: 'Delete routine',
     deleteConfirm: 'Delete "{name}"? This cannot be undone.',
     cancel: 'Keep it',  },
+  review: {
+    banner: 'Review mode: you are seeing drafts that nobody else sees.',
+    exit: 'Exit',
+    draft: 'draft',
+    hiddenTitle: 'This item is under review',
+    hiddenText: 'It has been built, but not published yet.',
+  },
   cadence: {
     accentOn: 'Accent on subdivision {pos} of {of}',
     accentNext: 'Next bar: the accent moves to subdivision {pos}',

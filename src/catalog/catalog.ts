@@ -10,6 +10,7 @@ import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 import type { MessageKey } from '../i18n';
 import { CELLS, RHYTHM_PRESETS, randomBars, type CellId } from '../theory/rhythm';
 import { TUNINGS } from '../components/music/Fretboard';
+import { LEGADO } from './publicacao';
 import type { CatalogItem, ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 // F2-3: o contexto musical vem da cascata, não de faixas escritas no código
 import { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
@@ -131,6 +132,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
     make(s, ctx): Question {
       const clef = pickClef(s, ctx);
@@ -150,6 +152,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
     make(s, ctx) {
       const clef = pickClef(s, ctx);
@@ -169,6 +172,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['key.major', 'key.minor', 'key.signatures', 'clef.treble', 'clef.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: [],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), { id: 'modo', label: ctx.t('settings.keyMode'), type: 'single', options: [{ id: 'maior', label: ctx.t('settings.major') }, { id: 'menor', label: ctx.t('settings.minor') }, { id: 'ambos', label: ctx.t('settings.both') }] },
       { id: 'max', label: ctx.t('settings.maxAccidentals'), type: 'single', options: [{ id: '2', label: '2', tier: 1 }, { id: '4', label: '4', tier: 2 }, { id: '7', label: '7', tier: 3 }] }],
     defaults: { claves: ['sol'], modo: 'maior', max: '4' },
@@ -194,6 +198,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
       { id: 'forma', label: ctx.t('settings.form'), type: 'single', options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] }],
     defaults: { claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico' },
@@ -224,6 +229,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'clef.treble', 'clef.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ALL_CHORDS) },
       { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' }],
     defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false },
@@ -252,6 +258,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues', 'clef.treble', 'clef.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [CLEFS(ctx), { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) }],
     defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] },
     presentation: { gap: 0.32 },
@@ -278,6 +285,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['scale.major', 'scale.modes', 'chord.triads', 'chord.sevenths', 'harmony.diatonic_field', 'harmony.tritone_sub', 'key.major', 'key.minor', 'key.signatures'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: [],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'temas', label: ctx.t('settings.topics'), type: 'multi', options: [
       { id: 'graus', label: ctx.t('settings.topicDegrees') }, { id: 'modos', label: ctx.t('settings.topicModes') }, { id: 'acordes', label: ctx.t('settings.topicChords') },
       { id: 'campo', label: ctx.t('settings.topicField') }, { id: 'tonalidades', label: ctx.t('settings.topicKeys') }, { id: 'sub5', label: ctx.t('settings.topicSub5') }] }],
@@ -294,6 +302,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }, { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] }],
     defaults: { pretas: true, oitavas: '2' },
     make(s, ctx) {
@@ -315,6 +324,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }], defaults: { pretas: true },
     make(s, ctx) {
       const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
@@ -334,6 +344,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['chord.triads', 'chord.sevenths', 'instrument.keyboard'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ['maior', 'menor', 'dim', 'aum', '7M', '7', 'm7', 'm7b5']) }],
     defaults: { tipos: ['maior', 'menor', '7', 'm7'] },
     make(s, ctx) {
@@ -360,6 +371,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [INST(ctx), FRETS(ctx)], defaults: { instrumento: 'auto', casas: '0-5' },
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
@@ -379,6 +391,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [INST(ctx), FRETS(ctx)], defaults: { instrumento: 'auto', casas: '0-12' },
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
@@ -401,6 +414,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['range'],
+    publicacao: LEGADO,
     settings: ctx => [INST(ctx)], defaults: { instrumento: 'auto' },
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
@@ -438,6 +452,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['chord.triads', 'chord.sevenths', 'chord.open_shapes', 'chord.barre_shapes', 'instrument.guitar', 'instrument.keyboard'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: [],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'onde', label: ctx.t('settings.instrument'), type: 'single', options: [{ id: 'violao', label: ctx.t('settings.guitar') }, { id: 'piano', label: ctx.t('settings.piano') }],
         present: v => (v === 'violao' ? { arp: 0.04 } : {}) },
       { id: 'formas', label: ctx.t('settings.shapes'), type: 'single', options: [{ id: 'abertos', label: ctx.t('settings.openChords') }, { id: 'pestana', label: ctx.t('settings.barreChords') }, { id: 'todos', label: ctx.t('settings.all') }] }],
@@ -454,6 +469,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'referencia', label: ctx.t('settings.reference', { note: noteName(note(0), ctx.naming) }), type: 'toggle' }, { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }],
     defaults: { referencia: true, pretas: false },
     presentation: { gap: 0.9 },
@@ -476,6 +492,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['interval.simple'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx).map(o => ({ ...o, tier: SEMI_TIER[Number(o.id)] })) },
       { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] }],
     defaults: { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' },
@@ -499,6 +516,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['chord.triads', 'chord.sevenths'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range'],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ALL_CHORDS) },
       { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
       { id: 'duracao', label: ctx.t('settings.chordDuration'), type: 'range', min: 0.5, max: 3, step: 0.1, format: v => `${v.toFixed(1)} s`, present: v => ({ dur: Number(v) }) }],
@@ -523,6 +541,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range'],
+    publicacao: LEGADO,
     settings: ctx => [
       { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
       DIRECAO(ctx),
@@ -556,6 +575,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: ['key', 'range'],
+    publicacao: LEGADO,
     // Era pentatônico-only sem razão (decisão 54): a célula é um desenho de graus, e graus existem
     // em qualquer escala. Agora aceita todas, inclusive as duas melódicas.
     settings: ctx => [{ id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
@@ -641,6 +661,7 @@ export const EXERCISES: CatalogItem[] = [
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: [],
+    publicacao: LEGADO,
     settings: ctx => [{ id: 'nivel', label: ctx.t('settings.rhythmValues'), type: 'single', options: RHYTHM_PRESETS.map(p => ({ id: p.id, label: ctx.t(`theory.rhythmPresets.${p.id}` as MessageKey) })) }],
     defaults: { nivel: 'duas' },
     presentation: { bpm: 84 },

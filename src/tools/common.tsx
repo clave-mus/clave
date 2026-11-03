@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { atTime, Clock, drum } from '../audio/engine';
 import type { ModuleId } from '../catalog/taxonomy';
-import { logActivity, type ActivityParams } from '../state/store';
+import type { ActivityParams } from '../state/store';
+import { useRegistroDePratica } from '../state/useRegistro';
 import { Btn, Chip } from '../components/ui';
 import { useT } from '../i18n';
 
@@ -17,16 +18,16 @@ import { useT } from '../i18n';
 export function useToolLog(id: string, title: string, module: ModuleId, active: boolean, snapshot?: ActivityParams) {
   const acc = useRef(0);
   const since = useRef<number | null>(null);
-  const snap = useRef(snapshot);
-  snap.current = snapshot;
   useEffect(() => {
     if (active) since.current = Date.now();
     else if (since.current) { acc.current += Date.now() - since.current; since.current = null; }
   }, [active]);
-  useEffect(() => () => {
+  // grava ao esconder a aba, ao sair da página e ao desmontar — sempre a mesma entrada, com o que
+  // valia no fim (src/state/useRegistro.ts)
+  useRegistroDePratica(() => {
     const total = acc.current + (since.current ? Date.now() - since.current : 0);
-    logActivity({ id, title, module, seconds: Math.round(total / 1000), snapshot: snap.current });
-  }, [id, title, module]);
+    return { id, title, module, seconds: Math.round(total / 1000), snapshot };
+  });
 }
 
 export function Metronome({ compact = false, onRunning }: { compact?: boolean; onRunning?: (r: boolean) => void }) {

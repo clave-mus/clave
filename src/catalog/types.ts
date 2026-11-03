@@ -5,6 +5,7 @@ import type { Translate } from '../i18n';
 import type { Presentation } from '../audio/presentation';
 import type { Classification } from './taxonomy';
 import type { GlobalParams, ParametroDePratica } from './params';
+import type { Publicacao } from './publicacao';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
 
@@ -194,6 +195,11 @@ export interface CatalogItem extends Classification {
    * `make` faz, então esta lista não envelhece sem o teste acusar.
    */
   respeita?: readonly ParametroDePratica[];
+  /**
+   * Se as pessoas veem este item (decisão 91). **Omitir é o mesmo que `rascunho`**: um item novo nasce
+   * escondido, e só o Paulo o publica.
+   */
+  publicacao?: Publicacao;
   /** Apresentação própria do item (ex.: intervalo maior entre notas), por cima da global. */
   presentation?: Partial<Presentation>;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */

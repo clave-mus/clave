@@ -1,39 +1,77 @@
-# Aguardando a sua revisão
+# Publicação: o que está em rascunho, e como se publica
 
-O que foi **construído e declarado, mas não publicado** — porque a decisão 51 diz que *tarefa
-delegada constrói o motor e a fiação; publicar a família é passo humano do Paulo.*
+A decisão 51 diz que *tarefa delegada constrói o motor e a fiação; publicar a família é passo humano
+do Paulo.* Desde a decisão 91 isso **é imposto pelo código**, não só combinado.
 
-**Hoje não existe nenhum mecanismo de "publicado"**: todo item declarado aparece no catálogo. Isso é
-seguro enquanto o beta não abriu (não há quem veja nada incompleto), mas **precisa ser resolvido
-antes de abrir** — ver `A19` em [decisoes.md](decisoes.md).
+## Os três estados
 
-Para cada item: o que conferir, e o que eu **não** consigo conferir sozinho (ouvir, tocar o
-instrumento, julgar se o exercício é bom).
-
-## Técnica (decisão 81)
-
-| Item | Onde | O que só você confere |
+| Estado | Quem vê | O que significa |
 |---|---|---|
-| **T1** · permutações de dedos | rotina da Técnica | se tocar a ordem na casa 5 (o dedo *f* em `4 + f`) é uma boa postura para o exercício |
-| **T2** · ordem das cordas | rotina da Técnica | a convenção (corda 1 = mais aguda) e o que tocar em cada corda: hoje uma nota na casa 5, duas voltas. Na guitarra de seis são **720** ordens — se isso é percorrível |
-| **T5** · troca de posição | rotina da Técnica | as 88 trocas (posições 3, 5 e 7, 1 a 4 casas nos dois sentidos, os quatro dedos) e se deslizar **com o dedo 4** é tocável em todas |
-| **T3** · deslocamento de acento | `acento-deslocado` | o clique: o acento é o `clique-forte` e a subdivisão um `clique` mais baixo — **se dá para ouvir o acento mover** |
-| **T4** · subdivisão alternada | `subdivisao-alternada` | a ordem fixa (da mais lenta para a mais rápida) e o aviso um compasso antes |
-| **T6** · sustentar e cortar | `sustentar-e-cortar` | o som do corte (`aro`): se ele marca o tempo sem confundir com o clique |
-| **T7** · legato e staccato | `legato-staccato` | o app só marca a troca — não ouve. Se isso basta |
-| **T8** · deslocamento de padrão | `deslocamento-ritmico` | os 15 padrões e se a pulsação ancorada no primeiro tempo ajuda ou atrapalha |
+| **`rascunho`** | **ninguém**, a não ser no modo de revisão | construído, ainda não revisado. **É o padrão**: um item novo que não declara `publicacao` já nasce assim |
+| **`legado`** | todo mundo | já estava no app **antes** deste portão existir. Visível, mas **sem revisão formal** — a revisão de ambiguidade (`F6-7`) ainda está pendente. Chamá-lo de "publicado" afirmaria uma revisão que não aconteceu |
+| **`publicado`** | todo mundo | revisado pelo Paulo, com **data e nome** registrados. **Só ele** muda um item para cá |
 
-**Os textos** (títulos e descrições, em português e inglês) saíram das tabelas das decisões 81 e 83,
-mas são rascunhos meus: nome de coisa que a pessoa vê é decisão sua.
+O padrão é o estado **mais restritivo**: esquecer de declarar nunca expõe nada.
 
-## Enumeradores (sem tela)
+## Para quem constrói itens (colegas e as IAs deles)
+
+- **Todo item novo é `rascunho`.** Declare `publicacao: RASCUNHO` (de `src/catalog/publicacao.ts`) ou
+  omita o campo. **Nunca** escreva `publicado` ou `legado` num item novo: `legado` é só para o que já
+  existia, e `publicado` é decisão do Paulo.
+- **Liste o item neste arquivo.** Um teste (`publicacao.test.ts`) falha se um rascunho não aparecer aqui
+  pelo id entre crases — é o que impede este documento de envelhecer.
+- Para ver o seu rascunho funcionando: abra o app com **`?revisao=1`** no endereço
+  (`http://localhost:5173/?revisao=1`). Aparece uma faixa avisando, e os rascunhos ganham a marca
+  "rascunho". `?revisao=0` desliga, e o botão "Sair" da faixa também.
+- **Não há controle para isso no Perfil, de propósito**: quem testa o beta não deve esbarrar nele.
+
+## Para o Paulo: como publicar
+
+Depois de revisar um item (ouvir, tocar, conferir o que a tabela abaixo diz que só você confere), troque no
+código:
+
+```ts
+publicacao: { estado: 'publicado', revisadoEm: '2026-11-04', por: 'Paulo' },
+```
+
+E **tire a linha do item deste arquivo**. O teste exige data no formato `AAAA-MM-DD` e um nome; sem eles,
+`publicado` não passa.
+
+## Em rascunho agora
+
+### Técnica — rotinas da ferramenta `tecnica` (decisão 81)
+
+| Id | Família | O que só você confere |
+|---|---|---|
+| `permutacoes` | **T1** · permutações de dedos | se tocar a ordem na casa 5 (o dedo *f* em `4 + f`) é uma boa postura para o exercício |
+| `cordas` | **T2** · ordem das cordas | a convenção (corda 1 = mais aguda) e o que tocar em cada corda: hoje uma nota na casa 5, duas voltas. **Na guitarra de seis são 720 ordens** — ver `A20` |
+| `troca` | **T5** · troca de posição | as 88 trocas (posições 3, 5 e 7, 1 a 4 casas nos dois sentidos, os quatro dedos) e se deslizar **com o dedo 4** é tocável em todas |
+
+### Tarefa com metrônomo — itens de catálogo (decisão 90)
+
+| Id | Família | O que só você confere |
+|---|---|---|
+| `acento-deslocado` | **T3** · deslocamento de acento | o clique: o acento é o `clique-forte` e a subdivisão um `clique` mais baixo — **se dá para ouvir o acento mover** |
+| `subdivisao-alternada` | **T4** · subdivisão alternada | a ordem fixa (da mais lenta para a mais rápida) e o aviso um compasso antes |
+| `sustentar-e-cortar` | **T6** · sustentar e cortar | o som do corte (`aro`): se ele marca o tempo sem confundir com o clique |
+| `legato-staccato` | **T7** · legato e staccato | o app só marca a troca — não ouve. Se isso basta |
+| `deslocamento-ritmico` | **T8** · deslocamento de padrão | os 15 padrões e se a pulsação ancorada no primeiro tempo ajuda ou atrapalha |
+
+**Os textos** (títulos e descrições, em português e inglês) saíram das tabelas das decisões 81 e 83, mas
+são rascunhos: nome de coisa que a pessoa vê é decisão do Paulo.
+
+## Enumeradores (sem tela, fora do portão)
 
 | Item | Onde | O que conferir |
 |---|---|---|
 | **FM-4** · conduções de voz | `theory/conducoes.ts` | as cinco medidas e os âmbitos corais (largos de propósito). **O corte de quatro vozes está marcado como revisável** (decisão 66) |
 | **FM-5** · rearmonizações | `theory/rearmonizacoes.ts` | as sete transformações (decisão 78), e **a questão em aberto** de onde a nota da melodia cai dentro do compasso |
 
+Não têm tela, então não há o que esconder; entram no portão quando ganharem uma.
+
 ## Escalas e ouvido (decisões 70 e 72)
+
+Já estão no app como `legado`, mas as mudanças recentes pedem o seu olho:
 
 - As **duas melódicas** e o nome "(jazz)" / "(clássica)".
 - O guarda que recusa a configuração impossível, e o texto da recusa.
@@ -44,3 +82,4 @@ mas são rascunhos meus: nome de coisa que a pessoa vê é decisão sua.
 - A **tabela de piano** (`FM-6`) tem 3 linhas em branco que só um pianista preenche.
 - A **biblioteca de padrões rítmicos** (`F6-11`) não existe, e exige fonte citada (decisão 85).
 - As **22 gravações** (`A0`) e as digitações de baixo (`FM-2`).
+- Os **26 itens `legado`** esperam a revisão da `F6-7` para virarem `publicado`.

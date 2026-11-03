@@ -11,7 +11,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
-import { useStore } from '../state/store';
+import { useRevisao, useStore } from '../state/store';
+import { visivel } from '../catalog/publicacao';
 import { useGlobalParams } from '../catalog/params';
 import { resumoDaConfiguracao, resumoDaPratica } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
@@ -38,9 +39,14 @@ export default function Praticar() {
 
   // O contexto filtra as ETAPAS, e a rotina continua sendo uma só: quem está sem o instrumento vê o
   // que dá para fazer agora, e é avisada do que ficou escondido.
-  const cabe = (itemId: string) => { const it = itemById[itemId]; return !!it && (withInst || it.mobile); };
-  const totalEtapas = rotinas.reduce((n, r) => n + r.etapas.length, 0);
-  const visiveis = rotinas.reduce((n, r) => n + r.etapas.filter(e => cabe(e.instancias[0].itemId)).length, 0);
+  // Rascunho some da rotina de quem não está em modo de revisão (decisão 91) — e some ANTES do filtro
+  // de contexto, para não ser contado como "escondido porque pede o instrumento", que não é verdade.
+  const revisao = useRevisao();
+  const publicada = (itemId: string) => { const it = itemById[itemId]; return !!it && visivel(it.publicacao, revisao); };
+  const etapasDe = (r: (typeof rotinas)[number]) => r.etapas.filter(e => publicada(e.instancias[0].itemId));
+  const cabe = (itemId: string) => publicada(itemId) && (withInst || itemById[itemId]!.mobile);
+  const totalEtapas = rotinas.reduce((n, r) => n + etapasDe(r).length, 0);
+  const visiveis = rotinas.reduce((n, r) => n + etapasDe(r).filter(e => cabe(e.instancias[0].itemId)).length, 0);
   const escondidas = totalEtapas - visiveis;
 
   return (
@@ -87,13 +93,13 @@ export default function Praticar() {
                   )}
                 </div>
 
-                {r.etapas.length === 0 ? (
+                {etapasDe(r).length === 0 ? (
                   <p className="muted" style={{ margin: 0 }}>{t('routines.emptyRoutine')}</p>
-                ) : r.etapas.every(e => !cabe(e.instancias[0].itemId)) ? (
+                ) : etapasDe(r).every(e => !cabe(e.instancias[0].itemId)) ? (
                   <p className="muted" style={{ margin: 0 }}>{t('home.noneFitText')}</p>
                 ) : (
                   <div className="grid cards">
-                    {r.etapas.filter(e => cabe(e.instancias[0].itemId)).map(e => {
+                    {etapasDe(r).filter(e => cabe(e.instancias[0].itemId)).map(e => {
                       // Uma etapa pode ter várias instâncias (ela cicla); o botão de salvar só cria
                       // com uma. Mostra a primeira e conta as outras, para nada sumir em silêncio.
                       const inst = e.instancias[0];

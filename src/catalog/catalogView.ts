@@ -4,6 +4,7 @@
 import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
 import { AMBIENTES, EXERCISES } from './index';
+import { visivel } from './publicacao';
 import type { ModuleId } from './taxonomy';
 
 export interface ModuleEntry {
@@ -16,11 +17,13 @@ export interface ModuleEntry {
   tools: string[];
 }
 
-export function catalogByModule(opts: { mobileOnly?: boolean } = {}): ModuleEntry[] {
+export function catalogByModule(opts: { mobileOnly?: boolean; revisao?: boolean } = {}): ModuleEntry[] {
+  // Rascunho não aparece para quem usa (decisão 91); só no modo de revisão.
+  const aparece = (i: { publicacao?: Parameters<typeof visivel>[0] }) => visivel(i.publicacao, !!opts.revisao);
   return MODULE_LIST.map(m => ({
     module: m.id,
     lessons: LESSONS.filter(l => l.primaryModule === m.id).map(l => l.id),
-    exercises: EXERCISES.filter(e => e.primaryModule === m.id && (!opts.mobileOnly || e.mobile)).map(e => e.id),
-    tools: AMBIENTES.filter(t => t.primaryModule === m.id && (!opts.mobileOnly || t.mobile)).map(t => t.id),
+    exercises: EXERCISES.filter(e => e.primaryModule === m.id && aparece(e) && (!opts.mobileOnly || e.mobile)).map(e => e.id),
+    tools: AMBIENTES.filter(t => t.primaryModule === m.id && aparece(t) && (!opts.mobileOnly || t.mobile)).map(t => t.id),
   }));
 }
