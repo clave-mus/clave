@@ -23,6 +23,11 @@ export const ALVO_DA_ROTACAO: Record<Rotacionavel, { kind: 'param'; key: 'key' |
   corda: { kind: 'setting', id: 'corda' },
   modo: { kind: 'setting', id: 'modo' },
   qualidadeAcorde: { kind: 'setting', id: 'tipos' },
+  // Os dois eixos de técnica (decisões 81 e 83). São a mesma máquina dos outros cinco, e é por isso
+  // que as duas famílias custaram pouco: `digitacao` percorre as 24 ordenações de 1-2-3-4,
+  // `deslocamento` percorre os modos de um padrão rítmico de um tempo.
+  digitacao: { kind: 'setting', id: 'digitacao' },
+  deslocamento: { kind: 'setting', id: 'deslocamento' },
 };
 
 /** O que a rotação injeta na execução: uma camada de parâmetros e/ou uma configuração. */

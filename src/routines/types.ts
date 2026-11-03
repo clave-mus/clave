@@ -53,7 +53,7 @@ export interface Etapa {
 }
 
 /** Os parâmetros que podem entrar em rotação (decisão 38). A lista é curada de propósito. */
-export const ROTACIONAVEIS = ['tonalidade', 'regiao', 'corda', 'modo', 'qualidadeAcorde'] as const;
+export const ROTACIONAVEIS = ['tonalidade', 'regiao', 'corda', 'modo', 'qualidadeAcorde', 'digitacao', 'deslocamento'] as const;
 export type Rotacionavel = (typeof ROTACIONAVEIS)[number];
 
 /** Quando a rotação anda. O padrão é manual, e isso não é preguiça de desenho — ver abaixo. */
