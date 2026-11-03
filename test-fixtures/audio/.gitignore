@@ -1,0 +1,3 @@
+# Os .wav são GERADOS a partir dos .m4a (`npm run audio:prep`). Versionar os dois custaria 26 MB em vez
+# de 4,6 MB, e o .m4a é a gravação original — o .wav é só a forma que as ferramentas leem.
+*.wav

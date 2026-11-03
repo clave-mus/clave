@@ -14,7 +14,15 @@ frentes** — dá para pegar a qualquer momento.
 
 ---
 
-## A0 · 👤+💻 Espigão: medir antes de prometer
+## A0 · 👤+💻 Espigão: medir antes de prometer ⚠️ *gravado e medido em 03/11/2026 — o portão de cents segue aberto*
+
+> **O Paulo gravou as 24 amostras e eu medi.** O resultado está em
+> [docs/medidas/microfone.md](../medidas/microfone.md): **o microfone entra**, para voz e ritmo relativo.
+>
+> **Mas o portão de ±15 cents NÃO foi verificado**, e não dá com estas gravações: as vozes foram cantadas
+> de ouvido, então o desvio medido mistura erro do detector com erro de canto, e os dois não se separam.
+> Fechar o portão custa **cinco minutos**: regravar duas ou três notas com um afinador na tela, anotando o
+> desvio que ele mostrou.
 
 **Decisão de origem:** 43. **Bloqueia:** A1, A3, A4.
 

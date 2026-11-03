@@ -77,15 +77,15 @@ Marque conforme for gravando. **Cada linha é gravada duas vezes: celular e note
 Para estes, **use metrônomo** e anote o andamento. O que interessa é o intervalo entre as batidas,
 não o alinhamento com o clique — mas sem referência não dá para conferir.
 
-- [ ] **Palmas, semínimas a 60 bpm**, uns 8 compassos.
-- [ ] **Palmas, semínimas a 120 bpm.**
-- [ ] **Palmas, colcheias a 80 bpm.**
-- [ ] **Palmas, um ritmo sincopado** — por exemplo `1 e _ a 2 _ e _`. Anote qual, em palavras.
-- [ ] **Estalos de dedo**, o mesmo sincopado. Som mais fraco, ataque mais difícil de detectar.
-- [ ] **Batida na mesa**, o mesmo sincopado. Som mais grave e abafado.
+- [x] **Palmas, semínimas a 60 bpm**, uns 8 compassos.
+- [x] **Palmas, semínimas a 120 bpm.**
+- [x] **Palmas, colcheias a 80 bpm.**
+- [x] **Palmas, um ritmo sincopado** — por exemplo `1 e _ a 2 _ e _`. Anote qual, em palavras.
+- [x] **Estalos de dedo**, o mesmo sincopado. Som mais fraco, ataque mais difícil de detectar.
+- [x] **Batida na mesa**, o mesmo sincopado. Som mais grave e abafado.
 - [ ] **Palmas numa sala com eco** — banheiro, cozinha, escada. A reverberação borra o ataque, e é
       aqui que o detector mais erra.
-- [ ] **Baixo tocando o mesmo sincopado**, uma nota só.
+- [x] **Baixo tocando o mesmo sincopado**, uma nota só.
 
 ---
 
