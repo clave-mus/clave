@@ -445,14 +445,13 @@ Para uma sessão futura. Nenhuma bloqueia a construção dos motores.
 | C2 | **"Arpejos sorteados · todos acordes"** — campo harmônico, as 12 fundamentais de uma qualidade, ou uma progressão? |
 | C3 | **Saídas do walking bass** — partitura, braço com digitação, ou os dois? |
 | C4 | **Digitação no piano** — o motor vale para teclado, ou lá são dedilhados convencionais fixos? |
-| C6 | **Harmonização de melodia** — vira laboratório de experimentação em vez de quiz? |
 | C7 | Convenção de canhoto no desenho do braço — **conferir com um canhoto de verdade**; ninguém no time é. |
 
 **Resolvidas em 03/11:** "descer em sextas" eram terças descendentes; em Relacionar cordas, as
-cordas são Lá, Ré e **Sol**; e **`C5`** — o objeto "Som, timbre e dinâmica" sai do beta inteiro
-(decisão 60).
+cordas são Lá, Ré e **Sol**; **`C5`** — o objeto "Som, timbre e dinâmica" sai do beta inteiro
+(decisão 60); e **`C6`** — harmonização de melodia vira laboratório de transformações nomeadas
+(decisão 69).
 
-**Pendente de resposta do Paulo, aberto na rodada de voice leading** (decisão 64): o corte de
-escopo é **quatro vozes em posição fechada**, ou o exercício já serve conjuntos de cordas e tríades
-abertas no baixo e na guitarra? E a resposta é **escrita na pauta, tocada, ou as duas com seletor
-de superfície** (padrão da decisão 58)?
+**Respondidas na rodada seguinte** (decisão 66): voice leading é **quatro vozes em posição
+fechada**, nas **duas superfícies com seletor**. O corte de quatro vozes está marcado como
+revisável na própria decisão — foi tomado por quem não toca instrumento de cordas.

@@ -877,6 +877,121 @@ dentro de uma tarefa.
 
 ---
 
+### 66 · Voice leading: quatro vozes em posição fechada, nas duas superfícies
+
+Fecha o escopo aberto pela decisão 64.
+
+**Quatro vozes, posição fechada.** E a documentação registra **por que isto é revisável**: a decisão
+foi tomada por quem toca teclado e por quem escreve código, e **nenhum dos dois é a pessoa certa
+para julgar se conjuntos de cordas e tríades abertas deveriam estar no beta**. Se um guitarrista ou
+baixista do time disser que falta, **a decisão muda sem precisar de defesa** — não há argumento de
+produto preso a ela, só um corte de escopo para caber no beta.
+
+**As duas superfícies de resposta, com seletor** — escrita na pauta e tocada no instrumento, pelo
+padrão da decisão 58. Escrita é determinística e cabe no ônibus; tocada é autoavaliação e cabe com
+o instrumento. O contexto escolhe o padrão, a pessoa troca.
+
+---
+
+### 67 · No comparador de escalas, enarmônicas são a mesma escala — e isso é a pergunta
+
+Ré♯ menor e Mi♭ menor são a mesma escala com dois nomes. Comparadas por grafia, "diferem em 7
+graus", o que é defensável na pauta e absurdo no som; e o app diria "errou" para quem respondeu
+"são iguais", que é a resposta musicalmente correta.
+
+**A comparação é por classe de altura.** E quando o par sorteado for enarmônico, **a resposta certa
+passa a ser "são a mesma escala"** — o caso-problema vira um dos melhores itens do bloco de
+notação, porque reconhecer isso é exatamente o que se quer que a pessoa saiba.
+
+**Com explicação na tela**, para não negligenciar a teoria: as duas grafias existem, servem a
+tonalidades diferentes, e a escolha entre elas é de armadura, não de som. Quem é purista está certo,
+e o app diz isso em voz alta em vez de fingir que o problema não existe.
+
+---
+
+### 68 · "Que escala serve sobre este acorde?" inverte para sim ou não
+
+Sobre C7 servem mixolídio, blues, alterada, lídia dominante e diminuta de tom e semitom. A pergunta
+na forma aberta não tem resposta única, e cai sob a decisão 13.
+
+**Invertida, tem:** *"esta escala serve sobre este acorde?"* — uma escala por vez, sim ou não. Ou as
+notas da escala contêm as do acorde, ou não contêm. O exercício fica mais simples e para de mentir.
+
+**"Nota a evitar" sai.** O 4º grau sobre C7 é nota de passagem no blues e dissonância em bebop:
+**não é propriedade do acorde, é propriedade do estilo.** Afirmá-la como fato é erro de teoria, não
+só ambiguidade.
+
+---
+
+### 69 · Harmonização de melodia é laboratório de transformações nomeadas
+
+Fecha a questão aberta `C6`. Harmonizar uma melodia não tem resposta certa — é o caso mais claro de
+todos. Então não é quiz: é **laboratório**, termina por `tarefa` (a pessoa para quando quer), e
+**não há correção nenhuma.**
+
+**O que as ferramentas existentes fazem, e por que não serve.** O *Reharmonist* do Band-in-a-Box
+gera uma progressão nova inteira a partir da melodia, por gênero. O *Hookpad* sugere acordes a
+partir de um banco de músicas analisadas, e escrever acordes para uma melodia inserida é o add-on
+pago *Aria*. Na academia há harmonização por cadeias de Markov e o reharmonizador do *Impro-Visor*.
+**Todas fazem por você. Nenhuma ensina.** É a brecha.
+
+**O desenho: transformações, não listas de acordes.** Enumerar os acordes que contêm uma nota da
+melodia é interseção de conjuntos — trivial, e entrega 40 acordes sem hierarquia, porque
+**"interessante" não é computável.** Em vez disso o app oferece **transformações pelo nome**:
+trocar o V7 pelo subV7 · interpolar um II antes do V · fazer deste um diminuto de passagem ·
+empréstimo modal. A pessoa aplica, o app toca, ela mantém ou desfaz.
+
+Como cada transformação tem **nome de teoria**, usar o laboratório **é** estudar rearmonização — não
+é só ouvir resultados bonitos. É o que o botão de gerar progressão não faz.
+
+**O que se mede com exatidão, e serve de ordenação:** que grau da nota da melodia o acorde faz
+(fundamental, 3ª, 5ª, 7ª, 9ª, 11ª, 13ª — este é *o* eixo útil) · diatônico ou cromático · função ·
+movimento do baixo.
+
+**Corte de escopo:** no beta vão as **transformações nomeadas**. O navegador livre de acordes — ver
+todos os que contêm aquela nota — fica para a Fase 2.
+
+**O custo a aceitar:** item sem resposta **não gera evidência de progresso**. Entra no histórico como
+tempo praticado e os acordes escolhidos, e nada mais.
+
+---
+
+### 70 · As duas menores melódicas são duas escalas, não uma opção
+
+No uso clássico, a melódica é **definida** pela assimetria: sobe com 6ª e 7ª elevadas, desce como
+menor natural. Não é preferência de estilo — é a definição que uma prova de conservatório cobra. No
+jazz, "melódica" é a forma ascendente usada nas duas direções, e é conceitualmente **outra escala**:
+é a que gera a alterada e a lídia dominante.
+
+Mesmo nome, duas coisas — **e é daí que vinha a ambiguidade, não da direção.** São **duas entradas
+separadas** na lista de escalas, nunca um interruptor escondido em configurações. Assim o app não
+precisa adivinhar qual foi pedida.
+
+**O guarda de direção continua necessário**, por um motivo que sobrevive à separação: **subindo, as
+duas são o mesmo áudio.** Com as duas marcadas e direção só ascendente, o exercício de ouvido
+pediria uma distinção fisicamente impossível. Então, nesse caso: **toca descendo também, ou avisa.**
+
+**Em aberto:** os nomes que a pessoa vê — ver `A11`.
+
+---
+
+### 71 · Três enumeradores puros, e eles não são motores
+
+`percorrer` (padrões de escala), `conduções` (voice leading) e `rearmonizações` são **funções puras
+sem interface nenhuma**: recebem material musical e devolvem uma lista ordenada por critérios
+nomeados. Quem desenha é o motor de partituras ou o visualizador.
+
+Registrar isso tem duas consequências práticas. A primeira é que **contá-los como motores infla a
+estimativa de trabalho** — continuam sendo oito motores de catálogo. A segunda é que eles têm a
+**mesma forma**, e ela é a resposta recorrente do projeto para problemas sem resposta certa:
+
+> **enumerar o que é válido, ordenar por critérios nomeados, nunca eleger um certo.**
+
+É a decisão 45 (digitações), a 64 (conduções) e a 69 (rearmonização) dizendo a mesma coisa três
+vezes. Quando aparecer a quarta, já se sabe o desenho.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -919,6 +1034,8 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C1–C7 | **Miudezas do catálogo** — notas-pivô, arpejos sorteados, saídas do walking bass, digitação no piano, o objeto "Som", harmonização de melodia, convenção de canhoto. Ver [catalogo.md](catalogo.md#questões-abertas-do-catálogo) | Paulo, em sessão futura | nada |
+| A11 | **Como chamar as duas menores melódicas** na lista de escalas (decisão 70). Opções: *"menor melódica"* + *"menor melódica (jazz)"* · *"menor melódica"* + *"menor jazz"* · *"melódica clássica"* + *"melódica jazz"* — a terceira é a mais clara e a menos econômica | Paulo | `F6-10` |
+| A12 | **Quais transformações de rearmonização entram** no laboratório da decisão 69 — curadoria musical | Paulo | o laboratório |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

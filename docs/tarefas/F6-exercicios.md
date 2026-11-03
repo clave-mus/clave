@@ -155,16 +155,31 @@ Três consertos e uma generalização, todos em itens que já existem.
    certa.**
 
 **Generalizar a escala (decisão 54):** `ouvido-celulas` é pentatônico-only sem razão. Passa a
-aceitar maior, menor natural, **harmônica e melódica**, modos e as duas pentatônicas. O mesmo vale
-para qualquer item preso a uma escala por acidente.
+aceitar maior, menor natural, **harmônica e as duas melódicas**, modos e as duas pentatônicas. O
+mesmo vale para qualquer item preso a uma escala por acidente.
+
+**As duas menores melódicas são duas entradas na lista, não um interruptor** (decisão 70):
+
+| Entrada | Subindo | Descendo |
+|---|---|---|
+| melódica **clássica** | 6ª e 7ª elevadas | menor natural |
+| melódica **jazz** | 6ª e 7ª elevadas | igual, 6ª e 7ª elevadas |
+
+O nome que a pessoa vê está em aberto (`A11`) — **implemente com as duas entradas e deixe o rótulo
+no `i18n`**, para trocar sem mexer no motor.
 
 **Direção como parâmetro:** `ouvido-escala` só toca **subindo** — e menor natural, harmônica e
-melódica se distinguem muito melhor **descendo**. Entra `sobe / desce / ambos`. Vale igual para
-`ouvido-celulas` e para os arpejos.
+melódica se distinguem muito melhor **descendo**. Entra `sobe / desce / ambos`.
+
+**O guarda que a decisão 70 exige, e ele é obrigatório:** **subindo, a melódica clássica e a jazz
+são o mesmo áudio.** Com as duas marcadas e direção só ascendente, o exercício pede uma distinção
+**fisicamente impossível** — é item ambíguo gerando "erro do usuário", o que a decisão 13 proíbe.
+Nesse caso, ou toca descendo também, ou avisa e não deixa seguir.
 
 **Contrato de saída:** teste que gera centenas de células e confere que **nenhuma repete nota**;
-teste que confere que **todo distrator difere da resposta certa em exatamente uma nota**; e o
-teste de catálogo rodando com todas as escalas novas.
+teste que confere que **todo distrator difere da resposta certa em exatamente uma nota**; o teste de
+catálogo rodando com todas as escalas novas; e **um teste que prova o guarda**: com as duas
+melódicas marcadas e direção ascendente, o item não produz pergunta — ele recusa a configuração.
 
 ---
 
@@ -207,10 +222,17 @@ verifica (não há dono musical por área — decisão 51):
 **Itens ambíguos ou sem solução única não devem gerar "erro do usuário".** Ou se corrige o item, ou
 se aceita mais de uma resposta, ou se retira a família.
 
-Pontos cinzentos já conhecidos, que a visão marcou explicitamente: enarmonia no comparador de
-escalas; "escolha de escala sobre acorde"; harmonização de melodia (não há melhor absoluto — o
-caminho é tratar como laboratório de experimentação, com análise da relação de cada acorde com a
-melodia, e não como quiz).
+**Os pontos cinzentos conhecidos já foram decididos** na rodada de 03/11 — esta tarefa não
+precisa redecidi-los, só verificar que o código os obedece:
+
+| Ponto cinzento | Resolução |
+|---|---|
+| Enarmonia no comparador de escalas | comparação **por classe de altura**; par enarmônico tem como resposta certa *"são a mesma escala"*, com explicação na tela (decisão 67) |
+| Escolha de escala sobre acorde | a pergunta **inverte** para *"esta escala serve sobre este acorde?"*, sim ou não. **"Nota a evitar" sai**: é propriedade do estilo, não do acorde (decisão 68) |
+| Harmonização de melodia | **laboratório de transformações nomeadas**, sem correção, terminando por `tarefa` (decisão 69) |
+| Voice leading | **medição, não julgamento**: a pessoa escreve a condução e o app diz onde ela caiu entre as válidas (decisão 64) |
+| Análise de forma e frase | **saiu do beta** — onde termina uma frase é interpretativo. Está em [guardados.md](../guardados.md) |
+| Menor melódica clássica × jazz | **duas escalas**, não uma opção, e subindo são o mesmo áudio — ver o guarda na `F6-10` (decisão 70) |
 
 **Pronto quando:** cada família publicada tem a data da revisão registrada.
 
