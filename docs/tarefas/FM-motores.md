@@ -16,7 +16,7 @@ elas declaram **o que o código precisa provar**. A revisão deixa de ser "parec
 
 ---
 
-## FM-1 · Motor de padrões
+## FM-1 · Motor de padrões ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 36, 40. **Depende de:** nada. **É a melhor relação custo-benefício do
 projeto inteiro.**
@@ -54,17 +54,32 @@ function percorrer(tamanhoDaEscala: number, p: Percurso, direcao: 'sobe' | 'desc
 
 - `src/catalog/patterns.test.ts` existe e passa, cobrindo **todas** as famílias de percurso contra
   **todos** os tamanhos de escala de 5 a 12 notas, e verificando que:
-  - nenhuma posição sai do intervalo `[0, tamanho)`;
-  - a sequência descendente é o espelho da ascendente quando `direcao: 'ambos'`;
-  - o padrão se repete a partir de cada posição, sem buraco e sem repetição acidental;
+  - **o grau** de toda posição fica em `[0, tamanho)`;
+  - a sequência descendente é o espelho exato da ascendente;
+  - `'ambos'` é subir e descer sem repetir o ápice;
   - o exemplo da pentatônica acima sai exatamente como está escrito aqui.
 - Zero importações de React no arquivo.
+
+> **Correção da especificação, feita ao implementar (03/11).** Eu tinha escrito "nenhuma posição
+> sai do intervalo `[0, tamanho)`", e isso estava **errado**. A posição **precisa** poder passar de
+> `tamanho` (é assim que a subida alcança a oitava de cima) e precisa poder ser **negativa** (a
+> vizinha inferior do primeiro grau cai na oitava de baixo, que é o `7` de "1-7-2-1-3-2…").
+> O que não pode sair da escala é o **grau**, que é `grauDaPos(pos, tamanho)`.
+>
+> **Segunda correção:** nem todo percurso cabe em toda escala. "Sétimas" é um salto de 6 posições
+> e **não existe numa pentatônica de 5**. Por isso entrou `aplicavel(tamanho, percurso)`: a tela
+> esconde o que não se aplica, e `percorrer` devolve `[]` em vez de quebrar no meio da prática.
 
 **Pronto quando:** o contrato acima bate, e `Percorrer escalas` consegue ser declarada no catálogo
 usando o motor, sem lógica própria.
 
 **Não faça:** nenhuma tela, nenhum áudio, nenhuma relação com braço ou digitação. Isto é uma
 função pura e um teste.
+
+**Ficou de fora, e precisa de decisão:** a família **"agrupamentos que cruzam o compasso"**
+(grupos de 3 ou 5 sobre subdivisões em 4). As notas são as mesmas de `grupos`; o que muda é o
+**acento rítmico**, que não é assunto deste motor. Precisa virar camada rítmica ou parâmetro de
+apresentação — questão para o Paulo, não decisão de tarefa.
 
 ---
 
