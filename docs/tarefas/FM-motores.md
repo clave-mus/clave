@@ -185,7 +185,7 @@ O contrato dos **8 objetivos com 4+ itens** fica para quando `goals[]` existir (
 
 ---
 
-## FM-4 · Enumerador de conduções de voz
+## FM-4 · Enumerador de conduções de voz ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 64, 66, 71. **Depende de:** nada — é função pura.
 
