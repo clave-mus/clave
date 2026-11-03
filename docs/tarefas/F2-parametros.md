@@ -102,7 +102,7 @@ abre o menu inteiro, com algumas opções pré-marcadas.
 
 ---
 
-## F2-3 · Ligar o catálogo na cascata ⚠️ *motor feito em 03/11/2026; faltam os controles na tela*
+## F2-3 · Ligar o catálogo na cascata ✅ *feita em 03/11/2026*
 
 **Decisão de origem:** 57. **Depende de:** F2-1. **Bloqueia:** F3-8 fazer sentido.
 

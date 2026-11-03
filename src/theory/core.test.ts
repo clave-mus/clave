@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildChord, buildScale, chordSymbol, fromMidi, harmonicField, intervalBetween, keyAccidentals,
-  majorTonic, midi, note, noteName, quality, relativeMinor, transpose,
-} from './core';
+  majorTonic, midi, note, noteName, quality, relativeMinor, transpose, keyName } from './core';
 
 const names = (ns: { letter: number; acc: number }[]) => ns.map(n => noteName(n as never, 'en')).join(' ');
 
@@ -70,5 +69,35 @@ describe('tonalidades', () => {
     const en = harmonicField(note(4), 'maior', true, 'en');
     expect(en.map(d => d.symbol).join(' ')).toBe('Gmaj7 Am7 Bm7 Cmaj7 D7 Em7 F♯m7♭5');
     expect(en[0].roman).toBe('Imaj7');
+  });
+});
+
+describe('keyName: a grafia convencional da tonalidade', () => {
+  // Lá♯ maior não é uma tonalidade; Si♭ maior é. É a mesma regra que faz Fá maior ter Si♭.
+  it('as tonalidades com bemol se escrevem com bemol', () => {
+    expect(keyName(1, 'en')).toBe('D♭');
+    expect(keyName(3, 'en')).toBe('E♭');
+    expect(keyName(8, 'en')).toBe('A♭');
+    expect(keyName(10, 'en')).toBe('B♭');
+  });
+
+  it('as com sustenido se escrevem com sustenido', () => {
+    expect(keyName(6, 'en')).toBe('F♯');
+    expect(keyName(11, 'en')).toBe('B');
+  });
+
+  it('as naturais não ganham acidente', () => {
+    for (const [pc, nome] of [[0, 'C'], [2, 'D'], [4, 'E'], [5, 'F'], [7, 'G'], [9, 'A']] as const) {
+      expect(keyName(pc, 'en')).toBe(nome);
+    }
+  });
+
+  it('nunca devolve as duas grafias juntas, ao contrário de pcName', () => {
+    for (let pc = 0; pc < 12; pc++) expect(keyName(pc, 'en')).not.toContain('/');
+  });
+
+  it('respeita o idioma dos nomes de nota', () => {
+    expect(keyName(10, 'pt')).toBe('Si♭');
+    expect(keyName(5, 'pt')).toBe('Fá');
   });
 });

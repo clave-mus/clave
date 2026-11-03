@@ -46,6 +46,21 @@ export function pcName(p: number, naming: Naming = 'pt', both = true) {
   if (!both || sharp[1] === 0) return s;
   return `${s}/${letterName(flat[0], naming) + accSymbol(flat[1])}`;
 }
+/**
+ * O nome da **tonalidade** de uma classe de altura, na grafia convencional dela.
+ *
+ * Não é `pcName`: Lá♯ maior não é uma tonalidade, Si♭ maior é. As tonalidades com bemol se escrevem
+ * com bemol — é a mesma regra que faz Fá maior ter Si♭ e nunca Lá♯.
+ */
+export function keyName(p: number, naming: Naming = 'pt') {
+  const comBemol = [1, 3, 6, 8, 10].includes(mod(p, 12)) && mod(p, 12) !== 6;
+  const flat = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]][mod(p, 12)];
+  const sharp = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]][mod(p, 12)];
+  // Fá♯/Sol♭ é o par em que as duas grafias circulam; fica em Fá♯, que é a mais usada.
+  const [letra, acc] = comBemol ? flat : sharp;
+  return letterName(letra, naming) + accSymbol(acc);
+}
+
 /** Converte uma altura MIDI em nota grafada, preferindo sustenidos ou bemóis. */
 export function fromMidi(m: number, prefer: 'sharp' | 'flat' = 'sharp'): Note {
   const p = mod(m, 12);
