@@ -2,7 +2,7 @@
 // Os textos vêm de ctx.t (src/i18n): os fixos por chave e os de teoria montados com a gramática de
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
 import {
-  buildChord, buildScale, CHORDS, chordSymbol, clefBottom, fromStep, harmonicField,
+  buildChord, buildScale, CHORDS, chordSymbol, clefBottom, harmonicField,
   majorTonic, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, semisFor, shuffle, transpose,
   type ChordId, type Clef, type Note, type Quality, type ScaleId,
 } from '../theory/core';
@@ -11,6 +11,8 @@ import type { MessageKey } from '../i18n';
 import { CELLS, RHYTHM_PRESETS, randomBars, type CellId } from '../theory/rhythm';
 import { TUNINGS } from '../components/music/Fretboard';
 import type { CatalogItem, ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
+// F2-3: o contexto musical vem da cascata, não de faixas escritas no código
+import { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
 
 type S = Record<string, SettingValue>;
 const arr = (v: SettingValue | undefined, fallback: string[]) => (Array.isArray(v) && v.length ? v : fallback);
@@ -51,8 +53,10 @@ const ROOTS: Note[] = [note(0), note(1, -1), note(1), note(2, -1), note(2), note
 const spellPc = (p: number, oct = 4): Note => ({ ...ROOTS[mod(p, 12)], oct });
 const MODES: ScaleId[] = ['maior', 'dorico', 'frigio', 'lidio', 'mixolidio', 'menor', 'locrio'];
 
-function pickClef(s: S): Clef {
-  return pick(arr(s.claves, ['sol'])) as Clef;
+/** A clave da pergunta: o que o item escolheu, ou a clave global quando ele não escolheu (F2-3). */
+function pickClef(s: S, ctx: Ctx): Clef {
+  const escolhidas = Array.isArray(s.claves) && s.claves.length ? (s.claves as string[]) : [clave(ctx)];
+  return pick(escolhidas) as Clef;
 }
 function stepRange(clef: Clef, ext: SettingValue | undefined): [number, number] {
   const b = clefBottom(clef);
@@ -63,6 +67,29 @@ function randAcc(on: SettingValue | undefined) {
   const r = Math.random();
   return r < 0.5 ? 0 : r < 0.75 ? 1 : -1;
 }
+/** Uma casa do braço cuja nota o material permite (F2-3). Tenta algumas vezes e desiste para a
+ *  primeira que couber — com `diatonico` numa região curta, nem toda corda tem nota da tonalidade. */
+function casaPermitida(tuning: readonly number[], from: number, to: number, ctx: Ctx) {
+  const permitidas = pcsPermitidas(ctx);
+  const faixa = ctx.params.range;
+  const lo = from === 0 ? 0 : from + 1;
+  const todas: { str: number; f: number; m: number }[] = [];
+  const naFaixa: { str: number; f: number; m: number }[] = [];
+  for (let str = 0; str < tuning.length; str++) {
+    for (let f = lo; f <= to; f++) {
+      const m = tuning[str] + f;
+      if (!permitidas.includes(mod(m, 12))) continue;
+      todas.push({ str, f, m });
+      if (m >= faixa.lo && m <= faixa.hi) naFaixa.push({ str, f, m });
+    }
+  }
+  // a região aperta quando dá; quando ela está fora do alcance do instrumento, o braço vence
+  if (naFaixa.length) return pick(naFaixa);
+  if (todas.length) return pick(todas);
+  const str = randInt(0, tuning.length - 1), f = randInt(lo, to);
+  return { str, f, m: tuning[str] + f };
+}
+
 function fretRange(s: S): [number, number] {
   const [a, b] = String(s.casas ?? '0-5').split('-').map(Number);
   return [a, b];
@@ -89,9 +116,8 @@ export const EXERCISES: CatalogItem[] = [
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
     make(s, ctx): Question {
-      const clef = pickClef(s);
-      const [lo, hi] = stepRange(clef, s.extensao);
-      const n = fromStep(randInt(lo, hi), randAcc(s.acidentes));
+      const clef = pickClef(s, ctx);
+      const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
       return {
         prompt: ctx.t('quiz.whatNote'), visual: { kind: 'staff', clef, columns: [[n]] },
         surface: { kind: 'letters', accidentals: !!s.acidentes }, expected: { kind: 'spelled', letter: n.letter, acc: n.acc },
@@ -108,9 +134,8 @@ export const EXERCISES: CatalogItem[] = [
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
     make(s, ctx) {
-      const clef = pickClef(s);
-      const [lo, hi] = stepRange(clef, s.extensao);
-      const n = fromStep(randInt(lo, hi), randAcc(s.acidentes));
+      const clef = pickClef(s, ctx);
+      const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
       return {
         prompt: ctx.t('quiz.writeNote', { note: `${noteName(n, ctx.naming)}${n.oct}` }), visual: { kind: 'text', text: '' },
         surface: { kind: 'staff', clef, accidentals: !!s.acidentes }, expected: { kind: 'spelled', letter: n.letter, acc: n.acc, oct: n.oct },
@@ -136,7 +161,7 @@ export const EXERCISES: CatalogItem[] = [
       const pool = Array.from({ length: 2 * max + 1 }, (_, i) => i - max);
       const opts = optionsWith(f, pool, Math.min(6, pool.length));
       return {
-        prompt: ctx.t(minor ? 'quiz.whichKeyMinor' : 'quiz.whichKeyMajor'), visual: { kind: 'staff', clef: pickClef(s), fifths: f, columns: [] },
+        prompt: ctx.t(minor ? 'quiz.whichKeyMinor' : 'quiz.whichKeyMajor'), visual: { kind: 'staff', clef: pickClef(s, ctx), fifths: f, columns: [] },
         surface: { kind: 'choices', options: opts.map(o => ({ id: String(o), label: label(o) })) }, expected: { kind: 'option', id: String(f) },
         reveal: label(f),
       };
@@ -153,14 +178,14 @@ export const EXERCISES: CatalogItem[] = [
       { id: 'forma', label: ctx.t('settings.form'), type: 'single', options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] }],
     defaults: { claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico' },
     make(s, ctx) {
-      const clef = pickClef(s);
+      const clef = pickClef(s, ctx);
       const ids = arr(s.intervalos, ['M3']);
       const id = pick(ids);
       const iv = INTERVALS.find(i => i.id === id)!;
       const b = clefBottom(clef);
       let lower: Note, upper: Note;
       do {
-        lower = fromStep(randInt(b - 1, b + 9 - (iv.num - 1)), Math.random() < 0.25 ? pick([1, -1]) : 0);
+        lower = notaNaPauta(ctx, [b - 1, b + 9 - (iv.num - 1)], () => (Math.random() < 0.25 ? pick([1, -1]) : 0));
         upper = transpose(lower, { num: iv.num, semis: semisFor(iv.num, iv.q) });
       } while (Math.abs(upper.acc) > 1);
       const columns = s.forma === 'harmonico' ? [[lower, upper]] : [[lower], [upper]];
@@ -183,10 +208,10 @@ export const EXERCISES: CatalogItem[] = [
     defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false },
     presentation: { arp: 0.08 },
     make(s, ctx) {
-      const clef = pickClef(s);
+      const clef = pickClef(s, ctx);
       const types = arr(s.tipos, ['maior']) as ChordId[];
       const type = pick(types);
-      const root = { ...pick(ROOTS), oct: clef === 'sol' ? 4 : 2 };
+      const root = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
       const inv = s.inversoes ? randInt(0, CHORDS[type].degs.length - 1) : 0;
       const notes = buildChord(root, type, inv);
       const sym = chordSymbol(root, type, ctx.conv);
@@ -209,10 +234,10 @@ export const EXERCISES: CatalogItem[] = [
     defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] },
     presentation: { gap: 0.32 },
     make(s, ctx) {
-      const clef = pickClef(s);
+      const clef = pickClef(s, ctx);
       const types = arr(s.tipos, ['maior']) as ScaleId[];
       const type = pick(types);
-      const tonic = { ...pick(ROOTS.filter(r => r.letter <= 4 || r.acc === 0)), oct: clef === 'sol' ? 4 : 2 };
+      const tonic = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
       const notes = [...buildScale(tonic, type), { ...tonic, oct: tonic.oct + 1 }];
       const name = (t: Note, id: ScaleId) => ctx.t('quiz.scaleOf', { note: noteName(t, ctx.naming), scale: ctx.t(`theory.scalesInline.${id}` as MessageKey) });
       const pool = [...types.map(t => name(tonic, t)), ...shuffle(ROOTS).slice(0, 4).map(r => name(r, type))];
@@ -248,9 +273,10 @@ export const EXERCISES: CatalogItem[] = [
     settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }, { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] }],
     defaults: { pretas: true, oitavas: '2' },
     make(s, ctx) {
-      const lo = 48, hi = s.oitavas === '1' ? 59 : 71;
+      const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
+      const permitidas = pcsPermitidas(ctx).filter(p => s.pretas || ![1, 3, 6, 8, 10].includes(p));
       let m: number;
-      do m = randInt(lo, hi); while (!s.pretas && [1, 3, 6, 8, 10].includes(m % 12));
+      do m = randInt(lo, hi); while (!permitidas.includes(m % 12));
       return {
         prompt: ctx.t('quiz.whatKey'), visual: { kind: 'keyboard', lo, hi, marks: [m] },
         surface: { kind: 'choices', options: pcOptions(ctx.naming).filter(o => s.pretas || ![1, 3, 6, 8, 10].includes(Number(o.id))) }, expected: { kind: 'pitchClass', pc: m % 12 },
@@ -266,12 +292,13 @@ export const EXERCISES: CatalogItem[] = [
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }], defaults: { pretas: true },
     make(s, ctx) {
-      let p: number;
-      do p = randInt(0, 11); while (!s.pretas && [1, 3, 6, 8, 10].includes(p));
+      const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+      const p = pick(permitidas);
+      const soa = alturaDoPc(ctx, p, { lo: 48, hi: 71 });
       const n = spellPc(p);
       return {
         prompt: ctx.t('quiz.tapNote', { note: noteName(n, ctx.naming) }), visual: { kind: 'text', text: '' },
-        surface: { kind: 'keyboard', lo: 48, hi: 71 }, expected: { kind: 'pitchClass', pc: p }, sound: { groups: [[60 + p]] }, reveal: noteName(n, ctx.naming),
+        surface: { kind: 'keyboard', lo: 48, hi: 71 }, expected: { kind: 'pitchClass', pc: p }, sound: { groups: [[soa]] }, reveal: noteName(n, ctx.naming),
       };
     },
   },
@@ -286,7 +313,9 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx) {
       const types = arr(s.tipos, ['maior']) as ChordId[];
       const type = pick(types);
-      const root = { ...pick(ROOTS), oct: 4 };
+      const pcRaiz = pcPermitido(ctx);
+      const base = alturaDoPc(ctx, pcRaiz, { lo: 48, hi: 72 });
+      const root = { ...ROOTS[mod(pcRaiz, 12)], oct: Math.floor(base / 12) - 1 };
       const notes = buildChord(root, type).map(midi).map(m => (m > 76 ? m - 12 : m));
       const sym = chordSymbol(root, type, ctx.conv);
       const pool = [...types.map(t => chordSymbol(root, t, ctx.conv)), ...shuffle(ROOTS).slice(0, 6).map(r => chordSymbol(r, type, ctx.conv))];
@@ -308,9 +337,7 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
       const [from, to] = fretRange(s);
-      const str = randInt(0, tuning.length - 1);
-      const f = randInt(from === 0 ? 0 : from + 1, to);
-      const m = tuning[str] + f;
+      const { str, f, m } = casaPermitida(tuning, from, to, ctx);
       return {
         prompt: ctx.t('quiz.whatNote'), visual: { kind: 'fretboard', tuning, from, to, marks: [{ s: str, f }] },
         surface: { kind: 'choices', options: pcOptions(ctx.naming) }, expected: { kind: 'pitchClass', pc: m % 12 },
@@ -328,9 +355,7 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
       const [from, to] = fretRange(s);
-      const str = randInt(0, tuning.length - 1);
-      const f = randInt(from === 0 ? 0 : from + 1, to);
-      const m = tuning[str] + f;
+      const { str, f, m } = casaPermitida(tuning, from, to, ctx);
       const open = pcName(tuning[str], ctx.naming, false);
       // no violão as duas cordas Mi se distinguem por grave e aguda
       const string = tuning.length === 6 && str === 0 ? ctx.t('quiz.lowString', { note: open }) : tuning.length === 6 && str === 5 ? ctx.t('quiz.highString', { note: open }) : open;
@@ -350,14 +375,25 @@ export const EXERCISES: CatalogItem[] = [
     settings: ctx => [INST(ctx)], defaults: { instrumento: 'auto' },
     make(s, ctx) {
       const tuning = tuningOf(s, ctx);
-      const s1 = randInt(0, tuning.length - 2);
-      const f1 = randInt(1, 6);
-      let s2: number, f2: number, d: number;
-      do {
-        s2 = Math.min(tuning.length - 1, s1 + randInt(0, 2));
-        f2 = Math.max(0, f1 + randInt(-2, 4));
-        d = tuning[s2] + f2 - (tuning[s1] + f1);
-      } while (d < 1 || d > 12);
+      // Enumera os pares tocáveis dentro da região em vez de passear no aleatório. Além de ler a
+      // cascata (F2-3), conserta a distribuição descontrolada que o passeio produzia — alguns
+      // intervalos apareciam muito mais que outros, sem a pessoa poder escolher.
+      const faixa = regiao(ctx, { lo: tuning[0], hi: tuning[tuning.length - 1] + 9 });
+      const pares: { s1: number; f1: number; s2: number; f2: number; d: number }[] = [];
+      for (let a = 0; a < tuning.length - 1; a++) {
+        for (let fa = 1; fa <= 6; fa++) {
+          const ma = tuning[a] + fa;
+          if (ma < faixa.lo || ma > faixa.hi) continue;
+          for (let b = a; b < Math.min(tuning.length, a + 3); b++) {
+            for (let fb = Math.max(0, fa - 2); fb <= fa + 4; fb++) {
+              const d0 = tuning[b] + fb - ma;
+              if (d0 >= 1 && d0 <= 12) pares.push({ s1: a, f1: fa, s2: b, f2: fb, d: d0 });
+            }
+          }
+        }
+      }
+      const par = pares.length ? pick(pares) : { s1: 0, f1: 1, s2: 1, f2: 1, d: tuning[1] + 1 - (tuning[0] + 1) };
+      const { s1, f1, s2, f2, d } = par;
       const lo = tuning[s1] + f1;
       return {
         prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: s1, f: f1, label: '1' }, { s: s2, f: f2, color: 'var(--ve)' }] },
@@ -391,9 +427,9 @@ export const EXERCISES: CatalogItem[] = [
     defaults: { referencia: true, pretas: false },
     presentation: { gap: 0.9 },
     make(s, ctx): Question {
-      let p: number;
-      do p = randInt(0, 11); while (!s.pretas && [1, 3, 6, 8, 10].includes(p));
-      const m = 60 + p;
+      const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+      const p = pick(permitidas);
+      const m = alturaDoPc(ctx, p, { lo: 48, hi: 83 });
       return {
         prompt: s.referencia ? ctx.t('quiz.earNoteRef', { note: noteName(note(0), ctx.naming) }) : ctx.t('quiz.earNote'), visual: { kind: 'ear' },
         surface: { kind: 'keyboard', lo: 60, hi: 71 }, expected: { kind: 'pitchClass', pc: p },
@@ -414,7 +450,7 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx) {
       const ids = arr(s.intervalos, ['4', '7']);
       const d = Number(pick(ids));
-      const base = randInt(52, 67);
+      const base = alturaNaRegiao(ctx, { lo: 52, hi: 67 });
       const dir = s.direcao === 'misto' ? pick(['sobe', 'desce', 'juntas']) : s.direcao;
       const groups = dir === 'juntas' ? [[base, base + d]] : dir === 'desce' ? [[base + d], [base]] : [[base], [base + d]];
       return {
@@ -438,7 +474,7 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx): Question {
       const types = arr(s.tipos, ['maior', 'menor']) as ChordId[];
       const type = pick(types);
-      const root = randInt(53, 64);
+      const root = tonicaNaRegiao(ctx, { lo: 53, hi: 64 });
       const ms = CHORDS[type].degs.map(([, semi]) => root + semi);
       return {
         prompt: ctx.t('quiz.earChord'), visual: { kind: 'ear' },
@@ -459,7 +495,7 @@ export const EXERCISES: CatalogItem[] = [
     make(s, ctx) {
       const types = arr(s.tipos, ['maior', 'menor']) as ScaleId[];
       const type = pick(types);
-      const tonic = randInt(55, 62);
+      const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });
       const ms = [...SCALES[type].degs.map(([, semi]) => tonic + semi), tonic + 12];
       return {
         prompt: ctx.t('quiz.whatScale'), visual: { kind: 'ear' },
@@ -492,7 +528,7 @@ export const EXERCISES: CatalogItem[] = [
       const key = (x: number[]) => x.map(i => degs[i]).join(' ');
       const others = new Set<string>();
       while (others.size < 3) { const o = key(cell()); if (o !== key(c)) others.add(o); }
-      const tonic = randInt(57, 64);
+      const tonic = tonicaNaRegiao(ctx, { lo: 57, hi: 64 });
       const triad = minor ? [tonic, tonic + 3, tonic + 7] : [tonic, tonic + 4, tonic + 7];
       return {
         prompt: ctx.t('quiz.cells'), visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint') },

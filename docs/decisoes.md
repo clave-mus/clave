@@ -710,6 +710,59 @@ exercício novo. Tarefa `F2-3`.
 
 ---
 
+### 58 · "Ouvir e identificar" é um item por objeto, com a superfície de resposta como parâmetro
+
+Os dois documentos duplicavam o bloco inteiro: o `Clave.md` tem a versão respondida **na tela**, o
+rascunho tem a mesma coisa respondida **no instrumento**. São cinco pares, e cada par é **um item**
+(regra 52: mesmo objeto, mesma tarefa, varia só a superfície).
+
+| Vira | A partir de |
+|---|---|
+| Intervalo de ouvido | Identificação de intervalos · Encontrar intervalos ouvidos |
+| Grau de ouvido | Identificar graus · Encontrar graus ouvidos |
+| Acorde de ouvido | Identificar acordes de ouvido · Tocar acordes de ouvido |
+| Melodia de ouvido | Reconhecimento de frases · Reprodução no instrumento virtual · Tocar melodias de ouvido |
+| Linha de baixo de ouvido | Tirar linhas de baixo de ouvido |
+
+Superfícies: **alternativas na tela · braço virtual · teclado virtual · o instrumento de verdade**.
+A validação segue a superfície: na tela é determinística, no instrumento é autoavaliação (ou
+microfone, se a pessoa ligou).
+
+**E o contexto escolhe a superfície sozinho.** Esta é a parte de UX, e ela não é opcional: quando a
+pessoa diz que está **sem o instrumento**, estes itens assumem a superfície de tela; quando diz que
+está **com o instrumento**, assumem o instrumento. Ela pode trocar, mas **nunca precisa** trocar
+para o exercício fazer sentido.
+
+Na prática: **o contexto da home vira uma camada de parâmetros** (`origin: 'agora'`), ao lado de
+perfil, rotina e etapa. É a cascata da decisão 7 fazendo o trabalho — não é um caso especial.
+
+**Motivo:** sem isso, a pessoa no ônibus abriria "intervalo de ouvido" e encontraria um exercício
+pedindo que ela toque no baixo. O item seria o certo e a experiência, errada.
+
+### 59 · Os itens que dependem de áudio gravado saem do beta
+
+Oito itens não são tocáveis com a síntese do `audio/engine.ts` — precisam de **material gravado**,
+produzido ou licenciado. E o documento de visão fecha a porta mais fácil: *música de IA está fora*,
+em qualquer forma.
+
+Saem do beta e ficam no corpus, marcados **"depende de áudio"**: transcrever trechos · imitar
+fraseado · acompanhar por estilo · manter um groove · reconhecimento de forma · identificação de
+timbre · percepção de dinâmica e articulação.
+
+**Duas exceções, e os motivos são diferentes:**
+
+- **Responder frases** fica, porque é o único do grupo cujo material pode ser **sintetizado**: o app
+  toca uma frase gerada e a pessoa responde tocando. Depende do gerador melódico da `F5-3`, não de
+  microfone nem de gravação.
+- **Tocar frases de vocabulário** fica **em aberto**: gravar licks de guitarra é viável e o time
+  tem guitarristas. É trabalho de músico, não de código, e pode ser divertido. Não entra no beta
+  como compromisso, mas também não é descartado.
+
+**Pesquisa de estilo fica parada**, para conversa do grupo. Acompanhamento de música erudita é um
+candidato natural para o Bernardo Garcia, se ele quiser — mas é decisão dele e de outra rodada.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa

@@ -102,7 +102,7 @@ abre o menu inteiro, com algumas opções pré-marcadas.
 
 ---
 
-## F2-3 · Ligar o catálogo na cascata
+## F2-3 · Ligar o catálogo na cascata ⚠️ *motor feito em 03/11/2026; faltam os controles na tela*
 
 **Decisão de origem:** 57. **Depende de:** F2-1. **Bloqueia:** F3-8 fazer sentido.
 
@@ -142,3 +142,28 @@ uma rotina em rotação por tonalidade muda a tonalidade de todas as etapas dela
 
 **Não faça:** não engesse. Tonalidade livre (`key: null`) é o padrão e precisa continuar sendo —
 quem não escolheu tonalidade quer variedade, não Dó maior em tudo.
+
+**Feito (a parte do catálogo).** `src/catalog/contexto-musical.ts` com `pcsPermitidas`,
+`alturaNaRegiao`, `alturaDoPc`, `tonicaNaRegiao`, `notaNaPauta`, `clave` e `regiao`; 15 testes em
+`contexto-musical.test.ts`. Os 20 exercícios passaram a ler a cascata.
+
+**Três coisas que o teste de contrato encontrou, e que mudaram o desenho:**
+
+1. **Um bug real:** encaixar uma classe de altura na oitava com `m - m%12 + pc` **pode cair abaixo
+   do piso pedido**. Entrou `alturaDoPc`, que escolhe entre as oitavas que cabem.
+2. **`material: diatonico` não significa "toda nota está na tonalidade".** Ele restringe a *escolha
+   livre de nota*; não mexe no conteúdo declarado. Se a pergunta é "que escala é esta?" e a resposta
+   é menor harmônica, as notas dela saem da tonalidade **por definição**, e está certo.
+   *Material filtra o que o app sorteia, não o que o app pergunta.*
+3. **A região não se aplica a todo item, e isso é legítimo.** Nos itens de **pauta** a oitava vem da
+   clave — senão a leitura deixa de ser legível naquela clave. Em `acorde-visual` as formas são
+   posições reais do braço: um Dó aberto é onde ele é. Nesses, o que a cascata governa é o
+   **material** (qual fundamental), não a altura. A lista de isenção está no teste, com o motivo.
+
+**De quebra:** `braco-intervalo` passou a **enumerar os pares tocáveis** em vez de passear no
+aleatório. Além de ler a cascata, isso conserta a distribuição descontrolada que eu tinha
+apontado na revisão — alguns intervalos apareciam muito mais que outros.
+
+**O que falta:** os **controles na tela**. Tonalidade, região, material e clave ainda não têm
+seletor no Perfil. O motor já responde a eles; falta a pessoa poder escolher. É o que resta da
+`F2-3`, e é tela, não motor.
