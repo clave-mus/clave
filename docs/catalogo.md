@@ -347,6 +347,7 @@ uma. **Fonte:** `V` = documento de visão (sem instrumento) · `R` = rascunho (c
 | Reprodução de ritmos · polirritmia | tocar | tarefa-metrônomo | V |
 | Tocar em tempo | tocar | tarefa-metrônomo | V+R |
 | Vocalizar ritmo | cantar | tarefa-metrônomo | matriz |
+| Deslocamento de padrão *(T8 — um tempo, família e modos)* | tocar | tarefa-metrônomo | 83 |
 | ~~Manter um groove~~ | tocar | — | [guardado](guardados.md) |
 
 > **Funde** (decisão 61): *Leitura rítmica* e *Ler e tocar ritmos* são a mesma tarefa — bater palma
@@ -408,14 +409,27 @@ saiu foram os itens.
 
 ### Controle motor
 
+Sete famílias (decisão 81). Antes eram duas, e **as duas eram o mesmo recipiente** — "faça um
+padrão com o metrônomo", sem conteúdo nenhum.
+
 | Família | Tarefa | Motor | Fonte |
 |---|---|---|---|
-| Executar padrão técnico com metrônomo | tocar | tarefa-metrônomo | R |
+| Permutações de dedos *(T1 — 24 ordenações; "independência dos dedos" é preset dela)* | tocar | tarefa-metrônomo | 81 |
+| Sequência de cordas *(T2)* | tocar | visualizador | 81 |
+| Deslocamento de acento *(T3)* | tocar | tarefa-metrônomo | 81 |
+| Subdivisão alternada *(T4 — a única que não se faz sozinho)* | tocar | tarefa-metrônomo | 81 |
+| Troca de posição *(T5)* | tocar | digitações | 81 |
+| Sustentar e cortar *(T6)* | tocar | tarefa-metrônomo | 81 |
+| Legato e staccato alternados *(T7)* | tocar | tarefa-metrônomo | 81 |
 | Sincronizar as duas mãos | tocar | tarefa-metrônomo | R |
 
-> **Funde:** *Independência dos dedos · alternar a palhetada · tocar ligados · controlar a duração*
-> são **uma** família com biblioteca de padrões. O rascunho admite que o áudio não confere nenhuma
-> delas, e é exatamente o caso dos exercícios simples que valem muito e custam pouco.
+> **O critério:** em técnica, a contribuição do app é **escolher o que a pessoa não escolheria** —
+> não validar. Sozinha ela toca 1-2-3-4 e 4-3-2-1 e nunca 2-4-1-3.
+
+> **Não são itens:** *aquecimento* é **rotina** (sequência de passos com tempo — o modelo já faz, sem
+> código novo) e *checagem de tensão* é **nota num passo de rotina**, não exercício.
+
+> **E o andamento nunca é comemorado** (decisão 82): é configuração neutra, nunca recorde.
 
 ⚠️ = validação duvidosa ou dependência externa (gravações licenciadas, pesquisa de estilo).
 

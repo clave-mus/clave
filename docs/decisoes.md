@@ -1157,6 +1157,124 @@ nada.
 
 ---
 
+### 81 · A área de técnica vai de 2 famílias para 7, e o critério é o gerador
+
+Antes desta decisão, "técnica" eram **duas famílias** — *Executar padrão técnico com metrônomo* e
+*Sincronizar as duas mãos* — e **as duas eram o mesmo recipiente**: "faça um padrão com o
+metrônomo". Não havia conteúdo. Era por isso que a linha da porta saía fraca: não havia o que
+descrever.
+
+**O princípio que seleciona o que vale:**
+
+> **Em técnica, a contribuição do app é escolher o que você não escolheria.**
+
+Não é validar — a decisão 36 já resolveu isso. É que o ponto inteiro do treino técnico é que **a
+pessoa tem padrões de conforto e volta sempre a eles.** Sozinha ela toca 1-2-3-4 e 4-3-2-1, e nunca
+2-4-1-3. É a mesma lógica já escrita no guia de digitações: *para internalizar o braço, a digitação
+mais confortável é a errada.*
+
+**Cinco com gerador:**
+
+| | Item | O que o app faz |
+|---|---|---|
+| T1 | **Permutações de dedos** | sorteia uma das **24 ordenações** de 1-2-3-4; a permutação é parâmetro rotacionável (decisão 38) |
+| T2 | **Sequência de cordas** | nomeia uma ordem de cordas (`4 2 3 1`) e a pessoa atravessa nessa ordem |
+| T3 | **Deslocamento de acento** | mesma figura rítmica, o **acento** muda de lugar a cada rodada |
+| T4 | **Subdivisão alternada** | o clique fica no mesmo andamento e **a subdivisão muda** a cada N compassos, avisada um compasso antes |
+| T5 | **Troca de posição** | nomeia duas posições e **com que dedo** deslizar entre elas |
+
+**A T4 é a única que a pessoa não consegue fazer sozinha** — não há como mudar a própria programação
+de subdivisão enquanto toca. Se fosse uma só, seria ela.
+
+**Duas de instrução e clique, e isso é legítimo:**
+
+| | Item | Por que vale |
+|---|---|---|
+| T6 | **Sustentar e cortar** | manter a nota N tempos exatos e **cortar no tempo**. Quase ninguém treina *parar* uma nota na hora, e no baixo isso é metade do que faz uma linha soar firme |
+| T7 | **Legato e staccato alternados** | mesma passagem, e **o app decide quando trocar**. O gerador é o momento da troca |
+
+**Duas coisas que pareciam itens e não são:**
+
+- **"Independência dos dedos" é a T1 sem o gerador** — tocar 1-2-3-4 em ordens diferentes *é* o
+  drill de permutações. Virou **preset da T1**, com a ordem fixa em vez de sorteada.
+- **"Aquecimento" é rotina, não item.** Uma sequência de passos nomeados com tempo por passo é
+  exatamente o que o modelo de rotina faz, e **não precisa de código nenhum**: é preset de rotina do
+  time. Vale como prova de que o modelo está certo.
+
+**Fora: checagem de tensão.** Lesão por esforço é real em estudo de música e ninguém trata disso,
+mas **não é exercício** — não há nada a fazer além de notar. Cabe como **nota num passo de rotina**;
+como item pareceria enchimento de app de bem-estar.
+
+---
+
+### 82 · Em técnica, o andamento nunca é comemorado
+
+Todos os sete itens da decisão 81 têm andamento, e a área é a mais tentada a transformá-lo em
+placar. A regra, que estava dita em conversa e não estava escrita:
+
+**O andamento é configuração, mostrada de forma neutra.** O app **nunca comemora um andamento
+maior**, nunca o registra como recorde, e nunca o apresenta como progressão ou carga. O histórico
+guarda qual andamento foi praticado do mesmo jeito que guarda qual tonalidade: **informação, não
+pontuação.**
+
+**Motivo:** aumentar o andamento demais frequentemente é prejudicial, e para muita coisa o melhor é
+fazer bem devagar. Um app que celebra bpm ensina a pessoa a praticar errado. É a decisão 11
+aplicada ao único número que o estudo técnico produz naturalmente.
+
+---
+
+### 83 · Deslocamento de padrão rítmico: um tempo, família e modos
+
+Item novo (`T8`), e a estrutura dele vem de três decisões encadeadas.
+
+**O padrão cabe em um tempo.** E essa restrição resolve mais do que parece: quando o padrão
+**preenche o ciclo exatamente**, *deslocar* (andar para a direita mantendo a forma) e *rodar*
+(tratar como ciclo, o que cai fora do fim volta pelo começo) passam a ser **a mesma operação** — nada
+cai fora, porque o fim é o começo. E o **tempo passa a ser o único ciclo que significa algo**: um
+padrão de um tempo repetido já é igual em todo tempo, então deslocá-lo dentro do compasso não produz
+nada novo.
+
+**O território é finito, e isso é o melhor da ideia.** Contando rotações do mesmo padrão como a mesma
+família:
+
+| Subdivisão | Posições | Padrões tocáveis | Famílias |
+|---|---|---|---|
+| colcheias | 2 | 3 | **2** |
+| tercinas | 3 | 7 | **3** |
+| semicolcheias | 4 | 15 | **5** |
+
+As cinco de semicolcheia, por inteiro — não há uma sexta:
+
+| Família | Padrão | Modos |
+|---|---|---|
+| um ataque | `x . . .` | 4 |
+| dois juntos | `x x . .` | 4 |
+| **dois alternados** | `x . x .` | **2** |
+| três ataques | `x x x .` | 4 |
+| tudo | `x x x x` | 1 |
+
+**A família é o que se escolhe; os modos são o que se percorre.** O deslocamento é parâmetro
+rotacionável (decisão 38), com avanço manual e mostrando por quais já se passou. Isso espelha a
+música — é literalmente *escolher a escala e percorrer os modos* — e reaproveita inteira a máquina da
+`T1`. A alternativa, 15 padrões numa lista plana, esconde a estrutura que torna o exercício
+inteligível.
+
+**A exigência de correção, e ela é obrigatória:** **padrão simétrico tem menos modos do que o ciclo
+tem posições.** `x . x .` rodado duas vezes volta a ser ele mesmo: **2 modos, não 4.** Se o app
+oferecer quatro, faz a mesma pergunta duas vezes — é o erro das duas melódicas (decisão 70) na menor
+escala em que ele pode existir. O item **conta os modos distintos**, não assume que são o tamanho do
+ciclo. E aqui isso é verificável por **enumeração exaustiva**: o espaço inteiro tem 15 padrões.
+
+**O custo aceito:** saem os padrões que **atravessam o tempo** — a versão mais difícil e, na
+pedagogia de jazz e funk, a mais usada. Atravessar o tempo vira **item separado depois**, se der
+saudade, e não parâmetro deste: como parâmetro, voltariam as duas operações e o ciclo ambíguo.
+
+**Não confundir com a T3**, e o teste é simples: na T3 a pessoa toca **as mesmas notas nos mesmos
+momentos** e muda só a ênfase; na T8 ela toca **em momentos diferentes.** Se os instantes de ataque
+mudam, é a T8.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
