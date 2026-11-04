@@ -46,6 +46,26 @@ E **tire a linha do item deste arquivo**. O teste exige data no formato `AAAA-MM
 | `permutacoes` | **T1** · permutações de dedos | se tocar a ordem na casa 5 (o dedo *f* em `4 + f`) é uma boa postura para o exercício |
 | `cordas` | **T2** · ordem das cordas | a convenção (corda 1 = mais aguda **do grupo**) e o que tocar em cada corda: hoje uma nota na casa 5, duas voltas. **Sempre quatro cordas vizinhas** (24 ordens), com seletor de grupo na guitarra — ver a decisão 94 e se quatro vizinhas bastam |
 
+### Rotinas do time (F3-6)
+
+**Escritas por IA, a pedido do Paulo.** Cinco rotinas prontas para usar, em `src/routines/doTime.ts`.
+São **proposta**: a sequência de etapas de uma rotina do time é conteúdo musical, e isso é decisão de
+produto (decisão 51). Enquanto estão em rascunho, **ninguém as vê** fora do modo de revisão.
+
+Cada etapa carrega um campo `porque` que não aparece na tela: é o argumento de ter escolhido aquele
+exercício ali, para a revisão não ter de reconstruir o raciocínio.
+
+| Id | Modo | Etapas | O que só você confere |
+|---|---|---|---|
+| `de-bolso` | livre, embaralhada | 5 | se as cinco são de fato as que valem sem instrumento, e se embaralhar é melhor que ordem fixa |
+| `internalizar-tonalidade` | guiada, 30 min, rotação por tonalidade | 5 | **a ordem das cinco frentes** (som → braço na casa → braço acima → acordes → tocar), e se 12 tonalidades em quartas é o ciclo certo |
+| `mapear-braco` | guiada, 20 min | 3 | se reconhecer antes de achar é a ordem certa, e se as três regiões do rodízio são as três que importam |
+| `aquecimento-ouvido` | guiada, 12 min | 3 | a duração: 12 min é aposta de "abre a sessão, não é a sessão" |
+| `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar — é a aposta pedagógica da rotina |
+
+**Publicar** é trocar `publicacao: RASCUNHO` por `{ estado: 'publicado', revisadoEm: '…', por: 'Paulo' }`
+na rotina, em `src/routines/doTime.ts`, e tirar a linha desta tabela.
+
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
 | Id | Família | O que só você confere |
@@ -79,6 +99,8 @@ Já estão no app como `legado`, mas as mudanças recentes pedem o seu olho:
 ## O que ainda NÃO foi feito, e não é revisão
 
 - A **tabela de piano** (`FM-6`) tem 3 linhas em branco que só um pianista preenche.
-- A **biblioteca de padrões rítmicos** (`F6-11`) não existe, e exige fonte citada (decisão 85).
+- A **biblioteca de padrões rítmicos** (`F6-11`) tem os doze candidatos e as fontes levantadas em
+  [padroes-ritmicos.md](padroes-ritmicos.md), **sem nenhuma notação nova escrita** — falta o
+  **revisor de tradição** (decisão 85, regra 2), que é pessoa, não documento. Nada dali entra no app.
 - As **22 gravações** (`A0`) e as digitações de baixo (`FM-2`).
 - Os **26 itens `legado`** esperam a revisão da `F6-7` para virarem `publicado`.

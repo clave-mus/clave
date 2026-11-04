@@ -55,6 +55,32 @@ const en: Shape<typeof pt> = {
     deleteRoutine: 'Delete routine',
     deleteConfirm: 'Delete "{name}"? This cannot be undone.',
     cancel: 'Keep it',  },
+  doTime: {
+    title: 'Routines from us',
+    sub: 'Ready to use. Adopting one makes your own copy — change it however you like.',
+    adopt: 'Adopt',
+    adopted: 'Adopted: it is yours now',
+    bolso: {
+      nome: 'Pocket-sized',
+      sobre: 'For the bus, the queue, the break: five things that need no instrument. Any order, no timer.',
+    },
+    tonalidade: {
+      nome: 'Settle into a key',
+      sobre: 'One key a week, crossed five different ways. You move to the next one when you want to.',
+    },
+    braco: {
+      nome: 'Map the fretboard',
+      sobre: 'Name it, find it, measure it. The middle step changes region each time.',
+    },
+    ouvido: {
+      nome: 'Ear warm-up',
+      sobre: 'Twelve minutes before you practise: interval, chord, scale. Short on purpose.',
+    },
+    leitura: {
+      nome: 'Daily reading',
+      sobre: 'Pitch and rhythm apart first, together after. Fifteen minutes.',
+    },
+  },
   review: {
     banner: 'Review mode: you are seeing drafts that nobody else sees.',
     exit: 'Exit',

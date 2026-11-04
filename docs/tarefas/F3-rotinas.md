@@ -199,6 +199,38 @@ o preset do braço em outra tonalidade.
 **👤 O conteúdo musical destas rotinas é curadoria do Paulo** (baixo) — a tarefa de código é a
 estrutura e o carregamento.
 
+**Feito a estrutura; o conteúdo entrou como RASCUNHO, 03/11/2026.** `src/routines/doTime.ts` com as
+cinco rotinas e 21 testes em `doTime.test.ts`; a seção "Rotinas do time" na Praticar, com adoção que
+cria cópia (`copiarRotina`). **As cinco são rascunho** (decisão 91): o Paulo pediu que a IA
+escrevesse a proposta, e proposta não aparece para quem usa até ele revisar. Estão listadas em
+[revisao-pendente.md](../revisao-pendente.md).
+
+Cada etapa carrega um campo `porque` que **não aparece na tela**: é o argumento de ter escolhido
+aquele exercício ali, para a revisão não ter de reconstruir o raciocínio.
+
+**O que os testes travam**, porque conteúdo escrito à mão apodrece em silêncio — um item renomeado e
+a rotina aponta para o nada sem o app reclamar: todo `itemId` existe; toda chave de `settings` existe
+no item; todo valor de lista é uma opção que existe; `multi` recebe lista e `single` não; nenhuma
+etapa pede microfone ou MIDI; todo `params` declarado está no `respeita` do item (é a lição da
+decisão 101: `material: diatonico` num item que não lê `material` é configuração que não faz nada);
+e **toda etapa da rotina em rotação respeita `key`** — sem isso a rotina avança para Sol e os
+exercícios continuam sorteando a tônica, que foi o bug que a F2-3 existiu para corrigir.
+
+**Três lugares onde a proposta se afastou do texto desta tarefa.** Nenhum é escolha de implementação,
+e por isso ficam escritos aqui em vez de resolvidos:
+
+1. **"Mapear o braço do baixo" ficou "Mapear o braço"**, sem o instrumento no nome, porque os itens
+   `braco-*` já funcionam com `instrumento: auto` e a decisão 62 diz que o app não se restringe
+   rigidamente a três instrumentos. **Nome de coisa que a pessoa vê é decisão do Paulo** — se ele
+   quiser "do baixo", é uma linha. O mesmo vale para "Aquecimento de percepção", que ficou
+   "Aquecimento de ouvido".
+2. **As três durações do braço (curta, padrão, completa) ficaram uma rotina só**, com a etapa do meio
+   em rodízio de região. Três rotinas quase iguais na mesma lista é o tipo de coisa que a decisão 15
+   evita no catálogo, mas aqui são rotinas, não itens — e a chamada é dele.
+3. **"Internalizar uma tonalidade" tem cinco etapas, não seis.** Caíram "modos" e "vocabulário
+   melódico": o primeiro é `ouvido-escala` com outra configuração, e o segundo **não tem item no
+   catálogo** (é o que está em [guardados.md](../guardados.md) como "tocar frases de vocabulário").
+
 ---
 
 ## F3-7 · Compartilhar por link

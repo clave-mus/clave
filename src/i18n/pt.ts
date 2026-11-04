@@ -55,6 +55,32 @@ const pt = {
     deleteRoutine: 'Apagar rotina',
     deleteConfirm: 'Apagar "{name}"? Não dá para desfazer.',
     cancel: 'Manter',  },
+  doTime: {
+    title: 'Rotinas do time',
+    sub: 'Prontas para usar. Adotar faz uma cópia sua — a sua cópia você muda à vontade.',
+    adopt: 'Adotar',
+    adopted: 'Adotada: agora é sua',
+    bolso: {
+      nome: 'De bolso',
+      sobre: 'Para o ônibus, a fila, o intervalo: cinco coisas que não pedem instrumento. Qualquer ordem, nenhum cronômetro.',
+    },
+    tonalidade: {
+      nome: 'Internalizar uma tonalidade',
+      sobre: 'Uma tonalidade por semana, atravessada de cinco jeitos. Você passa para a próxima quando quiser.',
+    },
+    braco: {
+      nome: 'Mapear o braço',
+      sobre: 'Reconhecer, achar e medir distâncias no braço. A etapa do meio muda de região a cada vez.',
+    },
+    ouvido: {
+      nome: 'Aquecimento de ouvido',
+      sobre: 'Doze minutos antes de estudar: intervalo, acorde, escala. Curta de propósito.',
+    },
+    leitura: {
+      nome: 'Leitura diária',
+      sobre: 'Altura e ritmo separados primeiro, juntos depois. Quinze minutos.',
+    },
+  },
   review: {
     banner: 'Modo de revisão: você está vendo rascunhos, que ninguém mais vê.',
     exit: 'Sair',

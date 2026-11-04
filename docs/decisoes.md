@@ -1140,8 +1140,25 @@ A segunda: **a última linha é a única que faz uma promessa em vez de descreve
 *"dá para mudar tudo depois"*. Está ali de propósito: é o antídoto da rigidez, e é o que faz alguém
 topar responder três perguntas em vez de fechar a tela.
 
-**Falta a versão em inglês**, e ela não é tradução literal — "sem travar" e "sem procurar" não
-atravessam. É tarefa da `D2`.
+**A versão em inglês** (resolve `A4b`), escrita em 03/11. Não é tradução literal: "sem travar" e "sem
+procurar" não atravessam, e o que importa é a linha fazer em inglês o que faz em português — descrever
+o conteúdo sem dizer nada sobre quem a pessoa é.
+
+| Porta | Linha de apoio |
+|---|---|
+| **Master the notes on your instrument** 🚩 | Know where every note is, without hunting for it. |
+| **Improve your ear** | Recognise what you hear — intervals, chords, scales, degrees. |
+| **Follow and understand harmony** | Diatonic chords, chord symbols and voice leading: what holds the music up. |
+| **Learn music theory** | The names and the reasons behind what you already play. |
+| **Learn to read sheet music** | From the written note to the sound, without stalling. |
+| **Improve rhythm and groove** | Subdivision, rhythm reading, and playing in time. |
+| **Improve technique and precision** | Coordination, finger independence, and control of your sound. |
+| **Improvise and solo** | What prepares improvisation: scales, arpeggios, target notes, and vocabulary. |
+| **I don't know where to start** | Three questions and a suggested routine. You can change all of it later. |
+
+⚠️ **As oito portas ainda NÃO existem no código.** As metas de hoje (`content.pt.ts`) são as sete
+antigas — *Improvisar com fluidez, Criar progressões bonitas, Tirar músicas de ouvido…* —, de antes da
+decisão 20. Trocá-las é a `D2`, e estes textos esperam lá.
 
 ---
 
@@ -1923,7 +1940,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 
 | # | Questão | Quem decide | Bloqueia |
 |---|---|---|---|
-| A4b | **A versão em inglês** das 9 linhas das portas — não é tradução literal ("sem travar", "sem procurar" não atravessam). Os textos em português estão fechados na decisão 79 | Paulo | `D2` |
 | A5 | **Calibração do diagnóstico** — qual configuração corresponde a qual ponto de partida | time, corrigido no beta | `D4` |
 | A6 | **Limiar da variação automática** — quantos acertos, em quantas sessões | time, calibrado no beta | nada: é uma constante num arquivo |
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |

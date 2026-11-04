@@ -18,9 +18,10 @@ import { resumoDaEtapa } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
 import { resolverInstancia } from '../routines/ciclagem';
 import { removerEtapa } from '../routines/edicao';
-import type { Etapa, Rotina } from '../routines/types';
+import { tempoTotal, type Etapa, type Rotina } from '../routines/types';
 import { useRotinas } from '../routines/hooks';
-import { apagarRotina, gravarRotinas, novaRotina } from '../routines/storage';
+import { apagarRotina, copiarRotina, gravarRotinas, novaRotina } from '../routines/storage';
+import { ROTINAS_DO_TIME, rotinasDoTime } from '../routines/doTime';
 import { Btn, Chip, SecTitle } from '../components/ui';
 import { useLocale, useNaming, useT } from '../i18n';
 
@@ -59,6 +60,16 @@ export default function Praticar() {
     navigate(`/rotina/${nova.id}`);
   };
 
+  /**
+   * Adotar uma rotina do time **cria uma cópia da pessoa** (decisão 9): é a cópia que evolui, e a
+   * original nunca muda. Depois de adotar, abre o editor — adotar é o começo de personalizar.
+   */
+  const adotar = (r: Rotina) => {
+    const minha = copiarRotina(r, 'time');
+    gravarRotinas([...rotinas, minha]);
+    navigate(`/rotina/${minha.id}`);
+  };
+
   const hour = new Date().getHours();
   const hello = hour < 12 ? 'home.helloMorning' : hour < 19 ? 'home.helloAfternoon' : 'home.helloEvening';
 
@@ -67,6 +78,9 @@ export default function Praticar() {
   // Rascunho some da rotina de quem não está em modo de revisão (decisão 91) — e some ANTES do filtro
   // de contexto, para não ser contado como "escondido porque pede o instrumento", que não é verdade.
   const revisao = useRevisao();
+  // As rotinas do time passam pelo MESMO portão dos itens (decisão 91): as cinco são rascunho até o
+  // Paulo revisá-las, e rascunho não aparece para quem usa.
+  const doTime = rotinasDoTime(t).filter((_, n) => visivel(ROTINAS_DO_TIME[n].publicacao, revisao));
   const publicada = (itemId: string) => { const it = itemById[itemId]; return !!it && visivel(it.publicacao, revisao); };
   const etapasDe = (r: (typeof rotinas)[number]) => r.etapas.filter(e => publicada(e.instancias[0].itemId));
   const cabe = (itemId: string) => publicada(itemId) && (withInst || itemById[itemId]!.mobile);
@@ -174,6 +188,34 @@ export default function Praticar() {
               <Btn to="/catalogo">{t('home.openCatalog')}</Btn>
               <Btn tone="ghost" onClick={criarVazia}>{t('routines.create')}</Btn>
             </div>
+          </div>
+        </section>
+      )}
+
+      {doTime.length > 0 && (
+        <section className="sec">
+          <SecTitle>{t('doTime.title')}</SecTitle>
+          <p className="muted" style={{ margin: '0 var(--gutter) 12px' }}>{t('doTime.sub')}</p>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {doTime.map(r => {
+              const total = tempoTotal(r);
+              const adotada = rotinas.some(x => x.origem?.rotinaId === r.id);
+              return (
+                <div key={r.id} className="panel" style={{ display: 'grid', gap: 8 }}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <b>{r.nome}</b>
+                    {adotada
+                      ? <span className="muted">{t('doTime.adopted')}</span>
+                      : <Btn small tone="ghost" onClick={() => adotar(r)}>{t('doTime.adopt')}</Btn>}
+                  </div>
+                  <p className="muted" style={{ margin: 0 }}>{r.notas}</p>
+                  <small className="muted">
+                    {t('editor.itemsOf', { n: r.etapas.length })}
+                    {total ? ` · ${t('editor.minutes', { n: Math.round(total / 60) })}` : ''}
+                  </small>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
