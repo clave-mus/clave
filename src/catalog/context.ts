@@ -40,13 +40,20 @@ const cache = new Map<string, RequisitosCompletos>();
  * dependem de idioma nem de configuração. Para **ambientes e tarefas**, que têm tela própria,
  * assume o caso conservador: usa olhos, mãos e áudio. Errar para mais só esconde o item de um
  * contexto apertado; errar para menos ofereceria algo que a pessoa não consegue fazer.
+ *
+ * **A única exceção é `semTela`**, que o item declara: um ciclo de áudio puro não tem o que olhar nem
+ * onde tocar, e a suposição conservadora estaria errada ali.
  */
 export function requisitosDe(item: CatalogItem): RequisitosCompletos {
   const emCache = cache.get(item.id);
   if (emCache) return emCache;
 
   let olhos = true, maos = true, audio = true;
-  if (isSeries(item)) {
+  // O item de tela própria que declara `semTela` é um ciclo de áudio: não há o que olhar nem onde
+  // tocar. É a única exceção à regra de que olhos/mãos/áudio são deduzidos, e ela existe porque a
+  // sonda não entra numa tela — ver `CatalogItem.semTela`.
+  if (item.semTela) { olhos = false; maos = false; }
+  else if (isSeries(item)) {
     try {
       const q = item.make(item.defaults, SONDA);
       olhos = q.visual.kind !== 'ear';
@@ -71,7 +78,8 @@ export function limparCacheDeRequisitos() {
  * O item cabe neste contexto?
  *
  * - **bolso** — nada de olhos, mãos, voz, instrumento ou microfone. Só ouvido, e dá para fazer
- *   até dirigindo. É um contexto quase vazio hoje, e tudo bem.
+ *   até dirigindo. **O habitante dele é o ciclo sem tela** (`maos-livres`, F6-1); os de série não
+ *   cabem porque todos têm superfície de resposta, e responder pede as mãos.
  * - **ônibus** — olhos e mãos liberados; sem instrumento, microfone ou canto.
  * - **silêncio** — sem áudio, para quem esqueceu o fone.
  * - **com o instrumento** — tudo liberado.

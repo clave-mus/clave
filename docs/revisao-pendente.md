@@ -57,24 +57,35 @@ E **tire a linha do item deste arquivo**. O teste exige data no formato `AAAA-MM
 
 ### Rotinas do time (F3-6)
 
-**Escritas por IA, a pedido do Paulo.** Cinco rotinas prontas para usar, em `src/routines/doTime.ts`.
-São **proposta**: a sequência de etapas de uma rotina do time é conteúdo musical, e isso é decisão de
-produto (decisão 51). Enquanto estão em rascunho, **ninguém as vê** fora do modo de revisão.
+**As nove, reescritas em 04/11/2026** depois da revisão do Paulo, e por isso **todas voltaram a
+rascunho** — o conteúdo mudou, e o estado diz a verdade. Com o portão desligado (decisão 104) isso não
+esconde nada de ninguém.
 
 Cada etapa carrega um campo `porque` que não aparece na tela: é o argumento de ter escolhido aquele
 exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
-**Três já saíram daqui.** `de-bolso`, `mapear-braco` e `leitura-diaria` foram **revisadas lendo** em
-03/11/2026 e estão publicadas: a ordem das etapas, as durações e o que entra dão para julgar no texto.
-**As duas que sobraram vivem de som**, e aprová-las pede fazê-las:
-
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
-| `internalizar-tonalidade` | guiada, 30 min, rotação por tonalidade | 5 | **a ordem das cinco frentes** (som → braço na casa → braço acima → acordes → tocar), e se 12 tonalidades em quartas é o ciclo certo |
-| `aquecimento-ouvido` | guiada, 12 min | 3 | a duração: 12 min é aposta de "abre a sessão, não é a sessão" |
+| `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
+| `teoria-no-silencio` | livre | 5 | se os cinco itens silenciosos dão uma rotina, ou se faltam assuntos |
+| `instrumento-na-rua` | livre | 6 | se as três superfícies na mesma rotina ajudam ou dispersam |
+| `ouvido-no-fone` | livre | 6 | os três rodízios (tríades→tétrades, escalas→modos) e se a ordem importa |
+| `braco-na-rua` | guiada, 25 min | 4 | se reconhecer antes de achar é a ordem certa, e as três regiões do rodízio |
+| `braco-com-instrumento` | guiada, 25 min | 3 | **a mais frágil das nove** — ver a nota abaixo |
+| `internalizar-tonalidade` | guiada, 30 min, rotação | 5 | a ordem das cinco frentes, e se 12 tonalidades em quartas é o ciclo certo |
+| `aquecimento-ouvido` | guiada, 15 min | 4 | a dose: 15 min com os modos incluídos, 3 min para eles |
+| `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar |
 
-**Publicar** é trocar `publicacao: RASCUNHO` por `{ estado: 'publicado', revisadoEm: '…', por: 'Paulo' }`
-na rotina, em `src/routines/doTime.ts`, e tirar a linha desta tabela.
+> ⚠️ **`braco-com-instrumento` tem três etapas, e isso é um achado.** Os itens que exigem o instrumento
+> hoje são técnica, harmonia, drone e as cinco tarefas com metrônomo — e **nenhum deles pergunta uma
+> nota do braço**. Falta o exercício que pede para tocar a nota no instrumento de verdade, e ele é a
+> `F6-4`. Até lá, a rotina é sobre *tocar*, não sobre *mapear*.
+
+### Mãos livres (`F6-1`)
+
+| Id | O que só você confere |
+|---|---|
+| `maos-livres` | **o som e a voz.** A resposta é dita pela síntese de fala do navegador, e a voz varia muito entre aparelhos — em alguns Android a voz portuguesa não vem instalada (a tela avisa e repete o som em vez de dizer). Confira também se o **tempo de pensar** padrão (6 s) é razoável, e se as seis fontes — intervalos, acordes, escalas, modos, graus, notas — são as que valem num ciclo sem tela |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 

@@ -270,7 +270,7 @@ export function ItemPage() {
             <Field seed={item.id} color={area.color} className="field-square" style={{ width: 88 }} />
           </header>
           <div className="row"><SalvarNaRotina itemId={item.id} settings={{}} /></div>
-          <ItemScreen item={item} />
+          <ItemScreen item={item} settings={daEtapa?.settings ?? undefined} />
         </>
       )}
     </div>

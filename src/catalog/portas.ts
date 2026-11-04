@@ -44,7 +44,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'ouvido',
     // Tudo o que tem etiqueta `ear.*`, mais o ambiente de cantar/tocar com referência.
-    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'ambiente'],
+    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'maos-livres', 'ambiente'],
   },
   {
     id: 'harmonia',

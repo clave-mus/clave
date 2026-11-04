@@ -73,24 +73,63 @@ const pt = {
     adopted: 'Adotada: agora é sua',
     bolso: {
       nome: 'De bolso',
-      sobre: 'Para o ônibus, a fila, o intervalo: cinco coisas que não pedem instrumento. Qualquer ordem, nenhum cronômetro.',
+      sobre: 'A pergunta toca, você pensa, a resposta vem. Celular no bolso, nenhuma etapa pede olhar nem responder.',
+    },
+    silencio: {
+      nome: 'Teoria no silêncio',
+      sobre: 'Nenhuma etapa faz nem recebe som. Para a sala de espera, a aula chata e o fone esquecido em casa.',
+    },
+    rua: {
+      nome: 'Mapear o instrumento na rua',
+      sobre: 'Braço, teclado e pauta, só na tela — nenhuma etapa pede o instrumento. Pule o que não servir.',
+    },
+    fone: {
+      nome: 'Treino de ouvido no fone',
+      sobre: 'Os seis de ouvido em que você responde. Pede fone e uma mão livre; cabe inteira num ônibus.',
+    },
+    bracoRua: {
+      nome: 'Mapear o braço na rua',
+      sobre: 'Reconhecer, achar, medir e desenhar no braço — tudo na tela, sem o instrumento. A segunda etapa muda de região a cada vez.',
+    },
+    bracoInst: {
+      nome: 'Mapear o braço com o instrumento',
+      sobre: 'Com o baixo ou a guitarra na mão: padrões com metrônomo, tocar dentro da harmonia e afinar contra um drone.',
     },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',
       sobre: 'Uma tonalidade por semana, atravessada de cinco jeitos. Você passa para a próxima quando quiser.',
     },
-    braco: {
-      nome: 'Mapear o braço',
-      sobre: 'Reconhecer, achar e medir distâncias no braço. A etapa do meio muda de região a cada vez.',
-    },
     ouvido: {
       nome: 'Aquecimento de ouvido',
-      sobre: 'Doze minutos antes de estudar: intervalo, acorde, escala. Curta de propósito.',
+      sobre: 'Quinze minutos antes de estudar: intervalo, acorde, escala e modos. Curta de propósito — pule o que não servir hoje.',
     },
     leitura: {
       nome: 'Leitura diária',
       sobre: 'Altura e ritmo separados primeiro, juntos depois. Quinze minutos.',
     },
+  },
+  handsfree: {
+    objetos: 'O que tocar',
+    obj_intervalos: 'Intervalos',
+    obj_acordes: 'Acordes',
+    obj_escalas: 'Escalas',
+    obj_modos: 'Modos',
+    obj_graus: 'Graus',
+    obj_notas: 'Notas',
+    pensar: 'Tempo para pensar',
+    anuncio: 'Como a resposta chega',
+    anuncioVoz: 'Dita em voz alta',
+    anuncioRepetir: 'O som toca de novo',
+    anuncioAmbos: 'Dita e tocada',
+    start: 'Começar',
+    stop: 'Parar',
+    running: 'Rodando — você pode guardar o celular',
+    thinking: 'Pensando…',
+    answer: 'Resposta',
+    count: '{n} até agora',
+    noObjects: 'Escolha pelo menos uma coisa para tocar.',
+    noVoice: 'Este aparelho não tem voz instalada para o seu idioma. A resposta vai ser tocada de novo, em vez de dita.',
+    hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
   review: {
     banner: 'Modo de revisão: você está vendo rascunhos, que ninguém mais vê.',
@@ -241,6 +280,7 @@ const pt = {
     hiddenByContext: { one: '{count} etapa escondida: pede o instrumento.', other: '{count} etapas escondidas: pedem o instrumento.' },
   },
   session: {
+    toEnd: 'Deixar para o final',
     none: 'Esta rotina não tem nenhuma etapa para fazer',
     build: 'Abrir o editor',
     start: 'Começar',
@@ -621,6 +661,7 @@ const pt = {
     'ritmo-ouvido': { title: 'Que ritmo é esse?', desc: 'Ouça um compasso e escolha a escrita certa. Dá para batucar junto.' },
   },
   tools: {
+    'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
     metronomo: { title: 'Metrônomo', desc: 'Pulso, compasso, subdivisão e tap tempo.' },
     ambiente: { title: 'Solfejar e tocar', desc: 'Drone de contexto harmônico, metrônomo e cronômetro com meta.' },
     backing: { title: 'Backing track', desc: 'Monte a progressão, escolha a levada e veja que escala usar em cada acorde.' },

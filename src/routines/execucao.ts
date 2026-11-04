@@ -119,6 +119,23 @@ export const voltar = (s: Execucao): Execucao => irPara(s, posicao(s) - 1);
 export const saltarPara = (s: Execucao, etapaId: string): Execucao =>
   s.ordem.includes(etapaId) ? { ...s, etapaAtual: etapaId } : s;
 
+/**
+ * Manda a etapa atual para o **fim da ordem** e segue para a próxima.
+ *
+ * É diferente de pular: pular marca a etapa como feita-por-passagem e a deixa para trás; isto diz
+ * *"não agora"* e a devolve no fim, sem desfecho. O Paulo pediu as duas — *"de novo, não queremos
+ * impor nenhuma ordem pro usuário"* —, e a diferença importa porque o resumo final conta puladas.
+ *
+ * Com uma etapa só, ou já no fim, não faz nada: mandar para o fim o que já é o fim é um laço.
+ */
+export function paraOFinal(s: Execucao): Execucao {
+  const n = posicao(s);
+  if (n < 0 || s.ordem.length < 2 || n === s.ordem.length - 1) return s;
+  const id = s.ordem[n];
+  const ordem = [...s.ordem.slice(0, n), ...s.ordem.slice(n + 1), id];
+  return { ...s, ordem, etapaAtual: ordem[n] };
+}
+
 export const terminou = (s: Execucao) => s.etapaAtual === '';
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   avancar, comecar, etapaAtual, instanciaDaVez, passouDoSugerido, pausar, posicao, praticou, problemasDa,
-  resumo, retomar, retomavel, saltarPara, sanear, segundosNaEtapa, segundosTotais, terminou, tiquetaque,
+  paraOFinal, resumo, retomar, retomavel, saltarPara, sanear, segundosNaEtapa, segundosTotais, terminou, tiquetaque,
   trocar, voltar, type Execucao,
 } from './execucao';
 import { FORMATO_ROTINA, type Etapa, type Rotina } from './types';
@@ -255,5 +255,51 @@ describe('a sessão guardada é serializável — ela vai e volta do localStorag
     const volta = JSON.parse(JSON.stringify(s)) as Execucao;
     expect(volta).toEqual(s);
     expect(resumo(volta)).toEqual(resumo(s));
+  });
+});
+
+describe('passar para o final', () => {
+  const tres = () => rotina([
+    etapa('a', ['x'], { segundosSugeridos: 60 }),
+    etapa('b', ['y'], { segundosSugeridos: 120 }),
+    etapa('c', ['z'], { segundosSugeridos: 60 }),
+  ]);
+
+  // "Não agora" é diferente de "pulei": pular deixa a etapa para trás com desfecho; isto a devolve
+  // no fim, sem desfecho. O resumo final conta puladas, então confundir as duas mentiria.
+  it('move a etapa para o fim e segue para a seguinte, SEM marcar desfecho', () => {
+    const s = paraOFinal(comecar(tres()).sessao);
+    expect(s.ordem).toEqual(['b', 'c', 'a']);
+    expect(s.etapaAtual).toBe('b');
+    expect(s.desfechos).toEqual({});
+  });
+
+  it('e o tempo já praticado nela não se perde', () => {
+    let s = tiquetaque(comecar(tres()).sessao, 42);
+    s = paraOFinal(s);
+    expect(segundosNaEtapa(s, 'a')).toBe(42);
+  });
+
+  it('do meio, também vai para o fim', () => {
+    const s = paraOFinal(saltarPara(comecar(tres()).sessao, 'b'));
+    expect(s.ordem).toEqual(['a', 'c', 'b']);
+    expect(s.etapaAtual).toBe('c');
+  });
+
+  it('já no fim não faz nada — mandar o fim para o fim é um laço', () => {
+    const s = saltarPara(comecar(tres()).sessao, 'c');
+    expect(paraOFinal(s)).toBe(s);
+  });
+
+  it('com uma etapa só, não faz nada', () => {
+    const s = comecar(rotina([etapa('a', ['x'])])).sessao;
+    expect(paraOFinal(s)).toBe(s);
+  });
+
+  it('a ordem continua com as mesmas etapas, sem perder nem duplicar', () => {
+    let s = comecar(tres()).sessao;
+    for (let i = 0; i < 7; i++) s = paraOFinal(s);
+    expect([...s.ordem].sort()).toEqual(['a', 'b', 'c']);
+    expect(new Set(s.ordem).size).toBe(3);
   });
 });

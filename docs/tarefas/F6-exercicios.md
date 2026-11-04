@@ -16,7 +16,7 @@ configuração de um motor existente. Se não puder, a justificativa vai no PR e
 
 ---
 
-## F6-1 · Treinamento auditivo hands-free
+## F6-1 · Treinamento auditivo hands-free ✅ *feita em 04/11/2026*
 
 **Depende de:** F1-2. **Tipo:** `ambiente`.
 
@@ -33,6 +33,33 @@ a pessoa pensar, toca o gabarito, segue. A pessoa nunca responde nada.
 
 **Pronto quando:** dá para pôr o fone, travar a tela, e a sessão rodar do começo ao fim sem nenhum
 toque.
+
+**Feito.** `src/catalog/maos-livres.ts` (a lógica, 13 testes), `src/audio/voz.ts` e
+`src/tools/MaosLivres.tsx`. Item `maos-livres`, e **ele é o habitante do contexto "De bolso"** — o
+teste que dizia *"de bolso está VAZIO hoje, e quando a F6-1 entrar isto vira `toBeGreaterThan(0)`"*
+virou o que devia virar.
+
+**Não é motor novo, e isso não é economia: é o desenho.** `make()` dos exercícios de ouvido devolve o
+som **e a resposta por extenso** (`reveal`) — que é exatamente o par de que um ciclo sem tela precisa.
+Acrescentar um objeto é acrescentar uma linha em `FONTES`. Hoje são seis (intervalos, acordes, escalas,
+modos, graus, notas), e **escalas e modos são o mesmo exercício com listas diferentes**: a decisão 15
+em miniatura.
+
+**A resposta é dita pela síntese de fala do navegador** (`speechSynthesis`). É a única forma de dizer
+sem gravação, e gravação é o que a decisão 59 diz que não temos. Não é música de IA: é um nome de nota
+lido em voz alta, como um leitor de tela faria. **A voz varia muito entre aparelhos** — em alguns
+Android a voz portuguesa não vem instalada —, então a tela detecta, avisa, e repete o som em vez de
+dizer. 👤 **O som e a voz são o que só o Paulo confere.**
+
+**Uma coisa que esta tarefa obrigou a mudar no modelo:** `maos-livres` **declara** `semTela: true`, e é
+o único item que declara um requisito deduzido. `requisitosDe` não consegue sondar uma tela, então
+assume o caso conservador (usa olhos, mãos e áudio) — e num ciclo de áudio puro essa suposição está
+errada, e só o item sabe.
+
+**E outra, que valeu para além dele:** `ScreenProps` passou a receber `settings`, a configuração da
+instância. Sem isso a configuração de um ambiente só existiria no estado da tela, e **duas etapas do
+mesmo ambiente seriam idênticas** — o que tornaria impossível a rotina "De bolso", que é quatro
+variações deste mesmo ciclo.
 
 ---
 

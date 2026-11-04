@@ -162,6 +162,14 @@ export type Termination = 'serie' | 'ambiente' | 'tarefa';
 export interface ScreenProps {
   /** Tempo sugerido da etapa, quando o item roda dentro de uma rotina. */
   goalMinutes?: number;
+  /**
+   * A configuração da instância, quando o item foi aberto a partir de uma etapa de rotina.
+   *
+   * É o que torna possível a MESMA ferramenta aparecer várias vezes na rotina com configurações
+   * diferentes — a rotina "De bolso" é quatro variações do ciclo sem tela. Sem isto, a configuração
+   * de um ambiente só existiria no estado da tela, e duas etapas do mesmo ambiente seriam idênticas.
+   */
+  settings?: Record<string, SettingValue>;
   /** Versão reduzida, para caber dentro de outra tela. */
   compact?: boolean;
   onRunning?: (running: boolean) => void;
@@ -235,6 +243,15 @@ export interface CatalogItem extends Classification {
   publicacao?: Publicacao;
   /** Apresentação própria do item (ex.: intervalo maior entre notas), por cima da global. */
   presentation?: Partial<Presentation>;
+  /**
+   * O item roda **sem olhos e sem mãos**?
+   *
+   * É o único requisito deduzido que um item pode declarar, e só itens de tela própria precisam dele:
+   * `requisitosDe` não consegue sondar uma tela, então assume o caso conservador (usa olhos, mãos e
+   * áudio) para nunca oferecer o que a pessoa não consegue fazer. Num ciclo de áudio puro essa
+   * suposição está errada, e só o item sabe. Ver `context.ts`.
+   */
+  semTela?: true;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
   make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
   /**

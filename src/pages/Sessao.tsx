@@ -14,12 +14,14 @@ import { isSeries } from '../catalog/types';
 import type { SettingValue } from '../catalog/types';
 import { companheirosDe } from '../catalog/grupos';
 import { visivel, type Publicacao } from '../catalog/publicacao';
-import { resumoDaPratica } from '../catalog/resumo';
+import { resumoDaEtapa, resumoDaPratica } from '../catalog/resumo';
 import type { ParametrosDePratica } from '../catalog/params';
+import { useGlobalParams } from '../catalog/params';
+import type { Ctx } from '../catalog/types';
 import { efeitoDaRotacao } from '../routines/rotacao';
 import {
   avancar, comecar, etapaAtual, instanciaDaVez, passouDoSugerido, pausar, posicao, problemasDa,
-  PERGUNTAS_POR_ETAPA, resumo, retomar, retomavel, saltarPara, sanear, segundosNaEtapa, segundosTotais, terminou,
+  paraOFinal, PERGUNTAS_POR_ETAPA, resumo, retomar, retomavel, saltarPara, sanear, segundosNaEtapa, segundosTotais, terminou,
   tiquetaque, trocar, voltar, type Desfecho, type Execucao,
 } from '../routines/execucao';
 import { useRotinas } from '../routines/hooks';
@@ -30,16 +32,19 @@ import { Btn, Chip, Tag } from '../components/ui';
 import { fmtClock } from '../tools/common';
 import { logActivity } from '../state/store';
 import { useRevisao } from '../state/store';
-import { itemText, useNaming, useT } from '../i18n';
+import { itemText, useLocale, useNaming, useT } from '../i18n';
 
 export default function Sessao() {
   const { id = '' } = useParams();
   const t = useT();
   const naming = useNaming();
+  const locale = useLocale();
   const navigate = useNavigate();
   const rotinas = useRotinas();
   const revisao = useRevisao();
 
+  const params = useGlobalParams();
+  const ctx: Ctx = { naming, conv: locale, t, params };
   const [sessao, setSessao] = useState<Execucao | null>(null);
   const [adotou, setAdotou] = useState(false);
   const [relogio, setRelogio] = useState(true);
@@ -198,15 +203,19 @@ export default function Sessao() {
             const it = itemById[instanciaDaVez(sessao, e).itemId];
             if (!it) return null;
             const feita = sessao.desfechos[eid] === 'concluida';
+            // O título **e a configuração**: quatro etapas do mesmo ciclo sem tela ficariam
+            // indistinguíveis só com o título, e a configuração é justamente o que as diferencia.
+            const { titulo, detalhe } = resumoDaEtapa(e.instancias, id => itemById[id], ctx);
             return (
               <button key={eid} type="button" className="ex-card"
                 style={{ textAlign: 'left', border: 0, font: 'inherit', cursor: 'pointer', opacity: feita ? 0.6 : 1 }}
                 onClick={() => { setSessao(s => (s ? saltarPara(s, eid) : s)); setAberta(true); }}>
                 <span className="ex-card-text">
-                  <b>{itemText(t, it.id, 'title')}</b>
+                  <b>{titulo}</b>
                   <small>
-                    {feita ? t('session.gotIt') : ''}
-                    {relogio && (sessao.tempoPorEtapa[eid] ?? 0) > 0 ? `${feita ? ' · ' : ''}${fmtClock(sessao.tempoPorEtapa[eid])}` : ''}
+                    {detalhe}
+                    {feita ? `${detalhe ? ' · ' : ''}${t('session.gotIt')}` : ''}
+                    {relogio && (sessao.tempoPorEtapa[eid] ?? 0) > 0 ? ` · ${fmtClock(sessao.tempoPorEtapa[eid])}` : ''}
                   </small>
                 </span>
               </button>
@@ -247,7 +256,8 @@ export default function Sessao() {
     }
     return (
       <>
-        <ItemScreen key={`${etapa.id}:${instancia.itemId}`} item={item} itemId={item.id} goalMinutes={etapa.segundosSugeridos ? etapa.segundosSugeridos / 60 : undefined} />
+        <ItemScreen key={`${etapa.id}:${instancia.itemId}`} item={item} itemId={item.id} settings={settings}
+          goalMinutes={etapa.segundosSugeridos ? etapa.segundosSugeridos / 60 : undefined} />
         {item.kind === 'tarefa' ? (
           <Autoavaliacao item={item.id} onPick={(d) => { registrarTarefa(item.id, item.primaryModule, segundosNaEtapa(sessao, etapa.id), d, sessao.sessaoId, itemText(t, item.id, 'title')); marcar('concluida'); }} />
         ) : (
@@ -326,6 +336,10 @@ export default function Sessao() {
           <>
             <Btn small tone="ghost" disabled={n <= 0} onClick={() => setSessao(s => (s ? voltar(s) : s))}>← {t('session.prev')}</Btn>
             <Btn small tone="ghost" onClick={() => marcar('pulada')}>{t('session.skip')}</Btn>
+            {/* "Não agora" é diferente de "pulei": a etapa volta no fim, sem desfecho. */}
+            {n < sessao.ordem.length - 1 && (
+              <Btn small tone="ghost" onClick={() => setSessao(s => (s ? paraOFinal(s) : s))}>{t('session.toEnd')}</Btn>
+            )}
           </>
         )}
         <Btn small tone="ghost" onClick={() => { gravarSessao(sessao); navigate('/'); }}>{t('session.leave')}</Btn>
@@ -343,7 +357,8 @@ export default function Sessao() {
             <button key={eid} type="button" className={`step-row ${k === n ? 'on' : ''}`}
               onClick={() => setSessao(s => (s ? saltarPara(s, eid) : s))}
               style={{ textAlign: 'left', border: 0, background: 'none', font: 'inherit', cursor: 'pointer', padding: '6px 0', opacity: k === n ? 1 : 0.65 }}>
-              <b>{k + 1}. {it ? itemText(t, it.id, 'title') : eid}</b>
+              <b>{k + 1}. {it ? resumoDaEtapa(e.instancias, id => itemById[id], ctx).titulo : eid}</b>
+              {it && <span className="muted"> {resumoDaEtapa(e.instancias, id => itemById[id], ctx).detalhe}</span>}
               {sessao.desfechos[eid] && <span className="muted"> · {t(sessao.desfechos[eid] === 'concluida' ? 'session.gotIt' : 'session.skip')}</span>}
               {(sessao.tempoPorEtapa[eid] ?? 0) > 0 && <span className="muted"> · {fmtClock(sessao.tempoPorEtapa[eid])}</span>}
             </button>

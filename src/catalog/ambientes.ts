@@ -6,7 +6,9 @@
 //
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
+import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
 import { LEGADO, RASCUNHO } from './publicacao';
+import type { MessageKey } from '../i18n';
 import type { CatalogItem } from './types';
 
 /** Ambientes não têm configuração declarada: cada tela cuida das suas (serão migradas na F1-3). */
@@ -21,6 +23,39 @@ export const AMBIENTES: CatalogItem[] = [
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.triplets'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/common').then(m => ({ default: m.Metronome })),
+  },
+  {
+    // F6-1. **O único item do contexto "De bolso"**: nada de olhos, nada de mãos.
+    //
+    // `semTela` é declarado, e não deduzido, porque a dedução não funciona para item com tela própria:
+    // `requisitosDe` assume o caso conservador (usa olhos, mãos e áudio) justamente para não oferecer
+    // o que a pessoa não consegue fazer. Aqui a suposição conservadora estaria errada, e só o item
+    // sabe disso. Há teste exigindo que ele seja o único a declarar isto sem motivo escrito.
+    id: 'maos-livres', kind: 'ambiente', semTela: true,
+    publicacao: RASCUNHO, requires: {}, validation: ['none'], mobile: true,
+    objetos: ['intervalos', 'acordes', 'escalas', 'notas'], tarefas: ['ouvir'],
+    primaryModule: 'perception.melodic',
+    skillTags: ['ear.interval_identification', 'ear.chord_quality', 'ear.scale_quality', 'ear.pitch_identification'],
+    contentTags: ['interval.simple', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor', 'scale.modes'],
+    // **Tem configuração declarada**, ao contrário dos outros ambientes, e por um motivo concreto: a
+    // rotina "De bolso" é quatro variações deste item. Sem declarar, a configuração viveria só no
+    // estado da tela e duas etapas do mesmo ciclo seriam idênticas.
+    settings: ctx => [
+      { id: 'objetos', label: ctx.t('handsfree.objetos'), type: 'multi',
+        options: OBJETOS_DE_BOLSO.map(id => ({ id, label: ctx.t(`handsfree.obj_${id}` as MessageKey) })) },
+      { id: 'pensar', label: ctx.t('handsfree.pensar'), type: 'range',
+        min: PENSAR.min, max: PENSAR.max, step: 1, format: v => `${v} s` },
+      { id: 'anuncio', label: ctx.t('handsfree.anuncio'), type: 'single', options: [
+        { id: 'voz', label: ctx.t('handsfree.anuncioVoz') },
+        { id: 'repetir', label: ctx.t('handsfree.anuncioRepetir') },
+        { id: 'ambos', label: ctx.t('handsfree.anuncioAmbos') },
+      ] },
+    ],
+    // O padrão é **um objeto só**: começar por intervalos é o que faz sentido para quem abre a
+    // ferramenta sozinha, e de quebra nenhuma etapa da rotina "De bolso" coincide com o padrão — se
+    // coincidisse, a linha dela ficaria em branco na lista (o resumo só mostra o que difere).
+    defaults: { objetos: ['intervalos'], pensar: PENSAR.padrao, anuncio: 'voz' },
+    screen: () => import('../tools/MaosLivres'),
   },
   {
     id: 'ambiente', kind: 'ambiente',

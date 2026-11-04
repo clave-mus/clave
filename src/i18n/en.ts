@@ -73,24 +73,63 @@ const en: Shape<typeof pt> = {
     adopted: 'Adopted: it is yours now',
     bolso: {
       nome: 'Pocket-sized',
-      sobre: 'For the bus, the queue, the break: five things that need no instrument. Any order, no timer.',
+      sobre: 'The question plays, you think, the answer comes. Phone in your pocket — no step asks you to look or to answer.',
+    },
+    silencio: {
+      nome: 'Theory in silence',
+      sobre: 'No step makes or needs sound. For the waiting room, the boring class, and the headphones left at home.',
+    },
+    rua: {
+      nome: 'Map your instrument out and about',
+      sobre: 'Fretboard, keyboard and staff, on screen only — no step needs the instrument. Skip whatever does not serve you.',
+    },
+    fone: {
+      nome: 'Ear training with headphones',
+      sobre: 'The six ear exercises where you answer. Needs headphones and one free hand; fits a whole bus ride.',
+    },
+    bracoRua: {
+      nome: 'Map the fretboard out and about',
+      sobre: 'Name it, find it, measure it, picture it — all on screen, no instrument. The second step changes region each time.',
+    },
+    bracoInst: {
+      nome: 'Map the fretboard with your instrument',
+      sobre: 'Bass or guitar in hand: metronome patterns, playing inside the harmony, and tuning against a drone.',
     },
     tonalidade: {
       nome: 'Settle into a key',
       sobre: 'One key a week, crossed five different ways. You move to the next one when you want to.',
     },
-    braco: {
-      nome: 'Map the fretboard',
-      sobre: 'Name it, find it, measure it. The middle step changes region each time.',
-    },
     ouvido: {
       nome: 'Ear warm-up',
-      sobre: 'Twelve minutes before you practise: interval, chord, scale. Short on purpose.',
+      sobre: 'Fifteen minutes before you practise: interval, chord, scale and modes. Short on purpose — skip whatever does not serve you today.',
     },
     leitura: {
       nome: 'Daily reading',
       sobre: 'Pitch and rhythm apart first, together after. Fifteen minutes.',
     },
+  },
+  handsfree: {
+    objetos: 'What to play',
+    obj_intervalos: 'Intervals',
+    obj_acordes: 'Chords',
+    obj_escalas: 'Scales',
+    obj_modos: 'Modes',
+    obj_graus: 'Degrees',
+    obj_notas: 'Notes',
+    pensar: 'Time to think',
+    anuncio: 'How the answer arrives',
+    anuncioVoz: 'Spoken out loud',
+    anuncioRepetir: 'The sound plays again',
+    anuncioAmbos: 'Spoken and played',
+    start: 'Start',
+    stop: 'Stop',
+    running: 'Running — you can put the phone away',
+    thinking: 'Thinking…',
+    answer: 'Answer',
+    count: '{n} so far',
+    noObjects: 'Pick at least one thing to play.',
+    noVoice: 'This device has no voice installed for your language. The answer will be played again instead of spoken.',
+    hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
   review: {
     banner: 'Review mode: you are seeing drafts that nobody else sees.',
@@ -241,6 +280,7 @@ const en: Shape<typeof pt> = {
     hiddenByContext: { one: '{count} step hidden: it needs your instrument.', other: '{count} steps hidden: they need your instrument.' },
   },
   session: {
+    toEnd: 'Leave for the end',
     none: 'This routine has no steps to do',
     build: 'Open the editor',
     start: 'Start',
@@ -620,6 +660,7 @@ const en: Shape<typeof pt> = {
     'ritmo-ouvido': { title: 'Which rhythm is this?', desc: 'Hear one bar and pick the right notation. Feel free to tap along.' },
   },
   tools: {
+    'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },
     metronomo: { title: 'Metronome', desc: 'Pulse, time signature, subdivision and tap tempo.' },
     ambiente: { title: 'Sing and play', desc: 'Harmonic drone, metronome and a timer with a goal.' },
     backing: { title: 'Backing track', desc: 'Build the progression, pick the groove and see which scale fits each chord.' },

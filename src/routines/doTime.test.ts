@@ -171,10 +171,10 @@ describe('a publicação', () => {
 
   // Decisão 51: o conteúdo musical de uma rotina do time é passo humano do Paulo. Enquanto ele não
   // revisou, ela é proposta — e proposta não aparece para quem usa.
-  it('as duas que vivem de som seguem em rascunho — não dá para aprová-las sem ouvir', () => {
-    for (const id of ['internalizar-tonalidade', 'aquecimento-ouvido']) {
-      expect(estadoDe(ROTINAS_DO_TIME.find(r => r.id === id)?.publicacao), id).toBe('rascunho');
-    }
+  // Todas voltaram a rascunho em 04/11: as nove foram reescritas depois da revisão do Paulo, e com o
+  // portão desligado (decisão 104) isso não esconde nada de ninguém — é só o estado dizendo a verdade.
+  it('as nove são rascunho: foram reescritas e ainda não revisadas', () => {
+    for (const r of ROTINAS_DO_TIME) expect(estadoDe(r.publicacao), r.id).toBe('rascunho');
   });
 
   // `publicado` afirma que uma pessoa revisou. Sem data e nome, a afirmação não se sustenta — é a
@@ -187,17 +187,16 @@ describe('a publicação', () => {
     }
   });
 
-  // O portão só vale se a lista que a tela mostra o respeitar. Sem isto, publicar seria só um rótulo.
-  // Ligado de propósito: hoje o portão está desligado (decisão 104), e é o caso do beta que precisa
-  // de guarda.
-  it('com o portão ligado, rascunho não aparece fora do modo de revisão', () => {
+  // O portão só vale se a lista que a tela mostra o respeitar. Ligado de propósito: hoje ele está
+  // desligado (decisão 104), e é o caso do beta que precisa de guarda.
+  it('com o portão ligado, nenhuma aparece fora do modo de revisão — todas são rascunho', () => {
     const naTela = (revisao: boolean) => ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, revisao, true)).map(r => r.id);
-    expect(naTela(false)).toEqual(['de-bolso', 'mapear-braco', 'leitura-diaria']);
+    expect(naTela(false)).toEqual([]);
     expect(naTela(true)).toHaveLength(ROTINAS_DO_TIME.length);
   });
 
-  it('e hoje, com ele desligado, as cinco aparecem — é o que o Paulo pediu para testar', () => {
-    expect(ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, false)).map(r => r.id)).toHaveLength(5);
+  it('e hoje, com ele desligado, todas aparecem — é o que o Paulo pediu para testar', () => {
+    expect(ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, false))).toHaveLength(ROTINAS_DO_TIME.length);
   });
 
   it('cada rascunho aparece em docs/revisao-pendente.md pelo id', () => {

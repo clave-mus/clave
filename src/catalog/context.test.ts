@@ -62,14 +62,18 @@ describe('os cinco contextos', () => {
     expect(cabeNoContexto(itemById['teoria-graus']!, 'silencio')).toBe(true);
   });
 
-  it('"de bolso" está VAZIO hoje, e isso é esperado', () => {
-    // Não é defeito: o contexto só aceita o que não usa olhos, mãos, voz, instrumento nem
-    // microfone, e o único habitante previsto é o treinamento auditivo hands-free (F6-1), que
-    // ainda não existe. Está escrito em catalogo.md.
-    //
-    // Quando a F6-1 entrar, este teste vira `toBeGreaterThan(0)` — e aí a Praticar para de
-    // mostrar um contexto que não leva a lugar nenhum.
-    expect(ITEMS.filter(i => cabeNoContexto(i, 'bolso'))).toEqual([]);
+  // Era vazio até 04/11/2026, e o teste dizia "quando a F6-1 entrar, isto vira toBeGreaterThan(0)".
+  // A F6-1 entrou: o ciclo sem tela é o habitante.
+  it('"de bolso" tem o ciclo sem tela, e só ele', () => {
+    const cabem = ITEMS.filter(i => cabeNoContexto(i, 'bolso')).map(i => i.id);
+    expect(cabem).toEqual(['maos-livres']);
+  });
+
+  // Por que só ele, e por que isso não é falta: **todo item de série tem superfície de resposta**, e
+  // responder pede as mãos e os olhos. "De bolso" não é um contexto apertado por acidente — ele é a
+  // definição de prática que não usa nem a vista nem as mãos, e isso exclui responder.
+  it('nenhum item de série cabe "de bolso", porque responder pede as mãos', () => {
+    for (const i of ITEMS.filter(x => x.kind === 'serie')) expect(cabeNoContexto(i, 'bolso'), i.id).toBe(false);
   });
 
   it('cada contexto é mais permissivo que o anterior, menos "silêncio" que é outro eixo', () => {
@@ -111,7 +115,7 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
-    metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    'maos-livres': 'ambiente', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
     // a "tarefa com metrônomo": cinco famílias, todas `tarefa` — terminam na autoavaliação
     'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'sustentar-e-cortar': 'tarefa',
     'legato-staccato': 'tarefa', 'deslocamento-ritmico': 'tarefa',
