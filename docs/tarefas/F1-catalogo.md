@@ -144,7 +144,12 @@ aleatório com distribuição descontrolada. Fundido, ele herda os parâmetros d
   (`src/catalog/types.ts:115`), que **não dá acesso ao valor das outras configurações** — então não
   há como mostrar `casas` apenas quando `superficie === 'braco'`.
 
-  **A capacidade a acrescentar, e ela é pequena:** um campo `quando?: (s: Record<string, unknown>)
+  ✅ **A capacidade já existe** (03/11/2026): `Setting.quando?: (s) => boolean`, e o Player filtra por
+  ela — junto com o resumo da configuração e a camada de apresentação, que também ignoram o que está
+  escondido. Há teste exigindo que o padrão de um item nunca esconda tudo e que nenhuma condição seja
+  inalcançável. **Falta só usar isto nas quatro fusões.**
+
+  A descrição original da capacidade: um campo `quando?: (s: Record<string, unknown>)
   => boolean` em `Setting`, e a tela filtra por ele. Declarativo, sem acesso a valores dentro da
   função `settings` — o que evitaria ordem de avaliação e re-render em cascata. Faça isto **antes**
   das fusões: as quatro precisam dele, não só a extensão (a validação por superfície e as inversões

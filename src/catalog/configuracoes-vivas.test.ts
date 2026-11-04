@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { translate, type MessageKey, type Vars } from '../i18n';
 import { EXERCISES } from './catalog';
 import { resolveParams } from './params';
-import { isSeries, type Ctx } from './types';
+import { isSeries, type Ctx, type SettingValue } from './types';
 
 const ctx: Ctx = { naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v), params: resolveParams('violao', {}) };
 
@@ -129,6 +129,39 @@ describe('presets', () => {
         for (const locale of ['pt', 'en'] as const) {
           expect(translate(locale, p.nome), `${ex.id}/${p.id}`).not.toMatch(/n[íi]vel|level|\b[1-9]\b|b[áa]sico|avan[çc]ado|iniciante|f[áa]cil|dif[íi]cil|easy|hard|beginner|advanced/i);
         }
+      }
+    }
+  });
+});
+
+// `quando?` existe para as fusões por superfície (F1-4): depois de fundir pauta, teclado e braço num
+// item só, a extensão tem três unidades incomparáveis, e cada uma só vale quando a sua superfície está
+// ativa. O que os testes travam é que o condicional não esconda nada por engano.
+describe('quando: configuração condicional', () => {
+  const itens = EXERCISES.filter(isSeries);
+
+  it('o padrão de todo item deixa visível pelo menos uma configuração, onde há configurações', () => {
+    for (const ex of itens) {
+      const todas = ex.settings(ctx);
+      if (!todas.length) continue;
+      const visiveis = todas.filter(s => s.quando?.(ex.defaults) ?? true);
+      expect(visiveis.length, `${ex.id}: o padrão esconde TODAS as configurações`).toBeGreaterThan(0);
+    }
+  });
+
+  it('toda configuração condicional fica visível em pelo menos uma combinação alcançável', () => {
+    for (const ex of itens) {
+      const condicionais = ex.settings(ctx).filter(s => s.quando);
+      if (!condicionais.length) continue;
+      // varre os valores de cada configuração de escolha única, que é o que liga/desliga as outras
+      const combos: Record<string, SettingValue>[] = [{ ...ex.defaults }];
+      for (const s of ex.settings(ctx)) {
+        if (s.type !== 'single') continue;
+        for (const o of s.options ?? []) combos.push({ ...ex.defaults, [s.id]: o.id });
+      }
+      for (const s of condicionais) {
+        const aparece = combos.some(c => s.quando!(c));
+        expect(aparece, `${ex.id}: \`${s.id}\` nunca aparece — condição inalcançável`).toBe(true);
       }
     }
   });

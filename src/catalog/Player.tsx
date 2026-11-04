@@ -72,7 +72,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
   const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
   // o que as configurações da pessoa mudam no som (ex.: arpejar, duração do acorde)
-  const settingsPresentation = useMemo(() => def.settings(ctx).reduce<Partial<Presentation>>(
+  const settingsPresentation = useMemo(() => def.settings(ctx).filter(s => s.quando?.(settings) ?? true).reduce<Partial<Presentation>>(
     (acc, s) => (s.present && settings[s.id] !== undefined ? { ...acc, ...s.present(settings[s.id]) } : acc), {}), [def, ctx, settings]);
 
   const [q, setQ] = useState<Question | null>(() => (def.problema?.(settings, ctx) ? null : make()));
@@ -425,7 +425,7 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
           </div>
         </div>
       ) : null}
-      {def.settings(ctx).map(s => (
+      {def.settings(ctx).filter(s => s.quando?.(values) ?? true).map(s => (
         <div className="field" key={s.id}>
           <span>{s.label}</span>
           {s.type === 'toggle' && (

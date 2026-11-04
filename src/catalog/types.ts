@@ -122,6 +122,18 @@ export interface Setting {
    * uma configuração marcada assim de fato não é lida pelo `make`.
    */
   soPresentation?: true;
+  /**
+   * Mostrar esta configuração só quando isto for verdade.
+   *
+   * Existe para as fusões por superfície (`F1-4`): depois de fundir pauta, teclado e braço num item só,
+   * a extensão tem **três unidades incomparáveis** — `pauta / linhas suplementares`, `1 / 2 oitavas`,
+   * faixas de casa. Não é um parâmetro com três listas de opções: são três configurações, cada uma
+   * visível quando a sua superfície está ativa.
+   *
+   * **Declarativo de propósito.** A alternativa seria dar à função `settings` acesso aos valores, o que
+   * criaria ordem de avaliação e re-render em cascata; aqui a tela só filtra.
+   */
+  quando?: (s: Record<string, SettingValue>) => boolean;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {

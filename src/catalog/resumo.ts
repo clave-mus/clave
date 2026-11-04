@@ -28,7 +28,8 @@ function valorLegivel(s: Setting, v: SettingValue): string | null {
 /** As configurações que mudaram em relação ao padrão, como texto. Vazio quando nada mudou. */
 export function resumoDaConfiguracao(item: CatalogItem, settings: Record<string, unknown>, ctx: Ctx): string {
   const partes: string[] = [];
-  for (const s of item.settings(ctx)) {
+  // Configuração escondida (a superfície dela não está ativa) não entra no resumo: ela não vale agora.
+  for (const s of item.settings(ctx).filter(s => s.quando?.(settings as Record<string, SettingValue>) ?? true)) {
     const v = settings[s.id] as SettingValue | undefined;
     if (v === undefined || igual(v, item.defaults[s.id])) continue;
     const texto = valorLegivel(s, v);
