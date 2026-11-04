@@ -28,7 +28,16 @@ E: **aparecer em duas tarefas é etiqueta; inverter o sentido da pergunta é ite
 
 ## 1. Declarar o item
 
-Em `src/catalog/catalog.ts` (tem `make`) ou `ambientes.ts` (tem `screen`).
+**Um arquivo novo em `src/catalog/items/<id>.ts`** (item com `make`) ou uma entrada em
+`src/catalog/ambientes.ts` (item com `screen`). Depois, **uma linha em `catalog.ts`**, que é só a lista.
+
+O que é comum mora em `src/catalog/helpers.ts`, e ele reexporta o que vem de `theory/` — então o seu
+arquivo abre com **dois imports**, não com cinco.
+
+> **Antes de criar o arquivo, releia a decisão 15.** Item novo quase sempre é **parâmetro ou modo** de
+> um que já existe: antes das fusões por superfície havia três telas para "qual nota é essa?". Se for
+> mesmo um item novo, o arquivo tem de caber em **120 linhas** — se não couber, provavelmente há motor
+> novo escondido ali, e motor novo é outra conversa.
 
 - [ ] **`kind`** — `serie` (N perguntas → evidência) · `ambiente` (a pessoa para quando quer) · `tarefa`
       (autoavaliação, nunca "correto"). Não é configuração: **decide o executor e o que a etapa consegue

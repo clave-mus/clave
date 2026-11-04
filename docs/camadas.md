@@ -148,7 +148,11 @@ Contá-los como motores infla a estimativa de trabalho: continuam sendo oito mot
 | Assunto | Arquivo |
 |---|---|
 | O item de catálogo | `src/catalog/types.ts` |
-| Os exercícios | `src/catalog/catalog.ts` · as ferramentas em `ambientes.ts` |
+| Os exercícios | `src/catalog/items/<id>.ts`, um por família · a lista em `catalog.ts` · o comum em `helpers.ts` |
+| As ferramentas e tarefas | `src/catalog/ambientes.ts` |
+| As oito portas por objetivo | `src/catalog/portas.ts` · o cruzamento com o catálogo em `portasView.ts` |
+| Contexto de prática | `src/catalog/context.ts` (os quatro contextos e o "posso cantar") |
+| As variantes de um item (superfície) | `src/catalog/variantes.ts` — a unidade que os testes percorrem |
 | Cascata de parâmetros | `src/catalog/params.ts` |
 | O que os itens leem da cascata | `src/catalog/contexto-musical.ts` |
 | Publicação | `src/catalog/publicacao.ts` |
@@ -156,6 +160,9 @@ Contá-los como motores infla a estimativa de trabalho: continuam sendo oito mot
 | Editor de rotinas | `src/pages/Editor.tsx` (`/rotina/:id`) |
 | Modelo de rotinas | `src/routines/types.ts` |
 | Rodízio | `src/routines/ciclagem.ts` |
+| Executor de rotinas | `src/routines/execucao.ts` (a lógica) · `src/pages/Sessao.tsx` (a tela) |
+| As rotinas que vêm no app | `src/routines/doTime.ts` |
+| Padrões rítmicos nomeados | `src/theory/padroes.ts` — **vazio até haver revisor de tradição** |
 | Rotação | `src/routines/rotacao.ts` |
 | Editar rotina | `src/routines/edicao.ts` |
 | Estado e histórico | `src/state/store.ts` · `useRegistro.ts` |

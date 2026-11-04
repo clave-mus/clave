@@ -25,7 +25,7 @@ estão certas. Mas também não se preserva decisão ruim só porque já foi imp
 **Três ideias do código que também ficam:**
 
 1. **O motor musical não conhece a tela.** Nada em `src/theory/` importa React.
-2. **Um exercício é uma declaração, não uma tela.** Em `catalog.ts` cada exercício tem
+2. **Um exercício é uma declaração, não uma tela.** Em `catalog/items/<id>.ts` cada exercício tem
    configurações e uma função `make(settings, ctx)` que sorteia uma pergunta; quem renderiza e
    corrige é um `Player` só, para todos. **É a ideia estrutural mais valiosa do repositório.**
 3. **O relógio do áudio não é o relógio da tela.**
@@ -273,7 +273,7 @@ src/
   audio/       ← fica como está
   catalog/     (era exercises/)
     types.ts     CatalogItem, Question, ParamSpec, ValidationMode
-    items/       um arquivo por família, em vez de um catalog.ts de 672 linhas
+    items/       um arquivo por família, em vez de um catalog.ts de 946 linhas ✅ feito em 04/11
     params.ts    a cascata
     context.ts   fitsContext + requisitos deduzidos
     validate.ts  ← fica como está
@@ -290,7 +290,7 @@ src/
   pages/
 ```
 
-**Por que `items/` em vez de um `catalog.ts`:** com 672 linhas e quatro pessoas mexendo, todo PR
+**Por que `items/` em vez de um `catalog.ts`:** com 946 linhas e quatro pessoas mexendo, todo PR
 toca o mesmo arquivo e todo PR dá conflito. Um arquivo por família resolve, e combina com "cada
 família tem um dono musical".
 
