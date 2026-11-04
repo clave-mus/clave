@@ -120,7 +120,7 @@ todo item tem ≥1 área.
 
 ---
 
-## F1-4 · Fundir as duplicatas por superfície
+## F1-4 · Fundir as duplicatas por superfície ✅ *feita em 04/11/2026*
 
 **Decisão de origem:** 16. **Depende de:** F1-3.
 
@@ -173,6 +173,30 @@ aleatório com distribuição descontrolada. Fundido, ele herda os parâmetros d
 existem mais, o estado salvo de quem já usava o app é migrado, e os testes de catálogo passam.
 
 **Não faça:** não aproveite para redesenhar o layout de celular desses exercícios — é F6-6.
+
+**Feito.** Onze ids viraram quatro. Conferido no navegador nas três superfícies de cada um, e a rotina
+real do Paulo ("Braço em 3 tons") abre no braço depois da migração.
+
+**A migração está nos três lugares onde o id antigo mora**, com teste em cada um: a rotina guardada
+(`routines/storage.ts`, na leitura — como `limparCamposQueSairam`, não é passo de versão, porque o que
+mudou foi o catálogo e não o formato), o histórico e as estatísticas (`state/migrate.ts`, `FUNDIDOS`).
+**A superfície é a metade que não pode faltar:** migrar `braco-nota` para `que-nota-e-essa` sem ela
+jogaria a pessoa na pauta.
+
+**Duas coisas que a fusão mudou e que não estavam no enunciado:**
+
+1. **A unidade de medida dos testes do catálogo.** Nasceu `catalog/variantes.ts`: os testes percorrem
+   **variantes** (item + superfície), não itens. Sem isso, um teste que olhasse só os padrões de
+   `que-nota-e-essa` mediria **um terço** dele. E foi o que mostrou que *"a região não se aplica"* é
+   propriedade da **superfície**, não do item — a mesma pergunta honra a região no teclado e não no
+   braço, porque lá a unidade é a casa.
+2. **O membro de um grupo de rodízio passou a ser uma instância**, não um id (`P8`). "O braço" listava
+   `braco-nota, braco-ache, braco-intervalo`; depois da fusão esses são os mesmos ids de "Leitura na
+   pauta", e um grupo que listasse só o id ofereceria leitura de pauta dentro de "O braço".
+
+**Uma decisão de conteúdo que pareceu conflito e não era** (`P7`): o ramo "piano" de `acorde-visual`
+montava o acorde na fundamental e marcava o teclado — exatamente o que `teclado-acorde` fazia, mas com
+a lista de qualidades chumbada e **ignorando a cascata**. Era `teclado-acorde` pior, e saiu.
 
 ---
 
