@@ -46,6 +46,21 @@ export function pcName(p: number, naming: Naming = 'pt', both = true) {
   if (!both || sharp[1] === 0) return s;
   return `${s}/${letterName(flat[0], naming) + accSymbol(flat[1])}`;
 }
+/**
+ * O nome da **tonalidade** de uma classe de altura, na grafia convencional dela.
+ *
+ * Não é `pcName`: Lá♯ maior não é uma tonalidade, Si♭ maior é. As tonalidades com bemol se escrevem
+ * com bemol — é a mesma regra que faz Fá maior ter Si♭ e nunca Lá♯.
+ */
+export function keyName(p: number, naming: Naming = 'pt') {
+  const comBemol = [1, 3, 6, 8, 10].includes(mod(p, 12)) && mod(p, 12) !== 6;
+  const flat = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]][mod(p, 12)];
+  const sharp = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]][mod(p, 12)];
+  // Fá♯/Sol♭ é o par em que as duas grafias circulam; fica em Fá♯, que é a mais usada.
+  const [letra, acc] = comBemol ? flat : sharp;
+  return letterName(letra, naming) + accSymbol(acc);
+}
+
 /** Converte uma altura MIDI em nota grafada, preferindo sustenidos ou bemóis. */
 export function fromMidi(m: number, prefer: 'sharp' | 'flat' = 'sharp'): Note {
   const p = mod(m, 12);
@@ -104,11 +119,33 @@ export function intervalShort(iv: Interval) {
 
 // ---------------- escalas ----------------
 type Deg = [num: number, semis: number];
+
+/**
+ * Direção em que a escala é percorrida. Importa para **uma** escala — a menor melódica clássica,
+ * que é definida pela assimetria — e por isso `desc` é opcional.
+ */
+export type Direcao = 'sobe' | 'desce';
+
 export const SCALES = {
   maior: { degs: [[1, 0], [2, 2], [3, 4], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
   menor: { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[] },
   'menor-harmonica': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 11]] as Deg[] },
-  'menor-melodica': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
+  // As DUAS melódicas, e são duas escalas, não uma opção (decisão 70).
+  //
+  // A clássica é *definida* pela assimetria: sobe com 6ª e 7ª elevadas, desce como menor natural.
+  // É a definição que uma prova de conservatório cobra, e é o que `desc` registra.
+  //
+  // A do jazz é a forma ascendente usada nas duas direções, e é conceitualmente outra escala — é a
+  // que gera a alterada e a lídia dominante. Ela não tem `desc` porque desce igual.
+  //
+  // Mesmo nome, duas coisas: era daí que vinha a ambiguidade, e não da direção. E repare que
+  // **subindo as duas são idênticas** — por isso quem pede para distingui-las de ouvido só na
+  // subida está pedindo o impossível, e o item tem que recusar (decisão 70).
+  'menor-melodica': {
+    degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[],
+    desc: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[],
+  },
+  'menor-melodica-jazz': { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 11]] as Deg[] },
   dorico: { degs: [[1, 0], [2, 2], [3, 3], [4, 5], [5, 7], [6, 9], [7, 10]] as Deg[] },
   frigio: { degs: [[1, 0], [2, 1], [3, 3], [4, 5], [5, 7], [6, 8], [7, 10]] as Deg[] },
   lidio: { degs: [[1, 0], [2, 2], [3, 4], [4, 6], [5, 7], [6, 9], [7, 11]] as Deg[] },
@@ -119,9 +156,45 @@ export const SCALES = {
   blues: { degs: [[1, 0], [3, 3], [4, 5], [5, 6], [5, 7], [7, 10]] as Deg[] },
 } as const;
 export type ScaleId = keyof typeof SCALES;
+/** Todas as escalas, na ordem em que estão declaradas. É a lista que as telas oferecem. */
+export const ALL_SCALE_IDS = Object.keys(SCALES) as ScaleId[];
 
-export function buildScale(tonic: Note, id: ScaleId): Note[] {
-  return SCALES[id].degs.map(([num, semis]) => transpose(tonic, { num, semis }));
+/** Os graus da escala na direção pedida; `desce` só difere na melódica clássica. */
+export function scaleDegs(id: ScaleId, dir: Direcao = 'sobe'): Deg[] {
+  const e = SCALES[id] as { degs: Deg[]; desc?: Deg[] };
+  return dir === 'desce' && e.desc ? e.desc : e.degs;
+}
+
+export function buildScale(tonic: Note, id: ScaleId, dir: Direcao = 'sobe'): Note[] {
+  return scaleDegs(id, dir).map(([num, semis]) => transpose(tonic, { num, semis }));
+}
+
+/**
+ * O rótulo de um grau a partir do número e dos semitons: `3`, `♭3`, `♯4`.
+ *
+ * Mora aqui, e não no catálogo, porque é grafia de teoria — e porque o teste do catálogo precisa
+ * dela para conferir os distratores. Duas implementações disto divergiriam em silêncio.
+ */
+export function degreeLabel(num: number, semis: number): string {
+  const natural = [0, 2, 4, 5, 7, 9, 11][num - 1];
+  const delta = semis - natural;
+  return `${delta < 0 ? '♭'.repeat(-delta) : delta > 0 ? '♯'.repeat(delta) : ''}${num}`;
+}
+
+/** Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho. */
+export function scaleDegreeLabels(id: ScaleId, dir: Direcao = 'sobe'): string[] {
+  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), "1'"];
+}
+
+/**
+ * As alturas MIDI de uma escala, na direção pedida, **incluindo a oitava nas duas pontas**.
+ *
+ * `sobe` devolve tônica → oitava; `desce` devolve oitava → tônica, usando os graus descendentes
+ * quando a escala tem os seus. É o que os itens de ouvido toca.
+ */
+export function scaleMidi(tonic: number, id: ScaleId, dir: Direcao = 'sobe'): number[] {
+  const semis = scaleDegs(id, dir).map(([, s]) => tonic + s);
+  return dir === 'sobe' ? [...semis, tonic + 12] : [tonic + 12, ...semis.slice().reverse()];
 }
 
 // ---------------- acordes ----------------
@@ -131,7 +204,11 @@ export const CHORDS = {
   menor: { suffix: { pt: 'm', en: 'm' }, degs: [[1, 0], [3, 3], [5, 7]] as Deg[] },
   aum: { suffix: { pt: '(♯5)', en: '+' }, degs: [[1, 0], [3, 4], [5, 8]] as Deg[] },
   dim: { suffix: { pt: '°', en: 'dim' }, degs: [[1, 0], [3, 3], [5, 6]] as Deg[] },
+  sus2: { suffix: { pt: 'sus2', en: 'sus2' }, degs: [[1, 0], [2, 2], [5, 7]] as Deg[] },
   sus4: { suffix: { pt: 'sus4', en: 'sus4' }, degs: [[1, 0], [4, 5], [5, 7]] as Deg[] },
+  // Exigidos pelos campos da menor harmônica e da melódica (grau i e grau ♭III) — ver `harmonicField`.
+  m7M: { suffix: { pt: 'm(7M)', en: 'm(maj7)' }, degs: [[1, 0], [3, 3], [5, 7], [7, 11]] as Deg[] },
+  '7M#5': { suffix: { pt: '7M(♯5)', en: 'maj7♯5' }, degs: [[1, 0], [3, 4], [5, 8], [7, 11]] as Deg[] },
   '7M': { suffix: { pt: '7M', en: 'maj7' }, degs: [[1, 0], [3, 4], [5, 7], [7, 11]] as Deg[] },
   '7': { suffix: { pt: '7', en: '7' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10]] as Deg[] },
   m7: { suffix: { pt: 'm7', en: 'm7' }, degs: [[1, 0], [3, 3], [5, 7], [7, 10]] as Deg[] },
@@ -157,8 +234,8 @@ export function chordSymbol(root: Pick<Note, 'letter' | 'acc'>, id: ChordId, con
 }
 
 // ---------------- tonalidades ----------------
-const SHARP_ORDER: Letter[] = [3, 0, 4, 1, 5, 2, 6]; // Fá Dó Sol Ré Lá Mi Si
-const FLAT_ORDER: Letter[] = [6, 2, 5, 1, 4, 0, 3];
+export const SHARP_ORDER: Letter[] = [3, 0, 4, 1, 5, 2, 6]; // Fá Dó Sol Ré Lá Mi Si
+export const FLAT_ORDER: Letter[] = [6, 2, 5, 1, 4, 0, 3];
 /** fifths: -7..7 (bemóis negativos). Devolve a tônica maior. */
 export function majorTonic(fifths: number): Note {
   let n = note(0, 0, 4);
@@ -207,18 +284,52 @@ export interface Degree {
   roman: string;
   symbol: string;
 }
-export function harmonicField(tonic: Note, mode: 'maior' | 'menor', tetrads = false, conv: Convention = 'pt'): Degree[] {
+/**
+ * Os modos que têm campo harmônico no app. As duas menores alteradas entraram a pedido do Paulo, e com
+ * elas vieram dois acordes novos ao catálogo: `m7M` (grau i) e `7M#5` (grau ♭III).
+ */
+export type ModoDoCampo = 'maior' | 'menor' | 'menor-harmonica' | 'menor-melodica';
+
+/** Tríades e tétrades de cada grau, por modo. Conferidos nota a nota em Lá. */
+const CAMPOS: Record<ModoDoCampo, { triades: ChordId[]; tetrades: ChordId[]; bemol: number[] }> = {
+  maior: {
+    triades: ['maior', 'menor', 'menor', 'maior', 'maior', 'menor', 'dim'],
+    tetrades: ['7M', 'm7', 'm7', '7M', '7', 'm7', 'm7b5'],
+    bemol: [],
+  },
+  menor: {
+    triades: ['menor', 'dim', 'maior', 'menor', 'menor', 'maior', 'maior'],
+    tetrades: ['m7', 'm7b5', '7M', 'm7', 'm7', '7M', '7'],
+    bemol: [2, 5, 6],
+  },
+  // Lá menor harmônica: Am · B° · C+ · Dm · E · F · G#°
+  'menor-harmonica': {
+    triades: ['menor', 'dim', 'aum', 'menor', 'maior', 'maior', 'dim'],
+    tetrades: ['m7M', 'm7b5', '7M#5', 'm7', '7', '7M', 'dim7'],
+    bemol: [2, 5],
+  },
+  // Lá menor melódica: Am · Bm · C+ · D · E · F#° · G#°
+  'menor-melodica': {
+    triades: ['menor', 'menor', 'aum', 'maior', 'maior', 'dim', 'dim'],
+    tetrades: ['m7M', 'm7', '7M#5', '7', '7', 'm7b5', 'm7b5'],
+    bemol: [2],
+  },
+};
+
+export function harmonicField(tonic: Note, mode: ModoDoCampo, tetrads = false, conv: Convention = 'pt'): Degree[] {
+  const campo = CAMPOS[mode];
   const scale = buildScale(tonic, mode);
-  const types: ChordId[] = mode === 'maior'
-    ? (tetrads ? ['7M', 'm7', 'm7', '7M', '7', 'm7', 'm7b5'] : ['maior', 'menor', 'menor', 'maior', 'maior', 'menor', 'dim'])
-    : (tetrads ? ['m7', 'm7b5', '7M', 'm7', 'm7', '7M', '7'] : ['menor', 'dim', 'maior', 'menor', 'menor', 'maior', 'maior']);
+  const types = tetrads ? campo.tetrades : campo.triades;
   return scale.map((root, i) => {
     const chord = types[i];
-    const minorish = ['menor', 'm7', 'dim', 'm7b5', 'dim7'].includes(chord);
+    const minorish = ['menor', 'm7', 'm7M', 'dim', 'm7b5', 'dim7'].includes(chord);
     let roman = ROMAN[i];
     if (minorish) roman = roman.toLowerCase();
-    if (mode === 'menor' && [2, 5, 6].includes(i)) roman = '♭' + roman;
-    const suffix = chord === 'dim' ? '°' : chord === 'm7b5' ? 'ø' : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7' : '';
+    if (campo.bemol.includes(i)) roman = '♭' + roman;
+    const suffix = chord === 'dim' ? '°' : chord === 'dim7' ? '°7' : chord === 'm7b5' ? 'ø'
+      : chord === 'aum' ? '+' : chord === '7M#5' ? '+' + (conv === 'pt' ? '7M' : 'maj7')
+      : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7'
+      : chord === 'm7M' ? (conv === 'pt' ? '(7M)' : '(maj7)') : '';
     return { degree: i + 1, root, chord, roman: roman + suffix, symbol: chordSymbol(root, chord, conv) };
   });
 }

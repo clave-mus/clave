@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { drone, playGroups } from '../audio/engine';
 import { pcName } from '../theory/core';
-import { Art, Btn, Chip } from '../components/ui';
+import { Btn, Chip } from '../components/ui';
 import { fmtClock, Metronome, useToolLog } from './common';
 import { useNaming, useT, type MessageKey } from '../i18n';
 
@@ -25,7 +25,8 @@ export default function Ambiente({ goalMinutes }: { goalMinutes?: number }) {
   const [metro, setMetro] = useState(false);
   const stopDrone = useRef<(() => void) | null>(null);
   const chimed = useRef(false);
-  useToolLog('ambiente', 'Solfejar e tocar', 'perception.melodic', timing || droneOn || metro);
+  // a tonalidade do drone é o conteúdo desta prática; sem o snapshot ela se perde (F3-9)
+  useToolLog('ambiente', 'Solfejar e tocar', 'perception.melodic', timing || droneOn || metro, { settings: { tonica: tonic, drone: kind } });
 
   useEffect(() => () => stopDrone.current?.(), []);
   useEffect(() => {
@@ -82,7 +83,6 @@ export default function Ambiente({ goalMinutes }: { goalMinutes?: number }) {
 
       <section className="panel" style={{ display: 'grid', gap: 12, gridColumn: '1 / -1' }}>
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Art name="clave-fones" style={{ width: 110 }} />
           <div style={{ flex: 1, minWidth: 240 }}>
             <h3 style={{ fontSize: 28 }}>{t('ambient.howTo')}</h3>
             <ol style={{ margin: '8px 0 0', paddingLeft: 20, display: 'grid', gap: 4 }}>

@@ -36,7 +36,7 @@ const GAP = 22;
 export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label }: Props) {
   const t = useT();
   const n = tuning.length;
-  const left = 34;
+  const left = 50;  // espaço para o nome da corda à esquerda
   const top = 18;
   const frets = to - from;
   const width = left + frets * FW + 16;
@@ -55,8 +55,16 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
       {Array.from({ length: frets + 1 }, (_, i) => (
         <path key={i} d={`M${left + i * FW},${top - 8} V${top + (n - 1) * GAP + 8}`} stroke={i === 0 && from === 0 ? 'var(--cream)' : '#a99f8c'} strokeWidth={i === 0 && from === 0 ? 6 : 2} />
       ))}
+      {/* O nome de cada corda solta, à esquerda. Sem ele é fácil se confundir sobre em que corda se
+          está — ainda mais no baixo de cinco e na guitarra, onde há duas cordas Mi. */}
+      {tuning.map((aberta, s) => (
+        <text key={`n${s}`} x={left - 32} y={yS(s) + 4} textAnchor="middle" fontSize="11" fontWeight="700"
+          fill="var(--cream)" opacity={onlyString === undefined || onlyString === s ? 0.9 : 0.4} fontFamily="var(--body)">
+          {pcName(aberta, naming, false)}
+        </text>
+      ))}
       {tuning.map((_, s) => (
-        <path key={s} d={`M${left - 26},${yS(s)} H${left + frets * FW}`} stroke="var(--white, #fbf6ea)" strokeWidth={0.9 + (n - 1 - (n - 1 - s)) * 0 + (n - s) * 0.28} opacity={onlyString === undefined || onlyString === s ? 1 : 0.35} />
+        <path key={s} d={`M${left - 22},${yS(s)} H${left + frets * FW}`} stroke="var(--white, #fbf6ea)" strokeWidth={0.9 + (n - 1 - (n - 1 - s)) * 0 + (n - s) * 0.28} opacity={onlyString === undefined || onlyString === s ? 1 : 0.35} />
       ))}
       {Array.from({ length: frets }, (_, i) => from + i + 1).filter(f => [1, 3, 5, 7, 9, 12, 15].includes(f)).map(f => (
         <text key={f} x={left + (f - from - 0.5) * FW} y={height - 4} textAnchor="middle" fontSize="11" fill="var(--muted)" fontFamily="var(--body)">{f}</text>

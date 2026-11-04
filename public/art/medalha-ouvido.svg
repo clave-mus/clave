@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><filter id="medalha-ouvido-gr" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-<feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="9" result="lo"/>
-<feDisplacementMap in="SourceGraphic" in2="lo" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
-<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
-<feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.86" result="dk"/>
-<feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.3 0 0 0 0.52" result="lt"/>
-<feComposite in="dk" in2="d" operator="in" result="dk2"/><feComposite in="lt" in2="d" operator="in" result="lt2"/>
-<feMerge><feMergeNode in="d"/><feMergeNode in="dk2"/><feMergeNode in="lt2"/></feMerge>
-</filter></defs><g filter="url(#medalha-ouvido-gr)"><path d="M152.0,80.0L139.9,96.0L142.4,116.0L123.8,123.8L116.0,142.4L96.0,139.9L80.0,152.0L64.0,139.9L44.0,142.4L36.2,123.8L17.6,116.0L20.1,96.0L8.0,80.0L20.1,64.0L17.6,44.0L36.2,36.2L44.0,17.6L64.0,20.1L80.0,8.0L96.0,20.1L116.0,17.6L123.8,36.2L142.4,44.0L139.9,64.0Z" fill="#3a5bd8" /><circle cx="80" cy="80" r="50" fill="#100e0d" /><circle cx="80" cy="80" r="44" fill="none" stroke="#f4e8d0" stroke-width="1.5" stroke-dasharray="3 4"/><path d="M60,96 L60,70 L72,58 L88,58 L100,70 L100,96" fill="none" stroke="#f4e8d0" stroke-width="6" stroke-linejoin="miter"/><rect x="52" y="84" width="12" height="22" fill="#e2522a" /><rect x="96" y="84" width="12" height="22" fill="#e2522a" /></g></svg>

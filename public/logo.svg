@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Clave">
+  <!-- Marca do Clave, estilo Campo: o campo de cor, com a letra em negativo. -->
+  <defs>
+    <radialGradient id="f1" cx="78%" cy="12%" r="86%">
+      <stop offset="0%" stop-color="#f2b87a" />
+      <stop offset="62%" stop-color="#e8703c" />
+      <stop offset="100%" stop-color="#c14a2b" />
+    </radialGradient>
+    <radialGradient id="f2" cx="10%" cy="96%" r="70%">
+      <stop offset="0%" stop-color="#b5407a" stop-opacity=".45" />
+      <stop offset="100%" stop-color="#b5407a" stop-opacity="0" />
+    </radialGradient>
+    <mask id="cut">
+      <rect width="64" height="64" fill="#fff" />
+      <!-- "C" aberto, cortado do campo -->
+      <path d="M44 20.5a16.5 16.5 0 1 0 0 23" fill="none" stroke="#000" stroke-width="8.5" stroke-linecap="round" />
+    </mask>
+  </defs>
+  <g mask="url(#cut)">
+    <rect width="64" height="64" rx="15" fill="url(#f1)" />
+    <rect width="64" height="64" rx="15" fill="url(#f2)" />
+  </g>
+</svg>

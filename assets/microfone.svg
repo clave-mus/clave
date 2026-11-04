@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 260" ><defs><filter id="microfone-stk" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-<feMorphology in="SourceAlpha" operator="dilate" radius="9" result="o"/>
-<feMorphology in="SourceAlpha" operator="dilate" radius="7.5" result="w"/>
-<feFlood flood-color="#1a1714"/><feComposite in2="o" operator="in" result="oi"/>
-<feFlood flood-color="#fdfbf5"/><feComposite in2="w" operator="in" result="wi"/>
-<feGaussianBlur in="o" stdDeviation="5"/><feOffset dx="2" dy="7" result="bo"/>
-<feFlood flood-color="#000" flood-opacity=".38"/><feComposite in2="bo" operator="in" result="sh"/>
-<feMerge><feMergeNode in="sh"/><feMergeNode in="oi"/><feMergeNode in="wi"/><feMergeNode in="SourceGraphic"/></feMerge>
-</filter></defs><g filter="url(#microfone-stk)" stroke-linecap="round" stroke-linejoin="round"><clipPath id="microfone-c"><rect x="50" y="20" width="60" height="90" rx="30"/></clipPath><rect x="50" y="20" width="60" height="90" rx="30" fill="#f7f3ea" stroke="#171513" stroke-width="3.5"/><g clip-path="url(#microfone-c)"><path d="M50,28 L110,28 M50,36 L110,36 M50,44 L110,44 M50,52 L110,52 M50,78 L110,78 M50,86 L110,86 M50,94 L110,94 M50,102 L110,102" fill="none" stroke="#171513" stroke-width="2" /></g><path d="M50,60 L110,60 L110,72 L50,72 Z" fill="#171513" stroke="#171513" stroke-width="3.5" /><path d="M40,64 C40,124 120,124 120,64" fill="none" stroke="#171513" stroke-width="4" /><path d="M73,108 L87,108 L87,132 L73,132 Z" fill="#171513" stroke="#171513" stroke-width="3.5" /><path d="M80,132 L80,230" fill="none" stroke="#171513" stroke-width="8" /><ellipse cx="80" cy="236" rx="42" ry="9" fill="#171513" stroke="#171513" stroke-width="3.5" /><path d="M52,234 Q80,240 108,234" fill="none" stroke="#f7f3ea" stroke-width="1.5" /></g></svg>

@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom';
 import { LESSONS as LESSON_BASE } from '../data/content';
 import { useContent } from '../data/localized';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
+import { exerciseById } from '../catalog/catalog';
+import { itemById } from '../catalog';
 import { useStore } from '../state/store';
-import { Art, Btn, PageHead, SecTitle, Tag } from '../components/ui';
+import { Btn, Field, PageHead, SecTitle, Tag } from '../components/ui';
 import NotFound from './NotFound';
 import { itemText, useT } from '../i18n';
 
@@ -30,7 +30,7 @@ export default function Estudar() {
             return (
               <div key={r.id} className="panel" style={{ display: 'grid', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  <Art name={r.art} style={{ width: 84, height: 84, objectFit: 'cover' }} />
+                  <Field seed={r.id} className="field-square" style={{ width: 68, flex: 'none' }} />
                   <div>
                     <h3 style={{ fontSize: 34 }}>{r.title}</h3>
                     <span className="script" style={{ color: 'var(--mu)', fontSize: 20 }}>{r.sub}</span>
@@ -51,7 +51,7 @@ export default function Estudar() {
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
           {GENRES.map(g => (
             <Link key={g.id} to={`/estudar/genero/${g.id}`} className="cover-card">
-              <Art name={g.art} alt={t('study.cover', { name: g.name })} />
+              <Field seed={g.id} color={g.color} className="field-square" label={g.name} style={{ borderRadius: 0 }} />
               <div className="lbl"><h3 style={{ color: g.color }}>{g.name}</h3><span className="sub">{g.sub}</span><small>{g.cat} · {t('study.tracks', { count: g.sides.reduce((a, s) => a + s.tracks.length, 0) })}</small></div>
             </Link>
           ))}
@@ -95,7 +95,7 @@ export function LessonPage() {
       <Link to={`/treinar#${m.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('study.backToModule', { module: a.name })}</Link>
       <header className="page-head" style={{ marginBottom: 0 }}>
         <div><Tag>{a.name}</Tag><h1>{m.title}</h1></div>
-        <Art name={a.art} style={{ width: 120 }} />
+        <Field seed={a.id} color={a.color} className="field-square" style={{ width: 84 }} />
       </header>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
         <div className="panel" style={{ background: 'var(--co)' }}><div className="eyebrow" style={{ color: 'var(--cream)' }}>{t('study.why')}</div><p style={{ fontSize: 18, marginTop: 8 }}>{m.why}</p></div>
@@ -118,8 +118,8 @@ export function LessonPage() {
           {m.exercises.map(e => exerciseById[e] && (
             <Link key={e} to={`/treinar/${e}`} className="ex-card"><span className="acc" style={{ background: moduleById[exerciseById[e].primaryModule].color }} /><div><h3>{itemText(t, e, 'title')}</h3><p>{itemText(t, e, 'desc')}</p></div></Link>
           ))}
-          {m.tools.map(id => toolById[id] && (
-            <Link key={id} to={toolById[id].path} className="ex-card"><span className="acc" style={{ background: 'var(--co)' }} /><Art name={toolById[id].art} style={{ width: 48, flex: 'none' }} /><div><h3>{itemText(t, id, 'title')}</h3><p>{itemText(t, id, 'desc')}</p></div></Link>
+          {m.tools.map(id => itemById[id] && (
+            <Link key={id} to={`/catalogo/${id}`} className="ex-card"><span className="acc" style={{ background: moduleById[itemById[id]!.primaryModule].color }} /><div><h3>{itemText(t, id, 'title')}</h3><p>{itemText(t, id, 'desc')}</p></div></Link>
           ))}
         </div>
       </section>
@@ -137,10 +137,7 @@ export function GenrePage() {
     <div style={{ display: 'grid', gap: 24 }}>
       <Link to="/estudar" className="eyebrow" style={{ textDecoration: 'none' }}>{t('study.back')}</Link>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', alignItems: 'start', gap: 32 }}>
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', inset: '16px -16px -16px 16px', background: 'var(--co)' }} />
-          <Art name={g.art} alt={t('study.cover', { name: g.name })} style={{ position: 'relative', width: '100%' }} />
-        </div>
+        <Field seed={g.id} color={g.color} className="field-square" label={g.name} style={{ width: '100%', fontSize: 34 }} />
         <div style={{ display: 'grid', gap: 16 }}>
           <span className="eyebrow">{g.cat}</span>
           <h1 style={{ fontSize: 'clamp(64px, 10vw, 128px)', color: g.color }}>{g.name}</h1>

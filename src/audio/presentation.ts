@@ -2,7 +2,7 @@
 // tocar; timbre, volume, intervalo entre notas, arpejo e andamento são resolvidos aqui, na hora de
 // tocar, a partir de camadas (padrão < global < exercício < configuração da pessoa). Um parâmetro de
 // som novo entra só neste arquivo e passa a valer para todo exercício com áudio.
-import type { SoundContent } from '../exercises/types';
+import type { SoundContent } from '../catalog/types';
 import { drum, now, tone, type Voice } from './engine';
 
 export interface Presentation {

@@ -1,9 +1,19 @@
+// Histórico · mora dentro do Perfil, em /perfil/historico (decisão 11).
+//
+// Progresso não é aba e não é central: o Clave é plataforma de estudo séria, não jogo. Quem quer
+// ver, vê; quem não quer, nunca esbarra. A medida principal é TEMPO ESTUDADO — honesta justamente
+// por ser modesta: não afirma domínio, não compara, não premia.
+//
+// Decisão 14: atividade e evidência de aprendizagem nunca se misturam, e toda proporção aparece
+// com a quantidade de tentativas ao lado.
+// Fora daqui, por decisão: sequência de dias, medalhas, níveis, XP e comparação entre pessoas.
 import { useContent } from '../data/localized';
-import { minutesByModule, streakDays, useStore } from '../state/store';
-import { Art, Btn, fmtMin, PageHead, SecTitle } from '../components/ui';
+import { minutesByModule, useStore } from '../state/store';
+import { fmtMin, PageHead, SecTitle } from '../components/ui';
 import { itemText, localeTag, useLocale, useT } from '../i18n';
-import { exerciseById } from '../exercises/catalog';
-import { toolById } from '../exercises/tools';
+import { descreverAtividade } from '../state/atividade';
+import { itemById } from '../catalog';
+import { useNaming } from '../i18n';
 
 export default function Progresso() {
   const stats = useStore(s => s.stats);
@@ -11,6 +21,19 @@ export default function Progresso() {
   const t = useT();
   const { MODULES, moduleById } = useContent();
   const lang = localeTag(useLocale());
+  const naming = useNaming();
+
+  /**
+   * Com que configuração a prática rodou. Vazio nas atividades de antes da F3-9.
+   *
+   * Quando a etapa era uma **tarefa**, a autoavaliação entra na linha. **Não é nota**: é o que a
+   * pessoa disse sobre a própria prática, e por isso aparece com as palavras dela ("consegui com
+   * esforço"), nunca convertida em acerto nem em percentual (decisão 5).
+   */
+  const comoFoi = (h: (typeof history)[number]) => [
+    h.autoavaliacao ? t(`session.${h.autoavaliacao === 'facil' ? 'gotIt' : h.autoavaliacao === 'esforco' ? 'withHelp' : 'again'}`) : '',
+    descreverAtividade(h.snapshot, { t, naming }),
+  ].filter(Boolean).join(' · ');
 
   const byModule = minutesByModule(history, 30);
   const totalMin = Object.values(byModule).reduce((a, b) => a + b, 0);
@@ -22,53 +45,61 @@ export default function Progresso() {
     <div>
       <PageHead tag={t('progress.tag')} title={t('progress.title')} sub={t('progress.sub')} />
 
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-        {[
-          [t('progress.streak'), String(streakDays(history))],
-          [t('progress.minutes30'), String(Math.round(totalMin))],
-          [t('progress.answers'), String(answers)],
-          [t('progress.accuracy'), answers ? `${Math.round((right / answers) * 100)}%` : '–'],
-        ].map(([l, v]) => (
-          <div key={l} className="panel"><div className="eyebrow">{l}</div><div className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 56, lineHeight: 1 }}>{v}</div></div>
-        ))}
-      </div>
-
       <section className="sec">
-        <SecTitle>{t('progress.modules')}</SecTitle>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-          {MODULES.map(m => (
-            <div key={m.id} className="panel" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <Art name={m.art} style={{ width: 72, flex: 'none' }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: 30 }}>{m.name}</h3>
-                <div className="progressbar" style={{ margin: '8px 0 6px' }}><i style={{ width: `${((byModule[m.id] ?? 0) / maxMin) * 100}%`, background: m.color }} /></div>
-                <div className="muted" style={{ fontSize: 13 }}>{t('progress.monthTime', { time: fmtMin((byModule[m.id] ?? 0) * 60) })}</div>
+        <SecTitle>{t('progress.timeTitle')}</SecTitle>
+        <p className="muted note-line">{t('progress.timeNote')}</p>
+        <div className="panel stack">
+          <div className="big-stat">
+            <b className="num">{fmtMin(totalMin * 60)}</b>
+            <span className="eyebrow">{t('progress.minutes30')}</span>
+          </div>
+          <div className="bars">
+            {MODULES.map(m => (
+              <div key={m.id} className="bar-row">
+                <span>{m.name}</span>
+                <div className="progressbar"><i style={{ width: `${((byModule[m.id] ?? 0) / maxMin) * 100}%`, background: m.color }} /></div>
+                <span className="num muted">{fmtMin((byModule[m.id] ?? 0) * 60)}</span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="sec">
-        <SecTitle>{t('progress.mentorTitle')}</SecTitle>
-        <div className="panel" style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Art name="clave-mentor" style={{ width: 96, flex: 'none' }} />
-          <p style={{ flex: 1, minWidth: 220 }}>{t('progress.mentorText')}</p>
-          <Btn to="/mentor" tone="ghost">{t('progress.mentorOpen')}</Btn>
+        <SecTitle>{t('progress.evidenceTitle')}</SecTitle>
+        <p className="muted note-line">{t('progress.evidenceNote')}</p>
+        <div className="panel">
+          {answers === 0 ? (
+            <p className="muted">{t('progress.evidenceEmpty')}</p>
+          ) : (
+            /* O PERCENTUAL SAIU (decisão 100): a taxa de acerto não significa nada — o chute dá 50% — e
+               "percentual de domínio" está na lista do que nunca entra. Fica a contagem, que é fato. */
+            <div className="big-stat">
+              <b className="num">{right}/{answers}</b>
+              <span className="eyebrow">{t('progress.rightOf')}</span>
+            </div>
+          )}
         </div>
       </section>
 
       <section className="sec">
         <SecTitle>{t('progress.history')}</SecTitle>
         {history.length === 0 ? (
-          <div className="empty"><Art name="clave-dormindo" style={{ width: 160 }} /><div><h3 style={{ fontSize: 28 }}>{t('progress.emptyTitle')}</h3><p className="muted">{t('progress.emptyText')}</p></div></div>
+          <div className="empty">
+            <h3>{t('progress.emptyTitle')}</h3>
+            <p className="muted">{t('progress.emptyText')}</p>
+          </div>
         ) : (
-          <div className="panel" style={{ padding: 0 }}>
+          <div className="panel list">
             {history.slice(0, 40).map((h, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 14, padding: '10px 16px', borderBottom: '1px solid var(--line)', alignItems: 'baseline' }}>
-                <div style={{ minWidth: 0 }}><b>{exerciseById[h.id] || toolById[h.id] ? itemText(t, h.id, 'title') : h.title}</b> <span className="muted" style={{ fontSize: 13 }}>· {moduleById[h.module]?.name}</span></div>
-                <span className="num muted" style={{ fontSize: 14 }}>{h.total ? `${h.correct}/${h.total}` : fmtMin(h.seconds)}</span>
-                <span className="num muted" style={{ fontSize: 13 }}>{new Date(h.at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+              <div key={i} className="list-row">
+                <div style={{ minWidth: 0 }}>
+                  <b>{itemById[h.id] ? itemText(t, h.id, 'title') : h.title}</b>
+                  <span className="muted"> · {moduleById[h.module]?.name}</span>
+                  {comoFoi(h) && <span className="muted"> · {comoFoi(h)}</span>}
+                </div>
+                <span className="num muted">{h.total ? `${h.correct}/${h.total}` : fmtMin(h.seconds)}</span>
+                <span className="num muted">{new Date(h.at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             ))}
           </div>

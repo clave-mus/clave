@@ -1,3 +1,14 @@
+> # ⚠️ DOCUMENTO SUPERADO — não use
+>
+> Este plano foi **substituído** em 02/11/2026 por [tarefas/](tarefas/), depois da reformulação
+> do produto. Ele descreve decisões que foram descartadas (metáfora de academia, cinco abas,
+> rotinas na Fase 2, carga em bpm, PostHog, biblioteca pública de rotinas).
+>
+> Está aqui só como registro histórico. **Nenhuma tarefa deste arquivo deve ser executada.**
+> O plano atual é [tarefas/README.md](tarefas/README.md).
+
+---
+
 # Fase 1 · O núcleo
 
 Objetivo: lançar o Clave como **site e PWA**, sem comunidade, com o núcleo que faz o

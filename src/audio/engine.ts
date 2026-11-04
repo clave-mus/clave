@@ -50,8 +50,54 @@ function env(g: GainNode, t: number, peak: number, attack: number, decay: number
   g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
 }
 
+/**
+ * Corda pulsada (Karplus-Strong): ruído curto num atraso realimentado do tamanho do período.
+ *
+ * É o que dá timbre de **corda** sem amostra nenhuma — o ruído do ataque vira o "dedo", e o filtro na
+ * realimentação come os agudos a cada volta, que é o que uma corda real faz. Substitui a síntese por
+ * osciladores em violão e baixo, que soava "tuc": oscilador dá forma de onda fixa, e corda tem espectro
+ * que muda enquanto soa.
+ */
+function cordaPulsada(m: number, t: number, dur: number, vel: number, brilho: number, decaimento: number) {
+  const c = audio();
+  const periodo = 1 / hz(m);
+  const amostras = Math.max(2, Math.round(c.sampleRate * periodo));
+
+  // o ataque: um estouro curto de ruído, do tamanho de uma volta da corda
+  const exc = c.createBuffer(1, amostras, c.sampleRate);
+  const d = exc.getChannelData(0);
+  for (let i = 0; i < amostras; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / amostras);
+  const fonte = c.createBufferSource();
+  fonte.buffer = exc;
+
+  // o laço: atraso de um período, com perda e passa-baixa — é ele que faz a corda decair
+  const atraso = c.createDelay(0.2);
+  atraso.delayTime.value = periodo;
+  const perda = c.createGain();
+  perda.gain.value = decaimento;
+  const abafa = c.createBiquadFilter();
+  abafa.type = 'lowpass';
+  abafa.frequency.value = brilho;
+
+  const out = c.createGain();
+  out.gain.value = vel;
+  fonte.connect(atraso);
+  atraso.connect(abafa).connect(perda).connect(atraso);  // realimentação
+  atraso.connect(out).connect(master);
+
+  const fim = t + Math.max(dur, 0.4) + 0.6;
+  out.gain.setValueAtTime(vel, t);
+  out.gain.setTargetAtTime(0.0001, t + Math.max(dur, 0.35), 0.18);
+  fonte.start(t);
+  fonte.stop(t + periodo * 2);
+  registrar(out, [], fim);
+}
+
 /** Toca uma altura MIDI. `t` é o tempo absoluto do contexto (use now() + atraso). */
 export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel = 0.7) {
+  // violão e baixo são cordas: a síntese por osciladores não dá o timbre delas
+  if (voice === 'baixo') return cordaPulsada(m, t, dur, 0.9 * vel, 1800, 0.993);
+  if (voice === 'violao') return cordaPulsada(m, t, dur, 0.55 * vel, 3200, 0.986);
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -75,17 +121,6 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     f.frequency.exponentialRampToValueAtTime(900, t + Math.max(0.4, dur));
     env(out, t, 0.32 * vel, 0.006, Math.max(0.6, dur * 1.4));
     stop = t + Math.max(0.6, dur * 1.4) + 0.05;
-  } else if (voice === 'violao') {
-    add('sawtooth', 1, 0.5); add('triangle', 2, 0.2);
-    f.frequency.setValueAtTime(3200, t);
-    f.frequency.exponentialRampToValueAtTime(500, t + 0.5);
-    env(out, t, 0.28 * vel, 0.004, Math.max(0.5, dur));
-    stop = t + Math.max(0.5, dur) + 0.05;
-  } else if (voice === 'baixo') {
-    add('triangle', 1, 0.8); add('sine', 0.5, 0.5); add('sawtooth', 1, 0.08);
-    f.frequency.value = 700;
-    env(out, t, 0.5 * vel, 0.008, Math.max(0.35, dur));
-    stop = t + Math.max(0.35, dur) + 0.05;
   } else if (voice === 'pad') {
     add('sawtooth', 1, 0.3, -7); add('sawtooth', 1, 0.3, 7); add('sine', 0.5, 0.3);
     f.frequency.value = 1100;
@@ -104,6 +139,42 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     stop = t + dur + 0.15;
   }
   oscs.forEach(o => { o.start(t); o.stop(stop); });
+  registrar(out, oscs, stop);
+}
+
+// ---------------------------------------------------------------------------
+// Parar o que está soando
+// ---------------------------------------------------------------------------
+
+/**
+ * O que ainda pode soar. Sem isto, tocar de novo enquanto o acorde anterior decai **sobrepõe os dois**
+ * — e quem está identificando um acorde de ouvido escuta a soma de dois acordes, que é outra coisa.
+ */
+const soando = new Set<{ out: GainNode; oscs: OscillatorNode[] }>();
+
+function registrar(out: GainNode, oscs: OscillatorNode[], stop: number) {
+  const nó = { out, oscs };
+  soando.add(nó);
+  // limpa sozinho quando a nota termina, para o conjunto não crescer para sempre
+  const atraso = Math.max(0, (stop - now()) * 1000) + 60;
+  setTimeout(() => soando.delete(nó), atraso);
+}
+
+/**
+ * Silencia tudo com um corte curto (25 ms) em vez de instantâneo: cortar o ganho de uma vez produz
+ * estalo, que é pior que o som sobreposto.
+ */
+export function pararTudo() {
+  const t = now();
+  for (const { out, oscs } of soando) {
+    try {
+      out.gain.cancelScheduledValues(t);
+      out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), t);
+      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+      oscs.forEach(o => o.stop(t + 0.03));
+    } catch { /* nó já parado: nada a fazer */ }
+  }
+  soando.clear();
 }
 
 /** Toca grupos de notas em sequência; cada grupo soa junto (acorde) ou arpejado. */

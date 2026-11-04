@@ -1,0 +1,275 @@
+import type { ComponentType } from 'react';
+import type { Instrument } from '../data/modules';
+import type { ChordId, Clef, Convention, Naming, Note } from '../theory/core';
+import type { MessageKey, Translate } from '../i18n';
+import type { Presentation } from '../audio/presentation';
+import type { Classification } from './taxonomy';
+import type { GlobalParams, ParametroDePratica } from './params';
+import type { Publicacao } from './publicacao';
+import type { CellId } from '../theory/rhythm';
+import type { FretMark } from '../components/music/Fretboard';
+
+// Uma pergunta separa quatro coisas (C1):
+// - conteúdo musical: o que se pergunta (visual, sound);
+// - apresentação: como soa (timbre, volume, intervalo, arpejo) — resolvida na hora de tocar, ver
+//   src/audio/presentation.ts; a pergunta não decide isso;
+// - superfície: onde a pessoa responde (surface), que devolve uma Response estruturada;
+// - validação: o que está certo (expected), conferido por src/catalog/validate.ts com
+//   equivalência musical (enarmonias, cifras equivalentes, posições com a mesma altura).
+
+export type Visual =
+  | { kind: 'staff'; clef: Clef; fifths?: number; columns: Note[][] }
+  | { kind: 'keyboard'; lo: number; hi: number; marks: number[] }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[] }
+  | { kind: 'ear'; hint?: string }
+  | { kind: 'text'; text: string };
+
+/** Resposta estruturada, como a superfície a entrega. É o que a C2 grava em cada tentativa. */
+export type Response =
+  | { kind: 'option'; id: string }
+  /** Uma classe de altura escolhida (opções de nome de nota), sem oitava nem grafia. */
+  | { kind: 'pitchClass'; pc: number }
+  /** Uma altura tocada (teclado, braço). */
+  | { kind: 'pitch'; midi: number }
+  /** Uma nota escrita (letras, pauta); oct só quando a superfície define a oitava. */
+  | { kind: 'spelled'; letter: number; acc: number; oct?: number }
+  /** Uma cifra digitada, em qualquer convenção. */
+  | { kind: 'chord'; text: string };
+
+/** O que está certo, em termos musicais. */
+export type Expected =
+  | { kind: 'option'; id: string }
+  /** Classe de altura: qualquer oitava, qualquer grafia (Dó♯ = Ré♭). */
+  | { kind: 'pitchClass'; pc: number }
+  /** Altura exata, em qualquer grafia ou posição do braço. */
+  | { kind: 'pitch'; midi: number }
+  /** Grafia exata: letra e acidente (e oitava, se dada). Aqui Dó♯ ≠ Ré♭. */
+  | { kind: 'spelled'; letter: number; acc: number; oct?: number }
+  /** Acorde: classe de altura da fundamental e qualidade. */
+  | { kind: 'chord'; root: number; quality: ChordId };
+
+export interface ChoiceOption {
+  id: string;
+  label: string;
+  rhythm?: CellId[][];
+  /** O que a opção significa, quando a conferência é musical (ex.: a cifra); sem isso, vale o id. */
+  value?: Response;
+}
+
+/** Onde a pessoa responde. */
+export type Surface =
+  | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean }
+  | { kind: 'letters'; accidentals: boolean }
+  | { kind: 'keyboard'; lo: number; hi: number }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
+  | { kind: 'staff'; clef: Clef; accidentals: boolean };
+
+/** Conteúdo sonoro: só as notas. Como elas soam fica com a apresentação. */
+export interface SoundContent {
+  groups: number[][]; // grupos de alturas MIDI, em sequência; as notas de um grupo são simultâneas
+  drums?: number[]; // ataques, em tempos (para ritmo)
+  /** De que instrumento é o som, para usar o timbre escolhido para ele. Sem isso, piano. */
+  instrument?: Instrument;
+}
+
+export interface Question {
+  prompt: string;
+  visual: Visual;
+  surface: Surface;
+  expected: Expected;
+  sound?: SoundContent; // tocado ao mostrar (ouvido) ou ao responder (visual)
+  autoplay?: boolean;
+  reveal: string; // a resposta certa, por extenso
+}
+
+export type SettingValue = string | string[] | boolean | number;
+
+/** Uma opção de uma configuração de lista. */
+export interface SettingOption {
+  id: string;
+  label: string;
+  /**
+   * Dica de dificuldade relativa, só para a variação automática PRÉ-MARCAR o que costuma ser o
+   * próximo passo (F2-2, decisão 9). `1` costuma vir primeiro.
+   *
+   * **Nunca ordena, nunca bloqueia, nunca esconde.** Ausente quer dizer "sem opinião", e é o caso
+   * da maioria: não existe "clave de sol mais fácil que clave de fá". Forçar uma ordem onde ela
+   * não existe é erro pedagógico — por isso o app abre o menu inteiro e só sugere.
+   */
+  tier?: 1 | 2 | 3;
+}
+
+export interface Setting {
+  id: string;
+  label: string;
+  type: 'single' | 'multi' | 'toggle' | 'range';
+  options?: SettingOption[];
+  /** Para 'range': limites, passo e como mostrar o valor (ex.: v => `${v} s`). */
+  min?: number;
+  max?: number;
+  step?: number;
+  format?: (v: number) => string;
+  /** Se a configuração muda só como o som é tocado, diz o que ela muda na apresentação. */
+  present?: (v: SettingValue) => Partial<Presentation>;
+  /**
+   * A configuração muda **só** como o som é tocado, nunca a pergunta.
+   *
+   * O Player usa isto para **não sortear uma pergunta nova** quando ela muda: mexer em "arpejar" ou na
+   * duração no meio de um acorde trocava o acorde, e a pessoa perdia o que estava tentando identificar.
+   *
+   * **Não dá para inferir de `present`:** o seletor de instrumento de `acorde-visual` tem `present` e
+   * TAMBÉM é lido pelo `make` (decide violão ou piano). Por isso é declarado, e há teste conferindo que
+   * uma configuração marcada assim de fato não é lida pelo `make`.
+   */
+  soPresentation?: true;
+  /**
+   * Mostrar esta configuração só quando isto for verdade.
+   *
+   * Existe para as fusões por superfície (`F1-4`): depois de fundir pauta, teclado e braço num item só,
+   * a extensão tem **três unidades incomparáveis** — `pauta / linhas suplementares`, `1 / 2 oitavas`,
+   * faixas de casa. Não é um parâmetro com três listas de opções: são três configurações, cada uma
+   * visível quando a sua superfície está ativa.
+   *
+   * **Declarativo de propósito.** A alternativa seria dar à função `settings` acesso aos valores, o que
+   * criaria ordem de avaliação e re-render em cascata; aqui a tela só filtra.
+   */
+  quando?: (s: Record<string, SettingValue>) => boolean;
+}
+/** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
+export interface Ctx {
+  naming: Naming;
+  conv: Convention;
+  t: Translate;
+  /** Parâmetros globais: instrumento, afinação, tonalidade, região, andamento… (ver params.ts). */
+  params: GlobalParams;
+}
+
+/**
+ * Tipo de término da etapa (decisão 5). É propriedade do item, não configuração — e determina
+ * o executor **e** o que aquela etapa consegue afirmar:
+ *
+ * - `serie`    termina em N perguntas (ou no tempo) → produz EVIDÊNCIA validada
+ * - `ambiente` termina quando a pessoa para          → produz ATIVIDADE, sem nota
+ * - `tarefa`   termina na autoavaliação da pessoa    → produz AUTOAVALIAÇÃO, nunca acerto
+ */
+export type Termination = 'serie' | 'ambiente' | 'tarefa';
+
+/**
+ * O que a tela de um item do tipo `ambiente` ou `tarefa` recebe. Tudo opcional: cada tela usa o
+ * que lhe serve e ignora o resto. Quando a F1-3 levar as configurações das telas para o catálogo,
+ * isto encolhe para um objeto de parâmetros resolvidos.
+ */
+export interface ScreenProps {
+  /** Tempo sugerido da etapa, quando o item roda dentro de uma rotina. */
+  goalMinutes?: number;
+  /**
+   * A configuração da instância, quando o item foi aberto a partir de uma etapa de rotina.
+   *
+   * É o que torna possível a MESMA ferramenta aparecer várias vezes na rotina com configurações
+   * diferentes — a rotina "De bolso" é quatro variações do ciclo sem tela. Sem isto, a configuração
+   * de um ambiente só existiria no estado da tela, e duas etapas do mesmo ambiente seriam idênticas.
+   */
+  settings?: Record<string, SettingValue>;
+  /** Versão reduzida, para caber dentro de outra tela. */
+  compact?: boolean;
+  onRunning?: (running: boolean) => void;
+  presetId?: string;
+  /** Qual item abriu esta tela — é como uma mesma tela serve a várias famílias (decisão 15). */
+  itemId?: string;
+}
+
+// Título e descrição ficam nos textos de cada idioma (exercises.<id> e tools.<id> em src/i18n;
+// ver itemText). O id é estável: rotinas, tentativas e configurações salvas apontam para ele,
+// então nunca muda (taxonomy.test.ts trava a lista). Etiquetas: ver src/catalog/taxonomy.ts.
+//
+// Exercício e ferramenta são O MESMO TIPO (decisão 17): registro unificado, tela separada quando
+// precisa. Assim o braço virtual não tem duas implementações, e uma ferramenta entra numa etapa
+// de rotina sem nenhum caso especial no código.
+/**
+ * O que o item exige do mundo (F1-2). **Só três são declarados**, porque só estes são fato do
+ * mundo; olhos, mãos e áudio são DEDUZIDOS em src/catalog/context.ts, para não desatualizarem.
+ */
+export interface Requisitos {
+  /** Precisa do instrumento em mãos. */
+  instrumento?: true;
+  /** Precisa captar som. Nenhum item pode EXIGIR isto — é sempre acréscimo opcional. */
+  microfone?: true;
+  /** Precisa cantar ou vocalizar. */
+  voz?: true;
+}
+
+/**
+ * Como a resposta pode ser conferida. **O primeiro é o padrão**, e com instrumento o padrão é
+ * sempre `self_report` (decisão 37): o app apresenta, a pessoa julga.
+ *
+ * `microphone` e `midi` são acréscimos **experimentais e opcionais** (decisões 43 e 44).
+ * Nenhum item pode depender deles.
+ */
+export type ModoDeValidacao = 'deterministic' | 'self_report' | 'microphone' | 'midi' | 'none';
+
+export interface CatalogItem extends Classification {
+  id: string;
+  kind: Termination;
+  requires: Requisitos;
+  /** Os modos que o item aceita; o primeiro é o padrão. */
+  validation: ModoDeValidacao[];
+  /** @deprecated Use `requires.instrumento`. Fica até as telas migrarem. */
+  mobile: boolean;
+  settings: (ctx: Ctx) => Setting[];
+  defaults: Record<string, SettingValue>;
+  /**
+   * Quais parâmetros de PRÁTICA este item de fato respeita (decisão 87). A tela só oferece o
+   * controle de tonalidade, região ou material onde ele muda alguma coisa — oferecer onde o item o
+   * ignora seria prometer o que não acontece, o mesmo erro de "material diatônico sem tonalidade".
+   *
+   * **Não é opinião: é medido.** `contexto-declarado.test.ts` confere contra as chamadas reais que o
+   * `make` faz, então esta lista não envelhece sem o teste acusar.
+   */
+  respeita?: readonly ParametroDePratica[];
+  /**
+   * Atalhos de configuração, **nomeados pelo conteúdo** (decisão 100).
+   *
+   * Não são "níveis": nomear "1, 2, 3" afirmaria uma progressão linear que nem sempre existe, e a
+   * decisão 9 proíbe. "Só tríades" e "Com suspensos" descrevem o que muda, sem dizer qual é mais
+   * avançado — a pessoa escolhe pelo que quer praticar, não por onde "deveria" estar.
+   *
+   * O nome de cada preset é curadoria do dono do produto.
+   */
+  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue> }[];
+  /**
+   * Se as pessoas veem este item (decisão 91). **Omitir é o mesmo que `rascunho`**: um item novo nasce
+   * escondido, e só o Paulo o publica.
+   */
+  publicacao?: Publicacao;
+  /** Apresentação própria do item (ex.: intervalo maior entre notas), por cima da global. */
+  presentation?: Partial<Presentation>;
+  /**
+   * O item roda **sem olhos e sem mãos**?
+   *
+   * É o único requisito deduzido que um item pode declarar, e só itens de tela própria precisam dele:
+   * `requisitosDe` não consegue sondar uma tela, então assume o caso conservador (usa olhos, mãos e
+   * áudio) para nunca oferecer o que a pessoa não consegue fazer. Num ciclo de áudio puro essa
+   * suposição está errada, e só o item sabe. Ver `context.ts`.
+   */
+  semTela?: true;
+  /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
+  make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
+  /**
+   * Por que estas configurações não geram pergunta. Devolve a mensagem já traduzida, ou `null`.
+   *
+   * Existe para a decisão 13: **item ambíguo não pode gerar "erro do usuário"**. Quando a própria
+   * configuração torna a pergunta impossível de responder, o certo não é sortear e corrigir — é
+   * recusar e dizer por quê. O caso que criou isto: menor melódica clássica e jazz **soam idênticas
+   * subindo**, então pedir para distinguir as duas só com direção ascendente é pedir o impossível
+   * (decisão 70).
+   *
+   * O Player chama antes de `make` e, havendo mensagem, **não chama `make`**.
+   */
+  problema?: (s: Record<string, SettingValue>, ctx: Ctx) => string | null;
+  /** Só em `ambiente` e `tarefa`: tela própria, carregada sob demanda. */
+  screen?: () => Promise<{ default: ComponentType<ScreenProps> }>;
+}
+
+/** Um item que o Player sabe rodar: tem `make`. */
+export type SeriesItem = CatalogItem & { make: NonNullable<CatalogItem['make']> };
+export const isSeries = (i: CatalogItem): i is SeriesItem => typeof i.make === 'function';

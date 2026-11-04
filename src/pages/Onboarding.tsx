@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { updateProfile, useStore } from '../state/store';
-import { Art, Btn, Chip, Tag } from '../components/ui';
+import { Btn, Chip, Field, Tag } from '../components/ui';
 import { useT } from '../i18n';
 
 export default function Onboarding() {
@@ -11,23 +11,23 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const nav = useNavigate();
   const t = useT();
-  const { GOALS, INSTRUMENTS } = useContent();
+  const { PORTAS, INSTRUMENTS } = useContent();
   const finish = () => { updateProfile({ onboarded: true }); nav('/'); };
   const steps = [
     {
-      title: t('onboarding.whatPlay'), art: 'correria',
+      title: t('onboarding.whatPlay'),
       body: (
         <div style={{ display: 'grid', gap: 18 }}>
           <label style={{ display: 'grid', gap: 6, maxWidth: 360 }}>
             <span className="eyebrow">{t('common.nameLabel')}</span>
             <input id="ob-nome" value={profile.name} onChange={e => updateProfile({ name: e.target.value })} placeholder={t('common.namePlaceholder')} autoFocus
-              style={{ background: 'var(--bk-3)', border: 0, color: 'var(--cream)', padding: '12px 14px', font: 'inherit', fontSize: 18 }} />
+              style={{ background: 'var(--surface)', border: '1px solid var(--rule)', borderRadius: 'var(--r-sm)', color: 'var(--ink)', padding: '12px 14px', font: 'inherit', fontSize: 17 }} />
           </label>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
             {INSTRUMENTS.map(i => (
               <button key={i.id} type="button" onClick={() => updateProfile({ instrument: i.id })} aria-pressed={profile.instrument === i.id}
-                style={{ border: 0, cursor: 'pointer', padding: 16, display: 'grid', gap: 10, justifyItems: 'center', background: profile.instrument === i.id ? 'var(--mu)' : 'var(--bk-2)', color: profile.instrument === i.id ? 'var(--bk)' : 'var(--cream)' }}>
-                <Art name={i.art} style={{ height: 90, width: 'auto' }} />
+                className="panel" style={{ cursor: 'pointer', padding: 16, display: 'grid', gap: 10, justifyItems: 'center', borderColor: profile.instrument === i.id ? 'var(--accent)' : 'var(--rule)', borderWidth: profile.instrument === i.id ? 2 : 1, color: 'var(--ink)' }}>
+                <Field seed={i.id} className="field-square" style={{ width: 64 }} />
                 <b>{i.name}</b>
               </button>
             ))}
@@ -36,11 +36,15 @@ export default function Onboarding() {
       ),
     },
     {
-      title: t('onboarding.goals'), art: 'genero-jazz',
+      title: t('onboarding.goals'),
       body: (
         <div style={{ display: 'grid', gap: 12 }}>
           <p className="muted">{t('onboarding.pickMany')}</p>
-          <div className="row">{GOALS.map(g => <Chip key={g.id} on={profile.goals.includes(g.id)} onClick={() => updateProfile({ goals: profile.goals.includes(g.id) ? profile.goals.filter(x => x !== g.id) : [...profile.goals, g.id] })}>{g.name}</Chip>)}</div>
+          {/* A entrada do nivelamento não é um objetivo que se marque: fica fora desta lista. */}
+          <div className="row">{PORTAS.filter(p => !p.diagnostico).map(p => (
+            <Chip key={p.id} title={p.apoio} on={profile.goals.includes(p.id)}
+              onClick={() => updateProfile({ goals: profile.goals.includes(p.id) ? profile.goals.filter(x => x !== p.id) : [...profile.goals, p.id] })}>{p.name}</Chip>
+          ))}</div>
         </div>
       ),
     },
@@ -59,7 +63,7 @@ export default function Onboarding() {
             <h1 style={{ fontSize: 'clamp(46px, 7vw, 88px)' }}>{s.title}</h1>
             {s.body}
           </div>
-          <Art name={s.art} style={{ width: '100%', maxWidth: 360, justifySelf: 'center' }} />
+          <Field seed={s.title} className="field-square" style={{ width: '100%', maxWidth: 320, justifySelf: 'center' }} />
         </div>
         <div className="row">
           {step > 0 && <Btn tone="ghost" onClick={() => setStep(step - 1)}>{t('common.back')}</Btn>}

@@ -1,9 +1,9 @@
 // Som dos exercícios no Perfil: liga/desliga, volume e o timbre de cada instrumento. São os
-// parâmetros globais de som da C1 (src/exercises/params.ts); quem escolhe ouve na hora como fica.
+// parâmetros globais de som da C1 (src/catalog/params.ts); quem escolhe ouve na hora como fica.
 import type { Voice } from '../audio/engine';
 import { playDemo } from '../audio/demo';
 import { useContent } from '../data/localized';
-import { useGlobalParams, VOLUME_RANGE } from '../exercises/params';
+import { useGlobalParams, VOLUME_RANGE } from '../catalog/params';
 import { useT, type MessageKey } from '../i18n';
 import { setParams, setState, useStore } from '../state/store';
 import { Btn, Chip, SecTitle } from './ui';

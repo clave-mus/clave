@@ -1,0 +1,20 @@
+{
+  // Publicar o Clave no Cloudflare Workers, servindo o site estático (`static assets`).
+  //
+  // **Por que Workers e não Pages.** O painel do Cloudflare passou a criar projetos novos por aqui, e
+  // foi o que o fluxo ofereceu quando o projeto foi recriado — o Pages antigo tinha quebrado com a
+  // transferência do repositório para a organização.
+  //
+  // ⚠️ **`public/_redirects` NÃO vale aqui.** Ele é um recurso do Pages; em Workers quem faz o papel
+  // dele é o `not_found_handling` abaixo. Os dois ficam no repositório porque descrevem a mesma
+  // intenção para hospedagens diferentes — e porque o `_redirects` é inofensivo se este for o caminho.
+  "name": "clave",
+  "compatibility_date": "2026-10-28",
+  "assets": {
+    "directory": "./dist/",
+    // O Clave é uma aplicação de uma página só: `/rotina/x/fazer` não é um arquivo, é uma rota do
+    // react-router. Sem isto, abrir um link direto (ou recarregar a página no meio de uma rotina)
+    // devolve 404 — que é o jeito mais fácil de um link compartilhado morrer.
+    "not_found_handling": "single-page-application"
+  }
+}
