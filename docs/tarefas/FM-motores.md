@@ -83,28 +83,44 @@ apresentação — questão para o Paulo, não decisão de tarefa.
 
 ---
 
-## FM-2 · Motor de digitações
+## FM-2 · Motor de formas
 
 **Decisões de origem:** 45, 46, 47. **Depende de:** FM-1 não; do visualizador, sim, para a tela.
 
 **Enumerador com rankings, nunca otimizador.** Leia a decisão 45 inteira antes de começar — o
 ponto central é contraintuitivo.
 
-### Regras de viabilidade (baixo elétrico moderno)
+> **A `A21` mudou o objeto desta tarefa, em 03/11/2026: é FORMA, não digitação.** O que o app precisa
+> na maior parte dos casos é *onde as notas estão no braço*, cego para dedo — e **dizer o dedo passou
+> a ser opcional, item a item**. A `T1` (permutações) continua precisando, porque ali o dedo *é* o
+> exercício; a `T2` já tinha deixado de dizer.
+>
+> **A tarefa encolheu**, e por isso: o espaço de busca sai de "posições × atribuições de dedo" para
+> só "posições", e as regras de viabilidade deixam de modelar a mão dedo a dedo.
 
-A mão tem uma **posição P**, a casa onde o dedo 1 fica por padrão. O dedo *f* mora em `P + (f−1)`.
+### Regras de viabilidade
 
-- O **dedo 1 alcança até `P−1`** — o vão entre 1 e 2 vira 2 casas. **Não é outra postura**: é o
-  indicador esticando. Não existe "posição espaçada" como estado.
-- Dedos **2, 3 e 4 ficam na casa deles**. Nada de esticar entre 2–3 ou 3–4.
-- Movimento maior é **mudança de posição**, de preferência com o mesmo dedo (sobretudo o 1), de
-  preferência deslizando na mesma corda.
+Sem dedo, são três, e todas são geométricas:
+
+- **Cabe na mão:** o vão entre a casa mais baixa e a mais alta da forma não passa de **5 casas**
+  (quatro dedos mais o alcance do indicador uma casa abaixo). **Casa 0 não conta no vão** — corda
+  solta não ocupa dedo.
+- **Cabe no braço:** nenhuma casa além da última do instrumento, nenhuma negativa.
+- **Cordas vizinhas:** a forma não salta uma corda inteira sem nota. Se saltar, são **duas** formas, e
+  é melhor mostrá-las separadas.
+
+**Duas notas na mesma casa em cordas diferentes são válidas**, e isso é novo: numa forma elas não
+competem por dedo. A modelagem antiga não deixava dizer isso.
+
+*O que saiu:* tudo que falava de posição P, de dedo 1 esticando até `P−1` e de dedos 2–3–4 na casa
+deles. Aquilo é **digitação**, vale para a `T1`, e não para forma.
 
 ### Rankings nomeados
 
 menos mudanças de posição · menos trocas de corda · ficar numa região · menor extensão entre dedos
 · usar cordas soltas · evitar cordas soltas · n notas por corda · **variar** (uma diferente da
-última vez).
+última vez). *"Menos mudanças de posição" e "menor extensão entre dedos" viram o mesmo ranking sem
+dedo: **menor vão**.*
 
 **O exercício define o ranking padrão; a pessoa troca, e a troca fica visível** — mesmo desenho da
 herança de parâmetros (F2-1). A função de custo **pertence ao exercício**, não ao motor: num
@@ -120,21 +136,21 @@ exercício de internalizar o braço, a digitação mais confortável é a errada
 
 **Contrato de saída:**
 
-1. `src/catalog/fingering.test.ts` passa, e verifica que **toda** digitação enumerada respeita as
-   regras de viabilidade acima — nenhuma com vão de 2 casas entre 2–3 ou 3–4, nenhuma fora do
-   braço, nenhuma com duas notas na mesma corda ao mesmo tempo.
-2. **O conjunto de teste do Paulo está contido na enumeração.** As 10 a 15 digitações que ele
-   escrever à mão (👤, abaixo) viram um arquivo de fixtures, e o teste falha se o motor não
-   enumerar alguma delas.
-3. Para cada ranking nomeado, o teste registra **em que posição** cada digitação do Paulo aparece.
+1. `src/theory/formas.test.ts` passa, e verifica que **toda** forma enumerada respeita as três regras
+   acima — nenhuma com vão maior que 5 casas descontando as soltas, nenhuma fora do braço, nenhuma
+   saltando uma corda vazia.
+2. **O conjunto de teste do Paulo está contido na enumeração.** As 10 a 15 formas que ele escrever à
+   mão (👤, abaixo) viram um arquivo de fixtures, e o teste falha se o motor não enumerar alguma delas.
+3. Para cada ranking nomeado, o teste registra **em que posição** cada forma do Paulo aparece.
    Não há limiar de aprovação — é uma medida para ele calibrar. Grave num arquivo legível.
 
-**Pronto quando:** o contrato bate, e o motor enumera as digitações da escala maior e da menor
-natural no baixo e na guitarra, com os rankings funcionando.
+**Pronto quando:** o contrato bate, e o motor enumera as formas da escala maior e da menor natural no
+baixo e na guitarra, com os rankings funcionando.
 
-**👤 Bloqueia:** o Paulo precisa escrever **10 a 15 digitações à mão** — o formato e a lista estão
-em [guias/digitacoes.md](../guias/digitacoes.md). Sem elas os contratos 2 e 3 não existem, e o
-motor não tem como provar nada.
+**👤 Bloqueia:** o Paulo precisa escrever **10 a 15 formas à mão** — o formato e a lista estão em
+[guias/formas.md](../guias/formas.md), reescrito em 03/11 para formas. Sem elas os contratos 2 e 3 não
+existem, e o motor não tem como provar nada. **Digitação já escrita no formato antigo não se perde:**
+ela contém uma forma (ignora-se a coluna do dedo), e o dedo serve à `T1`.
 
 **Não faça:** não tente achar "a melhor". Não invente heurística de conforto. Não use o motor para
 piano — lá são dedilhados convencionais fixos (e isso ainda é questão aberta `C4`).

@@ -547,7 +547,10 @@ prometer a um pianista uma trilha que não funciona no iPhone dele seria pior qu
 **Ganho secundário:** se alguns testadores do beta usarem MIDI, serão os **únicos dados de alta
 fidelidade** disponíveis para calibrar os limiares da variação automática.
 
-### 45 · Motor de digitações: enumerador com rankings, nunca otimizador
+### 45 · Motor de formas: enumerador com rankings, nunca otimizador
+
+> *Chamava-se "motor de digitações". A `A21` trocou o objeto para **forma** em 03/11/2026 — o
+> raciocínio desta decisão não mudou uma linha, e é por isso que ela só foi renomeada.*
 
 Enumerar o que é tocável é fácil e confiável. **Dizer qual é a melhor é impossível** — os pesos
 mudam o resultado e especialistas discordam entre si.

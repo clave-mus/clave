@@ -124,7 +124,19 @@ Duas regras que não podem ser perdidas:
 Ele serve a *Percorrer escalas · Percorrer modos · Percorrer uma tonalidade em uma corda · Tocar
 padrões de arpejo · Tocar motivos em graus* e, do outro lado da matriz, **Solfejar escalas**.
 
-### Motor de digitações
+### Motor de formas
+
+> **A `A21` renomeou e encolheu este motor em 03/11/2026: o objeto é FORMA, não digitação.** Forma é
+> onde as notas estão no braço, cega para dedo; digitação é que dedo em cada nota. O app precisa de
+> forma na maior parte dos casos, e **dizer o dedo passou a ser opcional item a item** — só a `T1`
+> (permutações de dedos) o exige, porque ali o dedo *é* o exercício.
+>
+> As regras de viabilidade abaixo descrevem a **mão dedo a dedo** e por isso valem para digitação
+> (a `T1`), não para forma. Sem dedo, a viabilidade é geométrica e tem três regras: cabe na mão (vão
+> de até 5 casas, descontando as soltas), cabe no braço, e não salta corda vazia. Ver
+> [tarefas/FM-motores.md § FM-2](tarefas/FM-motores.md#fm-2--motor-de-formas) e
+> [guias/formas.md](guias/formas.md).
+
 
 **Enumerador com rankings, nunca otimizador** (decisão 45). Enumerar o que é tocável é fácil e
 confiável; dizer qual é a melhor é impossível — os pesos mudam o resultado e especialistas
@@ -143,7 +155,7 @@ A mão tem uma **posição P**, a casa onde o dedo 1 fica por padrão. O dedo *f
   1), de preferência deslizando na mesma corda.
 
 **Rankings nomeados:** menos mudanças de posição · menos trocas de corda · ficar numa região ·
-menor extensão entre dedos · usar cordas soltas · evitar cordas soltas · n notas por corda · e o
+menor extensão entre dedos *(estes dois viram um só sem dedo: **menor vão**)* · usar cordas soltas · evitar cordas soltas · n notas por corda · e o
 inverso pedagógico, **variar** (me dá uma diferente da última vez).
 
 **O exercício define o ranking padrão; a pessoa troca, e a troca fica visível** — mesmo desenho da
