@@ -22,7 +22,7 @@ vi.mock('./contexto-musical', async orig => {
 
 import { translate, type MessageKey, type Vars } from '../i18n';
 import { EXERCISES } from './catalog';
-import { resolveParams, type ParametroDePratica } from './params';
+import { PARAMETROS_DE_PRATICA, resolveParams, type ParametroDePratica } from './params';
 import { isSeries, type Ctx } from './types';
 
 /**
@@ -49,6 +49,27 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
  * então oferecer "região" ali é prometer o que a leitura não aceita (ver contexto-musical.test.ts).
  */
 const REGIAO_NAO_SE_OFERECE = ['pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala'];
+
+/**
+ * `ctx.params` espionado: acusa quem lê `key`, `range` ou `material` **direto**, sem passar pelas
+ * funções de `contexto-musical`.
+ *
+ * Existe porque um bug passou exatamente por aqui: `casaPermitida` lia `ctx.params.range` direto, e a
+ * sonda — que só olhava as chamadas às funções de contexto — não viu. O resultado era que três
+ * exercícios de braço repetiam a mesma pergunta para sempre, porque a região em MIDI deixava uma única
+ * casa no braço do baixo.
+ */
+const lidosDireto = new Set<string>();
+function ctxEspiao(pratica: Parameters<typeof resolveParams>[1] = { key: { tonic: 5, mode: 'maior' }, material: 'diatonico' }): Ctx {
+  const reais = resolveParams('violao', pratica);
+  const params = new Proxy(reais, {
+    get(alvo, k) {
+      if (typeof k === 'string' && (PARAMETROS_DE_PRATICA as readonly string[]).includes(k)) lidosDireto.add(k);
+      return alvo[k as keyof typeof alvo];
+    },
+  });
+  return { naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v), params };
+}
 
 const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
@@ -92,5 +113,32 @@ describe('respeita: o que o item declara é o que ele de fato lê', () => {
   it('há itens que não respeitam nada — e é legítimo (armadura, teoria, ritmo)', () => {
     const nenhum = itens.filter(e => (e.respeita ?? []).length === 0).map(e => e.id);
     expect(nenhum).toEqual(expect.arrayContaining(['pauta-armadura', 'quiz-teoria', 'acorde-visual', 'ritmo-ouvido']));
+  });
+});
+
+// O furo que deixou passar o bug das três telas de braço: `respeita` era conferido contra as CHAMADAS
+// às funções de contexto, e quem lia `ctx.params.range` direto escapava.
+describe('ninguém lê `ctx.params` por fora do que declara', () => {
+  const itens = EXERCISES.filter(isSeries);
+
+  it.each(itens.map(e => e.id))('%s', id => {
+    const ex = itens.find(e => e.id === id)!;
+    lidosDireto.clear();
+    const espiao = ctxEspiao();
+    const variantes: Record<string, unknown>[] = [{ ...ex.defaults }];
+    for (const s of ex.settings(espiao)) {
+      for (const o of s.options ?? []) variantes.push({ ...ex.defaults, [s.id]: s.type === 'multi' ? [o.id] : o.id });
+    }
+    lidosDireto.clear();
+    for (const v of variantes) {
+      for (let i = 0; i < 10; i++) { try { ex.make(v as never, espiao); } catch { /* configuração recusada */ } }
+    }
+    // Os itens de pauta LEEM a região (via `notaNaPauta`, que descarta degraus fora dela) mas não a
+    // OFERECEM: a altura é ditada pela clave, para a nota caber nas linhas. Conferido que eles ficam
+    // estáveis em qualquer região — 7 e 9 perguntas distintas no grave, no agudo e em tudo —, porque o
+    // fallback de `notaNaPauta` entra quando a intersecção esvazia.
+    const declarados = new Set<string>([...(ex.respeita ?? []), ...(REGIAO_NAO_SE_OFERECE.includes(id) ? ['range'] : [])]);
+    const naoDeclarados = [...lidosDireto].filter(k => !declarados.has(k));
+    expect(naoDeclarados, `${id} lê ${naoDeclarados.join(', ')} direto de ctx.params sem declarar em \`respeita\``).toEqual([]);
   });
 });

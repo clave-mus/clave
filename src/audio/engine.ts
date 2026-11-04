@@ -50,8 +50,54 @@ function env(g: GainNode, t: number, peak: number, attack: number, decay: number
   g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
 }
 
+/**
+ * Corda pulsada (Karplus-Strong): ruído curto num atraso realimentado do tamanho do período.
+ *
+ * É o que dá timbre de **corda** sem amostra nenhuma — o ruído do ataque vira o "dedo", e o filtro na
+ * realimentação come os agudos a cada volta, que é o que uma corda real faz. Substitui a síntese por
+ * osciladores em violão e baixo, que soava "tuc": oscilador dá forma de onda fixa, e corda tem espectro
+ * que muda enquanto soa.
+ */
+function cordaPulsada(m: number, t: number, dur: number, vel: number, brilho: number, decaimento: number) {
+  const c = audio();
+  const periodo = 1 / hz(m);
+  const amostras = Math.max(2, Math.round(c.sampleRate * periodo));
+
+  // o ataque: um estouro curto de ruído, do tamanho de uma volta da corda
+  const exc = c.createBuffer(1, amostras, c.sampleRate);
+  const d = exc.getChannelData(0);
+  for (let i = 0; i < amostras; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / amostras);
+  const fonte = c.createBufferSource();
+  fonte.buffer = exc;
+
+  // o laço: atraso de um período, com perda e passa-baixa — é ele que faz a corda decair
+  const atraso = c.createDelay(0.2);
+  atraso.delayTime.value = periodo;
+  const perda = c.createGain();
+  perda.gain.value = decaimento;
+  const abafa = c.createBiquadFilter();
+  abafa.type = 'lowpass';
+  abafa.frequency.value = brilho;
+
+  const out = c.createGain();
+  out.gain.value = vel;
+  fonte.connect(atraso);
+  atraso.connect(abafa).connect(perda).connect(atraso);  // realimentação
+  atraso.connect(out).connect(master);
+
+  const fim = t + Math.max(dur, 0.4) + 0.6;
+  out.gain.setValueAtTime(vel, t);
+  out.gain.setTargetAtTime(0.0001, t + Math.max(dur, 0.35), 0.18);
+  fonte.start(t);
+  fonte.stop(t + periodo * 2);
+  registrar(out, [], fim);
+}
+
 /** Toca uma altura MIDI. `t` é o tempo absoluto do contexto (use now() + atraso). */
 export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel = 0.7) {
+  // violão e baixo são cordas: a síntese por osciladores não dá o timbre delas
+  if (voice === 'baixo') return cordaPulsada(m, t, dur, 0.9 * vel, 1800, 0.993);
+  if (voice === 'violao') return cordaPulsada(m, t, dur, 0.55 * vel, 3200, 0.986);
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -75,25 +121,6 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     f.frequency.exponentialRampToValueAtTime(900, t + Math.max(0.4, dur));
     env(out, t, 0.32 * vel, 0.006, Math.max(0.6, dur * 1.4));
     stop = t + Math.max(0.6, dur * 1.4) + 0.05;
-  } else if (voice === 'violao') {
-    add('sawtooth', 1, 0.5); add('triangle', 2, 0.2);
-    f.frequency.setValueAtTime(3200, t);
-    f.frequency.exponentialRampToValueAtTime(500, t + 0.5);
-    env(out, t, 0.28 * vel, 0.004, Math.max(0.5, dur));
-    stop = t + Math.max(0.5, dur) + 0.05;
-  } else if (voice === 'baixo') {
-    // Soava como um "tuc": três defeitos somados. (1) Uma sub-oitava com ganho 0,5 — numa corda Mi de
-    // 41 Hz isso põe 20 Hz, que ninguém ouve e que só come headroom. (2) Filtro FIXO em 700 Hz, que mata
-    // os harmônicos e deixa abafado. (3) Decay mínimo de 0,35 s, curto demais para uma corda.
-    //
-    // Agora: a fundamental manda, com harmônicos ímpares para o caráter de corda; o filtro abre no
-    // ataque e fecha, que é o que dá o "pluck"; e o decay acompanha a duração pedida.
-    add('triangle', 1, 0.9); add('sine', 2, 0.30); add('triangle', 3, 0.12); add('sine', 4, 0.05);
-    f.frequency.setValueAtTime(2600, t);
-    f.frequency.exponentialRampToValueAtTime(420, t + Math.min(0.5, Math.max(0.25, dur * 0.5)));
-    f.Q.value = 1.2;
-    env(out, t, 0.42 * vel, 0.006, Math.max(1.1, dur * 1.5));
-    stop = t + Math.max(1.1, dur * 1.5) + 0.05;
   } else if (voice === 'pad') {
     add('sawtooth', 1, 0.3, -7); add('sawtooth', 1, 0.3, 7); add('sine', 0.5, 0.3);
     f.frequency.value = 1100;

@@ -60,7 +60,17 @@ function faixaNatural(id: string): { lo: number; hi: number } {
  *
  * Nesses, o que a cascata governa é o **material** (qual fundamental), não a altura.
  */
-const REGIAO_NAO_SE_APLICA = ['pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala', 'acorde-visual'];
+const REGIAO_NAO_SE_APLICA = [
+  // Pauta: a oitava é ditada pela CLAVE, para a nota caber nas linhas.
+  'pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala',
+  // Acordes desenhados: são posições reais no braço — um Dó aberto é onde ele é.
+  'acorde-visual',
+  // Braço: a região é a FAIXA DE CASAS, que a pessoa escolhe, e não a faixa em MIDI. Sobrepor as duas
+  // mede a mesma coisa com unidades diferentes — e era um bug: num baixo com casas 0–5 e a região
+  // padrão (48–72), sobrava UMA casa no braço inteiro, e o exercício repetia a mesma pergunta para
+  // sempre (1 posição distinta em 200 sorteios).
+  'braco-nota', 'braco-ache', 'braco-intervalo',
+];
 
 describe('F2-3 · a região é lida', () => {
   // Guarda contra a regressão da decisão 57: se um item voltar a ignorar a cascata, o piso não é

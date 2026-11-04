@@ -86,22 +86,28 @@ function randAcc(on: SettingValue | undefined) {
 }
 /** Uma casa do braço cuja nota o material permite (F2-3). Tenta algumas vezes e desiste para a
  *  primeira que couber — com `diatonico` numa região curta, nem toda corda tem nota da tonalidade. */
+/**
+ * Uma casa do braço que o material permite.
+ *
+ * **Não usa `params.range`, e isso é a correção de um bug que travava três exercícios.** A versão
+ * anterior interseccionava com a região em MIDI: num baixo com casas 0–5 e a região padrão (48–72),
+ * sobrava **uma única casa no braço inteiro** — a corda Sol na casa 5 —, e o exercício repetia a mesma
+ * pergunta para sempre. Medido: 1 posição distinta em 200 sorteios.
+ *
+ * E a causa é conceitual, não um descuido de limite: **num exercício de braço, a região é a faixa de
+ * casas** (`casas`), que a pessoa escolhe. A região em MIDI foi feita para ouvido e pauta ("quero
+ * praticar no grave"), e sobrepô-la ao braço mede a mesma coisa duas vezes com unidades diferentes.
+ */
 function casaPermitida(tuning: readonly number[], from: number, to: number, ctx: Ctx) {
   const permitidas = pcsPermitidas(ctx);
-  const faixa = ctx.params.range;
   const lo = from === 0 ? 0 : from + 1;
   const todas: { str: number; f: number; m: number }[] = [];
-  const naFaixa: { str: number; f: number; m: number }[] = [];
   for (let str = 0; str < tuning.length; str++) {
     for (let f = lo; f <= to; f++) {
       const m = tuning[str] + f;
-      if (!permitidas.includes(mod(m, 12))) continue;
-      todas.push({ str, f, m });
-      if (m >= faixa.lo && m <= faixa.hi) naFaixa.push({ str, f, m });
+      if (permitidas.includes(mod(m, 12))) todas.push({ str, f, m });
     }
   }
-  // a região aperta quando dá; quando ela está fora do alcance do instrumento, o braço vence
-  if (naFaixa.length) return pick(naFaixa);
   if (todas.length) return pick(todas);
   const str = randInt(0, tuning.length - 1), f = randInt(lo, to);
   return { str, f, m: tuning[str] + f };
@@ -413,7 +419,7 @@ export const EXERCISES: CatalogItem[] = [
     primaryModule: 'theory', skillTags: ['fretboard.interval_shapes'],
     contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['range'],
+    respeita: [],
     publicacao: LEGADO,
     settings: ctx => [INST(ctx)], defaults: { instrumento: 'auto' },
     make(s, ctx) {
@@ -421,7 +427,9 @@ export const EXERCISES: CatalogItem[] = [
       // Enumera os pares tocáveis dentro da região em vez de passear no aleatório. Além de ler a
       // cascata (F2-3), conserta a distribuição descontrolada que o passeio produzia — alguns
       // intervalos apareciam muito mais que outros, sem a pessoa poder escolher.
-      const faixa = regiao(ctx, { lo: tuning[0], hi: tuning[tuning.length - 1] + 9 });
+      // O braço inteiro, sem interseccionar com a região em MIDI — ver `casaPermitida`: a região
+      // esmagava o alcance e sobrava um par só.
+      const faixa = { lo: tuning[0], hi: tuning[tuning.length - 1] + 9 };
       const pares: { s1: number; f1: number; s2: number; f2: number; d: number }[] = [];
       for (let a = 0; a < tuning.length - 1; a++) {
         for (let fa = 1; fa <= 6; fa++) {

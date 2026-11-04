@@ -1841,6 +1841,50 @@ a contagem (`6/23 respostas certas`), que é fato e não nota.
 
 ---
 
+### 101 · Bug: três exercícios de braço repetiam a mesma pergunta para sempre
+
+O Paulo relatou que "a nota nunca muda". **Era verdade, e pior do que parecia:** medido, `braco-nota` e
+`braco-intervalo` davam **1 posição distinta em 200 sorteios**.
+
+**A causa.** `casaPermitida` interseccionava as casas do braço com a **região em MIDI**. Num baixo com
+casas 0–5 e a região padrão (48–72), sobrava **uma única casa no braço inteiro** — a corda Sol na casa
+5 —, e `pick` devolvia sempre ela.
+
+**E a causa da causa é conceitual:** num exercício de braço, **a região é a faixa de casas**, que a
+pessoa escolhe. A região em MIDI foi feita para ouvido e pauta ("quero praticar no grave"), e
+sobrepô-la ao braço mede a mesma coisa com duas unidades diferentes. Os três itens de braço entraram em
+`REGIAO_NAO_SE_APLICA`, ao lado dos de pauta.
+
+**Por que nenhum teste pegou.** `contexto-declarado.test.ts` conferia `respeita` contra as **chamadas às
+funções** de `contexto-musical` — e `casaPermitida` lia `ctx.params.range` **direto**. O furo está
+fechado: `ctx.params` agora é espionado por Proxy no teste, e qualquer leitura direta de um parâmetro
+não declarado falha.
+
+Esse teste novo pegou mais três itens de pauta lendo `range` sem declarar. Ali é legítimo e documentado
+(a altura é ditada pela clave), e conferi que eles ficam estáveis em qualquer região — 7 e 9 perguntas
+distintas no grave, no agudo e em tudo.
+
+---
+
+### 102 · Corda pulsada, e o nome da corda no braço
+
+**O som de violão e baixo passou a ser Karplus-Strong** — ruído curto num atraso realimentado do
+tamanho do período. É o que dá timbre de **corda** sem amostra nenhuma: o ruído do ataque é o dedo, e o
+filtro na realimentação come os agudos a cada volta, como numa corda real.
+
+A síntese por osciladores não dava isso, e era a razão do "tuc": **oscilador produz forma de onda fixa,
+e corda tem espectro que muda enquanto soa.** A correção anterior (decisão 99) melhorou os parâmetros,
+mas não mudava a natureza do problema.
+
+**O Paulo precisa ouvir e dizer.** Eu não ouço — o que fiz foi trocar um método por outro que a
+literatura diz ser o certo para corda. Se ainda não servir, o caminho seguinte é amostra gravada, e aí
+é trabalho de músico.
+
+**O nome de cada corda aparece à esquerda do braço** (pedido do Paulo): sem ele é fácil se confundir
+sobre em que corda se está, ainda mais na guitarra, onde há duas cordas Mi.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1885,10 +1929,8 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
-| A13 | **O nome do visualizador**, agora que ele também toca (decisão 89). Hoje aparece como "visualizador" nos documentos e como "Exploração do braço e do teclado" no catálogo. Candidatas: *Instrumento virtual* (a mais direta) · *Braço e teclado* · outra | Paulo | `F6-3` |
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
-| A21 | **O motor de digitações resolve o problema certo?** O Paulo imaginava um **mapa do braço com notas em círculos** (forma), não uma tablatura com dedos. Se for isso, a `FM-2` encolhe e dizer o dedo vira opcional por item. Ver a decisão 99 | Paulo | `FM-2`, `F6-3` |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 
