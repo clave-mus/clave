@@ -1997,6 +1997,51 @@ não se toma dentro de uma tarefa.
 
 ---
 
+### 104 · A autoavaliação mede esforço; e o portão de publicação fica desligado até o beta
+
+Duas decisões do Paulo, em 04/11/2026.
+
+**A autoavaliação de uma etapa de tarefa passou a ser *consegui com facilidade / consegui com esforço /
+não consegui*.** Era *consegui / consegui com ajuda / preciso repetir*, e a versão nova é melhor por
+dois motivos que valem registrar:
+
+- **"com ajuda" é sobre a tela, não sobre a pessoa.** Numa tarefa de instrumento, "ajuda" pode ser o
+  nome da nota à vista, o metrônomo, a forma desenhada — e isso é configuração, não resultado.
+- **"preciso repetir" é um plano, não uma observação.** As outras duas respostas descrevem o que
+  acabou de acontecer; essa descrevia o que a pessoa pretende fazer depois, que é outra pergunta.
+
+**Facilidade e esforço são o que se percebe ao terminar**, e as três respostas passam a medir a mesma
+coisa em três graus. Continua valendo o essencial: **autoavaliação nunca vira acerto** (decisão 5), e
+aparece no histórico com as palavras da pessoa, nunca convertida em número.
+
+*A migração traduz os valores guardados. `consegui → com facilidade` e `com ajuda → com esforço` são
+exatas; `preciso repetir → não consegui` é a mais próxima, e não é exata — fica dito.*
+
+---
+
+**O portão de publicação fica desligado até o beta.** Nas palavras dele: *"acho que só precisamos usar
+a coisa de publicado e rascunho depois que lançarmos o beta. agora, ainda não."*
+
+Com quatro pessoas testando e nenhum usuário, esconder metade do catálogo **atrasa o teste e não
+protege ninguém** — não há "quem usa" para proteger.
+
+**O que NÃO foi feito, e é a diferença que importa: nada virou `publicado`.** O Paulo disse "pode
+publicar todos", e marcar os sete rascunhos como publicados registraria *"revisado pelo Paulo, em tal
+data"* — uma revisão que não aconteceu, que é exatamente o erro que a decisão 91 existe para impedir.
+Em vez disso, **o portão inteiro desligou**: `PORTAO_LIGADO = false`, em `src/catalog/publicacao.ts`.
+
+O efeito é o que ele pediu (o catálogo todo à vista, sem precisar de `?revisao=1`), e o estado de cada
+item **continua verdadeiro**. Virar para o beta é trocar `false` por `true` numa linha, e
+[revisao-pendente.md](revisao-pendente.md) segue listando o que falta revisar, com teste que a mantém
+completa.
+
+**Os testes passaram a exercitar os dois lados.** `visivel(p, revisao, portao)` recebe o estado do
+portão, e as suítes ligam-no de propósito: é o comportamento do **beta** que precisa de guarda, e ele
+deixou de ser o padrão. Testar só o padrão deixaria metade sem teste justamente na metade que vai
+valer quando houver gente de fora usando.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.

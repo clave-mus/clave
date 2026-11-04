@@ -36,8 +36,10 @@ describe('catálogo por módulo', () => {
     expect(mobile.flatMap(e => e.lessons).sort()).toEqual(all.flatMap(e => e.lessons).sort());
   });
 
-  describe('o portão de publicação (decisão 91)', () => {
-    const visiveis = catalogByModule();
+  // O portão está desligado até o beta (decisão 104), então o teste o LIGA de propósito: é o
+  // comportamento do beta que precisa de guarda, e hoje ele não é o padrão.
+  describe('o portão de publicação (decisão 91), ligado', () => {
+    const visiveis = catalogByModule({ portao: true });
     const ids = (e: typeof visiveis) => e.flatMap(m => [...m.exercises, ...m.tools]);
 
     it('quem usa o app não vê nenhum rascunho', () => {
@@ -52,9 +54,17 @@ describe('catálogo por módulo', () => {
     });
 
     it('o modo de revisão mostra os rascunhos, e só acrescenta: nada que era visível some', () => {
-      const todos = ids(catalogByModule({ revisao: true }));
+      const todos = ids(catalogByModule({ revisao: true, portao: true }));
       for (const id of ids(visiveis)) expect(todos).toContain(id);
       expect(todos.length).toBeGreaterThan(ids(visiveis).length);
+    });
+  });
+
+  describe('o portão desligado (hoje)', () => {
+    it('o catálogo inteiro aparece, inclusive os rascunhos', () => {
+      const ids = (e: ReturnType<typeof catalogByModule>) => e.flatMap(m => [...m.exercises, ...m.tools]);
+      const todos = [...EXERCISES, ...AMBIENTES].map(i => i.id);
+      expect(ids(catalogByModule()).sort()).toEqual(todos.sort());
     });
   });
 });

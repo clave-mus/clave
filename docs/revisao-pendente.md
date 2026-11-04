@@ -3,6 +3,15 @@
 A decisão 51 diz que *tarefa delegada constrói o motor e a fiação; publicar a família é passo humano
 do Paulo.* Desde a decisão 91 isso **é imposto pelo código**, não só combinado.
 
+> ## ⚠️ O portão está DESLIGADO até o beta (decisão 104)
+>
+> Em 04/11/2026 o Paulo pediu o catálogo inteiro à vista enquanto o time testa: `PORTAO_LIGADO = false`,
+> em `src/catalog/publicacao.ts`. **Rascunho aparece para todos, sem `?revisao=1`.**
+>
+> **Nada virou `publicado`** — isso afirmaria uma revisão que não aconteceu. O estado de cada item
+> continua verdadeiro, e esta lista continua sendo o que falta revisar **antes do beta**, quando o
+> portão volta a valer. Virar é trocar `false` por `true` naquela linha.
+
 ## Os três estados
 
 | Estado | Quem vê | O que significa |

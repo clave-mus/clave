@@ -52,6 +52,13 @@ const FUNDIDOS: Record<string, { id: string; superficie: string }> = {
  */
 const DIVIDIDOS: Record<string, string> = { 'quiz-teoria': 'teoria-graus' };
 
+/**
+ * A autoavaliação passou a medir **esforço** (decisão 104). *consegui → com facilidade* e *com ajuda →
+ * com esforço* são as correspondências honestas; *preciso repetir → não consegui* é a mais próxima, e
+ * não é exata — "preciso repetir" era um plano, e "não consegui" é uma observação.
+ */
+const AUTOAVALIACAO: Record<string, string> = { consegui: 'facil', 'com-ajuda': 'esforco', repetir: 'nao' };
+
 /** O id novo de um item, se ele foi fundido. */
 export const idFundido = (id: string) => FUNDIDOS[id]?.id ?? DIVIDIDOS[id] ?? id;
 
@@ -112,7 +119,11 @@ export function migrateSaved(raw: unknown): Obj {
       const module = typeof h.module === 'string' && MODULE_IDS.includes(h.module) ? h.module : AREA_TO_MODULE[String(area)] ?? 'theory';
       // o id fundido entra; o snapshot NÃO é remexido — ele é o registro do que aconteceu naquele dia,
       // e reescrever a configuração de uma prática passada seria falsear o histórico
-      return { ...h, module, ...(typeof h.id === 'string' ? { id: idFundido(h.id) } : {}) };
+      return {
+        ...h, module,
+        ...(typeof h.id === 'string' ? { id: idFundido(h.id) } : {}),
+        ...(typeof h.autoavaliacao === 'string' ? { autoavaliacao: AUTOAVALIACAO[h.autoavaliacao] ?? h.autoavaliacao } : {}),
+      };
     });
   }
 

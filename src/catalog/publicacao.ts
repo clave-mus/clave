@@ -29,12 +29,33 @@ export type EstadoDePublicacao = Publicacao['estado'];
 export const estadoDe = (p?: Publicacao): EstadoDePublicacao => p?.estado ?? 'rascunho';
 
 /**
+ * **O portão está desligado até o beta** (decisão 104).
+ *
+ * O Paulo: *"acho que só precisamos usar a coisa de publicado e rascunho depois que lançarmos o beta.
+ * agora, ainda não."* Enquanto o time é quatro pessoas testando, esconder metade do catálogo atrasa o
+ * teste e não protege ninguém — não há "quem usa" para proteger.
+ *
+ * **O que NÃO foi feito, e é a diferença que importa:** nada virou `publicado`. `publicado` afirma
+ * *"revisado pelo Paulo, em tal data"*, e marcar os sete rascunhos assim registraria uma revisão que
+ * não aconteceu — exatamente o erro que a decisão 91 existe para impedir. O estado de cada item
+ * continua verdadeiro; o que mudou é que **ninguém é escondido por causa dele agora**.
+ *
+ * Virar o portão para o beta é **trocar `false` por `true` nesta linha**. A lista do que falta revisar
+ * segue viva em `docs/revisao-pendente.md`, com teste que a mantém completa.
+ */
+export const PORTAO_LIGADO = false;
+
+/**
  * A pessoa vê este item?
  *
- * `revisao` é o modo de revisão: quem o liga (o Paulo, os colegas) vê os rascunhos para poder
- * revisá-los. Rascunho nunca aparece sem ele.
+ * `revisao` é o modo de revisão: quem o liga vê os rascunhos para poder revisá-los. Com o portão
+ * ligado, rascunho não aparece sem ele; com o portão desligado, tudo aparece.
+ *
+ * `portao` é parâmetro para o teste poder exercitar **os dois lados** — o de hoje e o do beta — sem
+ * depender de qual é o padrão.
  */
-export const visivel = (p: Publicacao | undefined, revisao: boolean): boolean => revisao || estadoDe(p) !== 'rascunho';
+export const visivel = (p: Publicacao | undefined, revisao: boolean, portao = PORTAO_LIGADO): boolean =>
+  !portao || revisao || estadoDe(p) !== 'rascunho';
 
 /** Data no formato `2026-11-03`, que é o que `publicado` exige. */
 export const ehDataIso = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));

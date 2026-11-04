@@ -115,9 +115,10 @@ describe('companheirosDe', () => {
     }
   });
 
-  // A condição que o Paulo pediu: o botão só aparece onde há o que oferecer.
+  // A condição que o Paulo pediu: o botão só aparece onde há o que oferecer. O portão é LIGADO no
+  // teste (hoje ele está desligado, decisão 104) porque é o caso do beta que precisa de guarda.
   it('o que a pessoa não pode ver não é oferecido', () => {
-    const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false);
+    const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false, true);
     // "Ritmo com metrônomo" é inteiro rascunho: fora do modo de revisão, ninguém tem companheiro
     for (const id of ['acento-deslocado', 'subdivisao-alternada', 'deslocamento-ritmico']) {
       expect(companheirosDe(inst(id), podeVer), id).toEqual([]);
@@ -125,8 +126,8 @@ describe('companheirosDe', () => {
     expect(companheirosDe(inst('acento-deslocado'), sempre).length).toBe(2);
   });
 
-  it('"Aquecimento de mão" hoje só oferece `tecnica`, porque os outros dois são rascunho', () => {
-    const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false);
+  it('com o portão ligado, "Aquecimento de mão" só oferece `tecnica`: os outros dois são rascunho', () => {
+    const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false, true);
     expect(companheirosDe(inst('tecnica'), podeVer)).toEqual([]);
     expect(companheirosDe(inst('sustentar-e-cortar'), podeVer).map(m => m.itemId)).toEqual(['tecnica']);
   });

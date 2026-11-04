@@ -17,9 +17,11 @@ export interface ModuleEntry {
   tools: string[];
 }
 
-export function catalogByModule(opts: { mobileOnly?: boolean; revisao?: boolean } = {}): ModuleEntry[] {
+export function catalogByModule(opts: { mobileOnly?: boolean; revisao?: boolean; portao?: boolean } = {}): ModuleEntry[] {
   // Rascunho não aparece para quem usa (decisão 91); só no modo de revisão.
-  const aparece = (i: { publicacao?: Parameters<typeof visivel>[0] }) => visivel(i.publicacao, !!opts.revisao);
+  // `portao` é opção para o teste exercitar o comportamento do beta (portão ligado) mesmo com o
+  // padrão de hoje desligado — ver `publicacao.ts`.
+  const aparece = (i: { publicacao?: Parameters<typeof visivel>[0] }) => visivel(i.publicacao, !!opts.revisao, opts.portao);
   return MODULE_LIST.map(m => ({
     module: m.id,
     lessons: LESSONS.filter(l => l.primaryModule === m.id).map(l => l.id),

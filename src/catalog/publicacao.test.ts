@@ -2,31 +2,51 @@
 // restritivo, e o que está escrito nos documentos bater com o que está no código.
 import { describe, expect, it } from 'vitest';
 import { EXERCISES, AMBIENTES } from './index';
-import { ehDataIso, estadoDe, LEGADO, RASCUNHO, visivel } from './publicacao';
+import { ehDataIso, estadoDe, LEGADO, PORTAO_LIGADO, RASCUNHO, visivel } from './publicacao';
 import { ROUTINES } from '../tools/tecnica-rotinas';
 // o documento, lido como texto pelo próprio bundler (não há acesso a `node:fs` nos tipos do app)
 import doc from '../../docs/revisao-pendente.md?raw';
 
-describe('a regra', () => {
+// O portão está DESLIGADO até o beta (decisão 104), então os testes passam o estado dele de propósito:
+// `true` é o comportamento do beta, `false` é o de hoje. Testar só o padrão deixaria metade sem guarda.
+describe('a regra, com o portão ligado (o beta)', () => {
   it('omitir a declaração é o mesmo que rascunho — o padrão é o estado MAIS restritivo', () => {
     expect(estadoDe(undefined)).toBe('rascunho');
-    expect(visivel(undefined, false)).toBe(false);
+    expect(visivel(undefined, false, true)).toBe(false);
   });
 
   it('rascunho só aparece no modo de revisão', () => {
-    expect(visivel(RASCUNHO, false)).toBe(false);
-    expect(visivel(RASCUNHO, true)).toBe(true);
+    expect(visivel(RASCUNHO, false, true)).toBe(false);
+    expect(visivel(RASCUNHO, true, true)).toBe(true);
   });
 
   it('legado e publicado aparecem sempre', () => {
     for (const p of [LEGADO, { estado: 'publicado' as const, revisadoEm: '2026-11-03', por: 'Paulo' }]) {
-      expect(visivel(p, false)).toBe(true);
-      expect(visivel(p, true)).toBe(true);
+      expect(visivel(p, false, true)).toBe(true);
+      expect(visivel(p, true, true)).toBe(true);
     }
   });
 
   it('o modo de revisão nunca esconde nada', () => {
-    for (const p of [undefined, RASCUNHO, LEGADO]) expect(visivel(p, true)).toBe(true);
+    for (const p of [undefined, RASCUNHO, LEGADO]) expect(visivel(p, true, true)).toBe(true);
+  });
+});
+
+describe('o portão desligado (hoje)', () => {
+  // O Paulo pediu o catálogo inteiro à vista enquanto o time testa. Com quatro pessoas e nenhum
+  // usuário, esconder metade atrasa o teste e não protege ninguém.
+  it('tudo aparece, inclusive rascunho, sem precisar do modo de revisão', () => {
+    for (const p of [undefined, RASCUNHO, LEGADO]) expect(visivel(p, false, false)).toBe(true);
+  });
+
+  it('e o ESTADO de cada item continua verdadeiro — o portão esconde, não reescreve', () => {
+    expect(estadoDe(RASCUNHO)).toBe('rascunho');
+    expect(estadoDe(undefined)).toBe('rascunho');
+  });
+
+  it('é o padrão de hoje, e virar para o beta é trocar uma constante', () => {
+    expect(PORTAO_LIGADO).toBe(false);
+    expect(visivel(RASCUNHO, false)).toBe(true);
   });
 });
 

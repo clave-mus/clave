@@ -188,10 +188,16 @@ describe('a publicação', () => {
   });
 
   // O portão só vale se a lista que a tela mostra o respeitar. Sem isto, publicar seria só um rótulo.
-  it('rascunho não aparece fora do modo de revisão, e publicada aparece sempre', () => {
-    const naTela = (revisao: boolean) => ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, revisao)).map(r => r.id);
+  // Ligado de propósito: hoje o portão está desligado (decisão 104), e é o caso do beta que precisa
+  // de guarda.
+  it('com o portão ligado, rascunho não aparece fora do modo de revisão', () => {
+    const naTela = (revisao: boolean) => ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, revisao, true)).map(r => r.id);
     expect(naTela(false)).toEqual(['de-bolso', 'mapear-braco', 'leitura-diaria']);
     expect(naTela(true)).toHaveLength(ROTINAS_DO_TIME.length);
+  });
+
+  it('e hoje, com ele desligado, as cinco aparecem — é o que o Paulo pediu para testar', () => {
+    expect(ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, false)).map(r => r.id)).toHaveLength(5);
   });
 
   it('cada rascunho aparece em docs/revisao-pendente.md pelo id', () => {

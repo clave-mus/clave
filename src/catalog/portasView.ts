@@ -10,8 +10,8 @@ const TODOS = [...EXERCISES, ...AMBIENTES];
 const porId = Object.fromEntries(TODOS.map(i => [i.id, i]));
 
 /** Os itens de uma porta que a pessoa pode ver agora (o portão da decisão 91). */
-export const itensDaPorta = (p: Porta, revisao: boolean): string[] =>
-  p.itens.filter(id => porId[id] && visivel(porId[id]!.publicacao, revisao));
+export const itensDaPorta = (p: Porta, revisao: boolean, portao?: boolean): string[] =>
+  p.itens.filter(id => porId[id] && visivel(porId[id]!.publicacao, revisao, portao));
 
 /**
  * As portas a mostrar.
@@ -19,5 +19,5 @@ export const itensDaPorta = (p: Porta, revisao: boolean): string[] =>
  * **Nenhuma porta é escondida por ter poucos itens** — a decisão 20 admitiu a técnica sabendo que ela
  * enche depois. Some só a porta que ficaria **vazia**, porque porta sem nada atrás é promessa falsa.
  */
-export const portasVisiveis = (revisao: boolean): Porta[] =>
-  PORTAS.filter(p => p.diagnostico || itensDaPorta(p, revisao).length > 0);
+export const portasVisiveis = (revisao: boolean, portao?: boolean): Porta[] =>
+  PORTAS.filter(p => p.diagnostico || itensDaPorta(p, revisao, portao).length > 0);

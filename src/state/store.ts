@@ -61,8 +61,13 @@ export interface Activity {
    * Autoavaliação de uma etapa do tipo `tarefa` (decisão 5). Mora aqui, e **não** em `correct`,
    * porque uma tarefa de instrumento não tem pergunta, resposta esperada nem correção: o app não
    * ouve a pessoa tocar. Tratar isto como acerto afirmaria uma validação que não existe.
+   *
+   * **As três respostas medem ESFORÇO, não ajuda** (decisão 104). A versão anterior era *consegui /
+   * consegui com ajuda / preciso repetir*, e ela misturava duas coisas: "com ajuda" é sobre o que
+   * estava na tela, e "preciso repetir" é um plano, não uma observação. Facilidade e esforço são o que
+   * a pessoa de fato percebe ao terminar.
    */
-  autoavaliacao?: 'consegui' | 'com-ajuda' | 'repetir';
+  autoavaliacao?: 'facil' | 'esforco' | 'nao';
 }
 /** Sessão da conta (Supabase). Null = sem conta, só localStorage. */
 export interface Account {

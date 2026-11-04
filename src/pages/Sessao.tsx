@@ -373,18 +373,21 @@ const rotinasDoTimePub = (id: string) => PUB_DO_TIME[id];
 /**
  * Autoavaliação de etapa do tipo `tarefa` (decisão 5): **nunca** vira acerto.
  *
- * O app não ouve a pessoa tocar; quem sabe se conseguiu é ela. As três respostas são as da F3-2, e a
- * do meio existe porque "com ajuda" é informação diferente de "consegui" e de "não consegui".
+ * O app não ouve a pessoa tocar; quem sabe se conseguiu é ela.
+ *
+ * **As três medem ESFORÇO** (decisão 104): *com facilidade / com esforço / não consegui*. A versão
+ * anterior era *consegui / com ajuda / preciso repetir*, e misturava duas coisas — "com ajuda" é sobre
+ * o que estava na tela, e "preciso repetir" é um plano, não uma observação do que acabou de acontecer.
  */
-function Autoavaliacao({ item, onPick }: { item: string; onPick: (d: 'consegui' | 'com-ajuda' | 'repetir') => void }) {
+function Autoavaliacao({ item, onPick }: { item: string; onPick: (d: 'facil' | 'esforco' | 'nao') => void }) {
   const t = useT();
   return (
     <div className="panel" style={{ display: 'grid', gap: 10 }} key={item}>
       <b>{t('session.howWasIt')}</b>
       <div className="row" style={{ flexWrap: 'wrap' }}>
-        <Btn small onClick={() => onPick('consegui')}>{t('session.gotIt')}</Btn>
-        <Btn small tone="ghost" onClick={() => onPick('com-ajuda')}>{t('session.withHelp')}</Btn>
-        <Btn small tone="ghost" onClick={() => onPick('repetir')}>{t('session.again')}</Btn>
+        <Btn small onClick={() => onPick('facil')}>{t('session.gotIt')}</Btn>
+        <Btn small tone="ghost" onClick={() => onPick('esforco')}>{t('session.withHelp')}</Btn>
+        <Btn small tone="ghost" onClick={() => onPick('nao')}>{t('session.again')}</Btn>
       </div>
     </div>
   );
@@ -397,7 +400,7 @@ function Autoavaliacao({ item, onPick }: { item: string; onPick: (d: 'consegui' 
  * nenhuma das três. Registrar como tentativa produziria `correct`, que é o que a decisão 5 proíbe.
  */
 function registrarTarefa(id: string, module: Parameters<typeof logActivity>[0]['module'], seconds: number,
-  autoavaliacao: 'consegui' | 'com-ajuda' | 'repetir', sessao: string, title: string) {
+  autoavaliacao: 'facil' | 'esforco' | 'nao', sessao: string, title: string) {
   logActivity({ id, title, module, seconds, sessao, autoavaliacao });
 }
 

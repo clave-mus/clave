@@ -52,12 +52,14 @@ describe('a regra da decisão 20: pelo menos 4 itens por porta', () => {
 });
 
 describe('o portão de publicação vale nas portas', () => {
-  it('rascunho não conta fora do modo de revisão', () => {
+  // `itensDaPorta` recebe o portão como terceiro argumento, como `visivel`: aqui ele é ligado, porque
+  // é o comportamento do beta que precisa de guarda (hoje ele está desligado, decisão 104).
+  it('com o portão ligado, rascunho não conta fora do modo de revisão', () => {
     const porta = portaPorId('tecnica')!;
     const rascunhos = porta.itens.filter(id => estadoDe(TODOS.find(i => i.id === id)?.publicacao) === 'rascunho');
     expect(rascunhos.length, 'esta porta devia ter rascunhos para o teste valer').toBeGreaterThan(0);
-    expect(itensDaPorta(porta, false).length).toBe(porta.itens.length - rascunhos.length);
-    expect(itensDaPorta(porta, true).length).toBe(porta.itens.length);
+    expect(itensDaPorta(porta, false, true).length).toBe(porta.itens.length - rascunhos.length);
+    expect(itensDaPorta(porta, true, true).length).toBe(porta.itens.length);
   });
 
   // Porta com poucos itens NÃO é escondida: a decisão 20 admitiu a técnica sabendo que ela enche
@@ -65,6 +67,9 @@ describe('o portão de publicação vale nas portas', () => {
   it('nenhuma porta fica vazia para quem usa, e nenhuma é escondida por ser pequena', () => {
     for (const p of portasVisiveis(false)) {
       if (!p.diagnostico) expect(itensDaPorta(p, false).length, p.id).toBeGreaterThan(0);
+    }
+    for (const p of portasVisiveis(false, true)) {
+      if (!p.diagnostico) expect(itensDaPorta(p, false, true).length, p.id).toBeGreaterThan(0);
     }
     expect(portasVisiveis(false).map(p => p.id)).toEqual([...PORTA_IDS]);
   });

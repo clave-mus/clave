@@ -28,10 +28,10 @@ export default function Progresso() {
    *
    * Quando a etapa era uma **tarefa**, a autoavaliação entra na linha. **Não é nota**: é o que a
    * pessoa disse sobre a própria prática, e por isso aparece com as palavras dela ("consegui com
-   * ajuda"), nunca convertida em acerto nem em percentual (decisão 5).
+   * esforço"), nunca convertida em acerto nem em percentual (decisão 5).
    */
   const comoFoi = (h: (typeof history)[number]) => [
-    h.autoavaliacao ? t(`session.${h.autoavaliacao === 'consegui' ? 'gotIt' : h.autoavaliacao === 'com-ajuda' ? 'withHelp' : 'again'}`) : '',
+    h.autoavaliacao ? t(`session.${h.autoavaliacao === 'facil' ? 'gotIt' : h.autoavaliacao === 'esforco' ? 'withHelp' : 'again'}`) : '',
     descreverAtividade(h.snapshot, { t, naming }),
   ].filter(Boolean).join(' · ');
 
