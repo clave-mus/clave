@@ -1,11 +1,16 @@
 # Digitações de piano · escalas
 
 Para a tarefa [`FM-6`](../tarefas/FM-motores.md#fm-6--tabela-de-digitações-de-piano).
-**Proposta a conferir, não tabela fechada.**
+
+> **O revisor pianista não vai existir** (decisão 107). O Bernardo Garcia declinou — disse que não quer
+> tomar essa decisão e não teria certeza. Então esta tabela deixa de ser "proposta a conferir por um
+> pianista" e passa a ser **compilada de fontes, com a fonte escrita**. A regra que vale aqui é a mesma
+> dos padrões rítmicos (decisão 85): **o que não tem fonte não entra, e o que tem entra dizendo qual.**
 
 Escrita por consulta, não por julgamento — é o que a decisão 76 afirma: digitação de escala no
-piano é convenção, e não há enumeração a fazer porque não há escolha genuína. Por isso ela pôde ser
-produzida sem um pianista; por isso ela ainda **precisa** de um para conferir.
+piano é convenção, e não há enumeração a fazer porque não há escolha genuína.
+
+**A tradição seguida** está na seção final, e sem ela a tabela não seria verificável.
 
 **Uma oitava, ascendente.** Descendo é a mesma sequência ao contrário.
 
@@ -14,9 +19,19 @@ onde as edições divergem, e é o que diz ao Bernardo onde gastar o tempo dele:
 
 | | |
 |---|---|
-| ✅ | convenção única, igual em toda edição que eu conheço |
-| 🟡 | proposta minha; há mais de uma edição em circulação |
-| ❓ | **não preencho de cabeça com confiança.** Precisa de pianista ou de método na mão |
+| ✅ | convenção única, e **a regra do polegar a verifica** (ver abaixo) |
+| 🟡 | há mais de uma edição em circulação, e a regra do polegar não desempata |
+| ❓ | sem fonte: **não entra** |
+
+### A verificação que torna esta tabela checável sem um pianista
+
+**O polegar nunca cai em tecla preta.** Isso não é preferência: é mecânica da mão, e é o que a decisão
+76 chama de "convenção, não julgamento".
+
+E a regra **determina a digitação quase sozinha**, por construção: marque as teclas brancas da escala,
+ponha o polegar nelas, e os grupos de 3 e de 4 dedos se encaixam sozinhos entre um polegar e o
+seguinte. Toda linha ✅ desta tabela foi conferida assim, nota por nota — e foi assim que um erro
+apareceu (ver Si♭ menor).
 
 ---
 
@@ -56,15 +71,35 @@ saber disso para não pedir duas tabelas.
 | Sol menor | 1 2 3 1 2 3 4 5 | 5 4 3 2 1 3 2 1 | ✅ |
 | Dó menor | 1 2 3 1 2 3 4 5 | 5 4 3 2 1 3 2 1 | ✅ |
 | Fá menor | 1 2 3 4 1 2 3 4 | 5 4 3 2 1 3 2 1 | ✅ |
-| Si♭ menor | 4 1 2 3 1 2 3 4 | 2 1 4 3 2 1 3 2 | 🟡 |
-| Mi♭ menor | 3 1 2 3 4 1 2 3 | 2 1 4 3 2 1 3 2 | 🟡 |
-| Fá♯ menor | — | — | ❓ |
-| Dó♯ menor | — | — | ❓ |
-| Sol♯ menor | — | — | ❓ |
+| Si♭ menor | 4 1 2 3 1 2 3 4 | **2 1 3 2 1 4 3 2** | ✅ |
+| Mi♭ menor | 3 1 2 3 4 1 2 3 | 2 1 4 3 2 1 3 2 | ✅ |
+| Fá♯ menor | **2 3 1 2 3 1 2 3** | **4 3 2 1 3 2 1 4** | ✅ |
+| Dó♯ menor | **3 4 1 2 3 1 2 3** | **3 2 1 4 3 2 1 3** | ✅ |
+| Sol♯ menor | **3 4 1 2 3 1 2 3** | **3 2 1 3 2 1 4 3** | ✅ |
 
-**As três ❓ são as menores com muitas teclas pretas**, e é justamente onde as edições divergem mais.
-Eu preferi deixar em branco a escrever três linhas que parecem tão confiáveis quanto as outras
-dezenove. **Linha em branco é informação; linha errada com cara de certa não é.**
+### As três que estavam em branco, preenchidas — e por que agora dá
+
+Elas estavam ❓ porque eu não tinha fonte e não quis escrever linha com cara de certa. Agora têm fonte
+**e** passam pela regra do polegar, que é o que as torna checáveis sem pianista. A conferência,
+explícita:
+
+| Escala | Teclas brancas | Onde o polegar cai | Confere? |
+|---|---|---|---|
+| Fá♯ menor | Lá, Si, Ré, Mi | **direita** em Lá e Ré · **esquerda** em Si e Mi | ✅ |
+| Dó♯ menor | Mi, Lá, Si | **direita** em Mi e Lá · **esquerda** em Mi e Si | ✅ |
+| Sol♯ menor | Si, Mi | **direita** em Si e Mi · **esquerda** em Si e Mi | ✅ |
+
+*Sol♯ menor tem só **duas** teclas brancas, e é por isso que ela é a mais rígida das três: com dois
+lugares possíveis para o polegar, não há escolha a fazer em nenhuma das mãos.*
+
+### ⚠️ Um erro encontrado: a mão esquerda de Si♭ menor
+
+A linha anterior era `2 1 4 3 2 1 3 2`, marcada 🟡. **Ela punha o polegar em Sol♭** — tecla preta. A
+regra que organiza toda a tabela a reprova, e a fonte confirma: é `2 1 3 2 1 4 3 2`, com o polegar em
+**Dó** e **Fá**, as duas únicas brancas da escala.
+
+Mi♭ menor, a outra 🟡, **estava certa**: o polegar cai em Fá e em Dó♭ (que é o Si), as duas brancas.
+Ela sobe para ✅.
 
 ---
 
@@ -81,12 +116,50 @@ a harmônica e a melódica junto, não por herança.
 
 ---
 
-## O que falta, e é o pedido ao Bernardo
+## Arpejos: a regra não atravessa, e isso é o achado
 
-1. **As três ❓**, com as duas mãos.
-2. **Conferir as duas 🟡.**
-3. **Os arpejos** — tríades e tétrades, duas mãos. Não estão aqui porque divergem mais que as
-   escalas, e eu não quis inventar.
-4. **Uma linha dizendo qual tradição ou edição você seguiu.** Sem isso a tabela não é verificável, e
-   é o que a `FM-6` exige para estar pronta. Se você discordar de alguma linha ✅, **a sua mão
-   ganha** — ela está marcada pela minha confiança, que é consulta, não prática.
+**O método que fechou as escalas não serve para os arpejos**, e vale dizer por quê em vez de produzir
+uma tabela de 24 linhas com cara de certa.
+
+Nas escalas, "o polegar nunca cai em tecla preta" é uma restrição **forte**: ela sozinha fixa a
+digitação. **Em arpejo isso deixa de valer** — pianistas põem o polegar em tecla preta em arpejo o
+tempo todo, porque os saltos de terça não deixam alternativa. Sem essa restrição não sobra nada que
+determine a resposta, e a divergência entre edições é real.
+
+**O que as fontes dão com segurança** é a convenção para arpejo de tríade em posição fundamental, uma
+oitava, com **fundamental em tecla branca**:
+
+| | Subindo |
+|---|---|
+| Mão direita | **1 2 3 5** |
+| Mão esquerda | **5 3 2 1** quando há duas brancas entre as notas · **5 4 2 1** quando há uma |
+
+Vale para as sete fundamentais brancas (Dó, Ré, Mi, Fá, Sol, Lá, Si), maior e menor.
+
+**Fundamental em tecla preta fica fora**, de propósito: ali a escolha do dedo depende do que vem antes
+e do que vem depois, as fontes divergem, e **o revisor que desempataria não existe**. Entra se e quando
+aparecer alguém que toque.
+
+**Tétrades ficam fora inteiras**, pelo mesmo motivo com mais força: com quatro notas e cinco dedos, a
+digitação passa a depender do contexto musical, e aí não é mais convenção — é interpretação.
+
+---
+
+## A tradição seguida
+
+**Convenção anglo-americana corrente de ensino**, a que ABRSM e os métodos de escala norte-americanos
+compartilham para escalas de uma oitava em posição fundamental. Fontes consultadas em 04/11/2026:
+
+- [piano.org · escalas menores](https://piano.org/scales/minor/f-sharp/) — as três que estavam em
+  branco, com as duas mãos
+- [Hoffman Academy](https://www.hoffmanacademy.com/blog/b-flat-minor-scale-piano) e
+  [piano-keyboard-guide.com](https://www.piano-keyboard-guide.com/b-flat-minor-scale.html) — a correção
+  da mão esquerda de Si♭ menor
+- [Baylor · *Piano Basics*, arpejos de uma oitava](https://openbooks.library.baylor.edu/pianobasics/chapter/one-octave-arpeggios/)
+  e [Do Re Mi Studios](https://doremistudios.com.au/piano-major-arpeggios/) — a convenção de arpejo e a
+  distinção entre `5 3 2 1` e `5 4 2 1`
+
+**Onde as fontes divergirem, esta tabela registra a divergência em vez de escolher** — é a decisão 107.
+
+**E se um pianista aparecer e discordar de uma linha ✅, a mão dele ganha.** A marca de confiança aqui
+é consulta mais verificação pela regra do polegar; não é prática.

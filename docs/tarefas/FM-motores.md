@@ -309,10 +309,10 @@ com este mesmo motivo.
 
 ---
 
-## FM-6 · 👤 Tabela de digitações de piano
+## FM-6 · Tabela de digitações de piano ✅ *fechada em 04/11/2026*
 
-**Decisão de origem:** 76. **Depende de:** uma pessoa, não de código. **Candidato natural:** o
-Bernardo Garcia, pianista clássico do time.
+**Decisões de origem:** 76 e 107. **Dependia de uma pessoa**, e a pessoa declinou: o Bernardo Garcia
+disse que não quer tomar essa decisão e não teria certeza. O Paulo passou a tarefa para a IA.
 
 **A tabela já existe, em [docs/digitacoes/piano.md](../digitacoes/piano.md) — esta tarefa é
 conferir, não escrever.**
@@ -335,5 +335,20 @@ pretas, onde as edições divergem mais e onde eu não quis escrever linha com c
 **Pronto quando:** não há mais ❓, as 🟡 foram confirmadas ou corrigidas, os arpejos existem, e a
 linha de tradição está escrita — sem ela a tabela não é verificável.
 
-**E se o pianista discordar de uma linha ✅, a mão dele ganha.** A marca de confiança é a minha, e
-ela é consulta, não prática.
+**Feito, e com um achado.** As três ❓ (Fá♯, Dó♯ e Sol♯ menor) estão preenchidas com fonte **e** com a
+conferência do polegar explícita na tabela; as duas 🟡 foram resolvidas; a linha de tradição está
+escrita, com as fontes.
+
+**O achado:** a mão esquerda de Si♭ menor **estava errada** — punha o polegar em Sol♭, tecla preta. A
+regra que organiza a tabela inteira a reprova, e a fonte confirma a correção. Mi♭ menor, a outra 🟡,
+estava certa e subiu para ✅.
+
+**O que mudou de escopo, e por quê:** os arpejos **não** ganharam tabela. Nas escalas, "o polegar nunca
+cai em tecla preta" é restrição forte o suficiente para fixar a digitação sozinha — e é o que permitiu
+fechar isto sem pianista. **Em arpejo essa restrição não vale**: o polegar vai para tecla preta o tempo
+todo, porque os saltos de terça não deixam alternativa. Sem ela não sobra nada que determine a
+resposta. Então entrou só a convenção de tríade em posição fundamental com **fundamental branca**, que
+as fontes dão com segurança; fundamental preta e tétrades ficaram fora, com o motivo escrito.
+
+**E se um pianista aparecer e discordar de uma linha ✅, a mão dele ganha.** A confiança aqui é consulta
+mais verificação pela regra do polegar; não é prática.

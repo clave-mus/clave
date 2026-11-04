@@ -119,7 +119,9 @@ Já estão no app como `legado`, mas as mudanças recentes pedem o seu olho:
 
 ## O que ainda NÃO foi feito, e não é revisão
 
-- A **tabela de piano** (`FM-6`) tem 3 linhas em branco que só um pianista preenche.
+- A **tabela de piano** (`FM-6`) está fechada (04/11): as 3 linhas em branco foram preenchidas com
+  fonte e com a conferência do polegar, e **um erro foi encontrado** na mão esquerda de Si♭ menor. Os
+  arpejos ficaram só na convenção de fundamental branca — ver o motivo lá.
 - A **biblioteca de padrões rítmicos** (`F6-11`) tem os doze candidatos e as fontes levantadas em
   [padroes-ritmicos.md](padroes-ritmicos.md), **sem nenhuma notação nova escrita** — falta o
   **revisor de tradição** (decisão 85, regra 2), que é pessoa, não documento. Nada dali entra no app.
