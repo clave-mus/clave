@@ -2198,8 +2198,16 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 
 ## Pendências fora do código
 
-- **Criar a organização no GitHub** e transferir o repositório (só o Bernardo pode transferir).
-- **Religar o Cloudflare Pages** à organização e marcar produção = `main`.
+- ✅ **Criar a organização no GitHub** e transferir o repositório — o Bernardo transferiu (04/11/2026).
+- **O deploy do Cloudflare Pages quebrou com a transferência**, e isso era esperado: a integração com
+  git do Pages guarda o dono antigo internamente, o webhook do GitHub deixa de casar, e **o painel não
+  tem opção de reapontar**. Pela documentação do próprio Cloudflare, a saída é **desconectar e
+  reconectar do zero** ou **criar um projeto novo**.
+  **O deploy foi movido para dentro do repositório** (`.github/workflows/deploy.yml`) justamente por
+  isso: ele depende de um **token**, não de quem é o dono, e sobrevive à próxima mudança de dono.
+  Faltam dois segredos no repositório — `CLOUDFLARE_API_TOKEN` (permissão *Account · Cloudflare Pages ·
+  Edit*) e `CLOUDFLARE_ACCOUNT_ID`. Sem eles o fluxo avisa e passa, em vez de ficar vermelho a cada push.
+- **Marcar produção = `main`** no projeto do Pages.
 - **Proteger a `main`**: PR obrigatório, CI verde, 1 aprovação, sem force-push.
 - **Revisão de ambiguidade teórica** de cada família antes de publicá-la (decisão 13).
 - **Política de privacidade** do beta: contas, microfone do afinador, menores.

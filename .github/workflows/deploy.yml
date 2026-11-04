@@ -1,0 +1,76 @@
+# Publicar no Cloudflare Pages.
+#
+# **Por que o deploy mora aqui e não no painel do Cloudflare.** A integração com git do Pages é
+# configurada no painel, e ela **quebrou quando o repositório mudou de dono** — o projeto do Pages
+# guarda o dono antigo internamente, o webhook do GitHub deixa de casar, e o painel não tem opção de
+# reapontar. É comportamento conhecido do Cloudflare, e vai quebrar outra vez na próxima mudança de
+# dono ou de organização.
+#
+# Com o deploy no repositório, o que ele depende é de **um token**, não de quem é o dono. E dá para
+# revisar num PR, que é o contrário de uma caixinha num painel que ninguém lembra de ter marcado.
+#
+# ## O que precisa existir para isto funcionar
+#
+# Dois segredos no repositório (Settings → Secrets and variables → Actions):
+#
+#   CLOUDFLARE_API_TOKEN    token com a permissão **Account · Cloudflare Pages · Edit**
+#   CLOUDFLARE_ACCOUNT_ID   o id da conta, que aparece na barra lateral do painel
+#
+# **Sem eles, este fluxo não falha: ele avisa e passa.** Fluxo vermelho a cada push por falta de
+# credencial ensina a equipe a ignorar fluxo vermelho.
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    name: Build e deploy no Pages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Os segredos não são legíveis no `if` de um job, então a checagem é um passo com saída.
+      - name: Há credenciais do Cloudflare?
+        id: cred
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONTA: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$CONTA" ]; then
+            echo "tem=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sem CLOUDFLARE_API_TOKEN ou CLOUDFLARE_ACCOUNT_ID. Nada foi publicado — ver o comentário no topo deste arquivo."
+          else
+            echo "tem=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.cred.outputs.tem == 'true'
+        run: npm ci
+
+      # O build roda `tsc -b` antes do vite (ver package.json), então um erro de tipo barra a
+      # publicação mesmo que alguém force um push direto na `main`.
+      - if: steps.cred.outputs.tem == 'true'
+        run: npm run build
+
+      # `wrangler` é devDependency: a versão vem do package-lock, e não de uma ação de terceiro
+      # pinada por tag. É a mesma disciplina de SHA que o ci.yml usa para as ações oficiais.
+      - name: Deploy
+        if: steps.cred.outputs.tem == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name=clave --branch="${{ github.ref_name }}"
