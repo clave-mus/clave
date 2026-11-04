@@ -119,7 +119,7 @@ describe('respeita: o que o item declara é o que ele de fato lê', () => {
 
   it('há itens que não respeitam nada — e é legítimo (armadura, teoria, ritmo)', () => {
     const nenhum = itens.filter(e => (e.respeita ?? []).length === 0).map(e => e.id);
-    expect(nenhum).toEqual(expect.arrayContaining(['pauta-armadura', 'quiz-teoria', 'ritmo-ouvido']));
+    expect(nenhum).toEqual(expect.arrayContaining(['pauta-armadura', 'teoria-graus', 'teoria-campo', 'ritmo-ouvido']));
   });
 });
 

@@ -335,6 +335,6 @@ describe('as fusões por superfície na leitura (decisão 16)', () => {
   });
 
   it('instância de item não fundido passa intacta', () => {
-    expect(lida('quiz-teoria', { temas: ['graus'] })).toEqual({ itemId: 'quiz-teoria', settings: { temas: ['graus'] } });
+    expect(lida('ouvido-escala', { direcao: 'sobe' })).toEqual({ itemId: 'ouvido-escala', settings: { direcao: 'sobe' } });
   });
 });

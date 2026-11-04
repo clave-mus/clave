@@ -592,13 +592,16 @@ const pt = {
   },
   // ---------------- conteúdo: exercícios, ferramentas e teoria ----------------
   exercises: {
+    'teoria-graus': { title: 'Graus e modos', desc: 'Diga o grau de uma nota na tonalidade, e qual modo é qual.' },
+    'teoria-acordes': { title: 'Construção de acordes', desc: 'Diga de que notas um acorde é feito.' },
+    'teoria-campo': { title: 'Campo harmônico', desc: 'Diga que acorde cai em cada grau da tonalidade.' },
+    'teoria-tonalidades': { title: 'Tonalidades e armaduras', desc: 'Relacione tonalidade, armadura e relativa.' },
     'que-nota-e-essa': { title: 'Qual nota é essa?', desc: 'Identifique a nota, na pauta, no teclado ou no braço.' },
     'ache-a-nota': { title: 'Ache a nota', desc: 'Escreva ou toque a nota pedida, na superfície que você escolher.' },
     'que-intervalo-e-esse': { title: 'Qual intervalo é esse?', desc: 'Identifique a distância entre as duas notas.' },
     'que-acorde-e-esse': { title: 'Qual acorde é esse?', desc: 'Identifique a cifra, pelo desenho ou pelas notas escritas.' },
     'pauta-armadura': { title: 'Armadura de clave', desc: 'Diga a tonalidade pela armadura.' },
     'pauta-escala': { title: 'Escala na pauta', desc: 'Identifique a escala escrita.' },
-    'quiz-teoria': { title: 'Quiz de teoria', desc: 'Graus, modos, campo harmônico e rearmonização.' },
     'ouvido-tecla': { title: 'Que nota tocou?', desc: 'Ouça e toque a tecla certa.' },
     'ouvido-intervalo': { title: 'Intervalos de ouvido', desc: 'Ouça e reconheça o intervalo.' },
     'ouvido-acorde': { title: 'Acordes de ouvido', desc: 'Reconheça a qualidade do acorde que soa.' },

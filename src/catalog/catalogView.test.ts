@@ -25,7 +25,7 @@ describe('catálogo por módulo', () => {
   it('as aulas ficam no módulo do que ensinam, junto dos exercícios dele', () => {
     const theory = all.find(e => e.module === 'theory')!;
     expect(theory.lessons).toContain('escala-maior');
-    expect(theory.exercises).toContain('quiz-teoria');
+    expect(theory.exercises).toContain('teoria-graus');
     expect(all.find(e => e.module === 'perception.rhythmic')!.lessons).toContain('leitura-ritmica');
   });
   it('o filtro "sem instrumento" tira exercícios e ferramentas que precisam dele, mas não as aulas', () => {

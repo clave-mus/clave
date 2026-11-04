@@ -46,28 +46,28 @@ export const LESSONS: LessonBase[] = [
     objetos: ['escalas'],
     primaryModule: 'theory', skillTags: ['theory.scale_degrees', 'theory.key_relations', 'notation.key_signature'],
     contentTags: ['scale.major', 'key.major', 'key.minor', 'key.signatures'],
-    exercises: ['pauta-escala', 'quiz-teoria', 'ouvido-escala'], tools: [],
+    exercises: ['pauta-escala', 'teoria-graus', 'teoria-tonalidades', 'ouvido-escala'], tools: [],
   },
   {
     id: 'modos-gregos',
     objetos: ['escalas'],
     primaryModule: 'theory', skillTags: ['theory.modes'],
     contentTags: ['scale.modes'],
-    exercises: ['quiz-teoria', 'ouvido-escala'], tools: ['backing', 'ambiente'],
+    exercises: ['teoria-graus', 'ouvido-escala'], tools: ['backing', 'ambiente'],
   },
   {
     id: 'acordes',
     objetos: ['acordes'],
     primaryModule: 'theory', skillTags: ['theory.chord_construction', 'theory.harmonic_field'],
     contentTags: ['chord.triads', 'chord.sevenths', 'harmony.diatonic_field'],
-    exercises: ['que-acorde-e-esse', 'ouvido-acorde'], tools: ['backing'],
+    exercises: ['que-acorde-e-esse', 'teoria-acordes', 'ouvido-acorde'], tools: ['backing'],
   },
   {
     id: 'harmonia-funcional',
     objetos: ['harmonia'],
     primaryModule: 'theory', skillTags: ['theory.harmonic_field', 'theory.reharmonization', 'theory.key_relations'],
     contentTags: ['harmony.diatonic_field', 'harmony.tritone_sub', 'key.minor'],
-    exercises: ['quiz-teoria'], tools: ['backing'],
+    exercises: ['teoria-campo'], tools: ['backing'],
     premium: true,
   },
   {
@@ -125,7 +125,7 @@ export const GENRES: GenreBase[] = [
   {
     id: 'jazz', cat: 'CLV 1501', color: 'var(--mu)',
     sides: [
-      { side: 'a', tracks: [{ id: 'tetrades', min: 8, to: '/estudar/acordes' }, { id: 'iivi', min: 10, to: '/ferramentas/backing?p=ii-v-i' }, { id: 'sub5', min: 7, to: '/treinar/quiz-teoria' }] },
+      { side: 'a', tracks: [{ id: 'tetrades', min: 8, to: '/estudar/acordes' }, { id: 'iivi', min: 10, to: '/ferramentas/backing?p=ii-v-i' }, { id: 'sub5', min: 7, to: '/treinar/teoria-campo' }] },
       { side: 'b', tracks: [{ id: 'blues', min: 12, to: '/ferramentas/backing?p=blues' }, { id: 'celulas', min: 8, to: '/treinar/ouvido-celulas' }] },
     ],
   },

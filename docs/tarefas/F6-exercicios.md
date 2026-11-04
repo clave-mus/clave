@@ -124,7 +124,7 @@ e nada no app apresenta o andamento como pontuação.
 
 ---
 
-## F6-9 · Dividir o quiz de teoria em quatro
+## F6-9 · Dividir o quiz de teoria em quatro ✅ *feita em 04/11/2026*
 
 **Decisão de origem:** 53. **Depende de:** FM-3.
 
@@ -148,6 +148,27 @@ mapear o id antigo para um dos novos — sugestão: o de **graus e modos**, que 
 
 **Contrato de saída:** o teste de ids estáveis passa com a migração; e um teste confere que cada um
 dos quatro tem **um objeto só**.
+
+**Feito.** `teoria-graus`, `teoria-acordes`, `teoria-campo` e `teoria-tonalidades`, com o motor
+intacto — `theoryQuestion(topico, ctx)` já recebia o tópico.
+
+**O teste é de PORTA, porque o problema era de porta.** Com a `D2` pronta, a queixa da decisão 53
+ficou literal: `quiz-teoria` caía em quatro portas dizendo a mesma coisa em todas. Agora
+`teoria-campo` está atrás de *Acompanhar e entender harmonia* e `teoria-tonalidades` atrás de
+*Aprender a ler partitura* — que é onde quem procura por aquilo procura.
+
+**Dois detalhes que apareceram na implementação:**
+
+1. **Item com um tópico só não declara configuração nenhuma.** `teoria-acordes` e
+   `teoria-tonalidades` ficaram com `settings: () => []` e `defaults: {}`. A primeira versão
+   declarava uma lista de uma opção escondida por `quando`, e dois testes acusaram: um controle com
+   uma opção não controla nada, e esconder a única configuração deixaria "Personalizar" abrindo o
+   vazio.
+2. **A migração descarta a lista de tópicos**, além de trocar o id para `teoria-graus` (o tópico
+   padrão). Ela falava de seis tópicos e o item novo conhece dois: manter a lista daria uma
+   configuração que o item recusa. **Não dá para fazer melhor** — a pessoa tinha um item com cinco
+   tópicos marcados, e escolher um dos quatro novos perde quatro quintos ou inventa quatro etapas que
+   ela não pôs na rotina.
 
 ---
 

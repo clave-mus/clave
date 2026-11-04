@@ -42,13 +42,29 @@ const FUNDIDOS: Record<string, { id: string; superficie: string }> = {
   'acorde-visual': { id: 'que-acorde-e-esse', superficie: 'braco' },
 };
 
+/**
+ * A divisão do quiz de teoria em quatro (decisão 53). Aqui não há superfície: o que havia era uma
+ * lista de **tópicos**, e cada item novo ficou com os seus.
+ *
+ * O id antigo vai para **graus e modos**, que era o tópico padrão. Não dá para fazer melhor: a pessoa
+ * tinha um item com cinco tópicos marcados, e os quatro novos não são um — escolher um é perder quatro
+ * quintos ou inventar quatro etapas que ela não pôs na rotina.
+ */
+const DIVIDIDOS: Record<string, string> = { 'quiz-teoria': 'teoria-graus' };
+
 /** O id novo de um item, se ele foi fundido. */
-export const idFundido = (id: string) => FUNDIDOS[id]?.id ?? id;
+export const idFundido = (id: string) => FUNDIDOS[id]?.id ?? DIVIDIDOS[id] ?? id;
 
 /** A configuração de uma instância migrada: a superfície entra, e `onde` sai. */
 export function settingsFundidos(id: string, settings: Obj): { id: string; settings: Obj } {
   const f = FUNDIDOS[id];
-  if (!f) return { id, settings };
+  if (!f) {
+    // Item dividido: o id troca e a lista de tópicos é **descartada** — ela falava de seis tópicos, e
+    // o item novo só conhece dois. Manter a lista antiga daria uma configuração que o item recusa.
+    const d = DIVIDIDOS[id];
+    if (d) { const { temas: _fora, ...resto } = settings; void _fora; return { id: d, settings: resto }; }
+    return { id, settings };
+  }
   const { onde, ...resto } = settings;
   // `acorde-visual` com `onde: 'piano'` era o teclado, não o braço
   const superficie = id === 'acorde-visual' && onde === 'piano' ? 'teclado' : f.superficie;

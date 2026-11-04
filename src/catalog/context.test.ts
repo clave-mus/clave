@@ -59,7 +59,7 @@ describe('os cinco contextos', () => {
   it('em silêncio, nada que toque som', () => {
     expect(cabeNoContexto(itemById['ouvido-intervalo']!, 'silencio')).toBe(false);
     // quiz de teoria é texto puro: cabe sem fone
-    expect(cabeNoContexto(itemById['quiz-teoria']!, 'silencio')).toBe(true);
+    expect(cabeNoContexto(itemById['teoria-graus']!, 'silencio')).toBe(true);
   });
 
   it('"de bolso" está VAZIO hoje, e isso é esperado', () => {
@@ -94,7 +94,7 @@ describe('o motivo de não caber', () => {
   });
 
   it('não dá motivo para o que cabe', () => {
-    expect(porQueNaoCabe(itemById['quiz-teoria']!, 'onibus')).toBeNull();
+    expect(porQueNaoCabe(itemById['teoria-graus']!, 'onibus')).toBeNull();
   });
 });
 

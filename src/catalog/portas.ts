@@ -49,17 +49,17 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'harmonia',
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
-    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'quiz-teoria'],
+    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'teoria-campo'],
   },
   {
     id: 'teoria',
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['quiz-teoria', 'pauta-armadura', 'que-intervalo-e-esse', 'pauta-escala', 'que-acorde-e-esse'],
+    itens: ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'teoria-tonalidades', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',

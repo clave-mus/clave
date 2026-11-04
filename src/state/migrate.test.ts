@@ -70,8 +70,8 @@ describe('as fusões por superfície (decisão 16)', () => {
   });
 
   it('item que não foi fundido passa intacto', () => {
-    const s = migrate({ stats: { 'quiz-teoria': { attempts: 3, correct: 2, last: 7 } } });
-    expect(s.stats['quiz-teoria']).toEqual({ attempts: 3, correct: 2, last: 7 });
+    const s = migrate({ stats: { 'ouvido-escala': { attempts: 3, correct: 2, last: 7 } } });
+    expect(s.stats['ouvido-escala']).toEqual({ attempts: 3, correct: 2, last: 7 });
   });
 
   it('`settingsFundidos` troca o id e põe a superfície, tirando o `onde` que saiu', () => {
@@ -84,6 +84,6 @@ describe('as fusões por superfície (decisão 16)', () => {
   });
 
   it('e não mexe em quem não foi fundido', () => {
-    expect(settingsFundidos('quiz-teoria', { temas: ['graus'] })).toEqual({ id: 'quiz-teoria', settings: { temas: ['graus'] } });
+    expect(settingsFundidos('ouvido-escala', { direcao: 'sobe' })).toEqual({ id: 'ouvido-escala', settings: { direcao: 'sobe' } });
   });
 });

@@ -96,3 +96,18 @@ describe('os textos das nove entradas (decisão 79)', () => {
     for (const loc of ['pt', 'en'] as const) expect(translate(loc, 'train.byGoal').trim()).not.toBe('');
   });
 });
+
+// A divisão do quiz de teoria (decisão 53) existia por um problema de PORTA: quem procura campo
+// harmônico não procura "quiz de teoria". Então o teste é de porta.
+describe('a divisão do quiz de teoria resolveu o problema que a motivou', () => {
+  it('cada um dos quatro itens de teoria está atrás de uma porta diferente do que era', () => {
+    expect(portasDoItem('teoria-campo')).toContain('harmonia');
+    expect(portasDoItem('teoria-tonalidades')).toContain('leitura');
+    expect(portasDoItem('teoria-graus')).toContain('teoria');
+    expect(portasDoItem('teoria-acordes')).toContain('teoria');
+  });
+
+  it('e `quiz-teoria` não está atrás de nenhuma, porque não existe mais', () => {
+    expect(portasDoItem('quiz-teoria')).toEqual([]);
+  });
+});

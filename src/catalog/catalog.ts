@@ -121,6 +121,21 @@ function paresNoBraco(tuning: readonly number[]) {
   return pares;
 }
 
+/**
+ * Os tópicos de um item de teoria em texto. Cada item recebe só os seus.
+ *
+ * **Item com um tópico só não declara configuração nenhuma**, em vez de declarar uma lista de um item:
+ * uma lista com uma opção é um controle que não controla nada, e esconder a única configuração do item
+ * deixaria o botão "Personalizar" abrindo o vazio.
+ */
+const TOPICOS = { graus: 'settings.topicDegrees', modos: 'settings.topicModes', acordes: 'settings.topicChords',
+  campo: 'settings.topicField', tonalidades: 'settings.topicKeys', sub5: 'settings.topicSub5' } as const;
+type TopicoId = keyof typeof TOPICOS;
+const TEMAS = ({ t }: Ctx, quais: TopicoId[]): Setting => ({
+  id: 'temas', label: t('settings.topics'), type: 'multi',
+  options: quais.map(id => ({ id, label: t(TOPICOS[id]) })),
+});
+
 const DIRECAO = ({ t }: Ctx): Setting => ({ id: 'direcao', label: t('settings.direction'), type: 'single', options: [
   { id: 'sobe', label: t('settings.up') }, { id: 'desce', label: t('settings.down') }, { id: 'ambos', label: t('settings.upDown') }] });
 
@@ -470,21 +485,61 @@ export const EXERCISES: CatalogItem[] = [
       };
     },
   },
+  // ---------------- TEORIA EM TEXTO: QUATRO ITENS, UM MOTOR (decisão 53) ----------------
+  //
+  // Era um item só, `quiz-teoria`, cobrindo seis tópicos e **quatro objetos ao mesmo tempo** — o único
+  // assim no catálogo. O problema era de porta: **quem procura campo harmônico não procura "quiz de
+  // teoria"**. Com as portas por objetivo (D2) isso ficou literal — o item caía em quatro portas
+  // dizendo a mesma coisa em todas.
+  //
+  // `theoryQuestion(topico, ctx)` já recebia o tópico: são quatro declarações e zero código novo.
   {
-    id: 'quiz-teoria',
-    objetos: ['escalas', 'acordes', 'harmonia', 'notacao'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['theory.scale_degrees', 'theory.modes', 'theory.chord_construction', 'theory.harmonic_field', 'theory.key_relations', 'theory.reharmonization'],
-    contentTags: ['scale.major', 'scale.modes', 'chord.triads', 'chord.sevenths', 'harmony.diatonic_field', 'harmony.tritone_sub', 'key.major', 'key.minor', 'key.signatures'],
+    id: 'teoria-graus',
+    objetos: ['escalas'], tarefas: ['nomear'],
+    primaryModule: 'theory', skillTags: ['theory.scale_degrees', 'theory.modes'],
+    contentTags: ['scale.major', 'scale.modes'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
     respeita: [],
     publicacao: LEGADO,
-    settings: ctx => [{ id: 'temas', label: ctx.t('settings.topics'), type: 'multi', options: [
-      { id: 'graus', label: ctx.t('settings.topicDegrees') }, { id: 'modos', label: ctx.t('settings.topicModes') }, { id: 'acordes', label: ctx.t('settings.topicChords') },
-      { id: 'campo', label: ctx.t('settings.topicField') }, { id: 'tonalidades', label: ctx.t('settings.topicKeys') }, { id: 'sub5', label: ctx.t('settings.topicSub5') }] }],
-    defaults: { temas: ['graus', 'modos', 'acordes', 'campo', 'tonalidades'] },
-    make(s, ctx) {
-      return theoryQuestion(pick(arr(s.temas, ['graus'])), ctx);
-    },
+    settings: ctx => [TEMAS(ctx, ['graus', 'modos'])],
+    defaults: { temas: ['graus', 'modos'] },
+    make(s, ctx) { return theoryQuestion(pick(arr(s.temas, ['graus'])), ctx); },
+  },
+  {
+    id: 'teoria-acordes',
+    objetos: ['acordes'], tarefas: ['nomear'],
+    primaryModule: 'theory', skillTags: ['theory.chord_construction'],
+    contentTags: ['chord.triads', 'chord.sevenths'],
+    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
+    respeita: [],
+    publicacao: LEGADO,
+    // Um tópico só: nada a configurar, e por isso `defaults` fica vazio — chave em `defaults` sem
+    // configuração correspondente é chave solta, e há teste contra isso.
+    settings: () => [], defaults: {},
+    make(_s, ctx) { return theoryQuestion('acordes', ctx); },
+  },
+  {
+    id: 'teoria-campo',
+    objetos: ['harmonia'], tarefas: ['nomear'],
+    primaryModule: 'theory', skillTags: ['theory.harmonic_field', 'theory.reharmonization'],
+    contentTags: ['harmony.diatonic_field', 'harmony.tritone_sub'],
+    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
+    respeita: [],
+    publicacao: LEGADO,
+    settings: ctx => [TEMAS(ctx, ['campo', 'sub5'])],
+    defaults: { temas: ['campo'] },
+    make(s, ctx) { return theoryQuestion(pick(arr(s.temas, ['campo'])), ctx); },
+  },
+  {
+    id: 'teoria-tonalidades',
+    objetos: ['notacao'], tarefas: ['nomear'],
+    primaryModule: 'theory', skillTags: ['theory.key_relations'],
+    contentTags: ['key.major', 'key.minor', 'key.signatures'],
+    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
+    respeita: [],
+    publicacao: LEGADO,
+    settings: () => [], defaults: {},
+    make(_s, ctx) { return theoryQuestion('tonalidades', ctx); },
   },
   // ---------------- MAPEAMENTO: teclado ----------------
   // ---------------- MAPEAMENTO: braço ----------------
