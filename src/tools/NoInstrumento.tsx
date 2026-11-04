@@ -18,7 +18,7 @@ import { mod, pcName } from '../theory/core';
 import { playGroups } from '../audio/engine';
 import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
-import { useNaming, useT, type MessageKey } from '../i18n';
+import { useNaming, useT } from '../i18n';
 import type { Ctx, SettingValue } from '../catalog/types';
 
 /** Quanto tempo a pessoa tem para achar e tocar, antes de a resposta aparecer. */
@@ -65,10 +65,16 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
   }, [params, tuning, esperar, ouvirAntes]);
 
   /**
-   * A autoavaliação fecha a volta e sorteia a próxima. Grava **atividade**, não acerto: o app não
-   * ouviu nada, e as três respostas medem esforço (decisão 104).
+   * Próxima nota.
+   *
+   * **O item não se autoavalia.** A primeira versão perguntava "como foi?" depois de **cada nota** — o
+   * Paulo: *"seria muito chato"*, e ele tinha razão: numa etapa de 8 minutos são quinze perguntas. E
+   * havia duplicação, porque o executor já pergunta no fim da etapa por este item ser `tarefa`.
+   *
+   * Quem termina uma tarefa é a **etapa**, não a volta. Fora de uma rotina não há etapa — e aí não há
+   * autoavaliação nenhuma, o que está certo: uso avulso produz **atividade**, não evidência.
    */
-  const avaliar = () => { setFeitas(n => n + 1); sortear(); };
+  const proxima = () => { setFeitas(n => n + 1); sortear(); };
 
   const parar = () => { limpar(); setFase('parado'); setAlvo(null); };
 
@@ -109,14 +115,9 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
               <Btn tone="ghost" onClick={parar}>{t('onInstrument.stop')}</Btn>
             </div>
           ) : (
-            <div className="panel" style={{ display: 'grid', gap: 10 }}>
-              <b>{t('session.howWasIt')}</b>
-              <div className="row" style={{ flexWrap: 'wrap' }}>
-                {([['facil', 'session.gotIt'], ['esforco', 'session.withHelp'], ['nao', 'session.again']] as const).map(([id, chave]) => (
-                  <Btn key={id} small tone={id === 'facil' ? undefined : 'ghost'} onClick={avaliar}>{t(chave as MessageKey)}</Btn>
-                ))}
-              </div>
-              <div><Btn small tone="mu" onClick={parar}>{t('onInstrument.stop')}</Btn></div>
+            <div className="row">
+              <Btn onClick={proxima}>{t('onInstrument.next')}</Btn>
+              <Btn tone="ghost" onClick={parar}>{t('onInstrument.stop')}</Btn>
             </div>
           )}
         </>

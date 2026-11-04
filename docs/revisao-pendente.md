@@ -57,7 +57,7 @@ E **tire a linha do item deste arquivo**. O teste exige data no formato `AAAA-MM
 
 ### Rotinas do time (F3-6)
 
-**As nove, reescritas em 04/11/2026** depois da revisão do Paulo, e por isso **todas voltaram a
+**Sete** (eram nove: *Teoria no silêncio* e *Mapear o instrumento na rua* saíram, e as duas de braço viraram uma). Reescritas em 04/11/2026 depois da revisão do Paulo, e por isso **todas voltaram a
 rascunho** — o conteúdo mudou, e o estado diz a verdade. Com o portão desligado (decisão 104) isso não
 esconde nada de ninguém.
 
@@ -67,11 +67,8 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
 | `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
-| `teoria-no-silencio` | livre | 5 | se os cinco itens silenciosos dão uma rotina, ou se faltam assuntos |
-| `instrumento-na-rua` | livre | 6 | se as três superfícies na mesma rotina ajudam ou dispersam |
-| `ouvido-no-fone` | livre | 6 | os três rodízios (tríades→tétrades, escalas→modos) e se a ordem importa |
-| `braco-na-rua` | guiada, 30 min | 5 | se reconhecer antes de achar é a ordem certa, as três regiões do rodízio, e se **identificar e construir intervalo** na mesma rotina é demais |
-| `braco-com-instrumento` | guiada, 30 min | 5 | reescrita com o **critério do Paulo** (*"mapear o braço é internalizar as posições das notas"*): saiu o drone, entraram os dois de braço que trabalham posição. Confira se os exercícios de tela repetidos de `braco-na-rua` incomodam aqui |
+| `ouvido-no-fone` | livre | 8 | uma etapa por assunto, sem rodízio — confira se oito cartões é demais numa tela de celular |
+| `mapear-braco` | guiada, 30 min | 5 | a fusão das duas antigas. Confira o **rodízio entre identificar e construir** intervalo (etapa 3), e se a última etapa (a que pede o instrumento) atrapalha quem está na rua |
 | `internalizar-tonalidade` | guiada, 30 min, rotação | 5 | a ordem das cinco frentes, e se 12 tonalidades em quartas é o ciclo certo |
 | `aquecimento-ouvido` | guiada, **8 min** | 4 | dois minutos por frente, a pedido do Paulo. Confira se 2 min dá tempo de entrar no assunto |
 | `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar |

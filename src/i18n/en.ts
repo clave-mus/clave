@@ -71,29 +71,17 @@ const en: Shape<typeof pt> = {
     sub: 'Ready to use. Adopting one makes your own copy — change it however you like.',
     adopt: 'Adopt',
     adopted: 'Adopted: it is yours now',
+    braco: {
+      nome: 'Map the fretboard',
+      sobre: 'Name it, find it, measure it, picture it. One step needs the instrument in hand — skip it if you are out.',
+    },
     bolso: {
       nome: 'Pocket-sized',
       sobre: 'The question plays, you think, the answer comes. Phone in your pocket — no step asks you to look or to answer.',
     },
-    silencio: {
-      nome: 'Theory in silence',
-      sobre: 'No step makes or needs sound. For the waiting room, the boring class, and the headphones left at home.',
-    },
-    rua: {
-      nome: 'Map your instrument out and about',
-      sobre: 'Fretboard, keyboard and staff, on screen only — no step needs the instrument. Skip whatever does not serve you.',
-    },
     fone: {
       nome: 'Ear training with headphones',
-      sobre: 'The six ear exercises where you answer. Needs headphones and one free hand; fits a whole bus ride.',
-    },
-    bracoRua: {
-      nome: 'Map the fretboard out and about',
-      sobre: 'Name it, find it, measure it, picture it — all on screen, no instrument. The second step changes region each time.',
-    },
-    bracoInst: {
-      nome: 'Map the fretboard with your instrument',
-      sobre: 'Bass or guitar in hand: finding the note on the real neck, measuring and building intervals, metronome patterns, and playing inside a key.',
+      sobre: 'Eight ear fronts where you answer — one per subject. Needs headphones and one free hand; fits a whole bus ride.',
     },
     tonalidade: {
       nome: 'Settle into a key',
@@ -132,6 +120,7 @@ const en: Shape<typeof pt> = {
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
   onInstrument: {
+    next: 'Next',
     hint: 'Pick up your instrument. Clave shows the note, you find it and play it, then it shows where it was. The app does not hear you — you are the one who says how it went.',
     wait: 'Time to find it and play it',
     hearFirst: 'Hear the note first',

@@ -71,29 +71,17 @@ const pt = {
     sub: 'Prontas para usar. Adotar faz uma cópia sua — a sua cópia você muda à vontade.',
     adopt: 'Adotar',
     adopted: 'Adotada: agora é sua',
+    braco: {
+      nome: 'Mapear o braço',
+      sobre: 'Reconhecer, achar, medir e desenhar no braço. Uma etapa pede o instrumento na mão — se você estiver na rua, pule.',
+    },
     bolso: {
       nome: 'De bolso',
       sobre: 'A pergunta toca, você pensa, a resposta vem. Celular no bolso, nenhuma etapa pede olhar nem responder.',
     },
-    silencio: {
-      nome: 'Teoria no silêncio',
-      sobre: 'Nenhuma etapa faz nem recebe som. Para a sala de espera, a aula chata e o fone esquecido em casa.',
-    },
-    rua: {
-      nome: 'Mapear o instrumento na rua',
-      sobre: 'Braço, teclado e pauta, só na tela — nenhuma etapa pede o instrumento. Pule o que não servir.',
-    },
     fone: {
       nome: 'Treino de ouvido no fone',
-      sobre: 'Os seis de ouvido em que você responde. Pede fone e uma mão livre; cabe inteira num ônibus.',
-    },
-    bracoRua: {
-      nome: 'Mapear o braço na rua',
-      sobre: 'Reconhecer, achar, medir e desenhar no braço — tudo na tela, sem o instrumento. A segunda etapa muda de região a cada vez.',
-    },
-    bracoInst: {
-      nome: 'Mapear o braço com o instrumento',
-      sobre: 'Com o baixo ou a guitarra na mão: achar a nota no braço de verdade, medir e construir intervalos, padrões com metrônomo e tocar dentro de uma tonalidade.',
+      sobre: 'Oito frentes de ouvido em que você responde — uma por assunto. Pede fone e uma mão livre; cabe inteira num ônibus.',
     },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',
@@ -132,6 +120,7 @@ const pt = {
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
   onInstrument: {
+    next: 'Próxima',
     hint: 'Pegue o instrumento. O Clave mostra a nota, você acha e toca, e depois ele mostra onde era. O app não ouve você — quem diz como foi é você.',
     wait: 'Tempo para achar e tocar',
     hearFirst: 'Ouvir a nota antes',

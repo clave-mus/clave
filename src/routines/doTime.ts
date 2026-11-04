@@ -75,50 +75,6 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     ],
   },
   {
-    id: 'teoria-no-silencio', nome: 'doTime.silencio.nome', sobre: 'doTime.silencio.sobre',
-    modo: 'livre', publicacao: RASCUNHO,
-    // **Nenhuma etapa faz nem recebe som.** São os cinco itens do catálogo com `audio: false`, e é a
-    // rotina que cabe na sala de espera, na aula chata e no fone esquecido em casa.
-    etapas: [
-      { porque: 'o grau de uma nota na tonalidade, e qual modo é qual: a base de todo o resto',
-        instancias: [i('teoria-graus', { temas: ['graus', 'modos'] })] },
-      { porque: 'de que notas um acorde é feito — o que a cifra quer dizer',
-        instancias: [i('teoria-acordes')] },
-      { porque: 'que acorde cai em cada grau: é o que liga teoria a tocar junto',
-        instancias: [i('teoria-campo')] },
-      { porque: 'tonalidade, armadura e relativa, as três de uma vez',
-        instancias: [i('teoria-tonalidades')] },
-      { porque: 'intervalo sem pauta e sem som: o único lugar do catálogo onde isso cabe',
-        instancias: [i('teoria-intervalos', { temas: ['intervalo-nomeado'] })] },
-      { porque: 'reconhecer a armadura escrita, que é o mesmo assunto pela via da leitura',
-        instancias: [i('pauta-armadura', { claves: ['sol', 'fa'], modo: 'ambos', max: '4' })] },
-    ],
-  },
-  {
-    id: 'instrumento-na-rua', nome: 'doTime.rua.nome', sobre: 'doTime.rua.sobre',
-    modo: 'livre', publicacao: RASCUNHO,
-    // Visualização nas **três superfícies**, nenhuma pedindo o instrumento. Modo livre e com o botão
-    // de pular à mão: a ideia é atravessar o que serve e passar o resto para o fim.
-    etapas: [
-      { porque: 'nota no braço, na região de casa',
-        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '0-5' })] },
-      { porque: 'achar a nota no braço, braço inteiro: é o mais difícil dos quatro de braço',
-        instancias: [i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-12' })] },
-      { porque: 'nota no teclado, duas oitavas — o teclado é o mapa que todo mundo lê, mesmo quem não toca',
-        instancias: [i('que-nota-e-essa', { superficie: 'teclado', pretas: true, oitavas: '2' })] },
-      { porque: 'achar a tecla, que é o mesmo mapa na direção contrária',
-        instancias: [i('ache-a-nota', { superficie: 'teclado', pretas: true })] },
-      { porque: 'nota na pauta, nas duas claves: a terceira superfície',
-        instancias: [i('que-nota-e-essa', { superficie: 'pauta', claves: ['sol', 'fa'], extensao: 'pauta', acidentes: false })] },
-      { porque: 'desenho de acorde no braço e no teclado, em rodízio',
-        politica: 'ordem',
-        instancias: [
-          i('que-acorde-e-esse', { superficie: 'braco', formas: 'abertos' }),
-          i('que-acorde-e-esse', { superficie: 'teclado', tipos: ['maior', 'menor', '7', 'm7'] }),
-        ] },
-    ],
-  },
-  {
     id: 'ouvido-no-fone', nome: 'doTime.fone.nome', sobre: 'doTime.fone.sobre',
     modo: 'livre', publicacao: RASCUNHO,
     // Os seis itens de ouvido **interativos** (a pessoa responde). Precisam de fone e de uma mão, e é
@@ -126,18 +82,17 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     etapas: [
       { porque: 'intervalos, subindo: a unidade de tudo',
         instancias: [i('ouvido-intervalo', { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' })] },
-      { porque: 'as quatro tríades e as três tétrades, em rodízio: tríades primeiro, tétrades depois',
-        politica: 'ordem',
-        instancias: [
-          i('ouvido-acorde', { tipos: ['maior', 'menor', 'dim', 'aum'], arpejo: true, duracao: 2 }),
-          i('ouvido-acorde', { tipos: ['7M', '7', 'm7', 'm7b5'], arpejo: true, duracao: 2 }),
-        ] },
-      { porque: 'escalas e modos, em rodízio: a menor harmônica entra pela sensível, os modos vêm depois',
-        politica: 'ordem',
-        instancias: [
-          i('ouvido-escala', { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'ambos' }),
-          i('ouvido-escala', { tipos: ['dorico', 'frigio', 'lidio', 'mixolidio'], direcao: 'sobe' }),
-        ] },
+      // **Separadas, não em rodízio** (o Paulo decidiu). Em rodízio, uma execução pegava tríades e
+      // escalas (fácil) e a seguinte pegava tétrades e modos (difícil) — não era uma rotina que varia,
+      // eram duas que se alternavam, e a pessoa não escolhia qual pegava hoje. Separadas, ela escolhe.
+      { porque: 'as quatro tríades, incluindo as duas simétricas que confundem',
+        instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'dim', 'aum'], arpejo: true, duracao: 2 })] },
+      { porque: 'as tétrades, que são o vocabulário de harmonia de verdade',
+        instancias: [i('ouvido-acorde', { tipos: ['7M', '7', 'm7', 'm7b5'], arpejo: true, duracao: 2 })] },
+      { porque: 'escalas, subindo e descendo: a menor harmônica entra pela sensível',
+        instancias: [i('ouvido-escala', { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'ambos' })] },
+      { porque: 'os modos, à parte: eles pedem outro ouvido que as escalas',
+        instancias: [i('ouvido-escala', { tipos: ['dorico', 'frigio', 'lidio', 'mixolidio'], direcao: 'sobe' })] },
       { porque: 'graus dentro da tonalidade: ouvir a tônica e situar a frase',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
       { porque: 'nota pelo nome, com referência: o único de ouvido que responde no teclado',
@@ -146,57 +101,37 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('ritmo-ouvido', { nivel: 'duas' })] },
     ],
   },
-
-  // ---------------------------------------------------------------------------------------------
-  // AS DUAS DO BRAÇO
-  //
-  // A mesma porta carro-chefe, partida pelo que o mundo exige: uma cabe no ônibus, a outra pede o
-  // baixo na mão. Eram uma só, e isso obrigava a pessoa a pular metade em qualquer dos dois casos.
-  // ---------------------------------------------------------------------------------------------
   {
-    id: 'braco-na-rua', nome: 'doTime.bracoRua.nome', sobre: 'doTime.bracoRua.sobre',
+    id: 'mapear-braco', nome: 'doTime.braco.nome', sobre: 'doTime.braco.sobre',
     modo: 'guiado', publicacao: RASCUNHO,
+    // **Uma só.** Eram duas — "na rua" e "com o instrumento" —, e a divisão entre elas era **contexto
+    // puro**, que é justamente o que não define uma rotina: o contexto é do momento, e quem decide se
+    // dá para fazer isto no ônibus é quem está praticando. O seletor de contexto da Praticar esmaece a
+    // etapa que não cabe **com o motivo**, e é assim que a mesma rotina serve em casa e na rua.
+    //
+    // O que entra segue o critério do Paulo (decisão 109): **trabalha a posição das notas no braço.**
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
         instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '0-5' })] },
-      // O rodízio de região: a mesma pergunta, em três partes do braço, uma por execução.
-      { minutos: 10, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
+      { minutos: 8, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
         instancias: [
           i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-5' }),
           i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }),
           i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-12' }),
         ] },
-      { minutos: 5, porque: 'identificar a distância entre duas casas: é o que transforma nota solta em desenho',
-        instancias: [i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' })] },
-      // Identificar e CONSTRUIR são habilidades diferentes, e a segunda é a que serve para tocar.
-      { minutos: 5, porque: 'construir o intervalo: dada uma casa, achar a terça, a quinta e a sexta dela',
-        instancias: [i('ache-a-nota', { superficie: 'braco', pedido: 'intervalo', intervalos: ['M3', 'J5', 'M6'], instrumento: 'auto', casas: '0-12' })] },
+      // **Identificar e construir, em rodízio** — o Paulo pediu assim. São habilidades diferentes, e
+      // alternar entre elas gasta metade do tempo que fazer as duas toda vez.
+      { minutos: 6, politica: 'ordem', porque: 'o intervalo nas duas direções: reconhecer o desenho numa vez, construí-lo na outra',
+        instancias: [
+          i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' }),
+          i('ache-a-nota', { superficie: 'braco', pedido: 'intervalo', intervalos: ['M3', 'J5', 'M6'], instrumento: 'auto', casas: '0-12' }),
+        ] },
       { minutos: 5, porque: 'desenho de acorde no braço, formas abertas',
         instancias: [i('que-acorde-e-esse', { superficie: 'braco', formas: 'abertos' })] },
-    ],
-  },
-  {
-    id: 'braco-com-instrumento', nome: 'doTime.bracoInst.nome', sobre: 'doTime.bracoInst.sobre',
-    modo: 'guiado', publicacao: RASCUNHO,
-    // **O critério é do Paulo**, e é ele que define o que entra: *"mapear o braço é internalizar as
-    // posições das notas no braço — então tudo que trabalhar isso pode estar incluso."*
-    //
-    // Aplicado, ele faz duas coisas. **Tira o drone**: afinar contra uma nota fixa trabalha ouvido e
-    // entonação, não posição de nota. E **traz os exercícios de braço de tela**, que trabalham posição
-    // diretamente — com o instrumento na mão eles ficam melhores, porque a pessoa acha a nota no braço
-    // de verdade e só então confirma na tela. Aqui eles vão com o **braço inteiro**, que é o que dá
-    // para alcançar sentado com o instrumento.
-    etapas: [
-      { minutos: 8, porque: 'achar a nota no braço de verdade: a única etapa que a tela não consegue fazer por você',
+      // A única que pede o instrumento de verdade. Quem está na rua pula; quem está em casa tem aqui
+      // a parte que a tela não faz.
+      { minutos: 6, porque: 'achar a nota no braço de verdade: a única etapa que a tela não consegue fazer por você',
         instancias: [i('no-instrumento', { esperar: 8, ouvirAntes: true })] },
-      { minutos: 5, porque: 'a distância entre duas casas, braço inteiro: toque as duas e ouça se o desenho bate',
-        instancias: [i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' })] },
-      { minutos: 5, porque: 'construir o intervalo a partir de uma casa — com o instrumento, isso vira achar a nota e tocá-la',
-        instancias: [i('ache-a-nota', { superficie: 'braco', pedido: 'intervalo', intervalos: ['M3', 'J5', 'M6'], instrumento: 'auto', casas: '0-12' })] },
-      { minutos: 6, porque: 'padrões com metrônomo no braço: a posição sob pressão de tempo',
-        instancias: [i('tecnica')] },
-      { minutos: 6, porque: 'o braço dentro de uma tonalidade, com a harmonia rodando por baixo',
-        instancias: [i('backing')] },
     ],
   },
 
