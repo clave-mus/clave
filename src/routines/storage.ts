@@ -3,6 +3,7 @@
 // A migração existe desde a v1, mesmo sendo a única versão que existe. O motivo está em types.ts:
 // rotina compartilhada por link é dado fora do controle do app, e quando o formato mudar o link
 // antigo quebra se não houver migração.
+import { settingsFundidos } from '../state/migrate';
 import { FORMATO_ROTINA, type Etapa, type Instancia, type Rotina, type SessaoDeRotina } from './types';
 
 const KEY = 'clave:rotinas';
@@ -49,6 +50,37 @@ function limparCamposQueSairam(r: Record<string, unknown>): Record<string, unkno
 }
 
 /**
+ * As fusões por superfície (decisão 16) nas instâncias: `braco-nota` vira `que-nota-e-essa` **com
+ * `superficie: 'braco'`**.
+ *
+ * Como `limparCamposQueSairam`, não é passo de versão: o formato não mudou, o que mudou foi o catálogo.
+ * E sem isto a etapa de quem já usava o app apareceria no executor como "exercício que não existe
+ * mais" — com um substituto a oferecer, mas sem motivo para oferecer nada.
+ */
+function migrarItensFundidos(r: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(r.etapas)) return r;
+  return {
+    ...r,
+    etapas: r.etapas.map(e => {
+      if (!e || typeof e !== 'object') return e;
+      const et = e as Record<string, unknown>;
+      if (!Array.isArray(et.instancias)) return et;
+      return {
+        ...et,
+        instancias: et.instancias.map(i => {
+          if (!i || typeof i !== 'object') return i;
+          const inst = i as Record<string, unknown>;
+          if (typeof inst.itemId !== 'string') return inst;
+          const settings = (inst.settings && typeof inst.settings === 'object' ? inst.settings : {}) as Record<string, unknown>;
+          const novo = settingsFundidos(inst.itemId, settings);
+          return { ...inst, itemId: novo.id, settings: novo.settings };
+        }),
+      };
+    }),
+  };
+}
+
+/**
  * Lê uma rotina de qualquer formato conhecido e devolve no formato atual.
  * Devolve `null` quando o dado não é uma rotina — link adulterado, colagem errada, versão de um
  * app mais novo. **Nunca lança**: quem chama está lidando com dado de fora.
@@ -67,6 +99,7 @@ export function migrarRotina(raw: unknown): Rotina | null {
   }
   r.formato = FORMATO_ROTINA;
   r = limparCamposQueSairam(r);
+  r = migrarItensFundidos(r);
   return ehRotina(r) ? r : null;
 }
 

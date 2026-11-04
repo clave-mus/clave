@@ -161,7 +161,7 @@ function GradeDeItens({ exercicios, ferramentas, color, stats }: {
  * O catálogo por **porta** (decisão 20). É a entrada padrão: a pessoa chega com uma pergunta
  * ("quero melhorar o ouvido"), não com o nome de uma área do app.
  *
- * O mesmo item aparece atrás de várias portas, de propósito — `pauta-acorde` é leitura, harmonia e
+ * O mesmo item aparece atrás de várias portas, de propósito — "qual acorde é esse?" é leitura, harmonia e
  * teoria ao mesmo tempo, e obrigá-lo a escolher uma esconderia dois terços do que ele serve.
  */
 function PorObjetivo({ mobileOnly, revisao, stats, aberto, alternar }: {

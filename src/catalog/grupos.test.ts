@@ -1,25 +1,30 @@
-// Os grupos por propósito (decisão 95). O que importa travar: a lista aponta para itens que existem, e
-// o botão não aparece onde não há o que oferecer.
+// Os grupos por propósito (decisão 95). O que importa travar: a lista aponta para itens que existem, o
+// botão não aparece onde não há o que oferecer, e **a configuração do propósito é respeitada** — que é
+// o que as fusões por superfície tornaram obrigatório.
 import { describe, expect, it } from 'vitest';
-import { companheirosDe, GRUPOS, gruposDoItem, idsFantasma } from './grupos';
+import { companheirosDe, GRUPOS, gruposDaInstancia, idsFantasma, type MembroDeGrupo } from './grupos';
 import { ITEMS } from './index';
 import { estadoDe, visivel } from './publicacao';
 import pt from '../i18n/pt';
 import en from '../i18n/en';
 
 const sempre = () => true;
+const chave = (m: MembroDeGrupo) => `${m.itemId}|${JSON.stringify(m.settings ?? {})}`;
+const inst = (itemId: string, settings?: Record<string, unknown>): MembroDeGrupo => ({ itemId, settings });
+/** Toda instância declarada em algum grupo, para percorrer o modelo pelo lado dele. */
+const TODAS = GRUPOS.flatMap(g => g.itens);
 
 describe('a lista', () => {
   it('todo item declarado existe no catálogo', () => {
     expect(idsFantasma()).toEqual([]);
   });
 
-  it('nenhum grupo tem menos de dois itens — com um só não há rodízio', () => {
+  it('nenhum grupo tem menos de dois membros — com um só não há rodízio', () => {
     for (const g of GRUPOS) expect(g.itens.length, g.id).toBeGreaterThanOrEqual(2);
   });
 
-  it('nenhum grupo repete um item', () => {
-    for (const g of GRUPOS) expect(new Set(g.itens).size, g.id).toBe(g.itens.length);
+  it('nenhum grupo repete um membro', () => {
+    for (const g of GRUPOS) expect(new Set(g.itens.map(chave)).size, g.id).toBe(g.itens.length);
   });
 
   it('os ids dos grupos são únicos', () => {
@@ -33,46 +38,80 @@ describe('a lista', () => {
       expect(en.grupos[id], `${g.id} em en`).toBeTruthy();
     }
   });
+
+  // Depois das fusões, o id sozinho não diz o propósito: "qual nota é essa?" serve à pauta, ao teclado
+  // e ao braço. Um grupo de superfície que esquecesse a configuração ofereceria a superfície errada.
+  it('todo membro de um grupo de superfície declara a superfície', () => {
+    for (const g of GRUPOS.filter(x => ['leitura-pauta', 'o-braco', 'o-teclado'].includes(x.id))) {
+      for (const m of g.itens) {
+        const multisuperficie = (ITEMS.find(i => i.id === m.itemId)?.settings?.({ t: (k: string) => k } as never) ?? []).some(s => s.id === 'superficie');
+        if (multisuperficie) expect(m.settings?.superficie, `${g.id} → ${m.itemId}`).toBeTruthy();
+      }
+    }
+  });
 });
 
 describe('as decisões do Paulo sobre o conteúdo', () => {
-  const itensDe = (id: string) => GRUPOS.find(g => g.id === id)!.itens;
+  const itensDe = (id: string) => GRUPOS.find(g => g.id === id)!.itens.map(chave);
 
-  it('`pauta-construir` entra em "Leitura na pauta", mesmo sendo escrever e não ler', () => {
-    expect(itensDe('leitura-pauta')).toContain('pauta-construir');
+  it('escrever a nota na pauta entra em "Leitura na pauta", mesmo sendo escrever e não ler', () => {
+    expect(itensDe('leitura-pauta')).toContain(chave(inst('ache-a-nota', { superficie: 'pauta' })));
   });
 
   it('`ouvido-tecla` fica FORA de "Ouvido" — responde no teclado, e ali o propósito é outro', () => {
-    expect(itensDe('ouvido')).not.toContain('ouvido-tecla');
+    expect(itensDe('ouvido')).not.toContain(chave(inst('ouvido-tecla')));
   });
 });
 
-describe('um item em vários grupos', () => {
+describe('a mesma instância em vários grupos', () => {
   // É o que resolve "um exercício serve a vários propósitos": não é preciso eleger o principal.
-  it('o modelo permite, e `gruposDoItem` devolve todos', () => {
-    const emVarios = ITEMS.filter(i => gruposDoItem(i.id).length > 1);
-    // hoje não há nenhum, e está certo — o teste existe para o dia em que houver
-    for (const i of emVarios) expect(gruposDoItem(i.id).length).toBeGreaterThan(1);
-    expect(() => gruposDoItem('qualquer-um')).not.toThrow();
+  it('o modelo permite, e `gruposDaInstancia` devolve todos', () => {
+    for (const m of TODAS) expect(gruposDaInstancia(m).length, chave(m)).toBeGreaterThanOrEqual(1);
+    expect(() => gruposDaInstancia(inst('qualquer-um'))).not.toThrow();
   });
 
-  it('item fora de todo grupo devolve lista vazia, e isso é o caso comum', () => {
-    expect(gruposDoItem('quiz-teoria')).toEqual([]);
-    expect(companheirosDe('quiz-teoria', sempre)).toEqual([]);
+  it('instância fora de todo grupo devolve lista vazia, e isso é o caso comum', () => {
+    expect(gruposDaInstancia(inst('quiz-teoria'))).toEqual([]);
+    expect(companheirosDe(inst('quiz-teoria'), sempre)).toEqual([]);
+  });
+
+  // O ponto da mudança: o MESMO item em superfícies diferentes cai em grupos diferentes.
+  it('"qual nota é essa?" na pauta e no braço caem em grupos diferentes', () => {
+    const naPauta = gruposDaInstancia(inst('que-nota-e-essa', { superficie: 'pauta' })).map(g => g.id);
+    const noBraco = gruposDaInstancia(inst('que-nota-e-essa', { superficie: 'braco' })).map(g => g.id);
+    expect(naPauta).toEqual(['leitura-pauta']);
+    expect(noBraco).toEqual(['o-braco']);
+  });
+
+  // Sem a configuração, o membro casaria com qualquer superfície — e ofereceria pauta dentro do braço.
+  it('um item multissuperfície sem configuração não cai em grupo de superfície nenhum', () => {
+    expect(gruposDaInstancia(inst('que-nota-e-essa'))).toEqual([]);
   });
 });
 
 describe('companheirosDe', () => {
   it('devolve os outros do grupo, sem incluir ele mesmo', () => {
-    const c = companheirosDe('pauta-nota', sempre);
-    expect(c).not.toContain('pauta-nota');
-    expect(c.sort()).toEqual(['pauta-acorde', 'pauta-construir', 'pauta-escala', 'pauta-intervalo']);
+    const eu = inst('que-nota-e-essa', { superficie: 'pauta' });
+    const c = companheirosDe(eu, sempre);
+    expect(c.map(chave)).not.toContain(chave(eu));
+    expect(c.map(chave).sort()).toEqual([
+      chave(inst('ache-a-nota', { superficie: 'pauta' })),
+      chave(inst('pauta-escala')),
+      chave(inst('que-acorde-e-esse', { superficie: 'pauta' })),
+      chave(inst('que-intervalo-e-esse', { superficie: 'pauta' })),
+    ].sort());
   });
 
-  it('não repete, mesmo que dois grupos compartilhem um item', () => {
-    for (const i of ITEMS) {
-      const c = companheirosDe(i.id, sempre);
-      expect(new Set(c).size, i.id).toBe(c.length);
+  it('e os companheiros vêm com a superfície certa, nunca com a configuração do outro grupo', () => {
+    for (const m of companheirosDe(inst('que-nota-e-essa', { superficie: 'braco' }), sempre)) {
+      expect(m.settings?.superficie, m.itemId).toBe('braco');
+    }
+  });
+
+  it('não repete, mesmo que dois grupos compartilhem um membro', () => {
+    for (const m of TODAS) {
+      const c = companheirosDe(m, sempre).map(chave);
+      expect(new Set(c).size, chave(m)).toBe(c.length);
     }
   });
 
@@ -81,21 +120,20 @@ describe('companheirosDe', () => {
     const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false);
     // "Ritmo com metrônomo" é inteiro rascunho: fora do modo de revisão, ninguém tem companheiro
     for (const id of ['acento-deslocado', 'subdivisao-alternada', 'deslocamento-ritmico']) {
-      expect(companheirosDe(id, podeVer), id).toEqual([]);
+      expect(companheirosDe(inst(id), podeVer), id).toEqual([]);
     }
-    // e com o modo de revisão ligado, aparecem
-    expect(companheirosDe('acento-deslocado', sempre).length).toBe(2);
+    expect(companheirosDe(inst('acento-deslocado'), sempre).length).toBe(2);
   });
 
   it('"Aquecimento de mão" hoje só oferece `tecnica`, porque os outros dois são rascunho', () => {
     const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false);
-    expect(companheirosDe('tecnica', podeVer)).toEqual([]);
-    expect(companheirosDe('sustentar-e-cortar', podeVer)).toEqual(['tecnica']);
+    expect(companheirosDe(inst('tecnica'), podeVer)).toEqual([]);
+    expect(companheirosDe(inst('sustentar-e-cortar'), podeVer).map(m => m.itemId)).toEqual(['tecnica']);
   });
 
   it('todo companheiro é um item do catálogo', () => {
-    for (const i of ITEMS) {
-      for (const id of companheirosDe(i.id, sempre)) expect(ITEMS.some(x => x.id === id), id).toBe(true);
+    for (const m of TODAS) {
+      for (const c of companheirosDe(m, sempre)) expect(ITEMS.some(x => x.id === c.itemId), c.itemId).toBe(true);
     }
   });
 });
@@ -103,8 +141,8 @@ describe('companheirosDe', () => {
 describe('o que está em rascunho nos grupos', () => {
   // Não é defeito: é o portão da decisão 91 funcionando. Fica medido para ninguém se assustar.
   it('dois grupos estão quase vazios até o Paulo publicar os itens da tarefa com metrônomo', () => {
-    const rascunhos = GRUPOS.flatMap(g => g.itens).filter(id => estadoDe(ITEMS.find(i => i.id === id)?.publicacao) === 'rascunho');
-    expect(rascunhos.sort()).toEqual([
+    const rascunhos = TODAS.map(m => m.itemId).filter(id => estadoDe(ITEMS.find(i => i.id === id)?.publicacao) === 'rascunho');
+    expect([...new Set(rascunhos)].sort()).toEqual([
       'acento-deslocado', 'deslocamento-ritmico', 'legato-staccato', 'subdivisao-alternada', 'sustentar-e-cortar',
     ]);
   });

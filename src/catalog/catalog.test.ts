@@ -84,11 +84,13 @@ describe('catálogo de exercícios', () => {
     };
     const base = { gap: 0.75, arp: 0, voice: 'piano', bpm: 84 };
     it.each([
-      ['pauta-nota', {}, { ...base }],
-      ['pauta-intervalo', {}, { ...base }],
-      ['pauta-acorde', {}, { ...base, arp: 0.08 }],
+      ['que-nota-e-essa', {}, { ...base }],
+      ['que-intervalo-e-esse', {}, { ...base }],
+      // o arpejo acompanha a SUPERFÍCIE: na pauta quase em bloco, no violão dedilhado, no teclado em bloco
+      ['que-acorde-e-esse', { superficie: 'pauta' }, { ...base, arp: 0.08 }],
+      ['que-acorde-e-esse', { superficie: 'teclado' }, { ...base }],
+      ['que-acorde-e-esse', { superficie: 'braco' }, { ...base, voice: 'violao', arp: 0.04 }],
       ['pauta-escala', {}, { ...base, gap: 0.32 }],
-      ['teclado-acorde', {}, { ...base }],
       ['ouvido-tecla', {}, { ...base, gap: 0.9 }],
       ['ouvido-intervalo', {}, { ...base }],
       ['ouvido-escala', {}, { ...base, gap: 0.3 }],
@@ -96,15 +98,13 @@ describe('catálogo de exercícios', () => {
       ['ouvido-acorde', {}, { ...base, gap: 0.45, chord: 'arpeggio-block' }],
       ['ouvido-acorde', { arpejo: false }, { ...base, gap: 0.45, chord: 'block' }],
       ['ritmo-ouvido', {}, { ...base, bpm: 84 }],
-      ['acorde-visual', { onde: 'violao' }, { ...base, voice: 'violao', arp: 0.04 }],
-      ['acorde-visual', { onde: 'piano' }, { ...base }],
     ] as const)('%s %j', (id, over, expected) => {
       expect(final(id, over)).toMatchObject(expected);
     });
-    it('exercícios de braço usam o timbre do instrumento (violão ou baixo)', () => {
-      for (const id of ['braco-nota', 'braco-ache', 'braco-intervalo']) {
-        expect(final(id, {}, 'violao').voice).toBe('violao');
-        expect(final(id, {}, 'baixo').voice).toBe('baixo');
+    it('no braço, o timbre vem do instrumento da pessoa (violão ou baixo)', () => {
+      for (const id of ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse']) {
+        expect(final(id, { superficie: 'braco' }, 'violao').voice).toBe('violao');
+        expect(final(id, { superficie: 'braco' }, 'baixo').voice).toBe('baixo');
       }
     });
   });

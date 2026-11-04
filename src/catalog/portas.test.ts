@@ -28,10 +28,10 @@ describe('as portas apontam para itens que existem', () => {
     for (const i of TODOS) expect(portasDoItem(i.id).length, `${i.id} não está atrás de nenhuma porta`).toBeGreaterThan(0);
   });
 
-  // O mesmo item servir a várias portas é o desenho, não um descuido: `pauta-acorde` é leitura E
-  // harmonia E teoria, e esconder isso obrigaria a escolher uma por item.
+  // O mesmo item servir a várias portas é o desenho, não um descuido: "qual acorde é esse?" é leitura
+  // E harmonia E teoria, e esconder isso obrigaria a escolher uma por item.
   it('itens compartilhados entre portas existem, e isso é de propósito', () => {
-    expect(portasDoItem('pauta-acorde').length).toBeGreaterThan(1);
+    expect(portasDoItem('que-acorde-e-esse').length).toBeGreaterThan(1);
   });
 });
 

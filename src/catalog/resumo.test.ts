@@ -43,7 +43,7 @@ describe('resumoDaConfiguracao', () => {
   });
 
   it('toggle ligado mostra só o rótulo', () => {
-    const ex = item('pauta-nota');
+    const ex = item('que-nota-e-essa');
     const rotulo = ex.settings(ctx('pt')).find(s => s.id === 'acidentes')!.label;
     expect(resumoDaConfiguracao(ex, { ...ex.defaults, acidentes: true }, ctx('pt'))).toBe(rotulo);
   });

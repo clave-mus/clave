@@ -129,3 +129,59 @@ a porta nenhuma; eram objetivos de antes da decisão 20, e alimentavam o gerador
 
 **Reverter custa:** uma tabela de conversão em `state/migrate.ts`. Mas quem já abriu o app depois desta
 noite já perdeu o valor antigo, então reverter não o traz de volta.
+
+## P7 · `acorde-visual` no piano era `teclado-acorde` pior, e saiu
+
+**O que eu decidi:** ao fundir `pauta-acorde + teclado-acorde + acorde-visual` em `que-acorde-e-esse`,
+a superfície **teclado** usa o gerador que era de `teclado-acorde`, e o ramo "piano" de `acorde-visual`
+(`pianoChordQuestion`) foi apagado.
+
+**Por que precisava de decisão:** parecia um conflito — dois geradores diferentes para a mesma
+superfície — e conflito de conteúdo é seu. Olhando o código, não era: **os dois montavam o acorde na
+posição fundamental e marcavam o teclado**, e as únicas diferenças eram que `pianoChordQuestion` tinha a
+lista de cinco qualidades chumbada e **ignorava a cascata** (tonalidade, região, material). Ou seja,
+`teclado-acorde` fazia o mesmo e melhor.
+
+**O que isso NÃO é:** não é a tabela de digitações de piano (`FM-6`, as 3 linhas em branco do Bernardo).
+Aquela não está no código ainda; quando entrar, entra como formas reais, e aí sim há uma escolha a fazer
+sobre acorde montado versus posição real.
+
+**Reverter custa:** ressuscitar 6 linhas do histórico do git. Nada depende delas.
+
+---
+
+## P8 · O membro de um grupo de rodízio passou a ser uma instância, não um id
+
+**O que eu decidi:** `GRUPOS` em `catalog/grupos.ts` passou de `itens: string[]` para
+`itens: { itemId, settings? }[]`, e nasceu um grupo novo — **"O teclado"**.
+
+**Por que precisava de decisão:** a fusão por superfície forçou. Antes, "O braço" listava
+`braco-nota, braco-ache, braco-intervalo`; depois dela, esses três são os mesmos ids de "Leitura na
+pauta". Um grupo que listasse só o id ofereceria **leitura de pauta dentro de "O braço"**.
+
+**O grupo novo é consequência, não escopo extra:** existindo "Leitura na pauta" e "O braço" com os
+mesmos quatro itens em superfícies diferentes, o teclado ficava como a única superfície sem grupo — e os
+seus itens apareceriam sem companheiro nenhum.
+
+**Reverter custa:** o tipo e os três grupos de superfície. Tirar "O teclado" é apagar seis linhas.
+
+---
+
+## P9 · Como as estatísticas e o histórico atravessam a fusão
+
+**O que eu decidi**, em `state/migrate.ts`:
+
+- **O histórico troca o id e MANTÉM o título antigo.** O título gravado é o que a pessoa viu naquele
+  dia; reescrevê-lo falsearia o registro. A tela já prefere o título atual quando o item existe.
+- **O `parameters_snapshot` da atividade não é remexido.** Mesmo motivo: é o registro do que aconteceu.
+- **As estatísticas por item SOMAM.** `pauta-nota` com 10 tentativas e `braco-nota` com 4 viram
+  `que-nota-e-essa` com 14. Eram a mesma pergunta em superfícies diferentes, e separá-las agora perderia
+  a prática de uma delas.
+
+**A alternativa que recusei:** guardar a estatística por item **e** superfície. É mais informativo e é
+trabalho de verdade (muda a chave de `stats` em todo lugar); e como ninguém olha essa tela com lupa
+hoje, somar é a escolha honesta.
+
+**Reverter custa:** quem já abriu o app depois desta noite teve as estatísticas somadas, e **somar não
+se desfaz** — os números originais não ficaram guardados. Se você quiser por superfície, é para frente,
+não para trás.

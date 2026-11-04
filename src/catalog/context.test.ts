@@ -34,7 +34,7 @@ describe('o que é declarado e o que é deduzido', () => {
     expect(deOuvido.olhos).toBe(false);  // o visual é só som
     expect(deOuvido.audio).toBe(true);
 
-    const naPauta = requisitosDe(itemById['pauta-nota']!);
+    const naPauta = requisitosDe(itemById['que-nota-e-essa']!);
     expect(naPauta.olhos).toBe(true);    // tem pauta na tela
   });
 
@@ -90,7 +90,7 @@ describe('o motivo de não caber', () => {
   it('explica em vez de só esconder', () => {
     expect(porQueNaoCabe(itemById['backing']!, 'onibus')).toBe('instrumento');
     expect(porQueNaoCabe(itemById['ouvido-intervalo']!, 'silencio')).toBe('audio');
-    expect(porQueNaoCabe(itemById['pauta-nota']!, 'bolso')).toBe('maos');
+    expect(porQueNaoCabe(itemById['que-nota-e-essa']!, 'bolso')).toBe('maos');
   });
 
   it('não dá motivo para o que cabe', () => {

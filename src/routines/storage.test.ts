@@ -26,7 +26,7 @@ beforeEach(() => {
 
 const comEtapas = (nome = 'Mapear o braço'): Rotina => {
   const r = novaRotina(nome);
-  r.etapas = [novaEtapa('braco-nota', { casas: '0-5' }), novaEtapa('ouvido-intervalo')];
+  r.etapas = [novaEtapa('que-nota-e-essa', { superficie: 'braco', casas: '0-5' }), novaEtapa('ouvido-intervalo')];
   r.etapas[0].segundosSugeridos = 300;
   r.etapas[1].segundosSugeridos = 600;
   return r;
@@ -137,7 +137,7 @@ describe('adotar uma rotina cria uma cópia', () => {
 describe('ciclagem e tempo', () => {
   it('a última instância usada sobrevive ao disco — senão a ciclagem não existe', () => {
     const r = comEtapas();
-    r.etapas[0].instancias.push({ itemId: 'braco-ache', settings: {} });
+    r.etapas[0].instancias.push({ itemId: 'ache-a-nota', settings: {} });
     r.etapas[0].ultimaUsada = 1;
     salvarRotina(r);
     expect(lerRotinas()[0].etapas[0].ultimaUsada).toBe(1);
@@ -145,7 +145,7 @@ describe('ciclagem e tempo', () => {
 
   it('o tempo sugerido é da etapa, não da instância', () => {
     const r = comEtapas();
-    r.etapas[0].instancias.push({ itemId: 'braco-ache', settings: {} });
+    r.etapas[0].instancias.push({ itemId: 'ache-a-nota', settings: {} });
     // trocar de instância não pode mudar a duração da rotina
     expect(tempoTotal(r)).toBe(900);
   });
@@ -273,7 +273,7 @@ describe('Etapa.params saiu do modelo (decisão 97)', () => {
     etapas: [{
       id: 'e1', politica: 'ordem', segundosSugeridos: 300,
       params: { key: { tonic: 5, mode: 'maior' } },
-      instancias: [{ itemId: 'braco-ache', settings: {} }],
+      instancias: [{ itemId: 'ache-a-nota', settings: {} }],
     }],
   };
 
@@ -289,13 +289,13 @@ describe('Etapa.params saiu do modelo (decisão 97)', () => {
   it('o que a etapa de fato guarda sobrevive', () => {
     const r = migrarRotina(antiga)!;
     expect(r.etapas[0].segundosSugeridos).toBe(300);
-    expect(r.etapas[0].instancias[0].itemId).toBe('braco-ache');
+    expect(r.etapas[0].instancias[0].itemId).toBe('ache-a-nota');
   });
 
   it('a instância mantém os seus params — é lá que a tonalidade mora agora', () => {
     const comInstancia = {
       ...antiga,
-      etapas: [{ ...antiga.etapas[0], instancias: [{ itemId: 'braco-ache', settings: {}, params: { key: { tonic: 7, mode: 'maior' } } }] }],
+      etapas: [{ ...antiga.etapas[0], instancias: [{ itemId: 'ache-a-nota', settings: {}, params: { key: { tonic: 7, mode: 'maior' } } }] }],
     };
     expect(migrarRotina(comInstancia)!.etapas[0].instancias[0].params).toEqual({ key: { tonic: 7, mode: 'maior' } });
   });
@@ -303,5 +303,38 @@ describe('Etapa.params saiu do modelo (decisão 97)', () => {
   it('a cópia para adotar não propaga o campo morto', () => {
     const r = migrarRotina(antiga)!;
     expect(copiarRotina(r).etapas[0]).not.toHaveProperty('params');
+  });
+});
+
+describe('as fusões por superfície na leitura (decisão 16)', () => {
+  // Sem isto, a etapa de quem já usava o app apareceria no executor como "exercício que não existe
+  // mais". E a superfície é a metade que não pode faltar: migrar `braco-ache` sem ela jogaria a
+  // pessoa na pauta.
+  const comAntigos = (itemId: string, settings: Record<string, unknown> = {}) => ({
+    formato: FORMATO_ROTINA, id: 'r9', nome: 'Antiga', modo: 'guiado' as const, embaralhar: false, params: {},
+    etapas: [{ id: 'e9', politica: 'ordem' as const, instancias: [{ itemId, settings }] }],
+  });
+  const lida = (itemId: string, settings?: Record<string, unknown>) =>
+    migrarRotina(comAntigos(itemId, settings))!.etapas[0].instancias[0];
+
+  it('o id antigo vira o novo, com a superfície que ele era', () => {
+    expect(lida('braco-ache', { casas: '0-5' })).toEqual({ itemId: 'ache-a-nota', settings: { casas: '0-5', superficie: 'braco' } });
+    expect(lida('pauta-nota', { claves: ['fa'] })).toEqual({ itemId: 'que-nota-e-essa', settings: { claves: ['fa'], superficie: 'pauta' } });
+    expect(lida('teclado-tecla', { pretas: false })).toEqual({ itemId: 'ache-a-nota', settings: { pretas: false, superficie: 'teclado' } });
+  });
+
+  it('`acorde-visual` guardava a superfície na configuração `onde`, e ela sai', () => {
+    expect(lida('acorde-visual', { onde: 'piano' })).toEqual({ itemId: 'que-acorde-e-esse', settings: { superficie: 'teclado' } });
+    expect(lida('acorde-visual', { onde: 'violao', formas: 'todos' })).toEqual({ itemId: 'que-acorde-e-esse', settings: { formas: 'todos', superficie: 'braco' } });
+  });
+
+  it('a rotina antiga continua válida, e a etapa não some', () => {
+    const r = migrarRotina(comAntigos('braco-intervalo'))!;
+    expect(r).not.toBeNull();
+    expect(r.etapas).toHaveLength(1);
+  });
+
+  it('instância de item não fundido passa intacta', () => {
+    expect(lida('quiz-teoria', { temas: ['graus'] })).toEqual({ itemId: 'quiz-teoria', settings: { temas: ['graus'] } });
   });
 });

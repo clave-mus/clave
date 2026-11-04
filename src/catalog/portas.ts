@@ -3,7 +3,7 @@
 // **Uma porta é uma pergunta que a pessoa se faz, não uma categoria do app.** Ela não é módulo (o
 // módulo diz onde o item mora), não é etiqueta de habilidade (a etiqueta diz o que o item testa) e
 // não é contexto. É a frase "o que eu quero conseguir" ligada aos itens que servem àquilo — e o
-// mesmo item serve a várias portas, de propósito: `pauta-acorde` é leitura **e** harmonia.
+// mesmo item serve a várias portas, de propósito: "qual acorde é esse?" é leitura **e** harmonia.
 //
 // A regra da decisão 20: **uma porta só existe se tiver pelo menos 4 itens atrás dela.** Há teste.
 //
@@ -39,7 +39,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['braco-nota', 'braco-ache', 'braco-intervalo', 'teclado-nota', 'teclado-tecla', 'acorde-visual', 'teclado-acorde', 'ouvido-tecla'],
+    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',
@@ -49,17 +49,17 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'harmonia',
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
-    itens: ['backing', 'ouvido-acorde', 'pauta-acorde', 'teclado-acorde', 'acorde-visual', 'quiz-teoria'],
+    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'quiz-teoria'],
   },
   {
     id: 'teoria',
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['quiz-teoria', 'pauta-armadura', 'pauta-intervalo', 'pauta-escala', 'pauta-acorde', 'braco-intervalo'],
+    itens: ['quiz-teoria', 'pauta-armadura', 'que-intervalo-e-esse', 'pauta-escala', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',
@@ -75,7 +75,7 @@ export const PORTAS: readonly Porta[] = [
     id: 'improviso',
     // "O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário". Não há exercício de
     // improvisar, e o rótulo da porta é "Improvisar e solar" de propósito (decisão 80).
-    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'braco-ache'],
+    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'ache-a-nota'],
   },
   { id: 'comecar', itens: [], diagnostico: true },
 ];

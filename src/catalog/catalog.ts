@@ -30,6 +30,97 @@ const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.i
 const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 /** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */
+/**
+ * O seletor de superfície (decisão 16). **A superfície é parâmetro, não exercício** — e o que muda
+ * com ela não é só o desenho: é o que a pergunta consegue cobrar.
+ *
+ * `present` existe porque o arpejo depende da superfície: um acorde de violão soa dedilhado, um de
+ * pauta quase em bloco, e um de teclado em bloco.
+ */
+const SUPERFICIES = { pauta: 'settings.surfaceStaff', teclado: 'settings.surfaceKeyboard', braco: 'settings.surfaceFretboard' } as const;
+type SuperficieId = keyof typeof SUPERFICIES;
+const SUP = ({ t }: Ctx, quais: SuperficieId[], present?: Setting['present']): Setting => ({
+  id: 'superficie', label: t('settings.surface'), type: 'single',
+  options: quais.map(id => ({ id, label: t(SUPERFICIES[id]) })),
+  ...(present ? { present } : {}),
+});
+
+/**
+ * As configurações de cada superfície, cada uma visível só quando a sua está ativa.
+ *
+ * **A extensão não se unifica, de propósito.** `pauta / suplementares`, `1 / 2 oitavas` e faixas de
+ * casa são três unidades incomparáveis: um parâmetro só precisaria de três listas de opções, o que é
+ * três parâmetros com um nome em comum.
+ */
+function porSuperficie(ctx: Ctx, opts: { semOitavas?: boolean } = {}): Setting[] {
+  const naPauta = (s: S) => s.superficie === 'pauta' || s.superficie === undefined;
+  return [
+    { ...CLEFS(ctx), quando: naPauta },
+    { ...EXT(ctx), quando: naPauta },
+    { ...ACC(ctx), quando: naPauta },
+    { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.superficie === 'teclado' },
+    ...(opts.semOitavas ? [] : [{
+      id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single' as const, quando: (s: S) => s.superficie === 'teclado',
+      options: [{ id: '1', label: '1' }, { id: '2', label: '2' }],
+    }]),
+    { ...INST(ctx), quando: s => s.superficie === 'braco' },
+    { ...FRETS(ctx), quando: s => s.superficie === 'braco' },
+  ];
+}
+
+/** As teclas pretas, por classe de altura. */
+const PRETAS = [1, 3, 6, 8, 10];
+
+/** As alternativas de nota no teclado, sem as pretas quando a pessoa as desligou. */
+const teclasPermitidas = (ctx: Ctx, s: S): ChoiceOption[] =>
+  pcOptions(ctx.naming).filter(o => s.pretas || !PRETAS.includes(Number(o.id)));
+
+/** Uma altura do teclado que o material permite. */
+function alturaDeTeclado(ctx: Ctx, s: S, lo: number, hi: number): number {
+  const permitidas = pcsPermitidas(ctx).filter(p => s.pretas || !PRETAS.includes(p));
+  let m: number;
+  do m = randInt(lo, hi); while (!permitidas.includes(mod(m, 12)));
+  return m;
+}
+
+/** Quatro cordas é baixo; seis é violão. */
+const vozDoBraco = (tuning: readonly number[]) => (tuning.length === 4 ? 'baixo' as const : 'violao' as const);
+
+/** Como a pergunta chama a corda. No violão as duas Mi se distinguem por grave e aguda. */
+function nomeDaCorda(tuning: readonly number[], str: number, ctx: Ctx): string {
+  const open = pcName(tuning[str], ctx.naming, false);
+  if (tuning.length === 6 && str === 0) return ctx.t('quiz.lowString', { note: open });
+  if (tuning.length === 6 && str === 5) return ctx.t('quiz.highString', { note: open });
+  return open;
+}
+
+/** Quantos semitons tem um intervalo da lista. */
+const semisDoIntervalo = (id: string) => { const iv = INTERVALS.find(i => i.id === id)!; return semisFor(iv.num, iv.q); };
+
+/**
+ * Os pares de casas tocáveis no braço, com a distância de cada um.
+ *
+ * **Enumera em vez de passear no aleatório**, e usa o braço inteiro sem interseccionar com a região em
+ * MIDI — ver `casaPermitida`: a região esmagava o alcance e sobrava um par só (decisão 101).
+ */
+function paresNoBraco(tuning: readonly number[]) {
+  const faixa = { lo: tuning[0], hi: tuning[tuning.length - 1] + 9 };
+  const pares: { s1: number; f1: number; s2: number; f2: number; d: number }[] = [];
+  for (let a = 0; a < tuning.length - 1; a++) {
+    for (let fa = 1; fa <= 6; fa++) {
+      const ma = tuning[a] + fa;
+      if (ma < faixa.lo || ma > faixa.hi) continue;
+      for (let b = a; b < Math.min(tuning.length, a + 3); b++) {
+        for (let fb = Math.max(0, fa - 2); fb <= fa + 4; fb++) {
+          const d = tuning[b] + fb - ma;
+          if (d >= 1 && d <= 12) pares.push({ s1: a, f1: fa, s2: b, f2: fb, d });
+        }
+      }
+    }
+  }
+  return pares;
+}
+
 const DIRECAO = ({ t }: Ctx): Setting => ({ id: 'direcao', label: t('settings.direction'), type: 'single', options: [
   { id: 'sobe', label: t('settings.up') }, { id: 'desce', label: t('settings.down') }, { id: 'ambos', label: t('settings.upDown') }] });
 
@@ -131,16 +222,49 @@ const plain = (o: string): ChoiceOption => ({ id: o, label: o });
 // =====================================================================
 export const EXERCISES: CatalogItem[] = [
   // ---------------- LEITURA ----------------
+  // ---------------- AS QUATRO FUSÕES POR SUPERFÍCIE (decisões 16 e 53) ----------------
+  //
+  // Doze itens eram quatro perguntas repetidas em três superfícies. **A superfície é parâmetro, não
+  // exercício** — e o que prova que isto não é só arrumação é a validação: a mesma pergunta valida
+  // GRAFIA na pauta (Dó♯ ≠ Ré♭, porque a pauta distingue) e ALTURA no teclado e no braço (onde a
+  // tecla é a mesma). Três itens separados escondiam essa diferença atrás de três telas.
+  //
+  // Cada superfície traz as suas configurações, e as outras **somem** (`Setting.quando`). A extensão
+  // não se unifica, de propósito: `pauta / suplementares`, `1 / 2 oitavas` e faixas de casa são três
+  // unidades incomparáveis, e um parâmetro só precisaria de três listas de opções — o que é três
+  // parâmetros com um nome em comum.
   {
-    id: 'pauta-nota',
-    objetos: ['notacao'], tarefas: ['ler'],
-    primaryModule: 'theory', skillTags: ['notation.pitch_reading'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines'],
+    id: 'que-nota-e-essa',
+    objetos: ['notas', 'notacao'], tarefas: ['nomear', 'ler'],
+    primaryModule: 'theory', skillTags: ['notation.pitch_reading', 'keyboard.note_naming', 'fretboard.note_naming'],
+    contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines', 'instrument.keyboard', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
+    respeita: ['key', 'range', 'material'],
     publicacao: LEGADO,
-    settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
+    settings: ctx => [SUP(ctx, ['pauta', 'teclado', 'braco']), ...porSuperficie(ctx)],
+    defaults: { superficie: 'pauta', claves: ['sol'], extensao: 'pauta', acidentes: false, pretas: true, oitavas: '2', instrumento: 'auto', casas: '0-5' },
     make(s, ctx): Question {
+      if (s.superficie === 'teclado') {
+        const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
+        const m = alturaDeTeclado(ctx, s, lo, hi);
+        return {
+          prompt: ctx.t('quiz.whatNote'), visual: { kind: 'keyboard', lo, hi, marks: [m] },
+          surface: { kind: 'choices', options: teclasPermitidas(ctx, s) }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
+          sound: { groups: [[m]] }, reveal: pcName(m, ctx.naming),
+        };
+      }
+      if (s.superficie === 'braco') {
+        const tuning = tuningOf(s, ctx);
+        const [from, to] = fretRange(s);
+        const { str, f, m } = casaPermitida(tuning, from, to, ctx);
+        return {
+          prompt: ctx.t('quiz.whatNote'), visual: { kind: 'fretboard', tuning, from, to, marks: [{ s: str, f }] },
+          surface: { kind: 'choices', options: pcOptions(ctx.naming) }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
+          sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: pcName(m, ctx.naming),
+        };
+      }
+      // Pauta: a resposta é a GRAFIA, e é aqui que a fusão ganha sentido — Dó♯ e Ré♭ são a mesma
+      // tecla e notas escritas diferentes.
       const clef = pickClef(s, ctx);
       const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
       return {
@@ -152,15 +276,36 @@ export const EXERCISES: CatalogItem[] = [
     },
   },
   {
-    id: 'pauta-construir',
-    objetos: ['notacao'], tarefas: ['escrever'],
-    primaryModule: 'theory', skillTags: ['notation.pitch_writing'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines'],
+    id: 'ache-a-nota',
+    objetos: ['notas', 'notacao'], tarefas: ['tocar', 'escrever'],
+    primaryModule: 'theory', skillTags: ['notation.pitch_writing', 'keyboard.note_finding', 'fretboard.note_finding'],
+    contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines', 'instrument.keyboard', 'instrument.guitar', 'instrument.bass'],
     kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
+    respeita: ['key', 'range', 'material'],
     publicacao: LEGADO,
-    settings: ctx => [CLEFS(ctx), EXT(ctx), ACC(ctx)], defaults: { claves: ['sol'], extensao: 'pauta', acidentes: false },
-    make(s, ctx) {
+    settings: ctx => [SUP(ctx, ['pauta', 'teclado', 'braco']), ...porSuperficie(ctx, { semOitavas: true })],
+    defaults: { superficie: 'pauta', claves: ['sol'], extensao: 'pauta', acidentes: false, pretas: true, instrumento: 'auto', casas: '0-12' },
+    make(s, ctx): Question {
+      if (s.superficie === 'teclado') {
+        const p = pick(pcsPermitidas(ctx).filter(x => s.pretas || !PRETAS.includes(x)));
+        const soa = alturaDoPc(ctx, p, { lo: 48, hi: 71 });
+        const n = spellPc(p);
+        return {
+          prompt: ctx.t('quiz.tapNote', { note: noteName(n, ctx.naming) }), visual: { kind: 'text', text: '' },
+          surface: { kind: 'keyboard', lo: 48, hi: 71 }, expected: { kind: 'pitchClass', pc: p },
+          sound: { groups: [[soa]] }, reveal: noteName(n, ctx.naming),
+        };
+      }
+      if (s.superficie === 'braco') {
+        const tuning = tuningOf(s, ctx);
+        const [from, to] = fretRange(s);
+        const { str, f, m } = casaPermitida(tuning, from, to, ctx);
+        return {
+          prompt: ctx.t('quiz.tapOnString', { note: pcName(m, ctx.naming, false), string: nomeDaCorda(tuning, str, ctx) }), visual: { kind: 'text', text: '' },
+          surface: { kind: 'fretboard', tuning, from, to, onlyString: str }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
+          sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: ctx.t('quiz.atFret', { note: pcName(m, ctx.naming), fret: f }),
+        };
+      }
       const clef = pickClef(s, ctx);
       const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
       return {
@@ -168,6 +313,107 @@ export const EXERCISES: CatalogItem[] = [
         surface: { kind: 'staff', clef, accidentals: !!s.acidentes }, expected: { kind: 'spelled', letter: n.letter, acc: n.acc, oct: n.oct },
         sound: { groups: [[midi(n)]] },
         reveal: `${noteName(n, ctx.naming)}${n.oct}`,
+      };
+    },
+  },
+  {
+    id: 'que-intervalo-e-esse',
+    objetos: ['intervalos', 'notas', 'notacao'], tarefas: ['nomear', 'ler'],
+    primaryModule: 'theory', skillTags: ['theory.interval_naming', 'notation.pitch_reading', 'fretboard.interval_shapes'],
+    contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'instrument.guitar', 'instrument.bass'],
+    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
+    respeita: ['key', 'material'],
+    publicacao: LEGADO,
+    settings: ctx => [
+      SUP(ctx, ['pauta', 'braco']),
+      { ...CLEFS(ctx), quando: s => s.superficie !== 'braco' },
+      { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
+      { id: 'forma', label: ctx.t('settings.form'), type: 'single', quando: s => s.superficie !== 'braco',
+        options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] },
+      { ...INST(ctx), quando: s => s.superficie === 'braco' },
+    ],
+    defaults: { superficie: 'pauta', claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico', instrumento: 'auto' },
+    make(s, ctx) {
+      const ids = arr(s.intervalos, ['M3']);
+      if (s.superficie === 'braco') {
+        // No braço a resposta é o NÚMERO DE SEMITONS, não a qualidade: o desenho de uma terça menor
+        // e de uma segunda aumentada é o mesmo, e cobrar a qualidade seria cobrar o que não está ali.
+        //
+        // E é aqui que a fusão conserta um exercício de graça: `braco-intervalo` era o único item de
+        // intervalo **sem seletor de intervalos**, e o par saía de um passeio aleatório com
+        // distribuição descontrolada. Agora o seletor filtra os pares enumerados.
+        const tuning = tuningOf(s, ctx);
+        const querSemis = new Set(ids.map(semisDoIntervalo));
+        const pares = paresNoBraco(tuning).filter(x => querSemis.has(x.d));
+        const par = pares.length ? pick(pares) : pick(paresNoBraco(tuning));
+        const lo = tuning[par.s1] + par.f1;
+        return {
+          prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: par.s1, f: par.f1, label: '1' }, { s: par.s2, f: par.f2, color: 'var(--ve)' }] },
+          surface: { kind: 'choices', options: semiOptions(ctx) }, expected: { kind: 'option', id: String(par.d) },
+          sound: { groups: [[lo], [lo + par.d]], instrument: vozDoBraco(tuning) }, reveal: semitoneName(par.d, ctx.conv),
+        };
+      }
+      const clef = pickClef(s, ctx);
+      const id = pick(ids);
+      const iv = INTERVALS.find(i => i.id === id)!;
+      const b = clefBottom(clef);
+      let lower: Note, upper: Note;
+      do {
+        lower = notaNaPauta(ctx, [b - 1, b + 9 - (iv.num - 1)], () => (Math.random() < 0.25 ? pick([1, -1]) : 0));
+        upper = transpose(lower, { num: iv.num, semis: semisFor(iv.num, iv.q) });
+      } while (Math.abs(upper.acc) > 1);
+      const columns = s.forma === 'harmonico' ? [[lower, upper]] : [[lower], [upper]];
+      return {
+        prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'staff', clef, columns },
+        surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: ivLabel(i, ctx) })) }, expected: { kind: 'option', id },
+        sound: { groups: s.forma === 'harmonico' ? [[midi(lower), midi(upper)]] : [[midi(lower)], [midi(upper)]] },
+        reveal: ivLabel(id, ctx),
+      };
+    },
+  },
+  {
+    id: 'que-acorde-e-esse',
+    objetos: ['acordes', 'notacao'], tarefas: ['nomear', 'ler'],
+    primaryModule: 'theory', skillTags: ['theory.chord_identification', 'notation.pitch_reading', 'keyboard.chord_shapes', 'fretboard.chord_shapes'],
+    contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'chord.open_shapes', 'chord.barre_shapes', 'clef.treble', 'clef.bass', 'instrument.keyboard', 'instrument.guitar'],
+    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
+    respeita: ['key', 'range', 'material'],
+    publicacao: LEGADO,
+    settings: ctx => [
+      SUP(ctx, ['pauta', 'teclado', 'braco'], v => (v === 'braco' ? { arp: 0.04 } : v === 'pauta' ? { arp: 0.08 } : {})),
+      { ...CLEFS(ctx), quando: s => s.superficie === 'pauta' },
+      { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', quando: s => s.superficie !== 'braco',
+        options: chordTypes(ctx.t, ALL_CHORDS) },
+      { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.superficie === 'pauta' },
+      // No braço as formas são posições reais, e não acordes montados: por isso a lista é de formas.
+      { id: 'formas', label: ctx.t('settings.shapes'), type: 'single', quando: s => s.superficie === 'braco',
+        options: [{ id: 'abertos', label: ctx.t('settings.openChords') }, { id: 'pestana', label: ctx.t('settings.barreChords') }, { id: 'todos', label: ctx.t('settings.all') }] },
+    ],
+    defaults: { superficie: 'pauta', claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false, formas: 'abertos' },
+    make(s, ctx) {
+      if (s.superficie === 'braco') return guitarChordQuestion(String(s.formas ?? 'abertos'), ctx);
+      const types = arr(s.tipos, ['maior']) as ChordId[];
+      const type = pick(types);
+      if (s.superficie === 'teclado') {
+        const pcRaiz = pcPermitido(ctx);
+        const base = alturaDoPc(ctx, pcRaiz, { lo: 48, hi: 72 });
+        const root = { ...ROOTS[mod(pcRaiz, 12)], oct: Math.floor(base / 12) - 1 };
+        const notes = buildChord(root, type).map(midi).map(m => (m > 76 ? m - 12 : m));
+        const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
+        return {
+          prompt: ctx.t('quiz.whatChord'), visual: { kind: 'keyboard', lo: 48, hi: 83, marks: notes },
+          surface: { kind: 'choices', options }, expected, sound: { groups: [notes] }, reveal: sym,
+        };
+      }
+      const clef = pickClef(s, ctx);
+      const root = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
+      const inv = s.inversoes ? randInt(0, CHORDS[type].degs.length - 1) : 0;
+      const notes = buildChord(root, type, inv);
+      const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
+      return {
+        prompt: ctx.t('quiz.whatChord'), visual: { kind: 'staff', clef, columns: [notes] },
+        surface: { kind: 'choices', options }, expected,
+        sound: { groups: [notes.map(midi)] }, reveal: ctx.t('quiz.chordReveal', { symbol: sym, name: chordName(ctx.t, type).toLowerCase() }),
       };
     },
   },
@@ -197,66 +443,6 @@ export const EXERCISES: CatalogItem[] = [
     },
   },
   // ---------------- HARMONIA ----------------
-  {
-    id: 'pauta-intervalo',
-    objetos: ['intervalos', 'notacao'], tarefas: ['ler'],
-    primaryModule: 'theory', skillTags: ['theory.interval_naming', 'notation.pitch_reading'],
-    contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [CLEFS(ctx), { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
-      { id: 'forma', label: ctx.t('settings.form'), type: 'single', options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] }],
-    defaults: { claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico' },
-    make(s, ctx) {
-      const clef = pickClef(s, ctx);
-      const ids = arr(s.intervalos, ['M3']);
-      const id = pick(ids);
-      const iv = INTERVALS.find(i => i.id === id)!;
-      const b = clefBottom(clef);
-      let lower: Note, upper: Note;
-      do {
-        lower = notaNaPauta(ctx, [b - 1, b + 9 - (iv.num - 1)], () => (Math.random() < 0.25 ? pick([1, -1]) : 0));
-        upper = transpose(lower, { num: iv.num, semis: semisFor(iv.num, iv.q) });
-      } while (Math.abs(upper.acc) > 1);
-      const columns = s.forma === 'harmonico' ? [[lower, upper]] : [[lower], [upper]];
-      return {
-        prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'staff', clef, columns },
-        surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: ivLabel(i, ctx) })) }, expected: { kind: 'option', id },
-        sound: { groups: s.forma === 'harmonico' ? [[midi(lower), midi(upper)]] : [[midi(lower)], [midi(upper)]] },
-        reveal: ivLabel(id, ctx),
-      };
-    },
-  },
-  {
-    id: 'pauta-acorde',
-    objetos: ['acordes', 'notacao'], tarefas: ['ler'],
-    primaryModule: 'theory', skillTags: ['theory.chord_identification', 'notation.pitch_reading'],
-    contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'clef.treble', 'clef.bass'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [CLEFS(ctx), { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ALL_CHORDS) },
-      { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' }],
-    defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false },
-    presentation: { arp: 0.08 },
-    make(s, ctx) {
-      const clef = pickClef(s, ctx);
-      const types = arr(s.tipos, ['maior']) as ChordId[];
-      const type = pick(types);
-      const root = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
-      const inv = s.inversoes ? randInt(0, CHORDS[type].degs.length - 1) : 0;
-      const notes = buildChord(root, type, inv);
-      const sym = chordSymbol(root, type, ctx.conv);
-      const pool = [...types.map(t => chordSymbol(root, t, ctx.conv)), ...shuffle(ROOTS).slice(0, 6).map(r => chordSymbol(r, type, ctx.conv))];
-      const opts = optionsWith(sym, [...new Set(pool)], 6);
-      return {
-        prompt: ctx.t('quiz.whatChord'), visual: { kind: 'staff', clef, columns: [notes] },
-        surface: { kind: 'choices', options: opts.map(chordOption) }, expected: chordExpected(root, type),
-        sound: { groups: [notes.map(midi)] }, reveal: ctx.t('quiz.chordReveal', { symbol: sym, name: chordName(ctx.t, type).toLowerCase() }),
-      };
-    },
-  },
   {
     id: 'pauta-escala',
     objetos: ['escalas', 'notacao'], tarefas: ['ler'],
@@ -301,174 +487,7 @@ export const EXERCISES: CatalogItem[] = [
     },
   },
   // ---------------- MAPEAMENTO: teclado ----------------
-  {
-    id: 'teclado-nota',
-    objetos: ['notas'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['keyboard.note_naming'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'range', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }, { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] }],
-    defaults: { pretas: true, oitavas: '2' },
-    make(s, ctx) {
-      const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
-      const permitidas = pcsPermitidas(ctx).filter(p => s.pretas || ![1, 3, 6, 8, 10].includes(p));
-      let m: number;
-      do m = randInt(lo, hi); while (!permitidas.includes(m % 12));
-      return {
-        prompt: ctx.t('quiz.whatKey'), visual: { kind: 'keyboard', lo, hi, marks: [m] },
-        surface: { kind: 'choices', options: pcOptions(ctx.naming).filter(o => s.pretas || ![1, 3, 6, 8, 10].includes(Number(o.id))) }, expected: { kind: 'pitchClass', pc: m % 12 },
-        sound: { groups: [[m]] }, reveal: pcName(m, ctx.naming),
-      };
-    },
-  },
-  {
-    id: 'teclado-tecla',
-    objetos: ['notas'], tarefas: ['tocar'],
-    primaryModule: 'theory', skillTags: ['keyboard.note_finding'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'range', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [{ id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }], defaults: { pretas: true },
-    make(s, ctx) {
-      const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
-      const p = pick(permitidas);
-      const soa = alturaDoPc(ctx, p, { lo: 48, hi: 71 });
-      const n = spellPc(p);
-      return {
-        prompt: ctx.t('quiz.tapNote', { note: noteName(n, ctx.naming) }), visual: { kind: 'text', text: '' },
-        surface: { kind: 'keyboard', lo: 48, hi: 71 }, expected: { kind: 'pitchClass', pc: p }, sound: { groups: [[soa]] }, reveal: noteName(n, ctx.naming),
-      };
-    },
-  },
-  {
-    id: 'teclado-acorde',
-    objetos: ['acordes'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['keyboard.chord_shapes', 'theory.chord_identification'],
-    contentTags: ['chord.triads', 'chord.sevenths', 'instrument.keyboard'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'range', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ['maior', 'menor', 'dim', 'aum', '7M', '7', 'm7', 'm7b5']) }],
-    defaults: { tipos: ['maior', 'menor', '7', 'm7'] },
-    make(s, ctx) {
-      const types = arr(s.tipos, ['maior']) as ChordId[];
-      const type = pick(types);
-      const pcRaiz = pcPermitido(ctx);
-      const base = alturaDoPc(ctx, pcRaiz, { lo: 48, hi: 72 });
-      const root = { ...ROOTS[mod(pcRaiz, 12)], oct: Math.floor(base / 12) - 1 };
-      const notes = buildChord(root, type).map(midi).map(m => (m > 76 ? m - 12 : m));
-      const sym = chordSymbol(root, type, ctx.conv);
-      const pool = [...types.map(t => chordSymbol(root, t, ctx.conv)), ...shuffle(ROOTS).slice(0, 6).map(r => chordSymbol(r, type, ctx.conv))];
-      return {
-        prompt: ctx.t('quiz.whatChord'), visual: { kind: 'keyboard', lo: 48, hi: 83, marks: notes },
-        surface: { kind: 'choices', options: optionsWith(sym, [...new Set(pool)], 6).map(chordOption) }, expected: chordExpected(root, type),
-        sound: { groups: [notes] }, reveal: sym,
-      };
-    },
-  },
   // ---------------- MAPEAMENTO: braço ----------------
-  {
-    id: 'braco-nota',
-    objetos: ['notas'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['fretboard.note_naming'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [INST(ctx), FRETS(ctx)], defaults: { instrumento: 'auto', casas: '0-5' },
-    make(s, ctx) {
-      const tuning = tuningOf(s, ctx);
-      const [from, to] = fretRange(s);
-      const { str, f, m } = casaPermitida(tuning, from, to, ctx);
-      return {
-        prompt: ctx.t('quiz.whatNote'), visual: { kind: 'fretboard', tuning, from, to, marks: [{ s: str, f }] },
-        surface: { kind: 'choices', options: pcOptions(ctx.naming) }, expected: { kind: 'pitchClass', pc: m % 12 },
-        sound: { groups: [[m]], instrument: tuning.length === 4 ? 'baixo' : 'violao' }, reveal: pcName(m, ctx.naming),
-      };
-    },
-  },
-  {
-    id: 'braco-ache',
-    objetos: ['notas'], tarefas: ['tocar'],
-    primaryModule: 'theory', skillTags: ['fretboard.note_finding'],
-    contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: ['key', 'material'],
-    publicacao: LEGADO,
-    settings: ctx => [INST(ctx), FRETS(ctx)], defaults: { instrumento: 'auto', casas: '0-12' },
-    make(s, ctx) {
-      const tuning = tuningOf(s, ctx);
-      const [from, to] = fretRange(s);
-      const { str, f, m } = casaPermitida(tuning, from, to, ctx);
-      const open = pcName(tuning[str], ctx.naming, false);
-      // no violão as duas cordas Mi se distinguem por grave e aguda
-      const string = tuning.length === 6 && str === 0 ? ctx.t('quiz.lowString', { note: open }) : tuning.length === 6 && str === 5 ? ctx.t('quiz.highString', { note: open }) : open;
-      return {
-        prompt: ctx.t('quiz.tapOnString', { note: pcName(m, ctx.naming, false), string }), visual: { kind: 'text', text: '' },
-        surface: { kind: 'fretboard', tuning, from, to, onlyString: str }, expected: { kind: 'pitchClass', pc: m % 12 },
-        sound: { groups: [[m]], instrument: tuning.length === 4 ? 'baixo' : 'violao' }, reveal: ctx.t('quiz.atFret', { note: pcName(m, ctx.naming), fret: f }),
-      };
-    },
-  },
-  {
-    id: 'braco-intervalo',
-    objetos: ['intervalos', 'notas'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['fretboard.interval_shapes'],
-    contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: [],
-    publicacao: LEGADO,
-    settings: ctx => [INST(ctx)], defaults: { instrumento: 'auto' },
-    make(s, ctx) {
-      const tuning = tuningOf(s, ctx);
-      // Enumera os pares tocáveis dentro da região em vez de passear no aleatório. Além de ler a
-      // cascata (F2-3), conserta a distribuição descontrolada que o passeio produzia — alguns
-      // intervalos apareciam muito mais que outros, sem a pessoa poder escolher.
-      // O braço inteiro, sem interseccionar com a região em MIDI — ver `casaPermitida`: a região
-      // esmagava o alcance e sobrava um par só.
-      const faixa = { lo: tuning[0], hi: tuning[tuning.length - 1] + 9 };
-      const pares: { s1: number; f1: number; s2: number; f2: number; d: number }[] = [];
-      for (let a = 0; a < tuning.length - 1; a++) {
-        for (let fa = 1; fa <= 6; fa++) {
-          const ma = tuning[a] + fa;
-          if (ma < faixa.lo || ma > faixa.hi) continue;
-          for (let b = a; b < Math.min(tuning.length, a + 3); b++) {
-            for (let fb = Math.max(0, fa - 2); fb <= fa + 4; fb++) {
-              const d0 = tuning[b] + fb - ma;
-              if (d0 >= 1 && d0 <= 12) pares.push({ s1: a, f1: fa, s2: b, f2: fb, d: d0 });
-            }
-          }
-        }
-      }
-      const par = pares.length ? pick(pares) : { s1: 0, f1: 1, s2: 1, f2: 1, d: tuning[1] + 1 - (tuning[0] + 1) };
-      const { s1, f1, s2, f2, d } = par;
-      const lo = tuning[s1] + f1;
-      return {
-        prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: s1, f: f1, label: '1' }, { s: s2, f: f2, color: 'var(--ve)' }] },
-        surface: { kind: 'choices', options: semiOptions(ctx) }, expected: { kind: 'option', id: String(d) },
-        sound: { groups: [[lo], [lo + d]], instrument: tuning.length === 4 ? 'baixo' : 'violao' }, reveal: semitoneName(d, ctx.conv),
-      };
-    },
-  },
-  {
-    id: 'acorde-visual',
-    objetos: ['acordes'], tarefas: ['nomear'],
-    primaryModule: 'theory', skillTags: ['fretboard.chord_shapes', 'keyboard.chord_shapes', 'theory.chord_identification'],
-    contentTags: ['chord.triads', 'chord.sevenths', 'chord.open_shapes', 'chord.barre_shapes', 'instrument.guitar', 'instrument.keyboard'],
-    kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-    respeita: [],
-    publicacao: LEGADO,
-    settings: ctx => [{ id: 'onde', label: ctx.t('settings.instrument'), type: 'single', options: [{ id: 'violao', label: ctx.t('settings.guitar') }, { id: 'piano', label: ctx.t('settings.piano') }],
-        present: v => (v === 'violao' ? { arp: 0.04 } : {}) },
-      { id: 'formas', label: ctx.t('settings.shapes'), type: 'single', options: [{ id: 'abertos', label: ctx.t('settings.openChords') }, { id: 'pestana', label: ctx.t('settings.barreChords') }, { id: 'todos', label: ctx.t('settings.all') }] }],
-    defaults: { onde: 'violao', formas: 'abertos' },
-    make(s, ctx) {
-      return s.onde === 'piano' ? pianoChordQuestion(ctx) : guitarChordQuestion(String(s.formas ?? 'abertos'), ctx);
-    },
-  },
   // ---------------- OUVIDO ----------------
   {
     id: 'ouvido-tecla',
@@ -835,9 +854,16 @@ const A_FORM: Partial<Record<ChordId, (r: number) => Shape>> = {
   maior: r => [null, r, r + 2, r + 2, r + 2, r], menor: r => [null, r, r + 2, r + 2, r + 1, r], '7': r => [null, r, r + 2, r, r + 2, r],
   m7: r => [null, r, r + 2, r, r + 1, r], '7M': r => [null, r, r + 2, r + 1, r + 2, r],
 };
-function chordOptions(root: Note, type: ChordId, conv: Ctx['conv']) {
+/**
+ * As alternativas de uma pergunta de acorde: a cifra certa, as outras qualidades em jogo sobre a mesma
+ * fundamental, e a mesma qualidade sobre outras fundamentais.
+ *
+ * `emJogo` são as qualidades que a pessoa escolheu. Quando não vêm (as formas de violão são posições
+ * reais, não uma escolha de qualidade), caem nas cinco que o desenho de violão produz.
+ */
+function chordOptions(root: Note, type: ChordId, conv: Ctx['conv'], emJogo?: ChordId[]) {
   const sym = chordSymbol(root, type, conv);
-  const types: ChordId[] = ['maior', 'menor', '7', 'm7', '7M'];
+  const types: ChordId[] = emJogo?.length ? emJogo : ['maior', 'menor', '7', 'm7', '7M'];
   const pool = [...types.map(t => chordSymbol(root, t, conv)), ...shuffle(ROOTS).slice(0, 5).map(r => chordSymbol(r, type, conv))];
   return { sym, options: optionsWith(sym, [...new Set(pool)], 6).map(chordOption), expected: chordExpected(root, type) };
 }
@@ -862,11 +888,4 @@ function guitarChordQuestion(forms: string, ctx: Ctx): Question {
     visual: { kind: 'fretboard', tuning, from, to: from + 5, marks: frets.flatMap((f, s) => (f === null ? [] : [{ s, f, color: f === 0 ? 'var(--cream)' : undefined }])), muted: frets.flatMap((f, s) => (f === null ? [s] : [])) },
     surface: { kind: 'choices', options }, expected, sound: { groups: [played], instrument: 'violao' }, reveal: sym,
   };
-}
-function pianoChordQuestion(ctx: Ctx): Question {
-  const type = pick(['maior', 'menor', '7', 'm7', '7M'] as ChordId[]);
-  const root = { ...pick(ROOTS), oct: 4 };
-  const ms = buildChord(root, type).map(midi);
-  const { sym, options, expected } = chordOptions(root, type, ctx.conv);
-  return { prompt: ctx.t('quiz.whatChord'), visual: { kind: 'keyboard', lo: 48, hi: 83, marks: ms }, surface: { kind: 'choices', options }, expected, sound: { groups: [ms] }, reveal: sym };
 }

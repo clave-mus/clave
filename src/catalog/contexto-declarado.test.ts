@@ -45,10 +45,17 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
 };
 
 /**
- * Itens de pauta leem a região, mas a altura é ditada pela CLAVE, para a nota caber nas linhas —
- * então oferecer "região" ali é prometer o que a leitura não aceita (ver contexto-musical.test.ts).
+ * Itens que **leem** a região e não a **oferecem**.
+ *
+ * Na pauta a altura é ditada pela CLAVE, para a nota caber nas linhas; no braço a região é a faixa de
+ * CASAS, que é outra unidade. Oferecer "região" nesses é prometer o que nenhuma das duas superfícies
+ * aceita (ver contexto-musical.test.ts).
+ *
+ * `que-intervalo-e-esse` é o caso puro: as suas duas superfícies são pauta e braço, e nenhuma honra
+ * uma faixa em MIDI. Já `que-nota-e-essa`, `ache-a-nota` e `que-acorde-e-esse` **têm** a superfície do
+ * teclado, onde a região faz sentido de verdade — e por isso declaram `range`.
  */
-const REGIAO_NAO_SE_OFERECE = ['pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala'];
+const REGIAO_NAO_SE_OFERECE = ['pauta-escala', 'que-intervalo-e-esse'];
 
 /**
  * `ctx.params` espionado: acusa quem lê `key`, `range` ou `material` **direto**, sem passar pelas
@@ -112,7 +119,7 @@ describe('respeita: o que o item declara é o que ele de fato lê', () => {
 
   it('há itens que não respeitam nada — e é legítimo (armadura, teoria, ritmo)', () => {
     const nenhum = itens.filter(e => (e.respeita ?? []).length === 0).map(e => e.id);
-    expect(nenhum).toEqual(expect.arrayContaining(['pauta-armadura', 'quiz-teoria', 'acorde-visual', 'ritmo-ouvido']));
+    expect(nenhum).toEqual(expect.arrayContaining(['pauta-armadura', 'quiz-teoria', 'ritmo-ouvido']));
   });
 });
 

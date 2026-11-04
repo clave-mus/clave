@@ -7,6 +7,7 @@ import { EXERCISES } from './catalog';
 import { alturaDoPc, pcsPermitidas, regiao } from './contexto-musical';
 import { resolveCamadas, valoresDe, type ValoresDeCamada } from './params';
 import { isSeries, type Ctx } from './types';
+import { variantesDos, type Variante } from './variantes';
 import { mod } from '../theory/core';
 
 const ctxCom = (values: ValoresDeCamada): Ctx => ({
@@ -14,30 +15,45 @@ const ctxCom = (values: ValoresDeCamada): Ctx => ({
   params: valoresDe(resolveCamadas([{ origin: 'perfil', values }])),
 });
 
-/** Todas as alturas que um item toca, ao longo de N perguntas. */
-function alturas(id: string, ctx: Ctx, n = 120): number[] {
-  const ex = EXERCISES.filter(isSeries).find(e => e.id === id);
-  if (!ex) throw new Error(`sem exercício ${id}`);
+// Depois das fusões por superfície (decisão 16), o teste percorre VARIANTES, não itens: a mesma
+// pergunta cobra grafia na pauta e altura no braço, e medir só o padrão do item cobriria um terço dele.
+const SERIES = EXERCISES.filter(isSeries);
+const VARIANTES = variantesDos(SERIES, ctxCom({}));
+const variante = (rotulo: string): Variante => {
+  const v = VARIANTES.find(x => x.rotulo === rotulo);
+  if (!v) throw new Error(`sem variante ${rotulo} (há: ${VARIANTES.map(x => x.rotulo).join(', ')})`);
+  return v;
+};
+
+/** Todas as alturas que uma variante toca, ao longo de N perguntas. */
+function alturas(rotulo: string, ctx: Ctx, n = 120): number[] {
+  const v = variante(rotulo);
+  const ex = SERIES.find(e => e.id === v.id)!;
   const out: number[] = [];
   for (let i = 0; i < n; i++) {
-    const q = ex.make(ex.defaults, ctx);
+    const q = ex.make(v.settings, ctx);
     if (q.sound) out.push(...q.sound.groups.flat());
   }
   return out;
 }
 
 /** Itens que tocam ALTURA. `ritmo-ouvido` tem som, mas só percussão — não há o que pôr em região. */
-const comSom = EXERCISES.filter(isSeries).filter(e => {
+const comSom = VARIANTES.filter(v => {
   const ctx = ctxCom({});
+  const ex = SERIES.find(e => e.id === v.id)!;
   for (let i = 0; i < 20; i++) {
-    const q = e.make(e.defaults, ctx);
+    const q = ex.make(v.settings, ctx);
     if (q.sound?.groups.some(g => g.length)) return true;
   }
   return false;
 });
 
 /** Os itens que sorteiam nota LIVREMENTE — são os que `material` governa (ver contexto-musical.ts). */
-const SORTEIAM_NOTA_LIVRE = ['pauta-nota', 'pauta-construir', 'teclado-nota', 'teclado-tecla', 'braco-nota', 'braco-ache', 'ouvido-tecla'];
+const SORTEIAM_NOTA_LIVRE = [
+  'que-nota-e-essa/pauta', 'que-nota-e-essa/teclado', 'que-nota-e-essa/braco',
+  'ache-a-nota/pauta', 'ache-a-nota/teclado', 'ache-a-nota/braco',
+  'ouvido-tecla',
+];
 
 /**
  * A faixa que o item usa quando ninguém mandou nada.
@@ -46,8 +62,8 @@ const SORTEIAM_NOTA_LIVRE = ['pauta-nota', 'pauta-construir', 'teclado-nota', 't
  * não sobe a 80. Pedir uma região fora do alcance do item **não** é ignorá-la — a região do item
  * vence de propósito (ver `regiao`). Então o teste divide a faixa NATURAL de cada um.
  */
-function faixaNatural(id: string): { lo: number; hi: number } {
-  const ms = alturas(id, ctxCom({}), 200);
+function faixaNatural(rotulo: string): { lo: number; hi: number } {
+  const ms = alturas(rotulo, ctxCom({}), 200);
   return { lo: Math.min(...ms), hi: Math.max(...ms) };
 }
 
@@ -60,22 +76,24 @@ function faixaNatural(id: string): { lo: number; hi: number } {
  *
  * Nesses, o que a cascata governa é o **material** (qual fundamental), não a altura.
  */
+// Com as fusões, a lista passou a ser POR VARIANTE — e isso é a prova de que a superfície é o eixo
+// certo: a mesma pergunta respeita a região no teclado e não no braço, porque as unidades são outras.
 const REGIAO_NAO_SE_APLICA = [
   // Pauta: a oitava é ditada pela CLAVE, para a nota caber nas linhas.
-  'pauta-nota', 'pauta-construir', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala',
-  // Acordes desenhados: são posições reais no braço — um Dó aberto é onde ele é.
-  'acorde-visual',
+  'que-nota-e-essa/pauta', 'ache-a-nota/pauta', 'que-intervalo-e-esse/pauta', 'que-acorde-e-esse/pauta', 'pauta-escala',
   // Braço: a região é a FAIXA DE CASAS, que a pessoa escolhe, e não a faixa em MIDI. Sobrepor as duas
   // mede a mesma coisa com unidades diferentes — e era um bug: num baixo com casas 0–5 e a região
   // padrão (48–72), sobrava UMA casa no braço inteiro, e o exercício repetia a mesma pergunta para
   // sempre (1 posição distinta em 200 sorteios).
-  'braco-nota', 'braco-ache', 'braco-intervalo',
+  'que-nota-e-essa/braco', 'ache-a-nota/braco', 'que-intervalo-e-esse/braco',
+  // Acordes desenhados no braço: são posições reais — um Dó aberto é onde ele é.
+  'que-acorde-e-esse/braco',
 ];
 
 describe('F2-3 · a região é lida', () => {
   // Guarda contra a regressão da decisão 57: se um item voltar a ignorar a cascata, o piso não é
   // respeitado e isto falha.
-  it.each(comSom.filter(e => !REGIAO_NAO_SE_APLICA.includes(e.id)).map(e => e.id))(
+  it.each(comSom.filter(v => !REGIAO_NAO_SE_APLICA.includes(v.rotulo)).map(v => v.rotulo))(
     '%s respeita o piso e o teto pedidos', id => {
       const nat = faixaNatural(id);
       const lo = Math.max(nat.lo, Math.round((nat.lo + nat.hi) / 2) - 6);
@@ -148,14 +166,12 @@ describe('F2-3 · livre continua livre', () => {
 
 describe('F2-3 · a clave é lida', () => {
   it('o item sem clave escolhida usa a global', () => {
-    const naPauta = EXERCISES.filter(isSeries).filter(e => {
-      const q = e.make({ ...e.defaults, claves: [] }, ctxCom({ clef: 'fa' }));
-      return q.visual.kind === 'staff';
-    });
+    const pergunta = (v: Variante) => SERIES.find(e => e.id === v.id)!.make({ ...v.settings, claves: [] }, ctxCom({ clef: 'fa' }));
+    const naPauta = VARIANTES.filter(v => pergunta(v).visual.kind === 'staff');
     expect(naPauta.length).toBeGreaterThan(2);
-    for (const e of naPauta) {
-      const q = e.make({ ...e.defaults, claves: [] }, ctxCom({ clef: 'fa' }));
-      if (q.visual.kind === 'staff') expect(q.visual.clef, `${e.id} ignora params.clef`).toBe('fa');
+    for (const v of naPauta) {
+      const q = pergunta(v);
+      if (q.visual.kind === 'staff') expect(q.visual.clef, `${v.rotulo} ignora params.clef`).toBe('fa');
     }
   });
 });

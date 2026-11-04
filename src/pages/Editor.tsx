@@ -184,15 +184,19 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
 
                   {/* Companheiros de grupo: atalho, nunca a única via (decisão 95) */}
                   {(() => {
-                    const comp = companheirosDe(e.instancias[0].itemId, podeVer).filter(c => !e.instancias.some(i => i.itemId === c));
+                    // O companheiro vem com a configuração que define o propósito (a superfície, por
+                    // exemplo): sem ela, "o braço" ofereceria leitura de pauta.
+                    const comp = companheirosDe(e.instancias[0], podeVer)
+                      .filter(c => !e.instancias.some(i => i.itemId === c.itemId));
                     if (!comp.length) return null;
                     return (
                       <div style={{ display: 'grid', gap: 6 }}>
                         <span className="eyebrow">{t('editor.sameGroup')}</span>
                         <div className="row">
                           {comp.map(c => (
-                            <Chip key={c} onClick={() => grava(acrescentarInstancia(rotinas, rotina.id, e.id, c, itemById[c]?.defaults ?? {}))}>
-                              {itemText(t, c, 'title')}
+                            <Chip key={`${c.itemId}:${JSON.stringify(c.settings ?? {})}`}
+                              onClick={() => grava(acrescentarInstancia(rotinas, rotina.id, e.id, c.itemId, { ...(itemById[c.itemId]?.defaults ?? {}), ...c.settings }))}>
+                              {itemText(t, c.itemId, 'title')}
                             </Chip>
                           ))}
                         </div>

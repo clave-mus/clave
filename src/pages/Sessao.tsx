@@ -110,7 +110,7 @@ export default function Sessao() {
 
   if (!rotina) return <div className="empty"><h1>{t('notFound.title')}</h1><div><Btn to="/">{t('common.backHome')}</Btn></div></div>;
 
-  const problemas = problemasDa(rotina, itemId => !!itemById[itemId], itemId => companheirosDe(itemId, x => !!itemById[x] && visivel(itemById[x]!.publicacao, revisao)));
+  const problemas = problemasDa(rotina, itemId => !!itemById[itemId], itemId => companheirosDe({ itemId }, x => !!itemById[x] && visivel(itemById[x]!.publicacao, revisao)).map(m => m.itemId));
 
   // ---------------------------------------------------------------- antes de começar
   if (!sessao) {

@@ -25,7 +25,7 @@ export const LESSONS: LessonBase[] = [
     objetos: ['notacao'],
     primaryModule: 'theory', skillTags: ['notation.pitch_reading', 'notation.pitch_writing', 'notation.key_signature'],
     contentTags: ['clef.treble', 'clef.bass', 'staff.ledger_lines', 'pitch.naturals', 'key.signatures'],
-    exercises: ['pauta-nota', 'pauta-construir', 'pauta-armadura'], tools: ['leitura'],
+    exercises: ['que-nota-e-essa', 'ache-a-nota', 'pauta-armadura'], tools: ['leitura'],
   },
   {
     id: 'leitura-ritmica',
@@ -39,7 +39,7 @@ export const LESSONS: LessonBase[] = [
     objetos: ['notas'],
     primaryModule: 'theory', skillTags: ['fretboard.note_naming', 'fretboard.note_finding', 'fretboard.interval_shapes'],
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'interval.simple', 'instrument.guitar', 'instrument.bass'],
-    exercises: ['braco-nota', 'braco-ache', 'braco-intervalo', 'acorde-visual'], tools: [],
+    exercises: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse'], tools: [],
   },
   {
     id: 'escala-maior',
@@ -60,7 +60,7 @@ export const LESSONS: LessonBase[] = [
     objetos: ['acordes'],
     primaryModule: 'theory', skillTags: ['theory.chord_construction', 'theory.harmonic_field'],
     contentTags: ['chord.triads', 'chord.sevenths', 'harmony.diatonic_field'],
-    exercises: ['pauta-acorde', 'teclado-acorde', 'acorde-visual', 'ouvido-acorde'], tools: ['backing'],
+    exercises: ['que-acorde-e-esse', 'ouvido-acorde'], tools: ['backing'],
   },
   {
     id: 'harmonia-funcional',
@@ -131,7 +131,7 @@ export const GENRES: GenreBase[] = [
   },
   {
     id: 'rock', cat: 'CLV 1502', color: 'var(--ve)',
-    sides: [{ side: 'a', tracks: [{ id: 'palhetada', min: 6, to: '/ferramentas/tecnica' }, { id: 'power', min: 8, to: '/treinar/braco-intervalo' }, { id: 'pop', min: 8, to: '/ferramentas/backing?p=pop' }] }],
+    sides: [{ side: 'a', tracks: [{ id: 'palhetada', min: 6, to: '/ferramentas/tecnica' }, { id: 'power', min: 8, to: '/treinar/que-intervalo-e-esse' }, { id: 'pop', min: 8, to: '/ferramentas/backing?p=pop' }] }],
   },
   {
     id: 'classico', cat: 'CLV 1504', color: 'var(--co)',

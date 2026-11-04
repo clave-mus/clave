@@ -67,11 +67,11 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { porque: 'tríades e as três tétrades que aparecem em tudo; arpejado, que é o que dá para ouvir no ônibus',
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', '7M', '7', 'm7'], arpejo: true, duracao: 2 })] },
       { porque: 'as duas claves, sem acidentes: é leitura de manutenção, não de estudo novo',
-        instancias: [i('pauta-nota', { claves: ['sol', 'fa'], extensao: 'pauta', acidentes: false })] },
+        instancias: [i('que-nota-e-essa', { superficie: 'pauta', claves: ['sol', 'fa'], extensao: 'pauta', acidentes: false })] },
       { porque: 'teoria em texto, o único item que funciona sem som nenhum',
         instancias: [i('quiz-teoria', { temas: ['graus', 'campo', 'tonalidades'] })] },
       { porque: 'o braço na cabeça, sem o braço na mão: primeiras cinco casas',
-        instancias: [i('braco-nota', { instrumento: 'auto', casas: '0-5' })] },
+        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '0-5' })] },
     ],
   },
 
@@ -85,9 +85,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 5, porque: 'primeiro o som da tonalidade: três notas dela, para a tônica virar referência',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
       { minutos: 5, porque: 'as notas dela no braço, só as diatônicas, na região de casa',
-        instancias: [i('braco-ache', { instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
+        instancias: [i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
       { minutos: 5, porque: 'a mesma tonalidade noutra região — é o que liga as partes do braço',
-        instancias: [i('braco-nota', { instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
+        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
       { minutos: 5, porque: 'os acordes que nascem dela, de ouvido',
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'm7', '7M', '7'], arpejo: true, duracao: 2 })] },
       { minutos: 10, porque: 'fecha tocando dentro dela, com a harmonia rodando',
@@ -101,17 +101,17 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     modo: 'guiado', publicacao: LIDA_E_APROVADA,
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
-        instancias: [i('braco-nota', { instrumento: 'auto', casas: '0-5' })] },
+        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '0-5' })] },
       // A etapa com RODÍZIO: a mesma pergunta, em três partes do braço, uma por execução. É o caso
       // principal do rodízio — variantes do MESMO item, não itens diferentes.
       { minutos: 10, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
         instancias: [
-          i('braco-ache', { instrumento: 'auto', casas: '0-5' }),
-          i('braco-ache', { instrumento: 'auto', casas: '5-9' }),
-          i('braco-ache', { instrumento: 'auto', casas: '0-12' }),
+          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-5' }),
+          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }),
+          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-12' }),
         ] },
       { minutos: 5, porque: 'distância entre duas casas: é o que transforma nota solta em desenho',
-        instancias: [i('braco-intervalo', { instrumento: 'auto' })] },
+        instancias: [i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' })] },
     ],
   },
 
@@ -137,7 +137,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // Altura e ritmo SEPARADOS, que é como se aprende a ler: juntar os dois cedo demais trava os dois.
     etapas: [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',
-        instancias: [i('pauta-nota', { claves: ['sol'], extensao: 'pauta', acidentes: false })] },
+        instancias: [i('que-nota-e-essa', { superficie: 'pauta', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
       { minutos: 5, porque: 'ritmo só, no nível de entrada (semínima e colcheias)',
         instancias: [i('ritmo-ouvido', { nivel: 'duas' })] },
       { minutos: 5, porque: 'os dois juntos, no ambiente de leitura corrida',

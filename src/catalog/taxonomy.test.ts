@@ -7,9 +7,13 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 
 // exercise_id é estável: rotinas, tentativas e configurações salvas apontam para ele. Renomear ou
 // tirar um id quebra esses dados em silêncio. Para mudar esta lista, migre os dados antes.
+//
+// Esta lista **mudou uma vez**, nas fusões por superfície de 04/11/2026 (decisão 16): onze ids viraram
+// quatro. A migração está em `state/migrate.ts` (`FUNDIDOS`) e em `routines/storage.ts`, e tem teste
+// nos dois lugares — rotina, histórico e estatística de quem já usava o app atravessam.
 const STABLE_IDS = [
-  'pauta-nota', 'pauta-construir', 'pauta-armadura', 'pauta-intervalo', 'pauta-acorde', 'pauta-escala', 'quiz-teoria',
-  'teclado-nota', 'teclado-tecla', 'teclado-acorde', 'braco-nota', 'braco-ache', 'braco-intervalo', 'acorde-visual',
+  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse',
+  'pauta-armadura', 'pauta-escala', 'quiz-teoria',
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
 ];
 
