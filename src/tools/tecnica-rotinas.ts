@@ -114,3 +114,55 @@ export const ROUTINES: Routine[] = [
     }),
   },
 ];
+
+// ---------------------------------------------------------------------------
+// A forma sob a mão (A21)
+// ---------------------------------------------------------------------------
+
+/** Uma casa marcada no braço. Mesmo formato do `Fretboard` (decisão 17: há um só). */
+export interface Marca { s: number; f: number; color: string; label?: string }
+
+/** O alcance da mão, em casas. É o mesmo critério do guia de formas. */
+export const ALCANCE = 5;
+
+/** A janela de casas que a mão cobre agora. */
+export function janelaDaMao(seq: readonly Pos[], idx: number) {
+  const casaAtual = idx >= 0 && idx < seq.length ? seq[idx].f : (seq[0]?.f ?? 0);
+  const from = Math.max(0, casaAtual - 1);
+  return { from, to: from + ALCANCE - 1 };
+}
+
+/**
+ * **A forma sob a mão**, e não a sequência inteira (`A21`).
+ *
+ * A primeira versão marcava todas as casas que a rotina usa, e isso virou uma nuvem de 19 círculos na
+ * `tqo` — que sobe o braço inteiro, uma fundamental por vez. O desenho se perdia exatamente como se
+ * perdia na tablatura, só de outro jeito.
+ *
+ * O corte é o **alcance da mão**, e tem a propriedade certa: a forma **anda** com a mão quando o
+ * exercício sobe o braço, em vez de somar tudo.
+ *
+ * **A cor é declarada nas duas**, destaque e resto: o padrão do `Fretboard` já é `--mu`, então marcar
+ * só o destaque deixaria todas as casas da mesma cor.
+ *
+ * `comDedo` só é verdade onde o dedo **é** o exercício (a `T1`). Fora dela, qual dedo usar é escolha de
+ * quem toca — foi o que a `A21` decidiu.
+ */
+export function formaSobAMao(seq: readonly Pos[], idx: number, comDedo: boolean): Marca[] {
+  const { from, to } = janelaDaMao(seq, idx);
+  const porCasa = new Map<string, Marca>();
+  seq.forEach((p, i) => {
+    if (p.f < from || p.f > to) return;
+    const chave = `${p.s}:${p.f}`;
+    const agora = i === idx;
+    // a de agora sempre vence: se a mesma casa aparece duas vezes na sequência, o destaque manda
+    if (!porCasa.has(chave) || agora) {
+      porCasa.set(chave, {
+        s: p.s, f: p.f,
+        color: agora ? 'var(--mu)' : 'var(--cream)',
+        ...(comDedo && p.finger ? { label: String(p.finger) } : {}),
+      });
+    }
+  });
+  return [...porCasa.values()];
+}

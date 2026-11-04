@@ -5,13 +5,13 @@ import { useRevisao, useStore } from '../state/store';
 import { estadoDe, visivel } from '../catalog/publicacao';
 import { pcName } from '../theory/core';
 import Keyboard from '../components/music/Keyboard';
-import { TUNINGS } from '../components/music/Fretboard';
+import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import { Btn, Chip } from '../components/ui';
 import EixoManual from '../components/EixoManual';
 import { useGlobalParams } from '../catalog/params';
 import { useToolLog } from './common';
 import { useNaming, useT } from '../i18n';
-import { ROUTINES } from './tecnica-rotinas';
+import { ROUTINES, formaSobAMao, janelaDaMao } from './tecnica-rotinas';
 import { andamentoNaVolta, gruposDeCordas, indicesDoGrupo, TETO_PADRAO } from '../theory/tecnica';
 
 export default function Tecnica() {
@@ -157,9 +157,23 @@ export default function Tecnica() {
   const toggleRef = useRef(toggle);
   toggleRef.current = toggle;
 
-  const perLine = 16;
-  const lineStart = idx < 0 ? 0 : Math.floor(idx / perLine) * perLine;
-  const window_ = seq.slice(lineStart, lineStart + perLine);
+  /**
+   * **A forma**, não a tablatura (`A21`): as casas que a rotina usa, marcadas no braço, com a de agora
+   * destacada. O Paulo: *"eu imaginava não uma tablatura mas sim um mapa do braço com as notas
+   * destacadas com círculos — eu entendo que isso na verdade são shapes/formas."*
+   *
+   * A ordem não se perde: ela é ouvida no metrônomo e vista no destaque que anda. O que se ganha é o
+   * **desenho**, que é o que fica na cabeça depois — e era justamente o que a tablatura escondia,
+   * porque ela mostra a sequência e não a figura.
+   *
+   * **O dedo só aparece onde o dedo É o exercício** (a `T1`, permutações). Nas outras, qual dedo usar
+   * é escolha de quem toca — foi o que a `A21` decidiu, e é por isso que `Pos.finger` virou opcional.
+   */
+  // A forma sob a mão, e o dedo só onde ele é o exercício. A lógica mora em `tecnica-rotinas.ts`,
+  // testada sem React — ver `formaSobAMao`.
+  const mostraDedo = routine.eixo?.id === 'digitacao';
+  const janela = useMemo(() => janelaDaMao(seq, idx), [seq, idx]);
+  const marcas = useMemo(() => formaSobAMao(seq, idx, mostraDedo), [seq, idx, mostraDedo]);
   const isPiano = instrument === 'piano';
 
   return (
@@ -195,25 +209,10 @@ export default function Tecnica() {
         {isPiano ? (
           <Keyboard lo={60} hi={76} marks={idx >= 0 ? { [seq[idx].f]: 'var(--mu)' } : {}} naming={naming} labels="all" />
         ) : (
-          <svg viewBox={`0 0 ${40 + perLine * 38} ${26 + (tuning.length - 1) * 22 + 22}`} style={{ width: '100%', minWidth: 520, display: 'block' }} role="img" aria-label={t('technique.tab')}>
-            {tuning.map((open, s) => {
-              const y = 18 + (tuning.length - 1 - s) * 22;
-              return <g key={s}>
-                <text x="4" y={y + 4} fontSize="12" fill="var(--cream)" fontFamily="var(--body)" fontWeight="600">{pcName(open, naming, false)}</text>
-                <path d={`M30,${y} H${36 + perLine * 38}`} stroke="var(--cream)" strokeWidth="1" opacity="0.8" />
-              </g>;
-            })}
-            {window_.map((p, i) => {
-              const x = 48 + i * 38;
-              const y = 18 + (tuning.length - 1 - p.s) * 22;
-              const on = lineStart + i === idx;
-              return <g key={i}>
-                <rect x={x - 11} y={y - 10} width="22" height="20" fill={on ? 'var(--mu)' : 'var(--co)'} />
-                <text x={x} y={y + 5} textAnchor="middle" fontSize="15" fontWeight="700" fill={on ? 'var(--bk)' : 'var(--cream)'} fontFamily="var(--body)">{p.f}</text>
-                {p.finger && <text x={x} y={20 + (tuning.length - 1) * 22 + 18} textAnchor="middle" fontSize="10" fill="var(--cream)" opacity="0.7" fontFamily="var(--body)">{p.finger}</text>}
-              </g>;
-            })}
-          </svg>
+          /* UMA implementação de braço (decisão 17). O SVG que existia aqui era a segunda, e é por
+             isso que ela saiu junto com a tablatura. */
+          <Fretboard tuning={tuning} from={janela.from} to={janela.to} marks={marcas}
+            showNames naming={naming} label={t('technique.shape')} />
         )}
       </div>
 

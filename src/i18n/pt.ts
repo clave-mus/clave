@@ -506,6 +506,7 @@ const pt = {
     step4: 'Repita com o metrônomo ligado para manter o contexto rítmico.',
   },
   technique: {
+    shape: 'A forma no braço, com a casa de agora destacada',
     tqoName: 'Tônica, quinta e oitava',
     tqoDesc: 'Cruzando cordas com a mão direita, falando o nome de cada nota.',
     spiderName: 'Aranha (1-2-3-4)',

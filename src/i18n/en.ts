@@ -506,6 +506,7 @@ const en: Shape<typeof pt> = {
     step4: 'Repeat with the metronome on to keep the rhythmic context.',
   },
   technique: {
+    shape: 'The shape on the neck, with the current fret highlighted',
     tqoName: 'Root, fifth and octave',
     tqoDesc: 'Crossing strings with the picking hand, saying the name of each note.',
     spiderName: 'Spider (1-2-3-4)',

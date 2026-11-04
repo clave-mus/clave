@@ -1,7 +1,7 @@
 // As rotinas da área de técnica (decisão 81): T1 permutações, T2 ordem das cordas, T5 troca de posição.
 // Os geradores têm o seu teste em theory/tecnica.test.ts; aqui é o que cada rotina TOCA.
 import { describe, expect, it } from 'vitest';
-import { ROUTINES } from './tecnica-rotinas';
+import { ALCANCE, formaSobAMao, janelaDaMao, ROUTINES } from './tecnica-rotinas';
 import { permutacoesDe, gruposDeCordas } from '../theory/tecnica';
 
 const rotina = (id: string) => ROUTINES.find(r => r.id === id)!;
@@ -110,5 +110,79 @@ describe('T2 · ordem das cordas (sempre quatro cordas vizinhas)', () => {
 describe('o instrumento certo', () => {
   it('as rotinas novas servem a baixo e violão, não ao piano (não há cordas)', () => {
     for (const id of ['cordas']) expect(rotina(id).for).toEqual(['violao', 'baixo']);
+  });
+});
+
+// A forma sob a mão (A21). Testada aqui, sem React, porque no navegador o destaque só anda com o
+// relógio do áudio rodando — e um teste que depende de áudio real não é teste.
+describe('formaSobAMao', () => {
+  // Uma sequência que sobe o braço, como a `tqo` faz: casas 3, 5, 7 e depois 10, 12.
+  const seq = [
+    { s: 0, f: 3 }, { s: 1, f: 5 }, { s: 2, f: 5 },
+    { s: 0, f: 10 }, { s: 1, f: 12 }, { s: 2, f: 12 },
+  ];
+
+  it('mostra só o que cabe na mão, e não a sequência inteira', () => {
+    // Era o bug da primeira versão: 19 círculos na tqo, e o desenho perdido.
+    const m = formaSobAMao(seq, 0, false);
+    expect(m.map(x => x.f).sort((a, b) => a - b)).toEqual([3, 5, 5]);
+  });
+
+  it('e a forma ANDA quando o exercício sobe o braço', () => {
+    expect(formaSobAMao(seq, 3, false).map(x => x.f).sort((a, b) => a - b)).toEqual([10, 12, 12]);
+  });
+
+  it('a janela tem o alcance da mão, começando uma casa antes da atual', () => {
+    expect(janelaDaMao(seq, 0)).toEqual({ from: 2, to: 6 });
+    expect(janelaDaMao(seq, 3)).toEqual({ from: 9, to: 13 });
+  });
+
+  it('a janela não desce abaixo da casa 0', () => {
+    expect(janelaDaMao([{ s: 0, f: 0 }], 0).from).toBe(0);
+  });
+
+  // O padrão do `Fretboard` já é `--mu`, então marcar só o destaque deixava tudo da mesma cor.
+  // Conferido no navegador antes de virar teste: oito círculos, nenhum distinguível.
+  it('exatamente uma casa fica destacada, e as outras têm cor própria', () => {
+    const m = formaSobAMao(seq, 1, false);
+    expect(m.filter(x => x.color === 'var(--mu)')).toHaveLength(1);
+    expect(m.every(x => !!x.color)).toBe(true);
+  });
+
+  it('sem posição atual (parado), nenhuma fica destacada', () => {
+    expect(formaSobAMao(seq, -1, false).filter(x => x.color === 'var(--mu)')).toHaveLength(0);
+  });
+
+  it('a casa repetida na sequência aparece uma vez, e o destaque vence', () => {
+    const repetida = [{ s: 0, f: 5 }, { s: 1, f: 5 }, { s: 0, f: 5 }];
+    const m = formaSobAMao(repetida, 2, false);
+    expect(m).toHaveLength(2);
+    expect(m.find(x => x.s === 0)?.color).toBe('var(--mu)');
+  });
+
+  // A21: o dedo só aparece onde o dedo É o exercício.
+  it('o dedo só entra quando pedido', () => {
+    const comDedos = [{ s: 0, f: 5, finger: 1 }, { s: 0, f: 7, finger: 3 }];
+    expect(formaSobAMao(comDedos, 0, true).map(x => x.label)).toEqual(['1', '3']);
+    expect(formaSobAMao(comDedos, 0, false).every(x => x.label === undefined)).toBe(true);
+  });
+
+  // A propriedade que importa não é um número máximo (9 casas numa mão de 5 trastes é uma forma
+  // legítima): é que a mão **recorta** a sequência. A primeira versão mostrava tudo, e era isso o bug.
+  it('nas rotinas que sobem o braço, a mão recorta — nunca mostra a sequência inteira', () => {
+    for (const r of ROUTINES.filter(x => x.for.includes('baixo'))) {
+      const s = r.build(4, r.eixo?.valores(4)[0] ?? [], 0);
+      const todas = new Set(s.map(p => `${p.s}:${p.f}`)).size;
+      const vao = Math.max(...s.map(p => p.f)) - Math.min(...s.map(p => p.f));
+      if (vao < ALCANCE) continue; // cabe inteira na mão: aí mostrar tudo está certo
+      for (let i = 0; i < s.length; i++) {
+        expect(formaSobAMao(s, i, false).length, `${r.id} em ${i}`).toBeLessThan(todas);
+      }
+    }
+  });
+
+  it('e quando a rotina cabe toda na mão, ela aparece toda', () => {
+    const curta = [{ s: 0, f: 5 }, { s: 1, f: 6 }, { s: 2, f: 7 }];
+    expect(formaSobAMao(curta, 0, false)).toHaveLength(3);
   });
 });

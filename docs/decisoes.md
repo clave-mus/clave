@@ -2114,6 +2114,42 @@ não tem fonte não entra, e o que tem fonte entra **dizendo qual**.
 
 ---
 
+### 108 · A área de técnica mostra a forma, não a tablatura — e deixa de ter o segundo braço
+
+Aplica a `A21` ao código, em 04/11/2026. A `A21` decidiu *forma, não digitação*; os documentos e a
+`FM-2` foram reescritos na hora, mas **a ferramenta de técnica continuava desenhando tablatura** — casas
+numeradas sobre linhas de corda, com o dedo embaixo.
+
+E ela desenhava isso **com um SVG próprio**, que era uma **segunda implementação de braço** — o que a
+decisão 17 proíbe desde sempre. As duas coisas saíram juntas, porque eram a mesma coisa: o componente
+de braço compartilhado já desenha o que a `A21` pediu (casas marcadas com círculos), e a tablatura
+existia porque havia um desenho paralelo para mantê-la.
+
+**O que entrou:** o `Fretboard` compartilhado, com as casas da rotina marcadas e **a de agora
+destacada**. A ordem não se perde — ela é ouvida no metrônomo e vista no destaque que anda. O que se
+ganha é o **desenho**, que é o que fica na cabeça depois.
+
+**O dedo só aparece onde o dedo é o exercício** (a `T1`, permutações). Nas outras, qual dedo usar é
+escolha de quem toca.
+
+**Duas correções que só apareceram olhando a tela**, e valem registro porque são o tipo de coisa que um
+teste não pega sozinho:
+
+1. **A primeira versão marcava a sequência inteira**, e a `tqo` virou uma nuvem de **19 círculos** —
+   ela sobe o braço inteiro, uma fundamental por vez. O desenho se perdia exatamente como se perdia na
+   tablatura, só de outro jeito. O corte é o **alcance da mão** (5 casas em volta da casa de agora), e
+   tem a propriedade certa: a forma **anda** com a mão em vez de somar tudo.
+2. **A cor precisava ser declarada nas duas**, destaque e resto: o padrão do `Fretboard` já é `--mu`,
+   então marcar só o destaque deixava as oito casas **da mesma cor**. Conferido no navegador — oito
+   círculos, nenhum distinguível.
+
+A lógica foi para `tools/tecnica-rotinas.ts` (`formaSobAMao`, `janelaDaMao`) com 11 testes, **porque no
+navegador o destaque só anda com o relógio do áudio rodando** — e teste que depende de áudio real não é
+teste. A propriedade travada não é um número máximo de casas (nove numa mão de cinco trastes é uma
+forma legítima): é que a mão **recorta** a sequência, que era o bug.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.
