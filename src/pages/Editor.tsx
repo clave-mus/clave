@@ -82,7 +82,10 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
       {/* Tudo grava a cada mudança, então "Pronto" é só sair — mas a pessoa precisa de um fim claro. */}
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <Link to="/" className="eyebrow" style={{ textDecoration: 'none' }}>{t('editor.back')}</Link>
-        <Btn small to="/">{t('editor.done')}</Btn>
+        <div className="row">
+          {rotina.etapas.length > 0 && <Btn small tone="ghost" to={`/rotina/${rotina.id}/fazer`}>{t('session.start')}</Btn>}
+          <Btn small to="/">{t('editor.done')}</Btn>
+        </div>
       </div>
 
       <section style={{ display: 'grid', gap: 14 }}>

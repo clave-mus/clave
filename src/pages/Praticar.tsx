@@ -129,6 +129,7 @@ export default function Praticar() {
                     </div>
                   ) : (
                     <div className="row">
+                      {etapasDe(r).length > 0 && <Btn small to={`/rotina/${r.id}/fazer`}>{t('session.start')}</Btn>}
                       <Btn small tone="ghost" to={`/rotina/${r.id}`}>{t('routines.edit')}</Btn>
                       <Btn small tone="ghost" onClick={() => setApagando(r.id)}>{t('routines.deleteRoutine')}</Btn>
                     </div>
@@ -204,9 +205,12 @@ export default function Praticar() {
                 <div key={r.id} className="panel" style={{ display: 'grid', gap: 8 }}>
                   <div className="row" style={{ justifyContent: 'space-between' }}>
                     <b>{r.nome}</b>
-                    {adotada
-                      ? <span className="muted">{t('doTime.adopted')}</span>
-                      : <Btn small tone="ghost" onClick={() => adotar(r)}>{t('doTime.adopt')}</Btn>}
+                    <div className="row">
+                      <Btn small to={`/rotina/${r.id}/fazer`}>{t('session.start')}</Btn>
+                      {adotada
+                        ? <span className="muted">{t('doTime.adopted')}</span>
+                        : <Btn small tone="ghost" onClick={() => adotar(r)}>{t('doTime.adopt')}</Btn>}
+                    </div>
                   </div>
                   <p className="muted" style={{ margin: 0 }}>{r.notas}</p>
                   <small className="muted">

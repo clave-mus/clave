@@ -57,6 +57,12 @@ export interface Activity {
    * fecha — e não uma entrada por gravação. Ausente nas atividades antigas.
    */
   sessao?: string;
+  /**
+   * Autoavaliação de uma etapa do tipo `tarefa` (decisão 5). Mora aqui, e **não** em `correct`,
+   * porque uma tarefa de instrumento não tem pergunta, resposta esperada nem correção: o app não
+   * ouve a pessoa tocar. Tratar isto como acerto afirmaria uma validação que não existe.
+   */
+  autoavaliacao?: 'consegui' | 'com-ajuda' | 'repetir';
 }
 /** Sessão da conta (Supabase). Null = sem conta, só localStorage. */
 export interface Account {

@@ -45,6 +45,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const { moduleById } = useContent();
   // O perfil por baixo, e por cima o que a pessoa escolheu NESTE exercício (decisão 87).
   const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams);
+  // Dentro de uma rotina em execução, "salvar numa rotina" é ruído: a pessoa já está numa.
+  const emRotina = !!target;
   const saved = useStore(s => s.settings[def.id]);
   // Aberto a partir de uma etapa de rotina, o item começa com a configuração DA ETAPA — não com a
   // que a pessoa deixou salva no item. E mexer nas configurações precisa continuar funcionando:
@@ -213,7 +215,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           <div />
           <div className="row">
             <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
-          <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
+          {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
           </div>
         </div>
         {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
@@ -253,7 +255,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
         </div>
       </div>
       {/* Fora da `row` do rodapé: ao lado do texto do exercício, o painel espremia os dois em largura média. */}
-      <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />
+      {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
 
       {confidenceFor && (
         <div className="panel" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>

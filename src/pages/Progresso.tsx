@@ -23,8 +23,17 @@ export default function Progresso() {
   const lang = localeTag(useLocale());
   const naming = useNaming();
 
-  /** Com que configuração a prática rodou. Vazio nas atividades de antes da F3-9. */
-  const comoFoi = (h: (typeof history)[number]) => descreverAtividade(h.snapshot, { t, naming });
+  /**
+   * Com que configuração a prática rodou. Vazio nas atividades de antes da F3-9.
+   *
+   * Quando a etapa era uma **tarefa**, a autoavaliação entra na linha. **Não é nota**: é o que a
+   * pessoa disse sobre a própria prática, e por isso aparece com as palavras dela ("consegui com
+   * ajuda"), nunca convertida em acerto nem em percentual (decisão 5).
+   */
+  const comoFoi = (h: (typeof history)[number]) => [
+    h.autoavaliacao ? t(`session.${h.autoavaliacao === 'consegui' ? 'gotIt' : h.autoavaliacao === 'com-ajuda' ? 'withHelp' : 'again'}`) : '',
+    descreverAtividade(h.snapshot, { t, naming }),
+  ].filter(Boolean).join(' · ');
 
   const byModule = minutesByModule(history, 30);
   const totalMin = Object.values(byModule).reduce((a, b) => a + b, 0);
