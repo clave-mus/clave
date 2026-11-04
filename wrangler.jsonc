@@ -5,9 +5,13 @@
   // foi o que o fluxo ofereceu quando o projeto foi recriado — o Pages antigo tinha quebrado com a
   // transferência do repositório para a organização.
   //
-  // ⚠️ **`public/_redirects` NÃO vale aqui.** Ele é um recurso do Pages; em Workers quem faz o papel
-  // dele é o `not_found_handling` abaixo. Os dois ficam no repositório porque descrevem a mesma
-  // intenção para hospedagens diferentes — e porque o `_redirects` é inofensivo se este for o caminho.
+  // ⚠️ **`public/_redirects` foi APAGADO, e não é opcional.** Eu tinha escrito aqui que ele era
+  // "inofensivo" em Workers. Errado: o Workers **lê** o arquivo e **recusa o deploy** com
+  // `Invalid _redirects configuration: infinite loop detected`, porque a regra do Pages
+  // (`/* /index.html 200`) casa com o próprio `/index.html` e se morde. Quebrou o primeiro deploy.
+  //
+  // Quem faz o papel dele aqui é o `not_found_handling` abaixo — e **só ele**. Se um dia o projeto
+  // voltar para o Pages, o `_redirects` volta junto; os dois nunca convivem.
   "name": "clave",
   "compatibility_date": "2026-10-28",
   "assets": {
