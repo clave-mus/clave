@@ -200,7 +200,7 @@ a lista de qualidades chumbada e **ignorando a cascata**. Era `teclado-acorde` p
 
 ---
 
-## F1-5 · Catálogo em um arquivo por família
+## F1-5 · Catálogo em um arquivo por família ✅ *feita em 04/11/2026*
 
 **Depende de:** F1-4. **Pode ser feito junto com F1-4, se quem pegar preferir.**
 
@@ -217,6 +217,20 @@ sem alteração.
 
 **Não faça:** nenhuma mudança de comportamento. Este PR é só movimentação de código, e precisa ser
 revisável como tal.
+
+**Feito.** `catalog.ts` tem **46 linhas** e é só a lista; 16 arquivos em `items/`, o maior com **90**;
+e `helpers.ts` com o que é comum. **995 testes passando sem nenhuma alteração** — que é o que prova
+que foi só movimentação.
+
+Duas coisas que a movimentação resolveu de passagem:
+
+- **`helpers.ts` reexporta o que vem de `theory/`, de `contexto-musical` e de `types`.** Sem isso, cada
+  `items/<id>.ts` abriria com cinco linhas de import de quatro módulos, e a declaração — que é o que se
+  lê — ficaria enterrada. Agora cada item abre com **dois imports**.
+- **Os divisores de seção (`---- LEITURA ----`) foram apagados**, não movidos: eram organização *do
+  arquivo antigo*, e num arquivo por família o nome do arquivo já diz. O que era comentário de
+  conteúdo (o porquê das fusões) foi para `helpers.ts`, onde vale para os quatro itens, com um resumo
+  de três linhas em cada um.
 
 ---
 
