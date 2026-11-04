@@ -77,6 +77,26 @@ variações deste mesmo ciclo.
 **Pronto quando:** o item existe, passa no teste que gera centenas de perguntas e confere que a
 resposta certa é alcançável na superfície oferecida.
 
+> ⚠️ **A estimativa desta tarefa está errada, e vale saber antes de pegá-la** (conferido em 04/11/2026).
+>
+> Ela diz *"é configuração dos motores que já existem — **não deve precisar de código novo** além do
+> item"*. **Precisa.** A resposta aqui é uma **sequência** de 3 a 5 notas, e o Player julga **um toque
+> por pergunta**: `onAnswer(resposta)` é chamado uma vez e decide na hora. Nada no modelo acumula
+> toques antes de julgar — `Expected` tem `option`, `pitchClass`, `pitch`, `spelled` e `chord`, e
+> nenhum deles é uma sequência.
+>
+> **Então são duas coisas, não uma:**
+>
+> 1. `Expected` ganha um tipo de sequência, e o Player ganha um estado entre "perguntou" e "julgou",
+>    em que os toques se acumulam e dá para apagar o último. É mudança no componente de que **todo**
+>    exercício depende — merece PR próprio e revisão.
+> 2. O item, que aí sim é só declaração.
+>
+> **O atalho que existe hoje, e por que ele não serve:** `ouvido-celulas` já pergunta uma sequência de
+> 3 notas, mas por **múltipla escolha** — as opções são sequências inteiras ("6 5 3"). Dá para fazer a
+> `F6-2` assim sem tocar no Player, e seria outro exercício: reconhecer entre cinco sequências é muito
+> mais fácil que reproduzir uma. A tarefa pede responder **na superfície**, e é essa a parte difícil.
+
 ---
 
 ## F6-3 · Visualizador de escalas, arpejos e desenhos
