@@ -413,6 +413,18 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
   const t = useT();
   return (
     <div className="settings">
+      {/* Atalhos nomeados pelo CONTEÚDO, nunca por nível (decisão 100) */}
+      {def.presets?.length ? (
+        <div className="field" style={{ display: 'grid', gap: 8 }}>
+          <span>{t('presets.title')}</span>
+          <div className="row">
+            {def.presets.map(p => {
+              const igual = Object.entries(p.settings).every(([k, v]) => JSON.stringify(values[k]) === JSON.stringify(v));
+              return <Chip key={p.id} on={igual} onClick={() => onChange({ ...values, ...p.settings })}>{t(p.nome)}</Chip>;
+            })}
+          </div>
+        </div>
+      ) : null}
       {def.settings(ctx).map(s => (
         <div className="field" key={s.id}>
           <span>{s.label}</span>

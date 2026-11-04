@@ -38,21 +38,24 @@ export default function PracticePanel({ respeita, params, onChange }: Props) {
       {mostraTonalidade && (
         <div style={{ display: 'grid', gap: 8 }}>
           <span className="eyebrow">{t('practice.key')}</span>
+          {/* As doze SEMPRE visíveis (decisão 100). Antes elas só apareciam depois de sair de "Livre", e
+              à primeira vista o controle parecia ter três opções. */}
           <div className="row">
             <Chip on={params.key === null} onClick={() => onChange({ key: null })}>{t('practice.keyFree')}</Chip>
-            {MODOS.map(mode => (
-              <Chip key={mode} on={params.key?.mode === mode}
-                onClick={() => onChange({ key: { tonic: params.key?.tonic ?? 0, mode } })}>
-                {t(mode === 'maior' ? 'theory.keyMajor' : 'theory.keyMinor', { note: keyName(params.key?.tonic ?? 0, naming) })}
+            {Array.from({ length: 12 }, (_, pc) => (
+              <Chip key={pc} on={params.key?.tonic === pc}
+                onClick={() => onChange({ key: { tonic: pc, mode: params.key?.mode ?? 'maior' } })}>
+                {keyName(pc, naming)}
               </Chip>
             ))}
           </div>
+          {/* Maior ou menor só faz sentido com uma tônica escolhida */}
           {params.key && (
-            <div className="row" aria-label={t('practice.key')}>
-              {Array.from({ length: 12 }, (_, pc) => (
-                <Chip key={pc} on={params.key?.tonic === pc}
-                  onClick={() => onChange({ key: { tonic: pc, mode: params.key?.mode ?? 'maior' } })}>
-                  {keyName(pc, naming)}
+            <div className="row">
+              {MODOS.map(mode => (
+                <Chip key={mode} on={params.key?.mode === mode}
+                  onClick={() => onChange({ key: { tonic: params.key?.tonic ?? 0, mode } })}>
+                  {t(mode === 'maior' ? 'theory.keyMajor' : 'theory.keyMinor', { note: keyName(params.key?.tonic ?? 0, naming) })}
                 </Chip>
               ))}
             </div>

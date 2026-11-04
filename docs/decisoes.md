@@ -1815,6 +1815,32 @@ pede dele continuam valendo como conjunto de teste em qualquer dos caminhos.
 
 ---
 
+### 100 · Atalhos por conteúdo, as doze tônicas visíveis, textos no imperativo e o percentual fora
+
+Quatro coisas aprovadas pelo Paulo, feitas juntas.
+
+**Atalhos de configuração, nomeados pelo conteúdo.** `CatalogItem.presets`: no exercício de acordes de
+ouvido são *Maior e menor · Só tríades · Só tétrades · Com suspensos · Todas as qualidades*.
+
+**Não são níveis**, e isso é o ponto: nomear "1, 2, 3" afirmaria uma progressão linear que nem sempre
+existe, e a decisão 9 proíbe. Os nomes descrevem **o que muda**, não quem é mais avançado — e há teste
+recusando nome que contenha número, "nível", "básico", "avançado", "fácil" ou "difícil", nos dois
+idiomas.
+
+**As doze tônicas sempre visíveis.** Antes elas só apareciam depois de sair de "Livre", e à primeira
+vista o controle parecia ter três opções — foi o que o Paulo viu. Agora são treze botões numa linha, e
+maior/menor aparece abaixo quando há tônica escolhida.
+
+**Os textos no imperativo.** Havia **dois padrões misturados**: uns usavam imperativo ("Identifique a
+nota escrita na pauta") e três **repetiam a pergunta que já aparece na tela** ("Qual é a tecla
+marcada?"). Uniformizados, nos dois idiomas. `pauta-acorde` dizia "Dê a cifra", que não é como se fala.
+
+**O percentual de acerto saiu da página de progresso.** Era o `A17`: a taxa de acerto **não significa
+nada** — o chute dá 50% (decisão 55) — e "percentual de domínio" está na lista do que nunca entra. Fica
+a contagem (`6/23 respostas certas`), que é fato e não nota.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1862,7 +1888,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A13 | **O nome do visualizador**, agora que ele também toca (decisão 89). Hoje aparece como "visualizador" nos documentos e como "Exploração do braço e do teclado" no catálogo. Candidatas: *Instrumento virtual* (a mais direta) · *Braço e teclado* · outra | Paulo | `F6-3` |
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
-| A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
 | A21 | **O motor de digitações resolve o problema certo?** O Paulo imaginava um **mapa do braço com notas em círculos** (forma), não uma tablatura com dedos. Se for isso, a `FM-2` encolhe e dizer o dedo vira opcional por item. Ver a decisão 99 | Paulo | `FM-2`, `F6-3` |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |

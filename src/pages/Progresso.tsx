@@ -63,9 +63,11 @@ export default function Progresso() {
           {answers === 0 ? (
             <p className="muted">{t('progress.evidenceEmpty')}</p>
           ) : (
+            /* O PERCENTUAL SAIU (decisão 100): a taxa de acerto não significa nada — o chute dá 50% — e
+               "percentual de domínio" está na lista do que nunca entra. Fica a contagem, que é fato. */
             <div className="big-stat">
-              <b className="num">{Math.round((right / answers) * 100)}%</b>
-              <span className="eyebrow">{t('progress.outOf', { right: String(right), total: String(answers) })}</span>
+              <b className="num">{right}/{answers}</b>
+              <span className="eyebrow">{t('progress.rightOf')}</span>
             </div>
           )}
         </div>

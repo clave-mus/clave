@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import type { Instrument } from '../data/modules';
 import type { ChordId, Clef, Convention, Naming, Note } from '../theory/core';
-import type { Translate } from '../i18n';
+import type { MessageKey, Translate } from '../i18n';
 import type { Presentation } from '../audio/presentation';
 import type { Classification } from './taxonomy';
 import type { GlobalParams, ParametroDePratica } from './params';
@@ -206,6 +206,16 @@ export interface CatalogItem extends Classification {
    * `make` faz, então esta lista não envelhece sem o teste acusar.
    */
   respeita?: readonly ParametroDePratica[];
+  /**
+   * Atalhos de configuração, **nomeados pelo conteúdo** (decisão 100).
+   *
+   * Não são "níveis": nomear "1, 2, 3" afirmaria uma progressão linear que nem sempre existe, e a
+   * decisão 9 proíbe. "Só tríades" e "Com suspensos" descrevem o que muda, sem dizer qual é mais
+   * avançado — a pessoa escolhe pelo que quer praticar, não por onde "deveria" estar.
+   *
+   * O nome de cada preset é curadoria do dono do produto.
+   */
+  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue> }[];
   /**
    * Se as pessoas veem este item (decisão 91). **Omitir é o mesmo que `rascunho`**: um item novo nasce
    * escondido, e só o Paulo o publica.

@@ -85,3 +85,51 @@ describe('soPresentation: o que diz não mudar a pergunta, de fato não muda', (
     expect(itens.flatMap(e => e.settings(ctx)).filter(s => s.soPresentation).length).toBeGreaterThan(0);
   });
 });
+
+// Atalhos nomeados pelo CONTEÚDO, nunca por nível (decisão 100): "1, 2, 3" afirmaria uma progressão
+// linear que nem sempre existe, e a decisão 9 proíbe.
+describe('presets', () => {
+  const comPresets = EXERCISES.filter(isSeries).filter(e => e.presets?.length);
+
+  it('todo preset escreve em configurações que o item tem', () => {
+    for (const ex of comPresets) {
+      const ids = new Set(ex.settings(ctx).map(s => s.id));
+      for (const p of ex.presets ?? []) {
+        for (const k of Object.keys(p.settings)) expect(ids, `${ex.id}/${p.id}: ${k}`).toContain(k);
+      }
+    }
+  });
+
+  it('todo preset gera pergunta válida, e nenhum é recusado', () => {
+    for (const ex of comPresets) {
+      for (const p of ex.presets ?? []) {
+        const s = { ...ex.defaults, ...p.settings };
+        expect(ex.problema?.(s, ctx) ?? null, `${ex.id}/${p.id}`).toBeNull();
+        expect(() => ex.make(s, ctx), `${ex.id}/${p.id}`).not.toThrow();
+      }
+    }
+  });
+
+  it('os ids são únicos dentro do item, e os nomes existem nos dois idiomas', () => {
+    for (const ex of comPresets) {
+      const ids = (ex.presets ?? []).map(p => p.id);
+      expect(new Set(ids).size, ex.id).toBe(ids.length);
+      for (const p of ex.presets ?? []) {
+        for (const locale of ['pt', 'en'] as const) {
+          expect(translate(locale, p.nome), `${ex.id}/${p.id} em ${locale}`).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  // Nome que classifica a pessoa ou afirma ordem é o que a decisão 9 proíbe.
+  it('nenhum nome de preset é um número ou um nível', () => {
+    for (const ex of comPresets) {
+      for (const p of ex.presets ?? []) {
+        for (const locale of ['pt', 'en'] as const) {
+          expect(translate(locale, p.nome), `${ex.id}/${p.id}`).not.toMatch(/n[íi]vel|level|\b[1-9]\b|b[áa]sico|avan[çc]ado|iniciante|f[áa]cil|dif[íi]cil|easy|hard|beginner|advanced/i);
+        }
+      }
+    }
+  });
+});
