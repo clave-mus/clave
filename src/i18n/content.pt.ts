@@ -91,7 +91,7 @@ const ptContent = {
         'Jônio (1º), dórico (2º), frígio (3º), lídio (4º), mixolídio (5º), eólio (6º) e lócrio (7º).',
         'Dórico é o menor com 6ª maior. Frígio é o menor com 2ª menor.',
         'Lídio é o maior com 4ª aumentada. Mixolídio é o maior com 7ª menor.',
-        'No backing track, o Clave sugere qual modo usar em cada acorde.',
+        'Na ferramenta de harmonia, o Clave sugere qual modo usar em cada acorde.',
       ],
     },
     acordes: {
@@ -108,7 +108,7 @@ const ptContent = {
     'harmonia-funcional': {
       title: 'Harmonia funcional',
       why: 'Entender função (tônica, subdominante, dominante) explica por que progressões funcionam e abre caminho para rearmonizar.',
-      how: 'Analise os graus das músicas que você toca. Use o backing track para testar substituições.',
+      how: 'Analise os graus das músicas que você toca. Use a ferramenta de harmonia para testar substituições.',
       steps: [
         'Tônica: I, iii, vi. Subdominante: IV, ii. Dominante: V, vii.',
         'O relativo menor usa as mesmas notas do maior e tem a mesma armadura.',

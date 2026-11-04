@@ -663,7 +663,7 @@ const en: Shape<typeof pt> = {
     'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },
     metronomo: { title: 'Metronome', desc: 'Pulse, time signature, subdivision and tap tempo.' },
     ambiente: { title: 'Sing and play', desc: 'Harmonic drone, metronome and a timer with a goal.' },
-    backing: { title: 'Backing track', desc: 'Build the progression, pick the groove and see which scale fits each chord.' },
+    backing: { title: 'Harmony', desc: 'Build the progression, pick the groove and see which scale fits each chord.' },
     leitura: { title: 'Reading generator', desc: 'Endless sheet music: notes only or rhythm only, in a 4-bar loop.' },
     ritmo: { title: 'Rhythm reading', desc: 'Fresh bars at every tap, from the pulse to tuplets. Read in silence or listen with a metronome.' },
     tecnica: { title: 'Technique routines', desc: 'Hand patterns with a metronome. The app picks the finger order; you pick the tempo.' },
@@ -674,7 +674,7 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
     warmupTechnique: 'Technique warm-up',
     warmupMetronome: 'Metronome warm-up',
-    improvise: 'Improvise over a backing track',
+    improvise: 'Improvise over the harmony',
   },
   settings: {
     surface: 'Surface',

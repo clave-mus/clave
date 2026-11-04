@@ -2126,7 +2126,6 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
-| A22 | **O nome da ferramenta de harmonia**, hoje chamada "Backing track". A decisão 103 fechou que ela **não** se chama isso — o nome promete gravação e ela toca harmonia sintetizada —, mas o nome novo é decisão de produto e não foi escolhido. Candidatos levantados: *Harmonia*, *Tocar por cima*, *Campo harmônico* | Paulo | nada: é texto em dois idiomas |
 
 ## Pendências fora do código
 

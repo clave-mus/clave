@@ -664,7 +664,7 @@ const pt = {
     'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
     metronomo: { title: 'Metrônomo', desc: 'Pulso, compasso, subdivisão e tap tempo.' },
     ambiente: { title: 'Solfejar e tocar', desc: 'Drone de contexto harmônico, metrônomo e cronômetro com meta.' },
-    backing: { title: 'Backing track', desc: 'Monte a progressão, escolha a levada e veja que escala usar em cada acorde.' },
+    backing: { title: 'Harmonia', desc: 'Monte a progressão, escolha a levada e veja que escala usar em cada acorde.' },
     leitura: { title: 'Gerador de leitura', desc: 'Partituras infinitas: só notas ou só ritmo, em loop de 4 compassos.' },
     ritmo: { title: 'Leitura rítmica', desc: 'Compassos novos a cada toque, do pulso às quiálteras. Para ler em silêncio ou ouvir com metrônomo.' },
     tecnica: { title: 'Rotinas de técnica', desc: 'Padrões de mão com metrônomo. O app escolhe a ordem dos dedos; você escolhe o andamento.' },
@@ -675,7 +675,7 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
     warmupTechnique: 'Aquecimento técnico',
     warmupMetronome: 'Aquecimento com metrônomo',
-    improvise: 'Improviso sobre backing track',
+    improvise: 'Improviso sobre a harmonia',
   },
   settings: {
     surface: 'Superfície',

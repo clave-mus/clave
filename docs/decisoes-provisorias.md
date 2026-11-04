@@ -185,3 +185,20 @@ hoje, somar é a escolha honesta.
 **Reverter custa:** quem já abriu o app depois desta noite teve as estatísticas somadas, e **somar não
 se desfaz** — os números originais não ficaram guardados. Se você quiser por superfície, é para frente,
 não para trás.
+
+## P10 · A ferramenta de harmonia se chama "Harmonia"
+
+**O que eu decidi:** `Harmonia` em português, `Harmony` em inglês. A `A22` fecha.
+
+**Por que foi minha:** o Paulo aprovou **tirar** "Backing track" (decisão 103) e, ao ser perguntado
+sobre o nome novo, respondeu *sem preferência* — delegou.
+
+**Por que este entre os quatro candidatos:** é curto (navegação não tem espaço), é o que a coisa é
+(ela toca o campo harmônico), e **não promete gravação** — que era o defeito inteiro do nome antigo.
+*Tocar por cima* diz o que se faz com ela, mas é comprido; *Campo harmônico* é preciso e opaco para
+parte do público; *Acompanhamento* é o mais perto de "backing" e por isso herda a mesma promessa.
+
+**Também trocadas:** as menções em texto de aula ("no backing track, o Clave sugere…" virou "na
+ferramenta de harmonia"), e o nome do gênero "Improviso sobre backing track".
+
+**Reverter custa:** quatro linhas de texto, nos dois idiomas.

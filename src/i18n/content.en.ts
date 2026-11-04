@@ -91,7 +91,7 @@ const enContent: Shape<typeof ptContent> = {
         'Ionian (1st), Dorian (2nd), Phrygian (3rd), Lydian (4th), Mixolydian (5th), Aeolian (6th) and Locrian (7th).',
         'Dorian is minor with a major 6th. Phrygian is minor with a minor 2nd.',
         'Lydian is major with an augmented 4th. Mixolydian is major with a minor 7th.',
-        'In the backing track, Clave suggests which mode to use over each chord.',
+        'In the harmony tool, Clave suggests which mode to use over each chord.',
       ],
     },
     acordes: {
@@ -108,7 +108,7 @@ const enContent: Shape<typeof ptContent> = {
     'harmonia-funcional': {
       title: 'Functional harmony',
       why: 'Understanding function (tonic, subdominant, dominant) explains why progressions work and opens the way to reharmonization.',
-      how: 'Analyze the degrees in the songs you play. Use the backing track to test substitutions.',
+      how: 'Analyze the degrees in the songs you play. Use the harmony tool to test substitutions.',
       steps: [
         'Tonic: I, iii, vi. Subdominant: IV, ii. Dominant: V, vii.',
         'The relative minor uses the same notes as the major and has the same key signature.',
