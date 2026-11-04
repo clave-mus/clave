@@ -2150,6 +2150,39 @@ forma legítima): é que a mão **recorta** a sequência, que era o bug.
 
 ---
 
+### 109 · "Mapear o braço" é internalizar as posições — e é isso que define o que entra na rotina
+
+Resposta do Paulo, em 04/11/2026, a uma pergunta minha sobre a rotina *Mapear o braço com o
+instrumento* estar fina:
+
+> *"mapear o braço é uma expressão que eu entendo como internalizar as posições das notas no braço.
+> então tudo que trabalhar isso pode estar incluso."*
+
+**Isto é um critério, não uma lista** — e é melhor que uma lista, porque decide casos futuros. Aplicado
+às quatro etapas que a rotina tinha, ele faz duas coisas que eu não teria feito sozinho:
+
+- **Tira o drone.** Afinar contra uma nota fixa trabalha **ouvido e entonação**, não posição de nota.
+  Era a etapa que eu havia posto por ser "com o instrumento", e "com o instrumento" nunca foi o
+  critério.
+- **Traz os exercícios de braço de tela.** Eles trabalham posição **diretamente**, e eu os tinha
+  excluído por não exigirem o instrumento — o que, pelo critério dele, é irrelevante. Com o instrumento
+  na mão eles ficam **melhores**: a pessoa acha a nota no braço de verdade e só então confirma na tela.
+
+**A consequência que vale registrar:** as duas rotinas de braço passaram a **compartilhar itens**, e a
+diferença entre elas deixou de ser a lista de exercícios — é o **enquadramento** (instrumento na mão ou
+não) e o **vão do braço** (regiões em rodízio na rua, braço inteiro com o instrumento). Isso contraria
+um pouco a decisão 105, que partiu as rotinas "pelo que o mundo exige": aqui as duas exigem coisas
+diferentes do mundo e **pedem os mesmos exercícios**. As duas coisas convivem, mas é bom saber que
+convivem.
+
+**E a mesma conversa cortou o aquecimento de ouvido de 15 para 8 minutos**, dois por frente. Ele está
+certo pelo nome: quinze minutos com quatro assuntos já era meia sessão, e aquecimento que ocupa meia
+sessão **compete** com a sessão em vez de abrir ela. Dois minutos por frente é pouco de propósito — a
+pessoa pula o que não servir hoje e deixa o resto para o fim, que é o que os dois botões do executor
+existem para permitir.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.

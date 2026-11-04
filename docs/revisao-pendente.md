@@ -71,14 +71,21 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 | `instrumento-na-rua` | livre | 6 | se as três superfícies na mesma rotina ajudam ou dispersam |
 | `ouvido-no-fone` | livre | 6 | os três rodízios (tríades→tétrades, escalas→modos) e se a ordem importa |
 | `braco-na-rua` | guiada, 30 min | 5 | se reconhecer antes de achar é a ordem certa, as três regiões do rodízio, e se **identificar e construir intervalo** na mesma rotina é demais |
-| `braco-com-instrumento` | guiada, 29 min | 4 | agora abre com `no-instrumento`, que é a única etapa sobre **mapear** e não sobre tocar |
+| `braco-com-instrumento` | guiada, 30 min | 5 | reescrita com o **critério do Paulo** (*"mapear o braço é internalizar as posições das notas"*): saiu o drone, entraram os dois de braço que trabalham posição. Confira se os exercícios de tela repetidos de `braco-na-rua` incomodam aqui |
 | `internalizar-tonalidade` | guiada, 30 min, rotação | 5 | a ordem das cinco frentes, e se 12 tonalidades em quartas é o ciclo certo |
-| `aquecimento-ouvido` | guiada, 15 min | 4 | a dose: 15 min com os modos incluídos, 3 min para eles |
+| `aquecimento-ouvido` | guiada, **8 min** | 4 | dois minutos por frente, a pedido do Paulo. Confira se 2 min dá tempo de entrar no assunto |
 | `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar |
 
 > **O achado que esta rotina expôs foi resolvido** em 04/11: `no-instrumento` existe e é a primeira
 > etapa dela. Era o único buraco óbvio do catálogo — todos os exercícios de braço aconteciam na tela, e
 > nenhum pedia para tocar no instrumento de verdade.
+>
+> **E o critério de inclusão agora é explícito** (decisão 109): *"mapear o braço é internalizar as
+> posições das notas no braço — então tudo que trabalhar isso pode estar incluso."* Aplicado, ele tirou
+> o **drone** (que trabalha entonação, não posição) e trouxe os dois exercícios de braço de tela, com o
+> **braço inteiro** — porque com o instrumento na mão a pessoa acha a nota no braço de verdade e só
+> então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
+> entre elas é o enquadramento e o vão do braço, não a lista.
 
 ### Mãos livres (`F6-1`)
 

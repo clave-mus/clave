@@ -93,7 +93,7 @@ const pt = {
     },
     bracoInst: {
       nome: 'Mapear o braço com o instrumento',
-      sobre: 'Com o baixo ou a guitarra na mão: achar a nota no braço de verdade, padrões com metrônomo, tocar dentro da harmonia e afinar contra um drone.',
+      sobre: 'Com o baixo ou a guitarra na mão: achar a nota no braço de verdade, medir e construir intervalos, padrões com metrônomo e tocar dentro de uma tonalidade.',
     },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',
@@ -101,7 +101,7 @@ const pt = {
     },
     ouvido: {
       nome: 'Aquecimento de ouvido',
-      sobre: 'Quinze minutos antes de estudar: intervalo, acorde, escala e modos. Curta de propósito — pule o que não servir hoje.',
+      sobre: 'Oito minutos antes de estudar: intervalo, acorde, escala e modos, dois minutos cada. Curta de propósito — pule o que não servir hoje.',
     },
     leitura: {
       nome: 'Leitura diária',

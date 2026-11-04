@@ -93,7 +93,7 @@ const en: Shape<typeof pt> = {
     },
     bracoInst: {
       nome: 'Map the fretboard with your instrument',
-      sobre: 'Bass or guitar in hand: finding the note on the real neck, metronome patterns, playing inside the harmony, and tuning against a drone.',
+      sobre: 'Bass or guitar in hand: finding the note on the real neck, measuring and building intervals, metronome patterns, and playing inside a key.',
     },
     tonalidade: {
       nome: 'Settle into a key',
@@ -101,7 +101,7 @@ const en: Shape<typeof pt> = {
     },
     ouvido: {
       nome: 'Ear warm-up',
-      sobre: 'Fifteen minutes before you practise: interval, chord, scale and modes. Short on purpose — skip whatever does not serve you today.',
+      sobre: 'Eight minutes before you practise: interval, chord, scale and modes, two minutes each. Short on purpose — skip whatever does not serve you today.',
     },
     leitura: {
       nome: 'Daily reading',
