@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { AMBIENTES, EXERCISES } from '../catalog';
 import type { CatalogItem, Setting } from '../catalog/types';
-import { estadoDe } from '../catalog/publicacao';
+import { ehDataIso, estadoDe, visivel } from '../catalog/publicacao';
 import { translate } from '../i18n';
 import type { MessageKey } from '../i18n';
 import { ROTINAS_DO_TIME, rotinaDoTimePorId, rotinasDoTime } from './doTime';
@@ -171,8 +171,27 @@ describe('a publicação', () => {
 
   // Decisão 51: o conteúdo musical de uma rotina do time é passo humano do Paulo. Enquanto ele não
   // revisou, ela é proposta — e proposta não aparece para quem usa.
-  it('as cinco são rascunho: foram escritas por IA e ainda não revisadas', () => {
-    for (const r of ROTINAS_DO_TIME) expect(estadoDe(r.publicacao), r.id).toBe('rascunho');
+  it('as duas que vivem de som seguem em rascunho — não dá para aprová-las sem ouvir', () => {
+    for (const id of ['internalizar-tonalidade', 'aquecimento-ouvido']) {
+      expect(estadoDe(ROTINAS_DO_TIME.find(r => r.id === id)?.publicacao), id).toBe('rascunho');
+    }
+  });
+
+  // `publicado` afirma que uma pessoa revisou. Sem data e nome, a afirmação não se sustenta — é a
+  // mesma regra que vale para item de catálogo.
+  it('toda publicada tem a data da revisão (AAAA-MM-DD) e quem a fez', () => {
+    for (const r of ROTINAS_DO_TIME) {
+      if (r.publicacao.estado !== 'publicado') continue;
+      expect(ehDataIso(r.publicacao.revisadoEm), `${r.id}: data`).toBe(true);
+      expect(r.publicacao.por.trim(), `${r.id}: quem revisou`).not.toBe('');
+    }
+  });
+
+  // O portão só vale se a lista que a tela mostra o respeitar. Sem isto, publicar seria só um rótulo.
+  it('rascunho não aparece fora do modo de revisão, e publicada aparece sempre', () => {
+    const naTela = (revisao: boolean) => ROTINAS_DO_TIME.filter(r => visivel(r.publicacao, revisao)).map(r => r.id);
+    expect(naTela(false)).toEqual(['de-bolso', 'mapear-braco', 'leitura-diaria']);
+    expect(naTela(true)).toHaveLength(ROTINAS_DO_TIME.length);
   });
 
   it('cada rascunho aparece em docs/revisao-pendente.md pelo id', () => {

@@ -55,13 +55,14 @@ produto (decisão 51). Enquanto estão em rascunho, **ninguém as vê** fora do 
 Cada etapa carrega um campo `porque` que não aparece na tela: é o argumento de ter escolhido aquele
 exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
+**Três já saíram daqui.** `de-bolso`, `mapear-braco` e `leitura-diaria` foram **revisadas lendo** em
+03/11/2026 e estão publicadas: a ordem das etapas, as durações e o que entra dão para julgar no texto.
+**As duas que sobraram vivem de som**, e aprová-las pede fazê-las:
+
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
-| `de-bolso` | livre, embaralhada | 5 | se as cinco são de fato as que valem sem instrumento, e se embaralhar é melhor que ordem fixa |
 | `internalizar-tonalidade` | guiada, 30 min, rotação por tonalidade | 5 | **a ordem das cinco frentes** (som → braço na casa → braço acima → acordes → tocar), e se 12 tonalidades em quartas é o ciclo certo |
-| `mapear-braco` | guiada, 20 min | 3 | se reconhecer antes de achar é a ordem certa, e se as três regiões do rodízio são as três que importam |
 | `aquecimento-ouvido` | guiada, 12 min | 3 | a duração: 12 min é aposta de "abre a sessão, não é a sessão" |
-| `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar — é a aposta pedagógica da rotina |
 
 **Publicar** é trocar `publicacao: RASCUNHO` por `{ estado: 'publicado', revisadoEm: '…', por: 'Paulo' }`
 na rotina, em `src/routines/doTime.ts`, e tirar a linha desta tabela.

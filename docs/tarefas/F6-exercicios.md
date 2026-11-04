@@ -323,10 +323,12 @@ violão no samba para os brasileiros) e, para cada padrão, **o que um livro nã
 
 Três coisas que a pesquisa trouxe e que mudam a tarefa:
 
-1. **Há uma decisão antes das outras: a convenção de grafia.** O ciclo da clave cabe em um compasso
-   de 4/4 com grade em semicolcheias (que é o que `rhythm-cells.ts` já faz) **ou** em dois compassos
-   com grade em colcheias. As duas estão certas e dizem coisas diferentes sobre a pulsação. Trocar
-   depois obriga a reescrever todo o arquivo, então essa pergunta vem primeiro.
+1. **Havia uma decisão antes das outras: a convenção de grafia** — e ela foi tomada (decisão 103).
+   O ciclo da clave cabe em um compasso de 4/4 com grade em semicolcheias **ou** em dois compassos com
+   grade em colcheias; as duas estão certas e dizem coisas diferentes sobre a pulsação. **Cada padrão
+   declara o seu próprio vão**, e isso obrigou a separar `padrão` de `célula`:
+   `src/theory/padroes.ts`, 14 testes, nenhum motor novo. **Nenhum padrão declarado ali**, e há teste
+   que impede declarar antes do revisor.
 2. **O telecoteco é o caso mais divergente dos doze**, e não por grafia: a bibliografia o trata como
    padrão de tamborim, de caixa **e** de violão, e *quais* ataques o nome cobre varia com quem
    ensina. A dissertação da UDESC é a fonte certa para isso justamente porque é etnografia — ela

@@ -216,20 +216,27 @@ decisão 101: `material: diatonico` num item que não lê `material` é configur
 e **toda etapa da rotina em rotação respeita `key`** — sem isso a rotina avança para Sol e os
 exercícios continuam sorteando a tônica, que foi o bug que a F2-3 existiu para corrigir.
 
-**Três lugares onde a proposta se afastou do texto desta tarefa.** Nenhum é escolha de implementação,
-e por isso ficam escritos aqui em vez de resolvidos:
+**Três lugares onde a proposta se afastou do texto desta tarefa, os três aprovados pelo Paulo em
+03/11/2026.** Nenhum era escolha de implementação, e por isso foram escritos aqui em vez de resolvidos
+dentro da tarefa:
 
 1. **"Mapear o braço do baixo" ficou "Mapear o braço"**, sem o instrumento no nome, porque os itens
    `braco-*` já funcionam com `instrumento: auto` e a decisão 62 diz que o app não se restringe
    rigidamente a três instrumentos. **Nome de coisa que a pessoa vê é decisão do Paulo** — se ele
    quiser "do baixo", é uma linha. O mesmo vale para "Aquecimento de percepção", que ficou
-   "Aquecimento de ouvido".
+   "Aquecimento de ouvido" — **"ouvido" é a palavra que ele usa**. *Aprovado.*
 2. **As três durações do braço (curta, padrão, completa) ficaram uma rotina só**, com a etapa do meio
    em rodízio de região. Três rotinas quase iguais na mesma lista é o tipo de coisa que a decisão 15
-   evita no catálogo, mas aqui são rotinas, não itens — e a chamada é dele.
+   evita no catálogo, mas aqui são rotinas, não itens — e a chamada é dele. *Aprovado: uma.*
 3. **"Internalizar uma tonalidade" tem cinco etapas, não seis.** Caíram "modos" e "vocabulário
    melódico": o primeiro é `ouvido-escala` com outra configuração, e o segundo **não tem item no
    catálogo** (é o que está em [guardados.md](../guardados.md) como "tocar frases de vocabulário").
+   *Aprovado: cinco.*
+
+**Pronto quando, conferido:** as cinco aparecem na Praticar ✅ · adotá-las cria cópia editável ✅ ·
+**três estão publicadas** (`de-bolso`, `mapear-braco`, `leitura-diaria`, revisadas lendo em 03/11) e as
+duas que vivem de som seguem em rascunho até o Paulo fazê-las. O que falta da tarefa é a `F3-2`: elas
+aparecem e se adotam, mas ainda **não executam**.
 
 ---
 

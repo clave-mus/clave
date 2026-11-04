@@ -1469,13 +1469,16 @@ um instrumento livre sozinho não diferencia o Clave. O que diferencia é ele se
 estudo** — tonalidade e escala marcadas sobre o braço, rótulos em nome/grau/intervalo, "só tocar
 notas da tonalidade" — e poder ser salvo numa rotina como tarefa.
 
-**Em aberto (o Paulo deixou assim):**
+**Resolvido em 03/11/2026 (era `A13`, `A14` e `A15`):**
 
-- **O nome.** "Visualizador" deixa de servir para algo que toca; o nome é decisão de produto e ainda
-  não foi escolhido. Está registrado em `A13`.
-- **Timbres e efeitos** podem entrar, **com requisitos extras** — `A14`.
-- **O que entra no beta** do instrumento (melodias simples, marcações de tonalidade, fixar e
-  arpejar/strum/bloco; bends, pedais, looper e capo depois) — `A15`.
+- **O nome é "instrumento virtual"** — simples assim, nas palavras do Paulo. `A13` fechou.
+- **Timbre é parâmetro de perfil**, como já é hoje, e continua lá. **Efeito fica fora do beta
+  inteiro**: efeito sobre síntese é onde "soa brinquedo" aparece primeiro, e o som do baixo ainda
+  não foi ouvido por ninguém. `A14` fechou.
+- **Entram no beta três coisas:** melodias simples · marcação de tonalidade e escala sobre o braço ·
+  fixar notas e depois arpejar, bater ou tocar em bloco. **Ficam fora bends, pedais, looper e
+  capo** — são o que mais depende da qualidade do som, que é o risco que decide tudo ali. `A15`
+  fechou.
 
 **O risco que decide tudo é a qualidade do som:** as vozes são sintetizadas, e efeitos e bends sobre
 um timbre fraco soam brinquedo (portão 4 do catálogo). Para violão e baixo, síntese de corda pulsada
@@ -1805,7 +1808,14 @@ enumerador em `theory/tecnica.ts`, os textos e o eixo rotacionável.
 
 ---
 
-### Em aberto (`A21`): o motor de digitações resolve o problema certo?
+### `A21`, resolvido em 03/11/2026: é a forma, não a digitação
+
+**O Paulo decidiu pela coluna "forma" da tabela abaixo.** A `FM-2` encolhe: dizer o dedo passa a ser
+**opcional, item a item**, em vez de obrigatório — a `T1` (permutações) continua precisando, porque ali
+o dedo *é* o exercício, e a `T2` já tinha deixado de dizer. O guia de digitações que pedia 10–15
+sequências dele **está desatualizado** e precisa ser reescrito para formas.
+
+O registro de como se chegou lá fica abaixo, porque o argumento vale mais que a conclusão.
 
 O Paulo levantou, e é a dúvida mais importante desta leva:
 
@@ -1827,8 +1837,8 @@ Se a forma é o que importa na maior parte dos casos, a `FM-2` encolhe muito —
 opcional, item a item**, em vez de obrigatório. A `T1` (permutações) continua precisando, porque ali o
 dedo *é* o exercício; a `T2` já deixou de dizer.
 
-**Isto não se resolve sem o Paulo**, e muda o escopo de uma tarefa grande. As 10–15 digitações que o guia
-pede dele continuam valendo como conjunto de teste em qualquer dos caminhos.
+*Era o que estava escrito antes da decisão:* "isto não se resolve sem o Paulo, e muda o escopo de uma
+tarefa grande." Resolveu-se: **forma**.
 
 ---
 
@@ -1934,6 +1944,39 @@ Ver a decisão 49 e [catalogo.md](catalogo.md#o-portão-de-qualidade-em-três-n�
 
 ---
 
+### 103 · Padrão rítmico declara o seu próprio vão; e a ferramenta de harmonia não é backing track
+
+Duas decisões da mesma rodada (03/11/2026), ambas tomadas pelo Paulo.
+
+**O vão do padrão rítmico** (fecha a primeira pergunta da `F6-11`). A grafia dos padrões nomeados tinha
+duas convenções possíveis e incompatíveis, e escolher errado obrigaria a reescrever os doze padrões
+depois:
+
+| | Como fica | Problema |
+|---|---|---|
+| **um compasso de 4/4, grade em semicolcheias** | é o que `rhythm-cells.ts` aceita hoje (`span <= barTicks`) | cada metade da clave vale 2 tempos, e o nome **"3-2" deixa de se referir a nada** — na literatura ele nomeia os dois compassos |
+| **dois compassos de 4/4, grade em colcheias** | é a convenção dominante para clave | o baião e o telecoteco se escrevem em **um** compasso na tradição deles |
+
+**Nenhuma das duas: cada padrão declara o seu próprio vão.** Clave e cáscara em dois compassos de 4/4;
+baião, telecoteco e samba em um, como a tradição deles escreve.
+
+**O que isso obriga, e é a parte boa:** `padrão` **não é** `célula`. Célula é material de leitura
+rítmica e cabe num compasso por definição; padrão é um **colar nomeado, com origem, fonte e revisor**,
+e o seu vão é propriedade dele. Eram dois objetos sob um nome, como já aconteceu com forma e digitação
+(`A21`). Não precisa de motor novo — a notação de `rhythm-cells.ts` serve inteira.
+
+**A ferramenta de harmonia não se chama "backing track"** (fecha `A9`). As três saídas que `A9` listava
+eram produzir, licenciar royalty-free ou cortar; **nenhuma das três.** O que existe — a harmonia do
+campo harmônico, sintetizada, para tocar por cima — já serve ao uso que a rotina *Internalizar uma
+tonalidade* faz dela. O que estava errado era o **nome**: "backing track" promete gravação, e prometer
+gravação para síntese é o portão 4 do catálogo ("soa brinquedo") aberto pelo texto, não pelo som.
+
+Produzir as gravações é trabalho de músico — o Paulo, o Cavazzo e o Schultz — e cabe depois do beta.
+**O nome novo não foi escolhido** e virou `A22`: nome de coisa que a pessoa vê é decisão de produto, e
+não se toma dentro de uma tarefa.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.
@@ -1945,10 +1988,8 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A7 | **Microfone nos exercícios** — entra se o time se empolgar; não está no caminho crítico | time | nada |
 | A8 | **Biblioteca pública de rotinas** — desenhada no beta, construída depois | Paulo | nada |
 | C7 | **Convenção de canhoto no desenho do braço.** `C1` a `C6` foram resolvidos em 03/11 (decisões 60, 69, 73 a 76). Este **não é falta de decisão: é falta de pessoa** — ninguém no time é canhoto, e espelhar errado produz um braço que parece certo para destros e é inútil para quem usa. Implementar como opção de perfil e **não afirmar convenção** até alguém canhoto conferir | um canhoto de verdade | o desenho de braço espelhado |
-| A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
-| A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
-| A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
+| A22 | **O nome da ferramenta de harmonia**, hoje chamada "Backing track". A decisão 103 fechou que ela **não** se chama isso — o nome promete gravação e ela toca harmonia sintetizada —, mas o nome novo é decisão de produto e não foi escolhido. Candidatos levantados: *Harmonia*, *Tocar por cima*, *Campo harmônico* | Paulo | nada: é texto em dois idiomas |
 
 ## Pendências fora do código
 

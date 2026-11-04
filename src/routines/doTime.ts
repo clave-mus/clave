@@ -14,6 +14,15 @@
 // repetição.
 import type { Publicacao } from '../catalog/publicacao';
 import { RASCUNHO } from '../catalog/publicacao';
+
+/**
+ * Revisadas pelo Paulo em 03/11/2026, **lendo**: ordem das etapas, durações e o que entra.
+ *
+ * Só as três que não dependem de ouvir nada. *Internalizar uma tonalidade* e *Aquecimento de ouvido*
+ * ficaram em rascunho de propósito: as duas vivem de som, e aprovar sem ouvir seria afirmar uma
+ * revisão que não aconteceu — que é exatamente o que o portão da decisão 91 existe para impedir.
+ */
+const LIDA_E_APROVADA: Publicacao = { estado: 'publicado', revisadoEm: '2026-11-03', por: 'Paulo' };
 import type { MessageKey, Translate } from '../i18n';
 import { CICLO_DE_QUARTAS } from './rotacao';
 import type { Etapa, Instancia, PoliticaDeCiclagem, Rotina } from './types';
@@ -51,7 +60,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   // ---------------------------------------------------------------------------------------------
   {
     id: 'de-bolso', nome: 'doTime.bolso.nome', sobre: 'doTime.bolso.sobre',
-    modo: 'livre', embaralhar: true, publicacao: RASCUNHO,
+    modo: 'livre', embaralhar: true, publicacao: LIDA_E_APROVADA,
     etapas: [
       { porque: 'intervalos de sempre: oitava, quinta, quarta e as duas terças, subindo',
         instancias: [i('ouvido-intervalo', { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' })] },
@@ -89,7 +98,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   // ---------------------------------------------------------------------------------------------
   {
     id: 'mapear-braco', nome: 'doTime.braco.nome', sobre: 'doTime.braco.sobre',
-    modo: 'guiado', publicacao: RASCUNHO,
+    modo: 'guiado', publicacao: LIDA_E_APROVADA,
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
         instancias: [i('braco-nota', { instrumento: 'auto', casas: '0-5' })] },
@@ -124,7 +133,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   // ---------------------------------------------------------------------------------------------
   {
     id: 'leitura-diaria', nome: 'doTime.leitura.nome', sobre: 'doTime.leitura.sobre',
-    modo: 'guiado', publicacao: RASCUNHO,
+    modo: 'guiado', publicacao: LIDA_E_APROVADA,
     // Altura e ritmo SEPARADOS, que é como se aprende a ler: juntar os dois cedo demais trava os dois.
     etapas: [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',

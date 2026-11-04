@@ -20,20 +20,35 @@ diferente.
 
 ---
 
-## A convenção de grafia (decidir antes de escrever o resto)
+## A convenção de grafia — **resolvida** (decisão 103)
 
-O repositório já tem notação: `src/theory/rhythm-cells.ts`. A clave de son se escreve
-`8. 8. q 8 q` **hoje**, sem motor novo.
+Havia duas convenções possíveis e incompatíveis, e a pergunta precedia todas as outras porque trocar
+depois obrigaria a reescrever os doze padrões:
 
-Mas essa grafia carrega uma escolha: ela põe o ciclo inteiro em **um compasso de 4/4**, com a grade
-em semicolcheias (3+3+4+2+4 = 16 semicolcheias). A outra convenção, igualmente comum, põe o mesmo
-ciclo em **dois compassos de 4/4**, com a grade em colcheias. As duas estão certas; elas dizem coisas
-diferentes sobre onde cai a pulsação.
+| | Como fica | Problema |
+|---|---|---|
+| um compasso de 4/4, grade em semicolcheias | é o que `rhythm-cells.ts` aceita (`span <= barTicks`) | cada metade da clave vale 2 tempos, e **"3-2" deixa de se referir a nada** |
+| dois compassos de 4/4, grade em colcheias | é a convenção dominante para clave | baião e telecoteco se escrevem em **um** compasso na tradição deles |
 
-**Isto é a primeira pergunta para o revisor**, e ela precede todas as outras: trocar de convenção
-depois obriga a reescrever cada padrão do arquivo.
+**O Paulo escolheu nenhuma das duas: cada padrão declara o seu próprio vão.** Clave e cáscara em dois
+compassos; baião, telecoteco e samba em um, como a tradição deles escreve.
 
----
+O que isso obrigou, e é a parte boa: **`padrão` não é `célula`.** Célula é material de leitura rítmica
+e cabe num compasso por definição; padrão é um colar nomeado com origem, fonte e revisor, e o vão é
+propriedade dele. O objeto está em `src/theory/padroes.ts`, com 14 testes, e **reusa a notação de
+`rhythm-cells.ts` inteira** — nenhum motor novo.
+
+Três coisas que o motor faz valer, e que não eram de graça:
+
+- **O padrão tem de fechar o vão que declarou.** Padrão que não fecha é colar que gira fora de fase, e
+  descobrir isso na tela é descobrir tarde. É erro lançado, não tolerado.
+- **Todo ataque tem de cair na grade declarada.** `8. 8. q 8 q` numa grade de colcheia é recusado.
+- **`padroesUsaveis()` devolve só o que tem fonte E revisão de tradição.** Hoje devolve lista vazia, e
+  é por isso que o item *Identificar o padrão* não entra — é a regra 3 da decisão 85 funcionando, e há
+  teste que falha se alguém encher o arquivo e achar que publicou.
+
+**A afirmação sobre son e rumba virou executável:** o teste calcula as cinco rotações de `3 3 4 2 4` e
+confere que `3 4 3 2 4` **não** está entre elas.
 
 ## Os candidatos
 
@@ -43,7 +58,7 @@ Doze. A coluna **o que o revisor decide** é o que um livro não resolve.
 
 | Padrão | Origem | O que o revisor decide |
 |---|---|---|
-| **Clave de son (3-2)** | Cuba | nada de atribuição: `3 3 4 2 4` já está conferido (ver abaixo). Só a convenção de grafia |
+| **Clave de son (3-2)** | Cuba | nada: `3 3 4 2 4` está conferido e a grafia está resolvida. **Falta só o revisor de tradição** |
 | **Clave de son (2-3)** | Cuba | **se entra como padrão próprio ou como "a mesma, começada na outra metade"** — e, se entrar, a grafia exata |
 | **Clave de rumba (3-2)** | Cuba | idem: `3 4 3 2 4` está conferido |
 | **Tresillo** | Cuba | se é padrão ou **célula** (ele cabe em meio ciclo), e se vale listar separado da clave |
