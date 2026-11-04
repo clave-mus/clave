@@ -171,7 +171,7 @@ describe('formaSobAMao', () => {
   // legítima): é que a mão **recorta** a sequência. A primeira versão mostrava tudo, e era isso o bug.
   it('nas rotinas que sobem o braço, a mão recorta — nunca mostra a sequência inteira', () => {
     for (const r of ROUTINES.filter(x => x.for.includes('baixo'))) {
-      const s = r.build(4, r.eixo?.valores(4)[0] ?? [], 0);
+      const s = r.build(4, r.eixo?.valores(4)[0] ?? '', 0);
       const todas = new Set(s.map(p => `${p.s}:${p.f}`)).size;
       const vao = Math.max(...s.map(p => p.f)) - Math.min(...s.map(p => p.f));
       if (vao < ALCANCE) continue; // cabe inteira na mão: aí mostrar tudo está certo
