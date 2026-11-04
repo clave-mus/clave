@@ -2,6 +2,7 @@
 // perfil (kind), níveis, medalhas, maior sequência e plano de tonalidade; quem já tinha dados no
 // navegador não pode quebrar nem carregar campo que o app não conhece mais.
 import type { ModuleId } from '../catalog/taxonomy';
+import { PORTA_IDS } from '../catalog/portas';
 
 /** Módulo mais próximo de cada área antiga. É aproximado (ex.: "ouvido" inclui acordes, que hoje
  *  são Percepção harmônica): serve ao resumo dos últimos 30 dias, não a diagnóstico. */
@@ -37,6 +38,13 @@ export function migrateSaved(raw: unknown): Obj {
   if (isObj(out.profile)) {
     const { kind: _kind, levels: _levels, ...profile } = out.profile;
     void _kind; void _levels;
+    // Os sete objetivos antigos saíram com a decisão 20 (as oito portas). **Não são mapeados para
+    // portas**: "jazz" e "repertorio" não correspondem a porta nenhuma, e inventar a correspondência
+    // seria registrar como escolha da pessoa algo que ela não escolheu. Quem tinha objetivo salvo
+    // reescolhe no Perfil, e a lista nova está lá.
+    if (Array.isArray(profile.goals)) {
+      profile.goals = profile.goals.filter(g => typeof g === 'string' && PORTA_IDS.includes(g as never));
+    }
     out.profile = profile;
   }
   if (isObj(out.stats)) {

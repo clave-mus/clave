@@ -261,6 +261,10 @@ const pt = {
     finish: 'Montar minha primeira sessão',
   },
   train: {
+    byGoal: 'Por objetivo',
+    byModule: 'Por área',
+    goalItems: '{n} itens',
+    goalDraft: '{n} em revisão',
     tag: 'Catálogo',
     title: 'Catálogo',
     sub: 'Tudo que dá para praticar no Clave. Escolha, configure do seu jeito, e guarde para ter a um toque na tela de praticar.',

@@ -5,7 +5,8 @@ import enContent from '../i18n/content.en';
 import ptContent from '../i18n/content.pt';
 import type { ModuleId } from '../catalog/taxonomy';
 import { GENRES, LESSONS, ROADMAPS, type Genre, type Lesson, type Roadmap } from './content';
-import { GOALS, INSTRUMENTS, MODULE_LIST, type ModuleBase } from './modules';
+import { INSTRUMENTS, MODULE_LIST, type ModuleBase } from './modules';
+import { PORTAS } from '../catalog/portas';
 
 /** Módulo de habilidade já com nome e resumo no idioma. */
 export interface Module extends ModuleBase {
@@ -37,7 +38,9 @@ function build(locale: Locale) {
     MODULES: modules,
     moduleById: Object.fromEntries(modules.map(m => [m.id, m])) as Record<ModuleId, Module>,
     INSTRUMENTS: INSTRUMENTS.map(i => ({ ...i, name: tx.instruments[i.id] })),
-    GOALS: GOALS.map(g => ({ ...g, name: tx.goals[g.id] })),
+    // As nove entradas por objetivo, já no idioma. `apoio` é a linha da decisão 79, e ela importa:
+    // é onde o texto descreve o conteúdo em vez de rotular quem usa.
+    PORTAS: PORTAS.map(p => ({ ...p, name: tx.portas[p.id].nome, apoio: tx.portas[p.id].apoio })),
     LESSONS: lessons,
     lessonById: Object.fromEntries(lessons.map(l => [l.id, l])) as Record<string, Lesson>,
     ROADMAPS: roadmaps,

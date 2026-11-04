@@ -21,8 +21,15 @@ describe('estado salvo por versões anteriores', () => {
     const s = migrate(old);
     expect(s.badges).toBeUndefined();
     expect(s.plan).toBeUndefined();
-    expect(s.profile).toEqual({ name: 'Ana', instrument: 'baixo', goals: ['jazz'], onboarded: true });
+    // "jazz" era um dos sete objetivos de antes da decisão 20 e **não vira porta**: mapeá-lo
+    // registraria como escolha da pessoa algo que ela não escolheu. Ver `migrate.ts`.
+    expect(s.profile).toEqual({ name: 'Ana', instrument: 'baixo', goals: [], onboarded: true });
     expect(s.stats['pauta-nota']).toEqual({ attempts: 10, correct: 7, last: 1 });
+  });
+
+  it('mantém os objetivos que ainda existem, e descarta só os que saíram', () => {
+    const s = migrate({ ...old, profile: { ...old.profile, goals: ['jazz', 'ouvido', 'leitura', 'repertorio'] } });
+    expect(s.profile.goals).toEqual(['ouvido', 'leitura']);
   });
 
   it('troca a área do histórico pelo módulo, sem perder o resto', () => {

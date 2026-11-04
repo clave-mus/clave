@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
 import { catalogByModule } from '../catalog/catalogView';
+import { itensDaPorta } from '../catalog/portasView';
 import ItemScreen from '../catalog/ItemScreen';
 import Player from '../catalog/Player';
 import { isSeries } from '../catalog/types';
 import { useRevisao, useStore } from '../state/store';
 import { estadoDe, visivel } from '../catalog/publicacao';
-import { Field, PageHead, Tag } from '../components/ui';
+import { Chip, Field, PageHead, Tag } from '../components/ui';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { lerAbertura } from '../routines/edicao';
 import NotFound from './NotFound';
@@ -27,6 +28,8 @@ export default function Treinar() {
   const stats = useStore(s => s.stats);
   const { hash } = useLocation();
   const [mobileOnly, setMobileOnly] = useState(false);
+  /** Por objetivo é o PADRÃO (decisão 20b): a pessoa chega com uma pergunta, não com o nome de uma área. */
+  const [por, setPor] = useState<'objetivo' | 'area'>('objetivo');
   const revisao = useRevisao();
   const [open, setOpen] = useState<string[]>(loadOpen);
   useEffect(() => { try { localStorage.setItem(OPEN_KEY, JSON.stringify(open)); } catch { /* sem armazenamento: só não lembra */ } }, [open]);
@@ -42,11 +45,17 @@ export default function Treinar() {
   return (
     <div>
       <PageHead tag={t('train.tag')} title={t('train.title')} sub={t('train.sub')} />
-      <div className="row" style={{ marginBottom: 8, justifyContent: 'flex-end' }}>
+      <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div className="row" role="group" aria-label={t('train.byGoal')}>
+          <Chip on={por === 'objetivo'} onClick={() => setPor('objetivo')}>{t('train.byGoal')}</Chip>
+          <Chip on={por === 'area'} onClick={() => setPor('area')}>{t('train.byModule')}</Chip>
+        </div>
         <label className="switch"><input type="checkbox" id="mobile-only" checked={mobileOnly} onChange={e => setMobileOnly(e.target.checked)} />{t('train.mobileOnly')}</label>
       </div>
 
-      {catalogByModule({ mobileOnly, revisao }).map(entry => {
+      {por === 'objetivo' && <PorObjetivo mobileOnly={mobileOnly} revisao={revisao} stats={stats} aberto={open} alternar={toggle} />}
+
+      {por === 'area' && catalogByModule({ mobileOnly, revisao }).map(entry => {
         const m = moduleById[entry.module];
         const items = entry.exercises.length + entry.tools.length;
         if (!items && !entry.lessons.length) return null;
@@ -83,37 +92,7 @@ export default function Treinar() {
                 {items > 0 && (
                   <div>
                     {entry.lessons.length > 0 && <div className="eyebrow" style={{ marginBottom: 8 }}>{t('train.items')}</div>}
-                    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
-                      {entry.exercises.map(id => {
-                        const st = stats[id];
-                        return (
-                          <div key={id} style={{ position: 'relative' }}>
-                            <Link to={`/catalogo/${id}`} className="ex-card">
-                              <span className="acc" style={{ background: m.color }} />
-                              <div style={{ minWidth: 0 }}>
-                                <h3>{itemText(t, id, 'title')}</h3>
-                                <p>{itemText(t, id, 'desc')}</p>
-                                {(st || estadoDe(itemById[id]?.publicacao) === 'rascunho') && <div className="meta">{st && <span className="mini-tag">{t('train.done', { count: st.attempts })}</span>}{estadoDe(itemById[id]?.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}</div>}
-                              </div>
-                            </Link>
-                          </div>
-                        );
-                      })}
-                      {entry.tools.map(id => {
-                        const tool = itemById[id]!;
-                        return (
-                          <Link key={id} to={`/catalogo/${id}`} className="ex-card">
-                            <span className="acc" style={{ background: m.color }} />
-                            <Field seed={tool.id} color={m.color} className="field-square" style={{ width: 40, flex: 'none' }} />
-                            <div style={{ minWidth: 0 }}>
-                              <h3>{itemText(t, id, 'title')}</h3>
-                              <p>{itemText(t, id, 'desc')}</p>
-                              <div className="meta"><span className="mini-tag">{t('train.toolTag')}</span><span className="mini-tag">{t(tool.mobile ? 'common.mobile' : 'common.withInstrument')}</span>{estadoDe(tool.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}</div>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
+                    <GradeDeItens exercicios={entry.exercises} ferramentas={entry.tools} color={m.color} stats={stats} />
                   </div>
                 )}
               </div>
@@ -122,6 +101,119 @@ export default function Treinar() {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * A grade de cartões de item. Existe como componente porque o catálogo se entra de **dois** jeitos —
+ * por objetivo (o padrão, decisão 20b) e por área —, e os dois mostram os mesmos cartões.
+ */
+function GradeDeItens({ exercicios, ferramentas, color, stats }: {
+  exercicios: string[]; ferramentas: string[]; color: string; stats: Record<string, { attempts: number } | undefined>;
+}) {
+  const t = useT();
+  return (
+    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+      {exercicios.map(id => {
+        const st = stats[id];
+        const rascunho = estadoDe(itemById[id]?.publicacao) === 'rascunho';
+        return (
+          <div key={id} style={{ position: 'relative' }}>
+            <Link to={`/catalogo/${id}`} className="ex-card">
+              <span className="acc" style={{ background: color }} />
+              <div style={{ minWidth: 0 }}>
+                <h3>{itemText(t, id, 'title')}</h3>
+                <p>{itemText(t, id, 'desc')}</p>
+                {(st || rascunho) && (
+                  <div className="meta">
+                    {st && <span className="mini-tag">{t('train.done', { count: st.attempts })}</span>}
+                    {rascunho && <span className="mini-tag">{t('review.draft')}</span>}
+                  </div>
+                )}
+              </div>
+            </Link>
+          </div>
+        );
+      })}
+      {ferramentas.map(id => {
+        const tool = itemById[id]!;
+        return (
+          <Link key={id} to={`/catalogo/${id}`} className="ex-card">
+            <span className="acc" style={{ background: color }} />
+            <Field seed={tool.id} color={color} className="field-square" style={{ width: 40, flex: 'none' }} />
+            <div style={{ minWidth: 0 }}>
+              <h3>{itemText(t, id, 'title')}</h3>
+              <p>{itemText(t, id, 'desc')}</p>
+              <div className="meta">
+                <span className="mini-tag">{t('train.toolTag')}</span>
+                <span className="mini-tag">{t(tool.mobile ? 'common.mobile' : 'common.withInstrument')}</span>
+                {estadoDe(tool.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * O catálogo por **porta** (decisão 20). É a entrada padrão: a pessoa chega com uma pergunta
+ * ("quero melhorar o ouvido"), não com o nome de uma área do app.
+ *
+ * O mesmo item aparece atrás de várias portas, de propósito — `pauta-acorde` é leitura, harmonia e
+ * teoria ao mesmo tempo, e obrigá-lo a escolher uma esconderia dois terços do que ele serve.
+ */
+function PorObjetivo({ mobileOnly, revisao, stats, aberto, alternar }: {
+  mobileOnly: boolean; revisao: boolean; stats: Record<string, { attempts: number } | undefined>;
+  aberto: string[]; alternar: (id: string) => void;
+}) {
+  const t = useT();
+  const { PORTAS: portas, moduleById } = useContent();
+  const navigate = useNavigate();
+  return (
+    <>
+      {portas.map(porta => {
+        if (porta.diagnostico) {
+          // A nona entrada não é uma porta por objetivo: leva ao nivelamento (decisão 22), e por isso
+          // é um cartão e não uma seção que abre.
+          return (
+            <section key={porta.id} className="sec mod">
+              <h2 className="mod-h">
+                <button type="button" className="mod-head" onClick={() => navigate('/comecar')}>
+                  <span><span className="name">{porta.name}</span><span className="sub">{porta.apoio}</span></span>
+                  <span className="chev" aria-hidden="true">→</span>
+                </button>
+              </h2>
+            </section>
+          );
+        }
+        const visiveis = itensDaPorta(porta, revisao).filter(id => !mobileOnly || itemById[id]?.mobile);
+        if (visiveis.length === 0) return null;
+        const exercicios = visiveis.filter(id => isSeries(itemById[id]!));
+        const ferramentas = visiveis.filter(id => !isSeries(itemById[id]!));
+        const isOpen = aberto.includes(porta.id);
+        // a cor é a do módulo do primeiro item: a porta atravessa áreas, e não tem cor própria
+        const color = moduleById[itemById[visiveis[0]]!.primaryModule].color;
+        return (
+          <section key={porta.id} id={`porta-${porta.id}`} className="sec mod">
+            <h2 className="mod-h">
+              <button type="button" className="mod-head" aria-expanded={isOpen} aria-controls={`porta-body-${porta.id}`} onClick={() => alternar(porta.id)}>
+                <Field seed={porta.id} color={color} className="field-square" style={{ width: 44, flex: 'none' }} />
+                <span><span className="name">{porta.name}</span><span className="sub">{porta.apoio}</span></span>
+                <span className="count">{t('train.goalItems', { n: visiveis.length })}</span>
+                <span className="chev" aria-hidden="true">{isOpen ? '\u2212' : '+'}</span>
+              </button>
+            </h2>
+            {isOpen && (
+              <div id={`porta-body-${porta.id}`} className="mod-body solo">
+                <GradeDeItens exercicios={exercicios} ferramentas={ferramentas} color={color} stats={stats} />
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </>
   );
 }
 

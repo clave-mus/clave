@@ -14,7 +14,7 @@ export default function Perfil() {
   const locale = useStore(s => s.locale);
   const theme = useStore(s => s.theme);
   const t = useT();
-  const { GOALS, INSTRUMENTS } = useContent();
+  const { PORTAS, INSTRUMENTS } = useContent();
   const detected = LOCALES.find(l => l.id === detectLocale())!.name;
   const autoNames = useLocale() === 'pt' ? 'Dó Ré Mi' : 'C D E';
   const [confirmReset, setConfirmReset] = useState(false);
@@ -39,7 +39,9 @@ export default function Perfil() {
 
         <section>
           <SecTitle>{t('profile.goals')}</SecTitle>
-          <div className="row">{GOALS.map(g => <Chip key={g.id} on={profile.goals.includes(g.id)} onClick={() => toggleGoal(g.id)}>{g.name}</Chip>)}</div>
+          <div className="row">{PORTAS.filter(p => !p.diagnostico).map(p => (
+            <Chip key={p.id} title={p.apoio} on={profile.goals.includes(p.id)} onClick={() => toggleGoal(p.id)}>{p.name}</Chip>
+          ))}</div>
         </section>
 
         <section>

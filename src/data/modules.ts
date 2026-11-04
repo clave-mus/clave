@@ -25,14 +25,15 @@ export const INSTRUMENTS: { id: Instrument }[] = [
   { id: 'baixo' },
 ];
 
-export type GoalId = 'improvisar' | 'harmonia' | 'tirar-de-ouvido' | 'ler-partitura' | 'agilidade' | 'jazz' | 'repertorio';
-// Os módulos de cada objetivo só servem ao gerador de sessão; a porta por objetivo (D1) os substitui.
-export const GOALS: { id: GoalId; modules: ModuleId[] }[] = [
-  { id: 'improvisar', modules: ['perception.melodic', 'perception.harmonic', 'theory'] },
-  { id: 'harmonia', modules: ['theory', 'perception.harmonic'] },
-  { id: 'tirar-de-ouvido', modules: ['perception.melodic', 'perception.harmonic', 'theory'] },
-  { id: 'ler-partitura', modules: ['theory', 'perception.rhythmic'] },
-  { id: 'agilidade', modules: ['technique', 'perception.rhythmic'] },
-  { id: 'jazz', modules: ['theory', 'perception.harmonic', 'perception.melodic', 'perception.rhythmic'] },
-  { id: 'repertorio', modules: ['theory', 'perception.rhythmic'] },
-];
+/**
+ * Os objetivos do perfil são as **portas** (decisão 20). O id é o da porta, e a lista mora em
+ * `src/catalog/portas.ts` com os itens de cada uma; aqui fica só o apelido do tipo, para o estado
+ * guardado não precisar importar o catálogo.
+ *
+ * Os sete objetivos antigos (*improvisar, harmonia, tirar-de-ouvido, ler-partitura, agilidade, jazz,
+ * repertorio*) saíram: eram de antes da decisão 20, alimentavam o gerador de sessão que já não
+ * existe, e nenhum deles tinha itens declarados atrás de si. Quem os tinha salvos no navegador os
+ * perde na migração — de propósito, porque mapeá-los para portas seria inventar uma escolha que a
+ * pessoa não fez.
+ */
+export type { PortaId as GoalId } from '../catalog/portas';

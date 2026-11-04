@@ -14,6 +14,19 @@ const ptContent = {
     violao: 'Violão / guitarra',
     baixo: 'Baixo',
   },
+  // As nove entradas por objetivo (decisões 20, 79 e 80). Nenhuma linha diz nada sobre quem a pessoa
+  // é: todas dizem o que há atrás da porta. Ver `src/catalog/portas.ts`.
+  portas: {
+    'notas-no-instrumento': { nome: 'Dominar as notas no instrumento', apoio: 'Saber onde cada nota está, sem procurar.' },
+    ouvido: { nome: 'Melhorar o ouvido', apoio: 'Reconhecer o que você ouve — intervalos, acordes, escalas, graus.' },
+    harmonia: { nome: 'Acompanhar e entender harmonia', apoio: 'Campo harmônico, cifras e condução: o que sustenta a música.' },
+    teoria: { nome: 'Aprender teoria musical', apoio: 'Os nomes e as razões por trás do que você já toca.' },
+    leitura: { nome: 'Aprender a ler partitura', apoio: 'Da nota escrita ao som, sem travar.' },
+    ritmo: { nome: 'Melhorar ritmo e groove', apoio: 'Subdivisão, leitura rítmica e tocar no tempo.' },
+    tecnica: { nome: 'Melhorar técnica e precisão', apoio: 'Coordenação, independência dos dedos e controle do som.' },
+    improviso: { nome: 'Improvisar e solar', apoio: 'O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário.' },
+    comecar: { nome: 'Não sei por onde começar', apoio: 'Três perguntas e uma rotina sugerida. Dá para mudar tudo depois.' },
+  },
   goals: {
     improvisar: 'Improvisar com fluidez',
     harmonia: 'Criar progressões bonitas',

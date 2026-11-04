@@ -11,7 +11,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const nav = useNavigate();
   const t = useT();
-  const { GOALS, INSTRUMENTS } = useContent();
+  const { PORTAS, INSTRUMENTS } = useContent();
   const finish = () => { updateProfile({ onboarded: true }); nav('/'); };
   const steps = [
     {
@@ -40,7 +40,11 @@ export default function Onboarding() {
       body: (
         <div style={{ display: 'grid', gap: 12 }}>
           <p className="muted">{t('onboarding.pickMany')}</p>
-          <div className="row">{GOALS.map(g => <Chip key={g.id} on={profile.goals.includes(g.id)} onClick={() => updateProfile({ goals: profile.goals.includes(g.id) ? profile.goals.filter(x => x !== g.id) : [...profile.goals, g.id] })}>{g.name}</Chip>)}</div>
+          {/* A entrada do nivelamento não é um objetivo que se marque: fica fora desta lista. */}
+          <div className="row">{PORTAS.filter(p => !p.diagnostico).map(p => (
+            <Chip key={p.id} title={p.apoio} on={profile.goals.includes(p.id)}
+              onClick={() => updateProfile({ goals: profile.goals.includes(p.id) ? profile.goals.filter(x => x !== p.id) : [...profile.goals, p.id] })}>{p.name}</Chip>
+          ))}</div>
         </div>
       ),
     },

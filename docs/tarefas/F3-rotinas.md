@@ -48,7 +48,7 @@ mexer numa configuração alterava **a do time junto**. Agora é cópia profunda
 
 ---
 
-## F3-2 · Executor, modo guiado
+## F3-2 · Executor, modo guiado ✅ *feita em 03/11/2026*
 
 **Decisões de origem:** 4, 5. **Depende de:** F3-1.
 
@@ -77,9 +77,34 @@ retomar de onde parou — sem perder tempo nem resultado.
 
 **Não faça:** nada de avanço automático. Nenhuma tela de parabéns.
 
+**Feito.** `src/routines/execucao.ts` (a lógica, **31 testes, nada de React**) e `pages/Sessao.tsx`
+(a tela), na rota `/rotina/:id/fazer`. Conferido no navegador: começar, cronometrar, pular, concluir,
+a tela final, e fechar/retomar.
+
+Três coisas que o desenho precisou ter, e que estão travadas em teste:
+
+1. **A ordem é resolvida ao COMEÇAR e guardada.** `embaralhar` aplicado a cada render mudaria a lista
+   debaixo da pessoa. Pela mesma razão o rodízio resolve uma instância por etapa ao começar, e
+   `ultimaUsada` é gravado **na rotina** — a execução devolve a rotina alterada, e quem chama a salva.
+2. **Voltar não apaga tempo nem desfecho.** Refazer soma; zerar seria apagar prática real.
+3. **O resumo não tem onde pôr nota.** Um teste percorre as chaves de `resumo()` e falha se aparecer
+   `acertos`, `percentual`, `nota`, `score` ou `streak`.
+
+**A contradição do enunciado, resolvida.** Esta tarefa dizia que a série termina "em N perguntas, ou N
+corretas seguidas, ou no tempo, o que vier primeiro" **e** que passar do tempo sugerido "não avança, não
+bloqueia, não some com nada". Vale a segunda: **quem termina a etapa é a contagem, e o tempo só
+informa.** Ver `P1` em [decisoes-provisorias.md](../decisoes-provisorias.md).
+
+**Item que sumiu:** `problemasDa` acha as etapas que apontam para item inexistente e oferece
+companheiro de grupo quando há. **Oferta, nunca troca automática** — a decisão 7 diz que o app entrega
+o que a pessoa pôs ali, mas sumir em silêncio é pior que oferecer.
+
+**Editar a rotina no meio da execução** não prende a tela: `sanear` tira as etapas que sumiram e
+reposiciona. Era o caminho mais fácil de deixar um "falhar em silêncio" no código.
+
 ---
 
-## F3-3 · Executor, modo livre, e a aba Praticar
+## F3-3 · Executor, modo livre, e a aba Praticar — *o executor feito em 03/11/2026; a aba, em parte*
 
 **Decisões de origem:** 4, 20b. **Depende de:** F3-1, F0-4.
 
@@ -109,9 +134,22 @@ cabe), e começar uma etapa leva um toque.
 **Não faça:** não traga de volta nada que monte sessão automaticamente. Não ponha porcentagem de
 acerto nos cartões.
 
+**Feito: o modo livre.** A rotina livre abre nos **cartões**, com o cronômetro **escondido por
+padrão**; tocar num cartão abre a etapa, concluir volta aos cartões. **Sem numeração de etapa, sem
+barra e sem tempo somado** — as três sugerem ordem e progresso, que é o que o modo livre não tem
+(`P4` em [decisoes-provisorias.md](../decisoes-provisorias.md)). `praticou()` é verdade com um segundo
+real de prática, e **não compara com o total**: não existe "você deixou 3 etapas por fazer".
+
+**Falta da aba Praticar**, e nenhuma das três é do executor:
+
+- **Os cinco contextos** (De bolso · No ônibus · Em silêncio · Com o instrumento + *Posso cantar*).
+  Hoje são dois, porque o catálogo ainda declara `mobile: boolean` em vez de requisitos — é a `F1-3`.
+- **Rotina esmaecida com o motivo** em vez de etapas filtradas uma a uma.
+- **O card de descoberta** no rodapé, com motivo explícito.
+
 ---
 
-## F3-4 · Ciclagem ✅ *lógica feita em 03/11/2026; falta a tela*
+## F3-4 · Ciclagem ✅ *feita em 03/11/2026*
 
 **Decisão de origem:** 7. **Depende de:** F3-2, F3-3.
 
@@ -128,9 +166,11 @@ Uma etapa com várias instâncias resolve **uma ao abrir**:
 **Pronto quando:** abrir a mesma rotina três vezes seguidas entrega instâncias diferentes numa
 etapa com três instâncias, mesmo fechando o navegador entre uma e outra.
 
-**Feito (lógica).** `src/routines/ciclagem.ts`: `resolverInstancia`, `trocarInstancia` e
-`ordemDasEtapas`, com o gerador aleatório injetável para o teste ser determinístico. Falta ligar
-na tela, junto com F3-2 e F3-3.
+**Feito.** `src/routines/ciclagem.ts`: `resolverInstancia`, `trocarInstancia` e `ordemDasEtapas`, com
+o gerador aleatório injetável para o teste ser determinístico. **Ligado na tela** com o executor: o
+botão **"trocar"** aparece só quando a etapa tem mais de uma instância, resolve outra na hora e grava
+`ultimaUsada` na rotina — etapa com uma instância só não tem interface diferente, nem caminho de código
+diferente.
 
 Detalhe de implementação que vale saber: `sorteio-sem-repetir` **sorteia entre as outras e
 remapeia**, em vez de sortear de novo até dar diferente. Laço de repetição com gerador ruim pode

@@ -76,3 +76,56 @@ existe no modo livre", mas não diz o que fazer com a numeração e a barra — 
 e ordem, que é justamente o que o modo livre não tem.
 
 **Reverter custa:** três condicionais em `Sessao.tsx`.
+
+## P5 · Quais itens ficam atrás de cada uma das oito portas (D2)
+
+**O que eu decidi:** a tabela porta → itens em `src/catalog/portas.ts`, e **o catálogo passou a abrir
+"por objetivo" por padrão**, com "por área" como alternativa.
+
+**Por que precisava de decisão:** é taxonomia, e a `CLAUDE.md` diz que taxonomia é decisão de produto.
+A decisão 20 nomeou as oito portas e exigiu "pelo menos 4 itens atrás de cada", mas **nunca disse
+quais**.
+
+**Como eu derivei, para você poder conferir rápido:** mecanicamente, das etiquetas que os itens já
+declaram — `fretboard.*`/`keyboard.*` na porta do instrumento, `ear.*` no ouvido, `notation.*` na
+leitura, `theory.*` na teoria, `obj=ritmo` no ritmo, `primaryModule: technique` na técnica, `obj=harmonia`
+e `obj=acordes` na harmonia. **A única porta que não sai de etiqueta é o improviso**, porque não há
+etiqueta de improvisar: pus ali o que a decisão 79 diz que ela contém — escalas, arpejos, notas-alvo e
+vocabulário.
+
+| Porta | Itens | Declarados |
+|---|---|---|
+| Dominar as notas no instrumento 🚩 | braco-nota, braco-ache, braco-intervalo, teclado-nota, teclado-tecla, acorde-visual, teclado-acorde, ouvido-tecla | 8 |
+| Melhorar o ouvido | ouvido-intervalo, ouvido-acorde, ouvido-escala, ouvido-celulas, ouvido-tecla, ritmo-ouvido, ambiente | 7 |
+| Acompanhar e entender harmonia | backing, ouvido-acorde, pauta-acorde, teclado-acorde, acorde-visual, quiz-teoria | 6 |
+| Aprender teoria musical | quiz-teoria, pauta-armadura, pauta-intervalo, pauta-escala, pauta-acorde, braco-intervalo | 6 |
+| Aprender a ler partitura | pauta-nota, pauta-construir, pauta-intervalo, pauta-acorde, pauta-escala, pauta-armadura, leitura, ritmo | 8 |
+| Melhorar ritmo e groove | ritmo-ouvido, ritmo, metronomo, deslocamento-ritmico, acento-deslocado, subdivisao-alternada | 6 |
+| Melhorar técnica e precisão | tecnica, metronomo, sustentar-e-cortar, legato-staccato, acento-deslocado, subdivisao-alternada | 6 |
+| Improvisar e solar | ouvido-celulas, ouvido-escala, pauta-escala, ambiente, backing, braco-ache | 6 |
+
+**Duas coisas que valem o seu olho:**
+
+1. **Ritmo e técnica têm 6 itens declarados, mas só 3 e 2 visíveis hoje** — o resto é rascunho (os
+   cinco da tarefa com metrônomo). Então as duas estão **abaixo dos 4 da decisão 20** para quem usa, até
+   você revisar aqueles itens. Não escondi as portas: a decisão 20 admitiu a técnica *"sabendo que ela
+   enche depois"*, textualmente. O que o código impede é porta **vazia**.
+2. **O mesmo item aparece atrás de várias portas**, de propósito — `pauta-acorde` é leitura, harmonia e
+   teoria ao mesmo tempo. Obrigá-lo a escolher uma esconderia dois terços do que ele serve.
+
+**Reverter custa:** editar a tabela. Se você quiser outro critério (um item por porta, por exemplo), é
+reescrever o arquivo, mas nada mais depende dele.
+
+---
+
+## P6 · Os sete objetivos antigos são descartados na migração, não convertidos
+
+**O que eu decidi:** quem tem `goals: ['jazz']` salvo no navegador fica com `goals: []` e reescolhe no
+Perfil, agora entre as oito portas.
+
+**Por que precisava de decisão:** a alternativa é mapear — "jazz" → harmonia? improviso? ouvido? —, e
+**qualquer mapeamento inventa uma escolha que a pessoa não fez**. "Repertorio" e "jazz" não correspondem
+a porta nenhuma; eram objetivos de antes da decisão 20, e alimentavam o gerador de sessão que já saiu.
+
+**Reverter custa:** uma tabela de conversão em `state/migrate.ts`. Mas quem já abriu o app depois desta
+noite já perdeu o valor antigo, então reverter não o traz de volta.

@@ -261,6 +261,10 @@ const en: Shape<typeof pt> = {
     finish: 'Build my first session',
   },
   train: {
+    byGoal: 'By goal',
+    byModule: 'By area',
+    goalItems: '{n} items',
+    goalDraft: '{n} in review',
     tag: 'Catalog',
     title: 'Catalog',
     sub: 'Everything you can practice in Clave. Pick something, set it up your way, and save it to have it one tap away on Practice.',
