@@ -656,10 +656,10 @@ const pt = {
   // ---------------- conteúdo: exercícios, ferramentas e teoria ----------------
   exercises: {
     'teoria-intervalos': { title: 'Intervalos em texto', desc: 'Nomeie o intervalo entre duas notas, e a inversão dele — sem pauta e sem som.' },
-    'teoria-graus': { title: 'Graus e modos', desc: 'Diga o grau de uma nota na tonalidade, e qual modo é qual.' },
-    'teoria-acordes': { title: 'Construção de acordes', desc: 'Diga de que notas um acorde é feito.' },
-    'teoria-campo': { title: 'Campo harmônico', desc: 'Diga que acorde cai em cada grau da tonalidade.' },
-    'teoria-tonalidades': { title: 'Tonalidades e armaduras', desc: 'Relacione tonalidade, armadura e relativa.' },
+    'teoria-graus': { title: 'Graus e modos', desc: 'O grau de uma nota na tonalidade, qual modo é qual, e que modo é cada grau.' },
+    'teoria-acordes': { title: 'Construção de acordes', desc: 'De que notas um acorde é feito, e como se escreve com outra nota no baixo.' },
+    'teoria-campo': { title: 'Campo harmônico', desc: 'Que acorde cai em cada grau — no campo maior e nos menores.' },
+    'teoria-tonalidades': { title: 'Tonalidades e armaduras', desc: 'Tonalidade, armadura, relativa nas duas direções, e a mesma tecla com dois nomes.' },
     'que-nota-e-essa': { title: 'Qual nota é essa?', desc: 'Identifique a nota, na pauta, no teclado ou no braço.' },
     'ache-a-nota': { title: 'Ache a nota', desc: 'Escreva ou toque a nota pedida, na superfície que você escolher.' },
     'que-intervalo-e-esse': { title: 'Qual intervalo é esse?', desc: 'Identifique a distância entre as duas notas.' },
@@ -692,6 +692,8 @@ const pt = {
     improvise: 'Improviso sobre a harmonia',
   },
   settings: {
+    topicInversions: 'Inversões e cifra com barra',
+    topicModeDegree: 'Que modo é cada grau',
     topicEnharmonic: 'Enarmonia (a mesma tecla, dois nomes)',
     topicSignature: 'Quais acidentes tem cada tonalidade',
     topicNamedInterval: 'Intervalo entre duas notas, e inversão',
@@ -758,6 +760,11 @@ const pt = {
     rhythmValues: 'Figuras',
   },
   quiz: {
+    relativeMajorOf: 'Qual é o relativo maior de {key}?',
+    inversionAs: 'Como se escreve {chord} com a {ord} no baixo?',
+    whatIsBass: 'Em {chord}, que nota está no baixo?',
+    modeOfDegree: 'Qual é o {ord} modo da escala maior?',
+    degreeOfMode: 'O {mode} é o modo de que grau?',
     enharmonicOf: 'Que nota é a mesma tecla que {note}?',
     signatureOf: 'Quais são os acidentes de {key}, na ordem?',
     intervalFromTo: 'De {a} a {b}, subindo, que intervalo é?',

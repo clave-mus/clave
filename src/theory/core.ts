@@ -234,8 +234,8 @@ export function chordSymbol(root: Pick<Note, 'letter' | 'acc'>, id: ChordId, con
 }
 
 // ---------------- tonalidades ----------------
-const SHARP_ORDER: Letter[] = [3, 0, 4, 1, 5, 2, 6]; // Fá Dó Sol Ré Lá Mi Si
-const FLAT_ORDER: Letter[] = [6, 2, 5, 1, 4, 0, 3];
+export const SHARP_ORDER: Letter[] = [3, 0, 4, 1, 5, 2, 6]; // Fá Dó Sol Ré Lá Mi Si
+export const FLAT_ORDER: Letter[] = [6, 2, 5, 1, 4, 0, 3];
 /** fifths: -7..7 (bemóis negativos). Devolve a tônica maior. */
 export function majorTonic(fifths: number): Note {
   let n = note(0, 0, 4);

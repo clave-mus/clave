@@ -10,7 +10,7 @@ export const teoriaGraus: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],
   publicacao: LEGADO,
-  settings: ctx => [TEMAS(ctx, ['graus', 'modos'])],
-  defaults: { temas: ['graus', 'modos'] },
+  settings: ctx => [TEMAS(ctx, ['graus', 'modos', 'modo-do-grau'])],
+  defaults: { temas: ['graus', 'modos', 'modo-do-grau'] },
   make(s, ctx) { return theoryQuestion(pick(arr(s.temas, ['graus'])), ctx); },
 };

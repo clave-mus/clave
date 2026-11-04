@@ -7,7 +7,7 @@
 //
 // Os textos vêm de ctx.t (src/i18n): os fixos por chave e os de teoria montados com a gramática de
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
-import { buildChord, buildScale, CHORDS, chordSymbol, clefBottom, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
+import { buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
@@ -17,7 +17,7 @@ import { clave, pcsPermitidas } from './contexto-musical';
 // Reexportado para o item declarar **um import só**. Sem isto, cada `items/<id>.ts` abriria com cinco
 // linhas de import de quatro módulos, e a declaração — que é o que se lê — ficaria enterrada.
 export {
-  buildChord, buildScale, CHORDS, chordSymbol, clefBottom, harmonicField, ALL_SCALE_IDS, majorTonic,
+  buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, SHARP_ORDER,
   scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor,
   SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
 } from '../theory/core';
@@ -183,6 +183,7 @@ export const TOPICOS = {
   // `theoryQuestion`, onde está escrito o que ficou de fora e por quê.
   enarmonia: 'settings.topicEnharmonic', armadura: 'settings.topicSignature',
   'intervalo-nomeado': 'settings.topicNamedInterval', 'campo-menor': 'settings.topicMinorField',
+  inversoes: 'settings.topicInversions', 'modo-do-grau': 'settings.topicModeDegree',
 } as const;
 export type TopicoId = keyof typeof TOPICOS;
 export const TEMAS = ({ t }: Ctx, quais: TopicoId[]): Setting => ({
@@ -314,13 +315,15 @@ export const ENARMONIAS: [Note, Note][] = [
   [note(0), note(6, 1)],     // Dó / Si♯
 ];
 
-/** A ordem dos sustenidos (Fá Dó Sol Ré Lá Mi Si) e dos bemóis (Si Mi Lá Ré Sol Dó Fá), por letra. */
-const ORDEM_SUSTENIDOS = [3, 0, 4, 1, 5, 2, 6];
-const ORDEM_BEMOIS = [6, 2, 5, 1, 4, 0, 3];
-
-/** Quais acidentes a armadura de `f` quintas tem, **na ordem**. */
+/**
+ * Quais acidentes a armadura de `f` quintas tem, **na ordem**.
+ *
+ * A ordem vem de `theory/core.ts` — ela já estava lá, para montar a armadura na pauta. A primeira
+ * versão disto a redigitou aqui, e duas cópias da ordem dos acidentes é uma a mais do que precisa
+ * existir.
+ */
 export function acidentesDaArmadura(f: number): Note[] {
-  const ordem = f > 0 ? ORDEM_SUSTENIDOS : ORDEM_BEMOIS;
+  const ordem = f > 0 ? SHARP_ORDER : FLAT_ORDER;
   return ordem.slice(0, Math.abs(f)).map(letra => note(letra, f > 0 ? 1 : -1));
 }
 
@@ -453,6 +456,49 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
     );
   }
 
+  if (topic === 'inversoes') {
+    // A cifra com barra, que é notação de verdade: aparece em toda cifra de música popular e não era
+    // cobrada em lugar nenhum. Resposta única — a nota do baixo de uma inversão é calculada.
+    const root = pick(ROOTS);
+    const type = pick(['maior', 'menor', '7', 'm7', '7M'] as ChordId[]);
+    const notas = buildChord(root, type);
+    const inv = randInt(1, notas.length - 1);
+    const baixo = buildChord(root, type, inv)[0];
+    // **O baixo da cifra usa letra**, como o resto da cifra — `chordSymbol` sempre usa `noteName(.., 'en')`.
+    // A primeira versão usava o nome no idioma da pessoa e produzia `B7M/Lá♯`, que não é cifra de
+    // nada: foi o teste que pegou.
+    const nomeNaCifra = (n: Pick<Note, 'letter' | 'acc'>) => noteName(n, 'en');
+    const cifra = `${sym(root, type)}/${nomeNaCifra(baixo)}`;
+    if (Math.random() < 0.5) {
+      // "Dó maior com a terça no baixo se escreve como?"
+      const ans = cifra;
+      const pool = notas.slice(1).map(x => `${sym(root, type)}/${nomeNaCifra(x)}`).filter(x => x !== ans);
+      // **A fundamental fica fora das distratoras**: `D/D` não é inversão de nada, e alternativa
+      // absurda não ensina — ela só diminui o número real de opções. Foi o teste que pegou.
+      const outras = ROOTS.filter(r => nomeNaCifra(r) !== nomeNaCifra(root))
+        .slice(0, 6).map(r => `${sym(root, type)}/${nomeNaCifra(r)}`).filter(x => x !== ans);
+      return text(t('quiz.inversionAs', { chord: sym(root, type), ord: ordinal(inv * 2 + 1, conv, 'f') }),
+        optionsWith(ans, [...new Set([...pool, ...outras])], 5), ans);
+    }
+    // "Em C/E, que nota está no baixo?" — a volta, e é a que diz se a notação foi entendida. Aqui a
+    // resposta é no idioma da pessoa: a pergunta é sobre a NOTA, não sobre como se escreve a cifra.
+    const ans = nm(baixo);
+    return text(t('quiz.whatIsBass', { chord: cifra }), optionsWith(ans, notePool(ans), 6), ans);
+  }
+
+  if (topic === 'modo-do-grau') {
+    // Os modos **por posição**. Hoje eles são cobrados por grau alterado e por diferença entre dois
+    // modos, mas nunca por "qual é o quarto" — que é como quase todo mundo os aprendeu.
+    const i = randInt(0, MODES.length - 1);
+    const mode = MODES[i];
+    const ords = MODES.map((_, k) => ordinal(k + 1, conv, 'm'));
+    if (Math.random() < 0.5) {
+      const ans = modeName(mode);
+      return text(t('quiz.modeOfDegree', { ord: ords[i] }), optionsWith(ans, MODES.map(modeName), 6), ans);
+    }
+    return text(t('quiz.degreeOfMode', { mode: modeName(mode) }), ords, ords[i]);
+  }
+
   if (topic === 'acordes') {
     const root = pick(ROOTS);
     const type = pick(['maior', 'menor', '7', 'm7', '7M', 'm7b5', 'dim'] as ChordId[]);
@@ -496,9 +542,20 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
   // tonalidades
   const f = pick(keyPool.filter(x => x !== 0));
   const tonic = majorTonic(f);
-  if (Math.random() < 0.5) {
+  const sorteio = Math.random();
+  if (sorteio < 0.34) {
     const ans = nm(relativeMinor(f));
     return text(t('quiz.relativeOf', { key: major(tonic) }), optionsWith(ans, keyPool.map(k => nm(relativeMinor(k))), 6), ans, t('theory.keyMinor', { note: ans }));
+  }
+  if (sorteio < 0.67) {
+    // **A direção que faltava.** A relativa só era perguntada de maior para menor, e é a de volta que
+    // trava na prática: quem vê uma música em Fá menor precisa saber que a armadura é a de Lá♭ maior.
+    const menor = relativeMinor(f);
+    const ans = nm(tonic);
+    return text(
+      t('quiz.relativeMajorOf', { key: t('theory.keyMinor', { note: nm(menor) }) }),
+      optionsWith(ans, keyPool.map(k => nm(majorTonic(k))), 6), ans, major(tonic),
+    );
   }
   const accLabel = (k: number) => accidentalCount(k, conv);
   return text(t('quiz.accidentalsOf', { key: major(tonic) }), optionsWith(accLabel(f), keyPool.map(accLabel), 6), accLabel(f));

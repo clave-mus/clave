@@ -236,3 +236,16 @@ usuário"** (decisão 13), e um teste trava que nenhum tópico chamado `funcao` 
 
 **Reverter custa:** apagar cada bloco de `theoryQuestion` e tirar o tópico da lista do item. O item
 novo (`teoria-intervalos`) tem migração nenhuma a desfazer — ele nasceu agora.
+
+### Mais três, aprovados pelo Paulo na mesma conversa
+
+| Tópico | Onde | Nota |
+|---|---|---|
+| **Inversões e cifra com barra** | `teoria-acordes` | nos dois sentidos: *"como se escreve Fá7M com a terça no baixo?"* e *"em C/E, que nota está no baixo?"* |
+| **Que modo é cada grau** | `teoria-graus` | os modos **por posição**, que é como quase todo mundo os aprendeu. Hoje eles eram cobrados por grau alterado e por diferença entre dois modos, nunca por "qual é o quarto" |
+| **A relativa na volta** | `teoria-tonalidades` | **não é tópico novo:** a relativa já existia, só de maior para menor. Entrou a direção que faltava — quem vê uma música em Fá menor precisa saber que a armadura é a de Lá♭ maior |
+
+**A homônima ficou fora**, a pedido dele.
+
+**E os textos dos quatro itens de teoria foram reescritos:** as descrições diziam só o que o item fazia
+antes dos tópicos novos, e descrição desatualizada é a mesma coisa que descrição errada.
