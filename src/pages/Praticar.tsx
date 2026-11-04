@@ -7,12 +7,13 @@
 // uma etapa sem poder dizer o que a etapa fazia.
 // O seletor de contexto tem dois estados aqui; os cinco contextos chegam com a F1-3, quando o
 // catálogo passar a declarar requisitos em vez do `mobile: boolean` de hoje.
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContent } from '../data/localized';
-import { itemById } from '../catalog';
+import { EXERCISES, itemById } from '../catalog';
 import { useRevisao, useStore } from '../state/store';
 import { visivel } from '../catalog/publicacao';
+import { CONTEXTOS, cabeNoContexto, porQueNaoCabe, type Contexto } from '../catalog/context';
 import { useGlobalParams } from '../catalog/params';
 import { resumoDaEtapa } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
@@ -23,13 +24,36 @@ import { useRotinas } from '../routines/hooks';
 import { apagarRotina, copiarRotina, gravarRotinas, novaRotina } from '../routines/storage';
 import { ROTINAS_DO_TIME, rotinasDoTime } from '../routines/doTime';
 import { Btn, Chip, SecTitle } from '../components/ui';
-import { useLocale, useNaming, useT } from '../i18n';
+import { itemText, useLocale, useNaming, useT } from '../i18n';
+
+/** O contexto e o "posso cantar" ficam lembrados neste navegador — é conveniência de tela, não perfil. */
+const CTX_KEY = 'clave:contexto';
+const SING_KEY = 'clave:posso-cantar';
+const guardar = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* sem armazenamento: só não lembra */ } };
+const lerContexto = (): Contexto => {
+  try {
+    const v = localStorage.getItem(CTX_KEY);
+    return CONTEXTOS.includes(v as Contexto) ? (v as Contexto) : 'onibus';
+  } catch { return 'onibus'; }
+};
+const lerCantar = () => { try { return localStorage.getItem(SING_KEY) === 'true'; } catch { return false; } };
+
+/** A chave de i18n de cada contexto. Explícito, para o texto não depender do id. */
+const nomeDoContexto: Record<Contexto, string> = {
+  bolso: 'Bolso', onibus: 'Onibus', silencio: 'Silencio', instrumento: 'Instrumento',
+};
+
 
 export default function Praticar() {
   const profile = useStore(s => s.profile);
-  const [withInst, setWithInst] = useState(false);
+  const [contexto, setContexto] = useState<Contexto>(lerContexto);
+  const [podeCantar, setPodeCantar] = useState(lerCantar);
+  const trocarContexto = (c: Contexto) => { setContexto(c); guardar(CTX_KEY, c); };
+  const trocarCantar = (v: boolean) => { setPodeCantar(v); guardar(SING_KEY, String(v)); };
   const t = useT();
-  const { moduleById } = useContent();
+  const { moduleById, MODULES } = useContent();
+  const history = useStore(s => s.history);
+  const revisao = useRevisao();
   const rotinas = useRotinas();
   const [apagando, setApagando] = useState<string | null>(null);
   const naming = useNaming();
@@ -70,6 +94,23 @@ export default function Praticar() {
     navigate(`/rotina/${minha.id}`);
   };
 
+  /**
+   * O card de descoberta: **um**, fora das rotinas, com o motivo explícito. **Não é sorteio** (F3-3).
+   *
+   * A regra é determinística e verificável: o primeiro módulo em que a pessoa **nunca** abriu nada,
+   * e nele o primeiro item publicado que cabe no contexto de agora. Sem histórico naquele módulo não
+   * há o que afirmar além de "você nunca abriu" — que é exatamente o que o texto diz, e nada mais.
+   * Quando todos os módulos têm histórico, o card **não aparece**: inventar um motivo seria pior que
+   * não sugerir nada.
+   */
+  const descoberta = useMemo(() => {
+    const praticados = new Set(history.map(h => h.module));
+    const modulo = MODULES.find(m => !praticados.has(m.id));
+    if (!modulo) return null;
+    const item = EXERCISES.find(i => i.primaryModule === modulo.id && visivel(i.publicacao, revisao) && cabeNoContexto(i, contexto, podeCantar));
+    return item ? { item, modulo } : null;
+  }, [history, MODULES, revisao, contexto, podeCantar]);
+
   const hour = new Date().getHours();
   const hello = hour < 12 ? 'home.helloMorning' : hour < 19 ? 'home.helloAfternoon' : 'home.helloEvening';
 
@@ -77,16 +118,19 @@ export default function Praticar() {
   // que dá para fazer agora, e é avisada do que ficou escondido.
   // Rascunho some da rotina de quem não está em modo de revisão (decisão 91) — e some ANTES do filtro
   // de contexto, para não ser contado como "escondido porque pede o instrumento", que não é verdade.
-  const revisao = useRevisao();
   // As rotinas do time passam pelo MESMO portão dos itens (decisão 91): as cinco são rascunho até o
   // Paulo revisá-las, e rascunho não aparece para quem usa.
   const doTime = rotinasDoTime(t).filter((_, n) => visivel(ROTINAS_DO_TIME[n].publicacao, revisao));
   const publicada = (itemId: string) => { const it = itemById[itemId]; return !!it && visivel(it.publicacao, revisao); };
   const etapasDe = (r: (typeof rotinas)[number]) => r.etapas.filter(e => publicada(e.instancias[0].itemId));
-  const cabe = (itemId: string) => publicada(itemId) && (withInst || itemById[itemId]!.mobile);
-  const totalEtapas = rotinas.reduce((n, r) => n + etapasDe(r).length, 0);
-  const visiveis = rotinas.reduce((n, r) => n + etapasDe(r).filter(e => cabe(e.instancias[0].itemId)).length, 0);
-  const escondidas = totalEtapas - visiveis;
+  const cabe = (itemId: string) => publicada(itemId) && cabeNoContexto(itemById[itemId]!, contexto, podeCantar);
+  /** Por que esta etapa não cabe aqui — a tela diz o motivo em vez de só esconder (F3-3). */
+  const motivo = (itemId: string) => {
+    const it = itemById[itemId];
+    if (!it) return null;
+    const q = porQueNaoCabe(it, contexto, podeCantar);
+    return q ? t(`home.why${q.charAt(0).toUpperCase()}${q.slice(1)}` as never) : null;
+  };
 
   return (
     <div className="praticar">
@@ -96,9 +140,14 @@ export default function Praticar() {
           <p className="eyebrow">{t('nav.practice')}</p>
           <h1>{t(hello)}{profile.name ? `, ${profile.name}` : ''}</h1>
           <p className="hero-sub">{t('home.pickContext')}</p>
-          <div className="row" role="group" aria-label={t('home.context')}>
-            <Chip on={!withInst} onClick={() => setWithInst(false)}>{t('home.noInstrument')}</Chip>
-            <Chip on={withInst} onClick={() => setWithInst(true)}>{t('home.withInstrument')}</Chip>
+          <div className="row" role="group" aria-label={t('home.context')} style={{ flexWrap: 'wrap' }}>
+            {CONTEXTOS.map(c => (
+              <Chip key={c} on={contexto === c} title={t(`home.ctx${nomeDoContexto[c]}Hint` as never)} onClick={() => trocarContexto(c)}>
+                {t(`home.ctx${nomeDoContexto[c]}` as never)}
+              </Chip>
+            ))}
+            {/* "Posso cantar" é ortogonal aos quatro: libera o que exige voz em qualquer um deles. */}
+            <Chip on={podeCantar} onClick={() => trocarCantar(!podeCantar)}>{t('home.canSing')}</Chip>
           </div>
         </div>
       </section>
@@ -139,10 +188,10 @@ export default function Praticar() {
                 {etapasDe(r).length === 0 ? (
                   <p className="muted" style={{ margin: 0 }}>{t('routines.emptyRoutine')}</p>
                 ) : etapasDe(r).every(e => !cabe(e.instancias[0].itemId)) ? (
-                  <p className="muted" style={{ margin: 0 }}>{t('home.noneFitText')}</p>
+                  <p className="muted" style={{ margin: 0 }}>{t('home.noneFitHere', { ctx: t(`home.ctx${nomeDoContexto[contexto]}` as never) })}</p>
                 ) : (
                   <div className="grid cards">
-                    {etapasDe(r).filter(e => cabe(e.instancias[0].itemId)).map(e => {
+                    {etapasDe(r).map(e => {
                       // Uma etapa pode ter várias instâncias (ela cicla); o botão de salvar só cria
                       // com uma. Mostra a primeira e conta as outras, para nada sumir em silêncio.
                       const item = itemById[e.instancias[0].itemId];
@@ -150,14 +199,17 @@ export default function Praticar() {
                       // A linha diz O QUE varia, nunca um valor que mudaria a cada execução: mostrar a
                       // tonalidade da primeira variante mentiria em duas de três execuções.
                       const { titulo, detalhe } = resumoDaEtapa(e.instancias, id => itemById[id], ctx);
+                      // Etapa que não cabe aparece ESMAECIDA COM O MOTIVO, nunca escondida (F3-3):
+                      // esconder faria a rotina parecer menor do que é, e sem explicar por quê.
+                      const naoCabe = motivo(e.instancias[0].itemId);
                       return (
                         <div key={e.id} className="card-wrap">
-                          <button type="button" className="ex-card" style={{ textAlign: 'left', border: 0, font: 'inherit', cursor: 'pointer' }}
+                          <button type="button" className="ex-card" style={{ textAlign: 'left', border: 0, font: 'inherit', cursor: 'pointer', opacity: naoCabe ? 0.45 : 1 }}
                             onClick={() => abrirEtapa(r, e)}>
                             <span className="acc" style={{ background: moduleById[item.primaryModule].color }} />
                             <span className="ex-card-text">
                               <b>{titulo}</b>
-                              <small>{detalhe || moduleById[item.primaryModule].name}</small>
+                              <small>{naoCabe ?? (detalhe || moduleById[item.primaryModule].name)}</small>
                             </span>
                           </button>
                           <button type="button" className="card-x" onClick={() => gravarRotinas(removerEtapa(rotinas, r.id, e.id))}
@@ -177,6 +229,20 @@ export default function Praticar() {
         <div className="row" style={{ padding: '0 var(--gutter)' }}>
           <Btn small tone="ghost" onClick={criarVazia}>{t('routines.create')}</Btn>
         </div>
+      )}
+
+      {descoberta && (
+        <section className="sec">
+          <SecTitle>{t('home.discoverTitle')}</SecTitle>
+          <div className="panel" style={{ display: 'grid', gap: 10 }}>
+            <b>{itemText(t, descoberta.item.id, 'title')}</b>
+            <p className="muted" style={{ margin: 0 }}>{itemText(t, descoberta.item.id, 'desc')}</p>
+            <small className="muted">{t('home.discoverWhy', { area: descoberta.modulo.name })}</small>
+            <div className="row">
+              <Btn small tone="ghost" to={`/catalogo/${descoberta.item.id}`}>{t('home.discoverAdd')}</Btn>
+            </div>
+          </div>
+        </section>
       )}
 
       {rotinas.length === 0 && (
@@ -224,9 +290,6 @@ export default function Praticar() {
         </section>
       )}
 
-      {escondidas > 0 && visiveis > 0 && (
-        <p className="muted note-line">{t('home.hiddenByContext', { count: escondidas })}</p>
-      )}
     </div>
   );
 }

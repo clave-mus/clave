@@ -74,14 +74,25 @@ que parecia.
 
 ---
 
-## F1-3 · Áreas, objetivos e contextos ⚠️ *parcialmente absorvida pela FM-3 em 03/11/2026*
+## F1-3 · Áreas, objetivos e contextos ✅ *fechada em 04/11/2026*
 
 **Decisões de origem:** 19, 20. **Depende de:** F1-1.
 
-> **O que já foi feito, pela [FM-3](FM-motores.md):** a classificação virou **objeto × tarefa**
-> (decisão 40), que é melhor que `areas[]` e a substitui; `fitsContext` existe como
-> `cabeNoContexto`, em `src/catalog/context.ts`. **O que resta aqui é só `goals[]`** — e ele
-> depende dos textos das oito portas (`A4`).
+> **Feito em três pedaços, e não como o enunciado pedia.** A classificação virou **objeto × tarefa**
+> (decisão 40, pela `FM-3`), que é melhor que `areas[]` e a substitui. `fitsContext` existe como
+> `cabeNoContexto`, em `src/catalog/context.ts`. E os objetivos entraram como as **oito portas**
+> (`D2`), em `src/catalog/portas.ts`.
+>
+> **Uma diferença que vale saber:** o enunciado pedia um campo `goals: GoalId[]` **em cada item**. O
+> que existe é o inverso — **a porta declara os seus itens**. Mesma informação, duas vantagens: a
+> lista de uma porta se lê de uma vez (em vez de caçar 31 declarações), e `portas.ts` não precisa
+> importar o catálogo, o que evita um ciclo de import com o estado guardado. `portasDoItem(id)` dá a
+> volta quando se precisa do outro lado.
+>
+> **Os cinco contextos estão na tela** (04/11): os quatro mais o marcador *Posso cantar*, lembrados
+> neste navegador, e **a etapa que não cabe aparece esmaecida com o motivo** em vez de escondida.
+> `de bolso` e `em silêncio` seguem apertados — 4 e 6 itens —, e há teste que registra isso para o
+> número não mudar sem ninguém ver.
 
 - `primaryModule: ModuleId` vira **`areas: AreaId[]`** — plural. Acaba a regra de "uma localização
   principal".

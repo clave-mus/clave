@@ -104,7 +104,7 @@ reposiciona. Era o caminho mais fácil de deixar um "falhar em silêncio" no có
 
 ---
 
-## F3-3 · Executor, modo livre, e a aba Praticar — *o executor feito em 03/11/2026; a aba, em parte*
+## F3-3 · Executor, modo livre, e a aba Praticar ✅ *feita em 03–04/11/2026*
 
 **Decisões de origem:** 4, 20b. **Depende de:** F3-1, F0-4.
 
@@ -140,12 +140,15 @@ barra e sem tempo somado** — as três sugerem ordem e progresso, que é o que 
 (`P4` em [decisoes-provisorias.md](../decisoes-provisorias.md)). `praticou()` é verdade com um segundo
 real de prática, e **não compara com o total**: não existe "você deixou 3 etapas por fazer".
 
-**Falta da aba Praticar**, e nenhuma das três é do executor:
+**Feito: a aba Praticar** (04/11). Os **cinco contextos** estão lá — os quatro mais o marcador *Posso
+cantar*, que é ortogonal —, lembrados neste navegador. A **etapa que não cabe aparece esmaecida com o
+motivo** ("pede o instrumento", "tem som") em vez de escondida: esconder faria a rotina parecer menor
+do que é, e sem dizer por quê.
 
-- **Os cinco contextos** (De bolso · No ônibus · Em silêncio · Com o instrumento + *Posso cantar*).
-  Hoje são dois, porque o catálogo ainda declara `mobile: boolean` em vez de requisitos — é a `F1-3`.
-- **Rotina esmaecida com o motivo** em vez de etapas filtradas uma a uma.
-- **O card de descoberta** no rodapé, com motivo explícito.
+**O card de descoberta** entrou com uma regra determinística, que é o que "não é sorteio" exige: o
+**primeiro módulo em que a pessoa nunca abriu nada**, e nele o primeiro item publicado que cabe no
+contexto de agora. Quando todos os módulos têm histórico, **o card não aparece** — inventar um motivo
+seria pior que não sugerir nada.
 
 ---
 
