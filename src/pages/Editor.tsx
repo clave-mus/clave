@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { itemById, ITEMS } from '../catalog';
 import { companheirosDe } from '../catalog/grupos';
+import { cabeNoLink, linkDaRotina } from '../routines/share';
 import { useGlobalParams } from '../catalog/params';
 import { estadoDe, visivel } from '../catalog/publicacao';
 import { REGIOES } from '../catalog/regioes';
@@ -29,7 +30,7 @@ import { keyName } from '../theory/core';
 import { Btn, Chip, SecTitle } from '../components/ui';
 import { useContent } from '../data/localized';
 import { MODULE_LIST } from '../data/modules';
-import { useRevisao } from '../state/store';
+import { useRevisao, useStore } from '../state/store';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
 import NotFound from './NotFound';
 
@@ -58,7 +59,31 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
   const [escolhendo, setEscolhendo] = useState<{ etapaId: string | null } | null>(null);
   const [apagando, setApagando] = useState(false);
 
+  const perfil = useStore(x => x.profile);
   const grava = (rs: Rotina[]) => gravarRotinas(rs);
+
+  /**
+   * Compartilhar: copia um link com a rotina dentro (decisão 23).
+   *
+   * Não cria nada no servidor — a rotina viaja no próprio link. O limite de tamanho não é técnico: é
+   * que link que quebra em duas linhas numa mensagem quebra na prática, e aí a tela diz isso em vez
+   * de gerar um link que não funciona.
+   */
+  const [compartilhado, setCompartilhado] = useState<string | null>(null);
+  const compartilhar = async () => {
+    const origem = window.location.origin;
+    if (!cabeNoLink(rotina, origem)) { setCompartilhado(t('routines.shareTooBig')); return; }
+    const url = linkDaRotina(rotina, origem, perfil.name || undefined);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCompartilhado(t('routines.shareCopied'));
+    } catch {
+      // sem permissão de área de transferência: cai na partilha do sistema, e se não houver, mostra o link
+      if (navigator.share) { try { await navigator.share({ url }); return; } catch { /* a pessoa cancelou */ } }
+      setCompartilhado(url);
+    }
+    window.setTimeout(() => setCompartilhado(null), 4000);
+  };
   const podeVer = (itemId: string) => visivel(itemById[itemId]?.publicacao, revisao);
   const total = tempoTotal(rotina);
 
@@ -84,6 +109,9 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
         <Link to="/" className="eyebrow" style={{ textDecoration: 'none' }}>{t('editor.back')}</Link>
         <div className="row">
           {rotina.etapas.length > 0 && <Btn small tone="ghost" to={`/rotina/${rotina.id}/fazer`}>{t('session.start')}</Btn>}
+          {rotina.etapas.length > 0 && (
+            <Btn small tone="ghost" onClick={compartilhar}>{compartilhado ?? t('routines.share')}</Btn>
+          )}
           <Btn small to="/">{t('editor.done')}</Btn>
         </div>
       </div>

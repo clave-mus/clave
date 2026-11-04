@@ -283,7 +283,7 @@ aparecem e se adotam, mas ainda **não executam**.
 
 ---
 
-## F3-7 · Compartilhar por link
+## F3-7 · Compartilhar por link ✅ *feita em 04/11/2026*
 
 **Decisão de origem:** 23. **Depende de:** F3-1. **Pode ir em paralelo com F3-5.**
 
@@ -302,6 +302,34 @@ com uma cópia que ela pode editar.
 **Não faça:** nenhuma listagem, nenhum perfil, nenhuma busca, nenhum comentário. O momento em que
 o Clave publica texto de usuário onde outro usuário lê, ele herda moderação, denúncia, termos de
 uso, LGPD e ECA — e isso é a decisão 23 inteira, não um detalhe.
+
+**Feito.** `src/routines/share.ts` (17 testes) e `src/pages/Recebida.tsx`, na rota `/r/:dados`.
+Conferido de ponta a ponta no navegador: compartilhar → abrir o link → ver o que a rotina tem →
+adotar → cópia com crédito à origem, aberta no editor.
+
+**A rotina viaja DENTRO do link, e não no Supabase.** A tarefa deixava as duas portas abertas; esta é
+a que mantém a decisão 23 inteira sem esforço — **não há servidor envolvido, nada para moderar e nada
+para apagar**, e receber não pede conta porque não há o que consultar. A alternativa (guardar e pôr o
+id no link) só entra se alguém quiser compartilhar rotina de trinta etapas, e aí a resposta provável é
+"não".
+
+**O que NÃO viaja, e é a parte que importa:** id, `ultimaUsada`, tempo praticado, posição e visitas da
+rotação, e a marca `doTime`. Tudo isso é de quem mandou — se o id viajasse, duas pessoas ficariam com
+a mesma rotina, e o rodízio de uma avançaria de onde o da outra parou.
+
+**Três decisões pequenas dentro da implementação:**
+
+1. **Chaves curtas na serialização** (`n`, `m`, `p`) e base64url sem `+`, `/` e `=` — os três viram
+   outra coisa quando um aplicativo de mensagem "ajuda" com a URL. Uma rotina real dá um link de menos
+   de 400 caracteres.
+2. **`LIMITE_DO_LINK = 2000` não é regra de protocolo**, é prática: URL aguenta muito mais, mas link
+   que quebra em duas linhas no WhatsApp quebra de verdade. Passando disso, a tela **diz** em vez de
+   gerar um link que não funciona.
+3. **Item que este Clave não conhece: avisa e MANTÉM a etapa.** Tirar em silêncio faria a cópia ser
+   diferente do que a outra pessoa montou, sem dizer isso a ninguém.
+
+**E `doLink` devolve `null` como caminho normal, não como exceção** — ele recebe texto de fora do app
+(link truncado, colagem pela metade, versão mais nova), e metade dos testes é sobre isso.
 
 ---
 
