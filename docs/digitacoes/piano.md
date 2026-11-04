@@ -14,8 +14,8 @@ piano é convenção, e não há enumeração a fazer porque não há escolha ge
 
 **Uma oitava, ascendente.** Descendo é a mesma sequência ao contrário.
 
-**A coluna de confiança é a parte importante deste documento.** Ela diz onde eu tenho certeza e
-onde as edições divergem, e é o que diz ao Bernardo onde gastar o tempo dele:
+**A coluna de confiança é a parte importante deste documento.** Ela diz onde a fonte é única e onde as
+edições divergem — e, sem um pianista para desempatar, é ela que diz o que a tabela pode afirmar:
 
 | | |
 |---|---|
@@ -111,8 +111,10 @@ Ela sobe para ✅.
 Conferido uma a uma nessas sete: em Lá menor harmônica o Sol♯ recebe o 4; em Dó menor harmônica o Si
 recebe o 4; em Fá menor harmônica o Mi recebe o 3. Nenhuma viola a regra do polegar.
 
-**Não vale para as ❓ nem necessariamente para as 🟡** — quando essas três forem preenchidas, confira
-a harmônica e a melódica junto, não por herança.
+**Falta conferir nas cinco que eram ❓ ou 🟡.** Agora que as cinco estão ✅, a herança precisa ser
+verificada nelas também — nota por nota, não por analogia. Em Sol♯ menor harmônica, por exemplo, a 7ª
+elevada é **Fá♯♯ (= Sol natural, tecla branca)**, e isso pode deslocar o polegar: é exatamente o tipo
+de caso que a regra de herança não cobre.
 
 ---
 
