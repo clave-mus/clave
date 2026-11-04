@@ -654,6 +654,7 @@ const en: Shape<typeof pt> = {
     rhythmScore: 'Rhythm score: {bars} bars in {meter}',
   },
   exercises: {
+    'teoria-intervalos': { title: 'Intervals in words', desc: 'Name the interval between two notes, and its inversion — no staff, no sound.' },
     'teoria-graus': { title: 'Degrees and modes', desc: 'Name the degree of a note in the key, and tell the modes apart.' },
     'teoria-acordes': { title: 'Chord construction', desc: 'Say which notes a chord is built from.' },
     'teoria-campo': { title: 'Diatonic chords', desc: 'Say which chord falls on each degree of the key.' },
@@ -690,6 +691,10 @@ const en: Shape<typeof pt> = {
     improvise: 'Improvise over the harmony',
   },
   settings: {
+    topicEnharmonic: 'Enharmonics (same key, two names)',
+    topicSignature: 'Which accidentals each key has',
+    topicNamedInterval: 'Interval between two notes, and inversion',
+    topicMinorField: 'Diatonic chords in minor',
     ask: 'What the question asks for',
     askNote: 'The note by name',
     askInterval: 'The interval from a note',
@@ -752,6 +757,11 @@ const en: Shape<typeof pt> = {
     rhythmValues: 'Note values',
   },
   quiz: {
+    enharmonicOf: 'Which note is the same key as {note}?',
+    signatureOf: 'Which accidentals does {key} have, in order?',
+    intervalFromTo: 'From {a} up to {b}, what interval is it?',
+    inversionOf: 'What is the inversion of the {interval}?',
+    minorFieldDegree: 'In {note} {mode}, which chord falls on degree {roman}?',
     tapInterval: 'Play the {interval} above {note}',
     tapIntervalFrom: 'Play the {interval} above the marked note',
     writeInterval: 'Write the {interval} above {note}',

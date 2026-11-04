@@ -16,6 +16,7 @@ import { teoriaGraus } from './items/teoria-graus';
 import { teoriaAcordes } from './items/teoria-acordes';
 import { teoriaCampo } from './items/teoria-campo';
 import { teoriaTonalidades } from './items/teoria-tonalidades';
+import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
@@ -35,6 +36,7 @@ export const EXERCISES: CatalogItem[] = [
   teoriaAcordes,
   teoriaCampo,
   teoriaTonalidades,
+  teoriaIntervalos,
   ouvidoTecla,
   ouvidoIntervalo,
   ouvidoAcorde,

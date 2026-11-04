@@ -1,4 +1,4 @@
-import { theoryQuestion } from '../helpers';
+import { TEMAS, arr, pick, theoryQuestion } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
 
@@ -10,6 +10,7 @@ export const teoriaTonalidades: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],
   publicacao: LEGADO,
-  settings: () => [], defaults: {},
-  make(_s, ctx) { return theoryQuestion('tonalidades', ctx); },
+  settings: ctx => [TEMAS(ctx, ['tonalidades', 'armadura', 'enarmonia'])],
+  defaults: { temas: ['tonalidades', 'armadura', 'enarmonia'] },
+  make(s, ctx) { return theoryQuestion(pick(arr(s.temas, ['tonalidades'])), ctx); },
 };

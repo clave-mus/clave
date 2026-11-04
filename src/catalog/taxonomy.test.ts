@@ -14,7 +14,7 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 const STABLE_IDS = [
   'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse',
   'pauta-armadura', 'pauta-escala',
-  'teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades',
+  'teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'teoria-intervalos',
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
 ];
 

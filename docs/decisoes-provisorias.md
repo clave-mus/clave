@@ -202,3 +202,37 @@ parte do público; *Acompanhamento* é o mais perto de "backing" e por isso herd
 ferramenta de harmonia"), e o nome do gênero "Improviso sobre backing track".
 
 **Reverter custa:** quatro linhas de texto, nos dois idiomas.
+
+## P11 · Quatro tópicos novos de teoria em texto, e dois recusados
+
+**O que eu decidi:** quatro tópicos novos para a rotina *Teoria no silêncio*, a pedido do Paulo
+(*"será que você não conseguiria pensar em mais questões? faça uma pesquisa em sites como
+musictheory.net e seja criativo"*), mais um item novo para abrigar um deles.
+
+**O que a pesquisa achou, e é a parte útil:** o que o musictheory.net tem de **exercício** o Clave já
+tem quase todo — identificar e construir nota, armadura, intervalo, escala e acorde, nas três
+superfícies, mais treino de ouvido. O que falta está nas **aulas** deles, não nos exercícios.
+
+**A regra que escolheu os quatro: resposta única e calculável.**
+
+| Tópico | Onde entrou | Por que vale |
+|---|---|---|
+| **Enarmonia** | `teoria-tonalidades` | é o buraco mais prático para quem toca corda: `braco-*` responde por **classe de altura** e nunca cobra a grafia. Inclui os casos de tecla branca (Mi/Fá♭, Si/Dó♭, Fá/Mi♯, Dó/Si♯), que são os que parecem erro e não são |
+| **Quais acidentes tem a tonalidade** | `teoria-tonalidades` | o inverso do que existia (*quantos* acidentes). É o que faz a ordem dos acidentes virar útil em vez de decorada |
+| **Intervalo entre duas notas, e a inversão** | **`teoria-intervalos`**, item novo | **intervalo em silêncio não tinha onde morar**: `que-intervalo-e-esse` precisa de tela e `ouvido-intervalo` precisa de som |
+| **Campo harmônico menor** | `teoria-campo` | o `campo` só cobria **maior**, e os campos menores são metade da harmonia que essa gente toca. `harmonicField` já sabia os quatro modos — era só perguntar |
+
+**Dobrados ficaram fora da enarmonia:** aparecem em música real, mas numa múltipla escolha viram
+pegadinha.
+
+**Os dois que eu recusei, e o motivo é o mesmo:**
+
+- **Função harmônica** (*"o IIm7 é tônica, subdominante ou dominante?"*)
+- **Nome de cadência** (*"V–I é que cadência?"*)
+
+Os dois **divergem entre tradições** — "perfeita", "autêntica" e "completa" nomeiam coisas diferentes
+em escolas diferentes, e a função do II varia com quem ensina. **Item ambíguo não pode gerar "erro do
+usuário"** (decisão 13), e um teste trava que nenhum tópico chamado `funcao` ou `cadencia` entre.
+
+**Reverter custa:** apagar cada bloco de `theoryQuestion` e tirar o tópico da lista do item. O item
+novo (`teoria-intervalos`) tem migração nenhuma a desfazer — ele nasceu agora.

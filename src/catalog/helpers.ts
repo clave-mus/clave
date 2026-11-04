@@ -176,8 +176,14 @@ export function paresNoBraco(tuning: readonly number[]) {
  * uma lista com uma opção é um controle que não controla nada, e esconder a única configuração do item
  * deixaria o botão "Personalizar" abrindo o vazio.
  */
-export const TOPICOS = { graus: 'settings.topicDegrees', modos: 'settings.topicModes', acordes: 'settings.topicChords',
-  campo: 'settings.topicField', tonalidades: 'settings.topicKeys', sub5: 'settings.topicSub5' } as const;
+export const TOPICOS = {
+  graus: 'settings.topicDegrees', modos: 'settings.topicModes', acordes: 'settings.topicChords',
+  campo: 'settings.topicField', tonalidades: 'settings.topicKeys', sub5: 'settings.topicSub5',
+  // 04/11: os quatro novos. A regra que os escolheu é **resposta única e calculável** — ver
+  // `theoryQuestion`, onde está escrito o que ficou de fora e por quê.
+  enarmonia: 'settings.topicEnharmonic', armadura: 'settings.topicSignature',
+  'intervalo-nomeado': 'settings.topicNamedInterval', 'campo-menor': 'settings.topicMinorField',
+} as const;
 export type TopicoId = keyof typeof TOPICOS;
 export const TEMAS = ({ t }: Ctx, quais: TopicoId[]): Setting => ({
   id: 'temas', label: t('settings.topics'), type: 'multi',
@@ -289,6 +295,38 @@ export const plain = (o: string): ChoiceOption => ({ id: o, label: o });
 // =====================================================================
 // Cada frase é uma mensagem com lacunas (quiz.* em src/i18n); o que muda de forma conforme o
 // idioma — ordinais, nomes de intervalo, plural de acidentes — vem de src/theory/names.ts.
+/**
+ * Os pares enarmônicos que valem perguntar.
+ *
+ * As cinco teclas pretas, onde as duas grafias são correntes, **mais** os quatro casos de tecla branca
+ * (Mi/Fá♭, Si/Dó♭, Fá/Mi♯, Dó/Si♯) — que são os que confundem de verdade, porque parecem erro e não são.
+ * Dobrados ficam fora: aparecem em música real, mas numa pergunta de múltipla escolha viram pegadinha.
+ */
+export const ENARMONIAS: [Note, Note][] = [
+  [note(0, 1), note(1, -1)], // Dó♯ / Ré♭
+  [note(1, 1), note(2, -1)], // Ré♯ / Mi♭
+  [note(3, 1), note(4, -1)], // Fá♯ / Sol♭
+  [note(4, 1), note(5, -1)], // Sol♯ / Lá♭
+  [note(5, 1), note(6, -1)], // Lá♯ / Si♭
+  [note(2), note(3, -1)],    // Mi / Fá♭
+  [note(6), note(0, -1)],    // Si / Dó♭
+  [note(3), note(2, 1)],     // Fá / Mi♯
+  [note(0), note(6, 1)],     // Dó / Si♯
+];
+
+/** A ordem dos sustenidos (Fá Dó Sol Ré Lá Mi Si) e dos bemóis (Si Mi Lá Ré Sol Dó Fá), por letra. */
+const ORDEM_SUSTENIDOS = [3, 0, 4, 1, 5, 2, 6];
+const ORDEM_BEMOIS = [6, 2, 5, 1, 4, 0, 3];
+
+/** Quais acidentes a armadura de `f` quintas tem, **na ordem**. */
+export function acidentesDaArmadura(f: number): Note[] {
+  const ordem = f > 0 ? ORDEM_SUSTENIDOS : ORDEM_BEMOIS;
+  return ordem.slice(0, Math.abs(f)).map(letra => note(letra, f > 0 ? 1 : -1));
+}
+
+/** Como a qualidade de um intervalo se inverte: maior↔menor, aumentado↔diminuto, justo fica. */
+export const INVERTE: Record<Quality, Quality> = { M: 'm', m: 'M', A: 'd', d: 'A', J: 'J' };
+
 export function theoryQuestion(topic: string, ctx: Ctx): Question {
   const { t, conv } = ctx;
   const nm = (n: Pick<Note, 'letter' | 'acc'>) => noteName(n, ctx.naming);
@@ -347,6 +385,74 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
     const pool = ['♭2', '2', '♭3', '3', '4', '♯4', '♭5', '5', '♭6', '6', '♭7', '7'];
     return text(t('quiz.modeDiff', { a: modeName(a), b: modeName(b) }), optionsWith(ans, pool, 5), ans);
   }
+  // ---------------------------------------------------------------------------------------------
+  // Os quatro tópicos novos (04/11/2026). A regra que os escolheu: **resposta única e calculável**.
+  // Função harmônica e nome de cadência ficaram FORA — divergem entre tradições, e item ambíguo não
+  // pode gerar "erro do usuário" (decisão 13).
+  // ---------------------------------------------------------------------------------------------
+
+  if (topic === 'enarmonia') {
+    // A mesma tecla com dois nomes. É o buraco mais prático do catálogo para quem toca instrumento de
+    // corda: `braco-*` responde por CLASSE DE ALTURA e nunca cobra a grafia.
+    const [a, b] = pick(ENARMONIAS);
+    const certa = Math.random() < 0.5;
+    const [alvo, resposta] = certa ? [a, b] : [b, a];
+    // As distratoras: notas a um semitom de distância e a grafia "óbvia e errada" (mesma letra).
+    const pool = ENARMONIAS.flatMap(([x, y]) => [nm(x), nm(y)])
+      .filter(x => x !== nm(resposta) && x !== nm(alvo));
+    return text(t('quiz.enharmonicOf', { note: nm(alvo) }), optionsWith(nm(resposta), [...new Set(pool)], 6), nm(resposta));
+  }
+
+  if (topic === 'armadura') {
+    // O inverso do que já existia: `tonalidades` pergunta quantos acidentes tem a tonalidade; isto
+    // pergunta **quais**, na ordem. É a pergunta que faz a ordem dos acidentes virar útil em vez de
+    // decorada.
+    const f = pick(keyPool.filter(x => x !== 0));
+    const lista = acidentesDaArmadura(f).map(n => nm(n)).join(' ');
+    const erradas = new Set<string>();
+    for (const g of shuffle(keyPool.filter(x => x !== 0 && x !== f))) {
+      if (erradas.size >= 4) break;
+      const outra = acidentesDaArmadura(g).map(n => nm(n)).join(' ');
+      if (outra !== lista) erradas.add(outra);
+    }
+    return text(t('quiz.signatureOf', { key: major(majorTonic(f)) }), shuffle([lista, ...erradas]), lista, lista, true);
+  }
+
+  if (topic === 'intervalo-nomeado') {
+    const a = pick(ROOTS);
+    if (Math.random() < 0.5) {
+      // De uma nota a outra, **sem pauta e sem som**: é a única forma de cobrar intervalo em silêncio
+      // e sem olhar notação.
+      const iv = pick(INTERVALS);
+      const b = transpose({ ...a, oct: 4 }, { num: iv.num, semis: semisFor(iv.num, iv.q) });
+      if (Math.abs(b.acc) > 1) return theoryQuestion('intervalo-nomeado', ctx);
+      const ans = ivLabel(iv.id, ctx);
+      const pool = INTERVALS.map(x => ivLabel(x.id, ctx)).filter(x => x !== ans);
+      return text(t('quiz.intervalFromTo', { a: nm(a), b: nm(b) }), optionsWith(ans, pool, 6), ans);
+    }
+    // A inversão: a terça maior inverte em sexta menor. Calculada, não tabelada.
+    const iv = pick(INTERVALS.filter(x => x.num > 1 && x.num < 8));
+    const inv = INTERVALS.find(x => x.num === 9 - iv.num && x.q === INVERTE[iv.q])!;
+    const ans = ivLabel(inv.id, ctx);
+    const pool = INTERVALS.map(x => ivLabel(x.id, ctx)).filter(x => x !== ans);
+    return text(t('quiz.inversionOf', { interval: ivLabel(iv.id, ctx) }), optionsWith(ans, pool, 6), ans);
+  }
+
+  if (topic === 'campo-menor') {
+    // O `campo` só cobria MAIOR. Os campos menores (natural e harmônica) são metade da harmonia que
+    // esta gente toca, e `harmonicField` já sabe os quatro modos — era só perguntar.
+    const modo = pick(['menor', 'menor-harmonica'] as const);
+    const tonic = pick(ROOTS);
+    const field = harmonicField(tonic, modo, Math.random() < 0.5, conv);
+    const d = pick(field);
+    const outros = harmonicField(tonic, modo === 'menor' ? 'menor-harmonica' : 'menor', true, conv);
+    const pool = [...field.map(x => x.symbol), ...outros.map(x => x.symbol)];
+    return chordText(
+      t('quiz.minorFieldDegree', { note: nm(tonic), mode: t(`theory.scales.${modo}` as MessageKey), roman: d.roman }),
+      optionsWith(d.symbol, [...new Set(pool)], 6), chordExpected(d.root, d.chord), d.symbol,
+    );
+  }
+
   if (topic === 'acordes') {
     const root = pick(ROOTS);
     const type = pick(['maior', 'menor', '7', 'm7', '7M', 'm7b5', 'dim'] as ChordId[]);

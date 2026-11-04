@@ -88,6 +88,8 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('teoria-campo')] },
       { porque: 'tonalidade, armadura e relativa, as três de uma vez',
         instancias: [i('teoria-tonalidades')] },
+      { porque: 'intervalo sem pauta e sem som: o único lugar do catálogo onde isso cabe',
+        instancias: [i('teoria-intervalos', { temas: ['intervalo-nomeado'] })] },
       { porque: 'reconhecer a armadura escrita, que é o mesmo assunto pela via da leitura',
         instancias: [i('pauta-armadura', { claves: ['sol', 'fa'], modo: 'ambos', max: '4' })] },
     ],

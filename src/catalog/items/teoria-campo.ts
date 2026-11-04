@@ -10,7 +10,7 @@ export const teoriaCampo: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],
   publicacao: LEGADO,
-  settings: ctx => [TEMAS(ctx, ['campo', 'sub5'])],
-  defaults: { temas: ['campo'] },
+  settings: ctx => [TEMAS(ctx, ['campo', 'campo-menor', 'sub5'])],
+  defaults: { temas: ['campo', 'campo-menor'] },
   make(s, ctx) { return theoryQuestion(pick(arr(s.temas, ['campo'])), ctx); },
 };

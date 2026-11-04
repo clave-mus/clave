@@ -655,6 +655,7 @@ const pt = {
   },
   // ---------------- conteúdo: exercícios, ferramentas e teoria ----------------
   exercises: {
+    'teoria-intervalos': { title: 'Intervalos em texto', desc: 'Nomeie o intervalo entre duas notas, e a inversão dele — sem pauta e sem som.' },
     'teoria-graus': { title: 'Graus e modos', desc: 'Diga o grau de uma nota na tonalidade, e qual modo é qual.' },
     'teoria-acordes': { title: 'Construção de acordes', desc: 'Diga de que notas um acorde é feito.' },
     'teoria-campo': { title: 'Campo harmônico', desc: 'Diga que acorde cai em cada grau da tonalidade.' },
@@ -691,6 +692,10 @@ const pt = {
     improvise: 'Improviso sobre a harmonia',
   },
   settings: {
+    topicEnharmonic: 'Enarmonia (a mesma tecla, dois nomes)',
+    topicSignature: 'Quais acidentes tem cada tonalidade',
+    topicNamedInterval: 'Intervalo entre duas notas, e inversão',
+    topicMinorField: 'Campo harmônico menor',
     ask: 'O que a pergunta pede',
     askNote: 'A nota pelo nome',
     askInterval: 'O intervalo a partir de uma nota',
@@ -753,6 +758,11 @@ const pt = {
     rhythmValues: 'Figuras',
   },
   quiz: {
+    enharmonicOf: 'Que nota é a mesma tecla que {note}?',
+    signatureOf: 'Quais são os acidentes de {key}, na ordem?',
+    intervalFromTo: 'De {a} a {b}, subindo, que intervalo é?',
+    inversionOf: 'Qual é a inversão da {interval}?',
+    minorFieldDegree: 'Em {note} {mode}, que acorde cai no grau {roman}?',
     tapInterval: 'Toque a {interval} acima de {note}',
     tapIntervalFrom: 'Toque a {interval} acima da nota marcada',
     writeInterval: 'Escreva a {interval} acima de {note}',

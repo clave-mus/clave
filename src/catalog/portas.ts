@@ -54,7 +54,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'teoria',
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
+    itens: ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'teoria-intervalos', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
