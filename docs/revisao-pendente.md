@@ -70,22 +70,27 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 | `teoria-no-silencio` | livre | 5 | se os cinco itens silenciosos dão uma rotina, ou se faltam assuntos |
 | `instrumento-na-rua` | livre | 6 | se as três superfícies na mesma rotina ajudam ou dispersam |
 | `ouvido-no-fone` | livre | 6 | os três rodízios (tríades→tétrades, escalas→modos) e se a ordem importa |
-| `braco-na-rua` | guiada, 25 min | 4 | se reconhecer antes de achar é a ordem certa, e as três regiões do rodízio |
-| `braco-com-instrumento` | guiada, 25 min | 3 | **a mais frágil das nove** — ver a nota abaixo |
+| `braco-na-rua` | guiada, 30 min | 5 | se reconhecer antes de achar é a ordem certa, as três regiões do rodízio, e se **identificar e construir intervalo** na mesma rotina é demais |
+| `braco-com-instrumento` | guiada, 29 min | 4 | agora abre com `no-instrumento`, que é a única etapa sobre **mapear** e não sobre tocar |
 | `internalizar-tonalidade` | guiada, 30 min, rotação | 5 | a ordem das cinco frentes, e se 12 tonalidades em quartas é o ciclo certo |
 | `aquecimento-ouvido` | guiada, 15 min | 4 | a dose: 15 min com os modos incluídos, 3 min para eles |
 | `leitura-diaria` | guiada, 15 min | 3 | separar altura de ritmo antes de juntar |
 
-> ⚠️ **`braco-com-instrumento` tem três etapas, e isso é um achado.** Os itens que exigem o instrumento
-> hoje são técnica, harmonia, drone e as cinco tarefas com metrônomo — e **nenhum deles pergunta uma
-> nota do braço**. Falta o exercício que pede para tocar a nota no instrumento de verdade, e ele é a
-> `F6-4`. Até lá, a rotina é sobre *tocar*, não sobre *mapear*.
+> **O achado que esta rotina expôs foi resolvido** em 04/11: `no-instrumento` existe e é a primeira
+> etapa dela. Era o único buraco óbvio do catálogo — todos os exercícios de braço aconteciam na tela, e
+> nenhum pedia para tocar no instrumento de verdade.
 
 ### Mãos livres (`F6-1`)
 
 | Id | O que só você confere |
 |---|---|
 | `maos-livres` | **o som e a voz.** A resposta é dita pela síntese de fala do navegador, e a voz varia muito entre aparelhos — em alguns Android a voz portuguesa não vem instalada (a tela avisa e repete o som em vez de dizer). Confira também se o **tempo de pensar** padrão (6 s) é razoável, e se as seis fontes — intervalos, acordes, escalas, modos, graus, notas — são as que valem num ciclo sem tela |
+
+### No instrumento (`F6-4`)
+
+| Id | O que só você confere |
+|---|---|
+| `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela a casa, e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira o **tempo de espera** padrão (8 s), se "ouvir a nota antes" ajuda ou entrega demais, e se mostrar **uma** posição na revelação é melhor que mostrar todas as casas daquela nota |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 

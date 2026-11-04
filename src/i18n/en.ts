@@ -93,7 +93,7 @@ const en: Shape<typeof pt> = {
     },
     bracoInst: {
       nome: 'Map the fretboard with your instrument',
-      sobre: 'Bass or guitar in hand: metronome patterns, playing inside the harmony, and tuning against a drone.',
+      sobre: 'Bass or guitar in hand: finding the note on the real neck, metronome patterns, playing inside the harmony, and tuning against a drone.',
     },
     tonalidade: {
       nome: 'Settle into a key',
@@ -130,6 +130,17 @@ const en: Shape<typeof pt> = {
     noObjects: 'Pick at least one thing to play.',
     noVoice: 'This device has no voice installed for your language. The answer will be played again instead of spoken.',
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
+  },
+  onInstrument: {
+    hint: 'Pick up your instrument. Clave shows the note, you find it and play it, then it shows where it was. The app does not hear you — you are the one who says how it went.',
+    wait: 'Time to find it and play it',
+    hearFirst: 'Hear the note first',
+    start: 'Start',
+    stop: 'Stop',
+    findIt: 'Find it and play it on your instrument.',
+    hereItIs: 'It was here. Check against where you played.',
+    showMe: 'Played it, show me',
+    count: '{n} so far',
   },
   review: {
     banner: 'Review mode: you are seeing drafts that nobody else sees.',
@@ -660,6 +671,7 @@ const en: Shape<typeof pt> = {
     'ritmo-ouvido': { title: 'Which rhythm is this?', desc: 'Hear one bar and pick the right notation. Feel free to tap along.' },
   },
   tools: {
+    'no-instrumento': { title: 'On your instrument', desc: 'Clave shows the note, you find it and play it on the real neck.' },
     'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },
     metronomo: { title: 'Metronome', desc: 'Pulse, time signature, subdivision and tap tempo.' },
     ambiente: { title: 'Sing and play', desc: 'Harmonic drone, metronome and a timer with a goal.' },
@@ -677,6 +689,9 @@ const en: Shape<typeof pt> = {
     improvise: 'Improvise over the harmony',
   },
   settings: {
+    ask: 'What the question asks for',
+    askNote: 'The note by name',
+    askInterval: 'The interval from a note',
     surface: 'Surface',
     surfaceStaff: 'Staff',
     surfaceKeyboard: 'Keyboard',
@@ -736,6 +751,9 @@ const en: Shape<typeof pt> = {
     rhythmValues: 'Note values',
   },
   quiz: {
+    tapInterval: 'Play the {interval} above {note}',
+    tapIntervalFrom: 'Play the {interval} above the marked note',
+    writeInterval: 'Write the {interval} above {note}',
     whatNote: 'What note is this?',
     writeNote: 'Write {note}',
     whichKeyMajor: 'Which major key?',

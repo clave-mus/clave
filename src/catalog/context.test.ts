@@ -115,7 +115,7 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
-    'maos-livres': 'ambiente', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
     // a "tarefa com metrônomo": cinco famílias, todas `tarefa` — terminam na autoavaliação
     'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'sustentar-e-cortar': 'tarefa',
     'legato-staccato': 'tarefa', 'deslocamento-ritmico': 'tarefa',

@@ -39,7 +39,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'ouvido-tecla'],
+    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',

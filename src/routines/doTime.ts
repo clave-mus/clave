@@ -164,8 +164,11 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
           i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }),
           i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-12' }),
         ] },
-      { minutos: 5, porque: 'distância entre duas casas: é o que transforma nota solta em desenho',
+      { minutos: 5, porque: 'identificar a distância entre duas casas: é o que transforma nota solta em desenho',
         instancias: [i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' })] },
+      // Identificar e CONSTRUIR são habilidades diferentes, e a segunda é a que serve para tocar.
+      { minutos: 5, porque: 'construir o intervalo: dada uma casa, achar a terça, a quinta e a sexta dela',
+        instancias: [i('ache-a-nota', { superficie: 'braco', pedido: 'intervalo', intervalos: ['M3', 'J5', 'M6'], instrumento: 'auto', casas: '0-12' })] },
       { minutos: 5, porque: 'desenho de acorde no braço, formas abertas',
         instancias: [i('que-acorde-e-esse', { superficie: 'braco', formas: 'abertos' })] },
     ],
@@ -173,13 +176,15 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   {
     id: 'braco-com-instrumento', nome: 'doTime.bracoInst.nome', sobre: 'doTime.bracoInst.sobre',
     modo: 'guiado', publicacao: RASCUNHO,
-    // ⚠️ **Só três etapas, e é um achado, não um descuido.** Os itens que exigem o instrumento hoje são
-    // técnica, harmonia, drone e as cinco tarefas com metrônomo — e nenhum deles PERGUNTA uma nota do
-    // braço. Falta o exercício que pede para tocar a nota no instrumento de verdade, e ele é a `F6-4`.
+    // O buraco que esta rotina expôs **foi fechado** em 04/11: `no-instrumento` é a primeira etapa, e é
+    // a única coisa no app que pede para tocar uma nota no braço de verdade. As outras três são sobre
+    // tocar; esta é sobre mapear, que é o nome da rotina.
     etapas: [
-      { minutos: 10, porque: 'a mão primeiro: padrões com metrônomo no braço, no andamento que der hoje',
+      { minutos: 8, porque: 'achar a nota no braço de verdade: é a única etapa em que a mão vai ao instrumento sem a tela mostrar antes',
+        instancias: [i('no-instrumento', { esperar: 8, ouvirAntes: true })] },
+      { minutos: 8, porque: 'a mão depois: padrões com metrônomo no braço, no andamento que der hoje',
         instancias: [i('tecnica')] },
-      { minutos: 10, porque: 'o braço dentro de uma tonalidade, com a harmonia rodando por baixo',
+      { minutos: 8, porque: 'o braço dentro de uma tonalidade, com a harmonia rodando por baixo',
         instancias: [i('backing')] },
       { minutos: 5, porque: 'drone e afinação: tocar contra uma nota fixa é o que afina o ouvido pelo braço',
         instancias: [i('ambiente')] },

@@ -132,6 +132,31 @@ Tudo como **parâmetro e modo** dos motores existentes sempre que possível (dec
 **Pronto quando:** o objetivo "dominar as notas no instrumento" tem conteúdo suficiente para
 sustentar a rotina "Mapear o braço do baixo" nas três durações (F3-6).
 
+**Andamento, 04/11/2026 — duas das seis linhas estão feitas, e as duas são as que não dependem de
+nada.**
+
+1. ✅ **"A partir de uma nota, localizar a terça, a quinta, a sexta"** entrou como **modo de
+   `ache-a-nota`**, não como item novo: `pedido: 'nota' | 'intervalo'`. Por isso herdou as três
+   superfícies de graça, e na **pauta** ele cobra a **grafia** do intervalo — onde uma segunda aumentada
+   e uma terça menor deixam de ser a mesma resposta, que é o que o braço não consegue cobrar.
+   *Identificar e construir são habilidades diferentes*: `que-intervalo-e-esse` pede a primeira, este
+   pede a segunda, e é a segunda que serve para tocar. 10 testes medem a resposta esperada contra a
+   nota de partida, pergunta por pergunta.
+2. ✅ **`no-instrumento`**, a `tarefa` que faltava: o app mostra a nota, você acha e toca **no braço de
+   verdade**, ele revela onde era, e termina na autoavaliação. Fecha o buraco que a rotina "Mapear o
+   braço com o instrumento" expôs — todos os exercícios de braço aconteciam na tela.
+   **O app não ouve, e isso define o desenho inteiro:** não há resposta a conferir, então o que ele
+   consegue afirmar é pouco e honesto (que a pessoa praticou, e o que ela achou de si). O braço só
+   aparece na revelação; mostrá-lo antes transformaria o exercício em copiar da tela.
+
+**O que falta, e por que está bloqueado:**
+
+- **Desenhos de tríade e tétrade por conjunto de cordas, com inversões** — é tabela de formas, e a
+  curadoria do que vale mostrar é 👤 (o Paulo no baixo, o Cavazzo na guitarra).
+- **Extensões de escala no braço** — depende do visualizador (`F6-3`).
+- **Modos gregos e as digitações possíveis no baixo** — depende da `FM-2`, que espera as 10 a 15
+  **formas** escritas à mão ([guias/formas.md](../guias/formas.md)).
+
 ---
 
 ## F6-5 · Rotinas de técnica viram item registrável

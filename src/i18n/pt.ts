@@ -93,7 +93,7 @@ const pt = {
     },
     bracoInst: {
       nome: 'Mapear o braço com o instrumento',
-      sobre: 'Com o baixo ou a guitarra na mão: padrões com metrônomo, tocar dentro da harmonia e afinar contra um drone.',
+      sobre: 'Com o baixo ou a guitarra na mão: achar a nota no braço de verdade, padrões com metrônomo, tocar dentro da harmonia e afinar contra um drone.',
     },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',
@@ -130,6 +130,17 @@ const pt = {
     noObjects: 'Escolha pelo menos uma coisa para tocar.',
     noVoice: 'Este aparelho não tem voz instalada para o seu idioma. A resposta vai ser tocada de novo, em vez de dita.',
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
+  },
+  onInstrument: {
+    hint: 'Pegue o instrumento. O Clave mostra a nota, você acha e toca, e depois ele mostra onde era. O app não ouve você — quem diz como foi é você.',
+    wait: 'Tempo para achar e tocar',
+    hearFirst: 'Ouvir a nota antes',
+    start: 'Começar',
+    stop: 'Parar',
+    findIt: 'Ache e toque no instrumento.',
+    hereItIs: 'Era aqui. Confira se era onde você tocou.',
+    showMe: 'Já toquei, mostre',
+    count: '{n} até agora',
   },
   review: {
     banner: 'Modo de revisão: você está vendo rascunhos, que ninguém mais vê.',
@@ -661,6 +672,7 @@ const pt = {
     'ritmo-ouvido': { title: 'Que ritmo é esse?', desc: 'Ouça um compasso e escolha a escrita certa. Dá para batucar junto.' },
   },
   tools: {
+    'no-instrumento': { title: 'No instrumento', desc: 'O Clave mostra a nota, você acha e toca no braço de verdade.' },
     'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
     metronomo: { title: 'Metrônomo', desc: 'Pulso, compasso, subdivisão e tap tempo.' },
     ambiente: { title: 'Solfejar e tocar', desc: 'Drone de contexto harmônico, metrônomo e cronômetro com meta.' },
@@ -678,6 +690,9 @@ const pt = {
     improvise: 'Improviso sobre a harmonia',
   },
   settings: {
+    ask: 'O que a pergunta pede',
+    askNote: 'A nota pelo nome',
+    askInterval: 'O intervalo a partir de uma nota',
     surface: 'Superfície',
     surfaceStaff: 'Pauta',
     surfaceKeyboard: 'Teclado',
@@ -737,6 +752,9 @@ const pt = {
     rhythmValues: 'Figuras',
   },
   quiz: {
+    tapInterval: 'Toque a {interval} acima de {note}',
+    tapIntervalFrom: 'Toque a {interval} acima da nota marcada',
+    writeInterval: 'Escreva a {interval} acima de {note}',
     whatNote: 'Que nota é essa?',
     writeNote: 'Escreva {note}',
     whichKeyMajor: 'Qual a tonalidade maior?',

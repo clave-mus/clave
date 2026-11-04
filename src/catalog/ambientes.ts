@@ -58,6 +58,24 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/MaosLivres'),
   },
   {
+    // F6-4. **Tarefa**, não série: o app não ouve, então não há resposta a conferir — ele mostra o
+    // alvo, espera, revela onde era, e termina na autoavaliação (decisões 5 e 37).
+    //
+    // Fecha o buraco que a rotina "Mapear o braço com o instrumento" expôs: todos os exercícios de
+    // braço acontecem na TELA, e nenhum pedia para tocar no instrumento de verdade.
+    id: 'no-instrumento', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
+    objetos: ['notas'], tarefas: ['tocar'],
+    primaryModule: 'theory', skillTags: ['fretboard.note_finding'],
+    contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
+    settings: ctx => [
+      { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
+      { id: 'ouvirAntes', label: ctx.t('onInstrument.hearFirst'), type: 'toggle' },
+    ],
+    defaults: { esperar: 8, ouvirAntes: true },
+    screen: () => import('../tools/NoInstrumento'),
+  },
+  {
     id: 'ambiente', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['escalas'], tarefas: ['cantar', 'tocar'],
