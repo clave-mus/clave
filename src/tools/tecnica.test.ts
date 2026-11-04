@@ -2,7 +2,7 @@
 // Os geradores têm o seu teste em theory/tecnica.test.ts; aqui é o que cada rotina TOCA.
 import { describe, expect, it } from 'vitest';
 import { ROUTINES } from './tecnica-rotinas';
-import { permutacoesDe, trocasDePosicao, codificarTroca, casasDaTroca, gruposDeCordas } from '../theory/tecnica';
+import { permutacoesDe, gruposDeCordas } from '../theory/tecnica';
 
 const rotina = (id: string) => ROUTINES.find(r => r.id === id)!;
 
@@ -32,6 +32,31 @@ describe('T2 · ordem das cordas (sempre quatro cordas vizinhas)', () => {
 
   it('atravessa as cordas NA ORDEM pedida: "4 2 3 1" começa na mais grave do grupo e termina na mais aguda', () => {
     expect(r.build(4, '4231', 0).slice(0, 4).map(n => n.s)).toEqual([0, 2, 1, 3]);
+  });
+
+  it('o root-fifth-octave usa a digitação do Paulo: tônica 1, quinta 2, oitava 4', () => {
+    expect(rotina('tqo').build(4, '', 0).slice(0, 4).map(x => x.finger)).toEqual([1, 2, 4, 2]);
+  });
+
+  // Tudo na mesma casa é uma pestana, e no baixo pestana não se faz. O exercício é atravessar as
+  // cordas, não segurar um acorde.
+  it('NÃO põe todas as notas na mesma casa', () => {
+    for (const n of [4, 6]) {
+      for (const v of r.eixo!.valores(n)) {
+        const casas = new Set(r.build(n, v, 0).map(x => x.f));
+        expect(casas.size, `${n} cordas, ${v}`).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it('as casas sobem uma a cada corda do grupo, mantendo a mão numa posição só', () => {
+    const volta = r.build(4, '4321', 0).slice(0, 4);
+    expect(volta.map(x => x.f)).toEqual([5, 6, 7, 8]);
+    expect(Math.max(...volta.map(x => x.f)) - Math.min(...volta.map(x => x.f))).toBe(3);
+  });
+
+  it('não diz qual dedo usar — aqui o ponto é a ordem das cordas', () => {
+    for (const x of r.build(4, '1234', 0)) expect(x.finger).toBeUndefined();
   });
 
   it('toca cada corda do grupo exatamente uma vez por volta, e repete a volta', () => {
@@ -80,41 +105,10 @@ describe('T2 · ordem das cordas (sempre quatro cordas vizinhas)', () => {
   });
 });
 
-describe('T5 · troca de posição', () => {
-  const r = rotina('troca');
 
-  it('desliza com o dedo pedido, da casa de saída para a de chegada', () => {
-    const notas = r.build(4, '5-8-2', 0).slice(0, 2);
-    const { de, para } = casasDaTroca({ de: 5, para: 8, dedo: 2 });
-    expect(notas.map(n => n.f)).toEqual([de, para]);
-    expect(notas.every(n => n.finger === 2)).toBe(true);
-  });
-
-  it('é o MESMO dedo nas duas casas — é isso que faz ser um deslize e não uma troca de dedo', () => {
-    for (const v of r.eixo!.valores(4)) {
-      const seq = r.build(4, v, 0);
-      expect(new Set(seq.map(n => n.finger)).size, v).toBe(1);
-    }
-  });
-
-  it('todas as 88 trocas tocam só casas que existem', () => {
-    const valores = r.eixo!.valores(4);
-    expect(valores).toHaveLength(88);
-    for (const v of valores) for (const n of r.build(4, v, 0)) expect(n.f, v).toBeGreaterThanOrEqual(1);
-  });
-
-  it('passa por todas as cordas', () => {
-    expect(new Set(r.build(4, '5-8-1', 0).map(n => n.s))).toEqual(new Set([0, 1, 2, 3]));
-  });
-
-  it('valor ilegível cai na primeira troca em vez de quebrar', () => {
-    const primeira = codificarTroca(trocasDePosicao()[0]);
-    expect(r.build(4, 'lixo', 0)).toEqual(r.build(4, primeira, 0));
-  });
-});
 
 describe('o instrumento certo', () => {
   it('as rotinas novas servem a baixo e violão, não ao piano (não há cordas)', () => {
-    for (const id of ['cordas', 'troca']) expect(rotina(id).for).toEqual(['violao', 'baixo']);
+    for (const id of ['cordas']) expect(rotina(id).for).toEqual(['violao', 'baixo']);
   });
 });

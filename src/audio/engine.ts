@@ -82,10 +82,18 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     env(out, t, 0.28 * vel, 0.004, Math.max(0.5, dur));
     stop = t + Math.max(0.5, dur) + 0.05;
   } else if (voice === 'baixo') {
-    add('triangle', 1, 0.8); add('sine', 0.5, 0.5); add('sawtooth', 1, 0.08);
-    f.frequency.value = 700;
-    env(out, t, 0.5 * vel, 0.008, Math.max(0.35, dur));
-    stop = t + Math.max(0.35, dur) + 0.05;
+    // Soava como um "tuc": três defeitos somados. (1) Uma sub-oitava com ganho 0,5 — numa corda Mi de
+    // 41 Hz isso põe 20 Hz, que ninguém ouve e que só come headroom. (2) Filtro FIXO em 700 Hz, que mata
+    // os harmônicos e deixa abafado. (3) Decay mínimo de 0,35 s, curto demais para uma corda.
+    //
+    // Agora: a fundamental manda, com harmônicos ímpares para o caráter de corda; o filtro abre no
+    // ataque e fecha, que é o que dá o "pluck"; e o decay acompanha a duração pedida.
+    add('triangle', 1, 0.9); add('sine', 2, 0.30); add('triangle', 3, 0.12); add('sine', 4, 0.05);
+    f.frequency.setValueAtTime(2600, t);
+    f.frequency.exponentialRampToValueAtTime(420, t + Math.min(0.5, Math.max(0.25, dur * 0.5)));
+    f.Q.value = 1.2;
+    env(out, t, 0.42 * vel, 0.006, Math.max(1.1, dur * 1.5));
+    stop = t + Math.max(1.1, dur * 1.5) + 0.05;
   } else if (voice === 'pad') {
     add('sawtooth', 1, 0.3, -7); add('sawtooth', 1, 0.3, 7); add('sine', 0.5, 0.3);
     f.frequency.value = 1100;

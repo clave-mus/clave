@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { casasDaTroca, codificarTroca, decodificarTroca, indiceDaCorda, permutacoesDe, trocasDePosicao } from './tecnica';
+import { indiceDaCorda, permutacoesDe } from './tecnica';
 
 describe('permutacoesDe', () => {
   it.each([[1, 1], [2, 2], [3, 6], [4, 24], [5, 120], [6, 720]])('%i corda(s): %i ordenações (n!)', (n, esperado) => {
@@ -46,55 +46,9 @@ describe('indiceDaCorda: a corda 1 é a mais AGUDA', () => {
   });
 });
 
-describe('trocasDePosicao', () => {
-  const todas = trocasDePosicao();
 
-  // 22 pares de posição (6 + 8 + 8: da posição 3 não dá para voltar 3 nem 4 casas) × 4 dedos.
-  it('são 88', () => {
-    expect(todas).toHaveLength(88);
-  });
 
-  it('todas distintas', () => {
-    expect(new Set(todas.map(codificarTroca)).size).toBe(88);
-  });
 
-  it('os quatro dedos aparecem, em igual número — nenhum é favorecido', () => {
-    for (const dedo of [1, 2, 3, 4]) expect(todas.filter(t => t.dedo === dedo)).toHaveLength(22);
-  });
-
-  it('desliza de 1 a 4 casas, nos dois sentidos, e nunca para o mesmo lugar', () => {
-    for (const t of todas) {
-      const d = Math.abs(t.para - t.de);
-      expect(d).toBeGreaterThanOrEqual(1);
-      expect(d).toBeLessThanOrEqual(4);
-    }
-    expect(todas.some(t => t.para > t.de)).toBe(true);
-    expect(todas.some(t => t.para < t.de)).toBe(true);
-  });
-
-  it('nenhuma troca cai numa casa menor que 1 — não existe casa 0 pisada nem negativa', () => {
-    for (const t of todas) {
-      const { de, para } = casasDaTroca(t);
-      expect(de, codificarTroca(t)).toBeGreaterThanOrEqual(1);
-      expect(para, codificarTroca(t)).toBeGreaterThanOrEqual(1);
-    }
-  });
-
-  it('a regra de um dedo por casa: o dedo f mora em posição + f − 1', () => {
-    expect(casasDaTroca({ de: 5, para: 8, dedo: 1 })).toEqual({ de: 5, para: 8 });
-    expect(casasDaTroca({ de: 5, para: 8, dedo: 4 })).toEqual({ de: 8, para: 11 });
-  });
-});
-
-describe('codificar e decodificar uma troca', () => {
-  it('ida e volta devolve a mesma troca, para todas as 88', () => {
-    for (const t of trocasDePosicao()) expect(decodificarTroca(codificarTroca(t))).toEqual(t);
-  });
-
-  it('texto que não é uma troca vira null, sem lançar', () => {
-    for (const lixo of ['', 'x', '5-8', '5-8-5', '5-8-0', '5--8-1', '5-8-1-2', '5-8-a']) expect(decodificarTroca(lixo), lixo).toBeNull();
-  });
-});
 
 import { andamentoNaVolta, CORDAS_DO_GRUPO, gruposDeCordas, indicesDoGrupo, PASSO_DA_SUBIDA, TETO_PADRAO, VOLTAS_POR_PASSO } from './tecnica';
 

@@ -31,51 +31,6 @@ export function permutacoesDe(n: number): string[] {
 export const indiceDaCorda = (numero: number, cordas: number) => cordas - numero;
 
 // ---------------------------------------------------------------------------
-// Troca de posição (T5)
-// ---------------------------------------------------------------------------
-
-/** Deslizar de uma posição da mão para outra, **com um dedo só**. */
-export interface Troca { de: number; para: number; dedo: number }
-
-/**
- * Posição é a casa em que o dedo 1 fica por padrão, e o dedo `f` mora em `posição + f − 1` — a regra
- * de um dedo por casa (guia de digitações). Então o dedo `f` sai da casa `de + f − 1` e chega em
- * `para + f − 1`.
- */
-export const casasDaTroca = (t: Troca) => ({ de: t.de + t.dedo - 1, para: t.para + t.dedo - 1 });
-
-const POSICOES_BASE = [3, 5, 7];
-const DISTANCIAS = [-4, -3, -2, -1, 1, 2, 3, 4];
-
-/**
- * Todas as trocas: de três posições-base, para cada distância de 1 a 4 casas nos dois sentidos, com
- * cada um dos quatro dedos — **menos as que cairiam antes da casa 1**, que não existe. Da posição 3,
- * voltar 3 ou 4 casas cai na casa 0 ou na −1; então são 22 pares de posição × 4 dedos = **88**.
- * (A primeira conta que escrevi, 3 × 8 × 4 = 96, esquecia isso, e o teste de casas pegou.)
- *
- * **Os quatro dedos entram todos, e é o ponto:** quase todo mundo desliza com o indicador e foge de
- * deslizar com o anelar ou o mindinho — que é justamente o que precisa de treino.
- */
-export function trocasDePosicao(): Troca[] {
-  const out: Troca[] = [];
-  for (const de of POSICOES_BASE) {
-    for (const d of DISTANCIAS) {
-      if (de + d < 1) continue;
-      for (const dedo of [1, 2, 3, 4]) out.push({ de, para: de + d, dedo });
-    }
-  }
-  return out;
-}
-
-export const codificarTroca = (t: Troca) => `${t.de}-${t.para}-${t.dedo}`;
-
-/** Lê uma troca codificada. Devolve `null` para qualquer coisa que não seja uma. */
-export function decodificarTroca(texto: string): Troca | null {
-  const m = /^(\d+)-(\d+)-([1-4])$/.exec(texto);
-  return m ? { de: Number(m[1]), para: Number(m[2]), dedo: Number(m[3]) } : null;
-}
-
-// ---------------------------------------------------------------------------
 // Subida de andamento (decisões 82 e 93)
 // ---------------------------------------------------------------------------
 

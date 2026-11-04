@@ -49,6 +49,10 @@ export default function Tecnica() {
   // O andamento com que a prática COMEÇOU, para o histórico dizer de onde ela partiu e aonde chegou.
   const inicioDaPratica = useRef<number | null>(null);
   const [hear, setHear] = useState(false);
+  // Volumes separados: com um só, subir o instrumento subia o clique junto, e o clique é referência —
+  // quem está estudando quer ouvir a própria nota acima dele, ou o contrário.
+  const [volClique, setVolClique] = useState(0.8);
+  const [volNota, setVolNota] = useState(0.5);
   const [running, setRunning] = useState(false);
   const [idx, setIdx] = useState(-1);
   const [round, setRound] = useState(0);
@@ -94,21 +98,21 @@ export default function Tecnica() {
     });
   }, [chave, valorDoEixo]);
   // o timbre é o escolhido para o instrumento no Perfil (ver SoundPanel)
-  const live = useRef({ seq, hear, climb, teto, voice: params.timbres[instrument] });
-  live.current = { seq, hear, climb, teto, voice: params.timbres[instrument] };
+  const live = useRef({ seq, hear, climb, teto, volClique, volNota, voice: params.timbres[instrument] });
+  live.current = { seq, hear, climb, teto, volClique, volNota, voice: params.timbres[instrument] };
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
   useEffect(() => { clock.current?.stop(); setRunning(false); setIdx(-1); }, [routine]);
 
-  const toggle = () => {
-    if (running) { clock.current?.stop(); setRunning(false); setIdx(-1); return; }
+  /** Começa a tocar na subdivisão dada. Separado de `toggle` para a troca de subdivisão poder reusá-lo. */
+  const comecar = (subAtual: number) => {
     setRound(0);
     voltas.current = 0;
     base.current = { bpm, voltas: 0 };
     if (inicioDaPratica.current === null) inicioDaPratica.current = bpm;
-    const c = new Clock(bpm, sub, (i, t) => {
+    const c = new Clock(bpm, subAtual, (i, t) => {
       const L = live.current;
-      if (i % sub === 0) drum(Math.floor(i / sub) % 4 === 0 ? 'clique-forte' : 'clique', t, 0.8);
+      if (i % subAtual === 0) drum(Math.floor(i / subAtual) % 4 === 0 ? 'clique-forte' : 'clique', t, L.volClique);
       if (i < 4 * sub) return; // contagem
       const k = i - 4 * sub;
       const n = k % L.seq.length;
@@ -120,12 +124,38 @@ export default function Tecnica() {
       }
       atTime(t, () => setIdx(n));
       const p = L.seq[n];
-      if (L.hear) tone(instrument === 'piano' ? p.f : tuning[p.s] + p.f, t, 0.3, L.voice, 0.5);
+      if (L.hear) tone(instrument === 'piano' ? p.f : tuning[p.s] + p.f, t, 0.5, L.voice, L.volNota);
     });
     clock.current = c;
     c.start();
     setRunning(true);
   };
+
+  const reiniciar = (subAtual: number) => { clock.current?.stop(); comecar(subAtual); };
+
+  // **O espaço é sempre começar/parar.** Sem isto, ele reativava o ÚLTIMO botão clicado: tocar em
+  // "Sortear" e depois apertar espaço sorteava de novo, em vez de dar play. É comportamento padrão do
+  // navegador (espaço aciona o botão com foco), e aqui ele atrapalha mais do que ajuda.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const alvo = e.target as HTMLElement | null;
+      // num campo de texto ou num controle deslizante, o espaço e as setas continuam sendo deles
+      if (alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+      if (e.key !== ' ' && e.code !== 'Space') return;
+      e.preventDefault();
+      alvo?.blur?.();
+      toggleRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  const toggle = () => {
+    if (running) { clock.current?.stop(); setRunning(false); setIdx(-1); return; }
+    comecar(sub);
+  };
+  // o ouvinte de teclado monta uma vez; a ref mantém o `toggle` do render atual
+  const toggleRef = useRef(toggle);
+  toggleRef.current = toggle;
 
   const perLine = 16;
   const lineStart = idx < 0 ? 0 : Math.floor(idx / perLine) * perLine;
@@ -192,7 +222,11 @@ export default function Tecnica() {
         <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 30 }}>♩ = {bpm}</span>
         <input className="range" style={{ maxWidth: 200 }} type="range" min={40} max={200} value={bpm}
           onChange={e => { const v = Number(e.target.value); setBpm(v); base.current = { bpm: v, voltas: voltas.current }; }} aria-label={t('common.tempo')} id="tc-bpm" />
-        {!running && ([[1, '♩'], [2, '♫'], [4, '♬']] as const).map(([n, figure]) => <Chip key={n} on={sub === n} onClick={() => setSub(n)}>{t('technique.perNote', { figure })}</Chip>)}
+        {/* Visível também tocando: escondê-la obrigava a parar para mudar de subdivisão. Trocar no meio
+            reinicia o relógio, porque a subdivisão é a grade dele. */}
+        {([[1, '♩'], [2, '♫'], [4, '♬']] as const).map(([n, figure]) => (
+          <Chip key={n} on={sub === n} onClick={() => { setSub(n); if (running) reiniciar(n); }}>{t('technique.perNote', { figure })}</Chip>
+        ))}
       </div>
       <div className="row">
         <label className="switch"><input type="checkbox" id="tc-climb" checked={climb}
@@ -202,6 +236,15 @@ export default function Tecnica() {
         <label className="switch"><input type="checkbox" id="tc-hear" checked={hear} onChange={e => setHear(e.target.checked)} />{t('technique.hear')}</label>
         {running && <span className="muted">{t('technique.round', { n: round + 1 })}</span>}
       </div>
+      <div className="row">
+        <span className="eyebrow">{t('technique.volClick')}</span>
+        <input className="range" style={{ maxWidth: 120 }} type="range" min={0} max={1} step={0.05} value={volClique}
+          onChange={e => setVolClique(Number(e.target.value))} aria-label={t('technique.volClick')} id="tc-vol-clique" />
+        <span className="eyebrow">{t('technique.volNote')}</span>
+        <input className="range" style={{ maxWidth: 120 }} type="range" min={0} max={1} step={0.05} value={volNota}
+          onChange={e => setVolNota(Number(e.target.value))} aria-label={t('technique.volNote')} id="tc-vol-nota" />
+      </div>
+
       {climb && (
         <div className="row">
           <span className="muted">{t('technique.climbCeiling', { bpm: teto })}</span>

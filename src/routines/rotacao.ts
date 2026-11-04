@@ -28,7 +28,6 @@ export const ALVO_DA_ROTACAO: Record<Rotacionavel, { kind: 'param'; key: 'key' |
   // `deslocamento` percorre os modos de um padrão rítmico de um tempo.
   digitacao: { kind: 'setting', id: 'digitacao' },
   ordemDeCordas: { kind: 'setting', id: 'ordemDeCordas' },
-  trocaDePosicao: { kind: 'setting', id: 'trocaDePosicao' },
   deslocamento: { kind: 'setting', id: 'deslocamento' },
 };
 

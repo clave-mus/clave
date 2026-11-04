@@ -1756,6 +1756,65 @@ etapa abre o exercício direto, sem cronômetro por etapa nem tela final.
 
 ---
 
+### 99 · Correções da ferramenta de técnica, e o motor de digitações em dúvida
+
+Retorno do Paulo usando a ferramenta. Seis correções, e uma dúvida de rumo que é dele responder.
+
+**O som do baixo era um "tuc"**, e eram três defeitos somados: uma sub-oitava com ganho 0,5 (numa corda
+Mi de 41 Hz isso põe **20 Hz**, que ninguém ouve e que só come headroom), um filtro **fixo** em 700 Hz
+que matava os harmônicos, e decay mínimo de 0,35 s, curto demais para uma corda. Agora a fundamental
+manda, com harmônicos ímpares, o filtro abre no ataque e fecha (é o que dá o *pluck*), e o decay
+acompanha a duração.
+
+**Volume do clique e das notas, separados.** Com um só, subir o instrumento subia o clique junto — e o
+clique é referência: quem estuda quer a própria nota acima dele, ou o contrário.
+
+**A subdivisão ficava escondida tocando**, o que obrigava a parar para mudar. Agora é visível, e trocar
+reinicia o relógio (a subdivisão é a grade dele).
+
+**O espaço reativava o último botão clicado** em vez de dar play — tocar em "Sortear" e apertar espaço
+sorteava de novo. É comportamento padrão do navegador; aqui atrapalha. O espaço agora é sempre
+começar/parar, menos dentro de campo de texto.
+
+**"Tônica, quinta e oitava" usava o dedo 2 na tônica.** O Paulo toca **1 na tônica, 2 na quinta, 4 na
+oitava**, e ele é o baixista. Corrigido. Eu não soube explicar de onde veio o 2.
+
+**"Ordem das cordas" punha tudo na casa 5** — o que é uma pestana, e **no baixo pestana não se faz**. As
+casas agora sobem uma a cada corda do grupo, mantendo a mão numa posição. E o exercício **deixou de dizer
+qual dedo usar**: ali o ponto é atravessar as cordas, e o dedo é escolha de quem toca.
+
+**"Troca de posição" (T5) foi removida** — "exercício nada a ver", nas palavras dele. Saiu o item, o
+enumerador em `theory/tecnica.ts`, os textos e o eixo rotacionável.
+
+---
+
+### Em aberto (`A21`): o motor de digitações resolve o problema certo?
+
+O Paulo levantou, e é a dúvida mais importante desta leva:
+
+> *"quando eu falava de digitações esse tempo todo eu imaginava não uma tablatura mas sim um mapa do
+> braço com as notas destacadas com círculos. eu entendo que isso na verdade são shapes/formas."*
+
+E deu dois casos que o modelo atual não cobre: ele toca **o lá com os dedos 2 e 4 juntos**, e a digitação
+muda conforme o que vem antes. O enumerador da `FM-2` produz **uma sequência de dedos por nota** — e isso
+pode ser mais rígido e mais específico do que o problema pede.
+
+**A suspeita é que haja duas coisas diferentes sob o mesmo nome:**
+
+| | O que é | Onde isso vive |
+|---|---|---|
+| **Forma** | onde as notas estão no braço, marcadas com círculos. Cega para ritmo e para dedo | é o **visualizador** (`F6-3`) |
+| **Digitação** | que dedo em cada nota, em ordem | é a `FM-2` |
+
+Se a forma é o que importa na maior parte dos casos, a `FM-2` encolhe muito — e **dizer o dedo vira
+opcional, item a item**, em vez de obrigatório. A `T1` (permutações) continua precisando, porque ali o
+dedo *é* o exercício; a `T2` já deixou de dizer.
+
+**Isto não se resolve sem o Paulo**, e muda o escopo de uma tarefa grande. As 10–15 digitações que o guia
+pede dele continuam valendo como conjunto de teste em qualquer dos caminhos.
+
+---
+
 ## A hipótese do beta
 
 > **As pessoas montam e mantêm rotinas — com exercícios bons o bastante para valer a pena pôr numa
@@ -1804,6 +1863,7 @@ Decisões que ainda não foram tomadas, com quem precisa decidir.
 | A14 | **Timbres e efeitos no instrumento virtual** — podem entrar, com requisitos extras que ainda não foram definidos (decisão 89) | Paulo | o modo "tocar" |
 | A15 | **O que entra no beta do instrumento virtual** — melodias simples, marcações, fixar e arpejar/strum/bloco; bends, pedais, looper e capo depois? | Paulo | `F6-3` |
 | A17 | **O percentual de acerto na página de progresso** ("26% · 6 de 23 respostas") é o elemento dominante do bloco "respostas conferidas". A decisão 55 diz que a taxa de acerto *não significa nada* (o chute dá 50%) e a lista do que nunca entra cita "percentual de domínio". Não sei se é escolha deliberada ou resquício; o do cartão do catálogo eu removi, este eu não | Paulo | nada |
+| A21 | **O motor de digitações resolve o problema certo?** O Paulo imaginava um **mapa do braço com notas em círculos** (forma), não uma tablatura com dedos. Se for isso, a `FM-2` encolhe e dizer o dedo vira opcional por item. Ver a decisão 99 | Paulo | `FM-2`, `F6-3` |
 | A10 | **Tipografia definitiva** — Instrument Sans é a escolha atual; vale conferir no uso real | Paulo | nada |
 | A9 | **Backing tracks** — produzir, licenciar royalty-free, ou cortar. **Música de IA está fora.** | Paulo | a ferramenta de backing |
 

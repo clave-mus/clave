@@ -3,7 +3,7 @@
 import type { Publicacao } from '../catalog/publicacao';
 import { LEGADO, RASCUNHO } from '../catalog/publicacao';
 import type { MessageKey, Translate } from '../i18n';
-import { CORDAS_DO_GRUPO, casasDaTroca, codificarTroca, decodificarTroca, indiceDaCorda, indicesDoGrupo, permutacoesDe, trocasDePosicao } from '../theory/tecnica';
+import { CORDAS_DO_GRUPO, indiceDaCorda, indicesDoGrupo, permutacoesDe } from '../theory/tecnica';
 
 export interface Pos { s: number; f: number; finger?: number }
 
@@ -17,7 +17,7 @@ export interface Pos { s: number; f: number; finger?: number }
  */
 interface Eixo {
   /** É também o nome do parâmetro rotacionável (`ROTACIONAVEIS`) e a chave gravada no histórico. */
-  id: 'digitacao' | 'ordemDeCordas' | 'trocaDePosicao';
+  id: 'digitacao' | 'ordemDeCordas';
   /** Depende do número de cordas: com seis, a ordem das cordas tem 720 valores. */
   valores: (cordas: number) => string[];
   rotulo: MessageKey;
@@ -42,9 +42,16 @@ export const ROUTINES: Routine[] = [
   {
     publicacao: LEGADO,
     id: 'tqo', name: 'technique.tqoName', desc: 'technique.tqoDesc', for: ['violao', 'baixo'],
+    // Tônica com o dedo 1, quinta com o 2, oitava com o 4 — é a digitação que o Paulo usa, e ele é o
+    // baixista. A versão anterior começava no dedo 2, o que ele não soube explicar nem reconheceu.
     build: () => [3, 5, 7, 8, 5, 3].flatMap((r, i) => {
-      const s = i % 2; // alterna raiz na corda mais grave e na seguinte
-      return [{ s, f: r, finger: 2 }, { s: s + 1, f: r + 2, finger: 4 }, { s: s + 2, f: r + 2, finger: 4 }, { s: s + 1, f: r + 2, finger: 4 }];
+      const s = i % 2; // alterna a raiz entre a corda mais grave e a seguinte
+      return [
+        { s, f: r, finger: 1 },                 // tônica
+        { s: s + 1, f: r + 2, finger: 2 },      // quinta
+        { s: s + 2, f: r + 2, finger: 4 },      // oitava
+        { s: s + 1, f: r + 2, finger: 2 },      // quinta, voltando
+      ];
     }),
   },
   {
@@ -86,27 +93,15 @@ export const ROUTINES: Routine[] = [
       const q = indices.length;
       // dentro do grupo, 1 é a corda mais AGUDA DO GRUPO (indiceDaCorda); `indices[0]` é a mais grave
       const ordem = [...(valor || permutacoesDe(q)[0])].map(Number).filter(c => c >= 1 && c <= q);
-      // uma nota por corda, na casa 5, atravessando na ordem pedida — duas vezes, para dar ritmo
-      const volta = ordem.map(c => ({ s: indices[indiceDaCorda(c, q)], f: 5 }));
+      // **Casas diferentes por corda, não todas na 5.** Tudo na mesma casa é uma pestana, e no baixo
+      // pestana não se faz — o exercício é atravessar as cordas, não segurar um acorde. As casas sobem
+      // uma a cada corda do grupo, o que mantém a mão numa posição só.
+      // **Sem dedo**: aqui o ponto é a ordem das cordas, e qual dedo usar é escolha de quem toca.
+      const volta = ordem.map(c => {
+        const i = indiceDaCorda(c, q);
+        return { s: indices[i], f: 5 + i };
+      });
       return [...volta, ...volta];
-    },
-  },
-  {
-    // T5 (decisão 81): deslizar de uma posição para outra com UM dedo, e o app escolhe qual — porque
-    // quase todo mundo desliza com o indicador e foge do anelar e do mindinho.
-    publicacao: RASCUNHO,
-    id: 'troca', name: 'technique.swapName', desc: 'technique.swapDesc', for: ['violao', 'baixo'],
-    eixo: {
-      id: 'trocaDePosicao', valores: () => trocasDePosicao().map(codificarTroca), rotulo: 'technique.swapOrder',
-      mostrar: (v, t) => { const x = decodificarTroca(v); return x ? t('technique.swapShow', { from: x.de, to: x.para, finger: x.dedo }) : v; },
-    },
-    build: (n, valor) => {
-      const troca = decodificarTroca(valor) ?? trocasDePosicao()[0];
-      const { de, para } = casasDaTroca(troca);
-      return Array.from({ length: n }, (_, s) => s).flatMap(s => [
-        { s, f: de, finger: troca.dedo }, { s, f: para, finger: troca.dedo },
-        { s, f: de, finger: troca.dedo }, { s, f: para, finger: troca.dedo },
-      ]);
     },
   },
   {

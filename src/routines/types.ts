@@ -56,7 +56,7 @@ export interface Etapa {
 // O campo existiu e nunca foi lido por ninguém: era validado e copiado, e nenhum código o consumia.
 
 /** Os parâmetros que podem entrar em rotação (decisão 38). A lista é curada de propósito. */
-export const ROTACIONAVEIS = ['tonalidade', 'regiao', 'corda', 'modo', 'qualidadeAcorde', 'digitacao', 'ordemDeCordas', 'trocaDePosicao', 'deslocamento'] as const;
+export const ROTACIONAVEIS = ['tonalidade', 'regiao', 'corda', 'modo', 'qualidadeAcorde', 'digitacao', 'ordemDeCordas', 'deslocamento'] as const;
 export type Rotacionavel = (typeof ROTACIONAVEIS)[number];
 
 /** Quando a rotação anda. O padrão é manual, e isso não é preguiça de desenho — ver abaixo. */

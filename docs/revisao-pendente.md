@@ -45,7 +45,6 @@ E **tire a linha do item deste arquivo**. O teste exige data no formato `AAAA-MM
 |---|---|---|
 | `permutacoes` | **T1** · permutações de dedos | se tocar a ordem na casa 5 (o dedo *f* em `4 + f`) é uma boa postura para o exercício |
 | `cordas` | **T2** · ordem das cordas | a convenção (corda 1 = mais aguda **do grupo**) e o que tocar em cada corda: hoje uma nota na casa 5, duas voltas. **Sempre quatro cordas vizinhas** (24 ordens), com seletor de grupo na guitarra — ver a decisão 94 e se quatro vizinhas bastam |
-| `troca` | **T5** · troca de posição | as 88 trocas (posições 3, 5 e 7, 1 a 4 casas nos dois sentidos, os quatro dedos) e se deslizar **com o dedo 4** é tocável em todas |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
