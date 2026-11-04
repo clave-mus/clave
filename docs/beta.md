@@ -227,7 +227,7 @@ sai do aparelho** — e isso precisa estar escrito na tela e na política de pri
 
 ## O catálogo do beta
 
-**O trabalho aqui é curadoria e fusão, não adição.** Hoje são 20 exercícios e 6 ferramentas; depois
+**O trabalho aqui é curadoria e fusão, não adição.** Hoje são **16 exercícios e 11 ambientes/tarefas** — eram 20 e 6 antes das fusões por superfície (decisão 16) e da divisão do quiz de teoria (decisão 53); depois
 das fusões e de três itens novos ficam **23 candidatos**, e a meta é **~18 passando nos oito itens
 do portão de qualidade**.
 
@@ -235,9 +235,9 @@ do portão de qualidade**.
 
 | Vira | A partir de |
 |---|---|
-| **Que nota é essa?** com seletor de superfície | `pauta-nota` + `teclado-nota` + `braco-nota` |
-| **Ache a nota** com seletor de superfície | `pauta-construir` + `teclado-tecla` + `braco-ache` |
-| **Que acorde é esse?** (desenho) | `teclado-acorde` + `acorde-visual` |
+| **Que nota é essa?** com seletor de superfície | `que-nota-e-essa` + `que-nota-e-essa` + `que-nota-e-essa` |
+| **Ache a nota** com seletor de superfície | `ache-a-nota` + `ache-a-nota` + `ache-a-nota` |
+| **Que acorde é esse?** (desenho) | `que-acorde-e-esse` + `que-acorde-e-esse` |
 | **Gerador de partituras** (decisão 18) | ferramenta `leitura` + ferramenta `ritmo` |
 
 ### Candidatos

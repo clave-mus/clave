@@ -104,4 +104,5 @@ Já estão no app como `legado`, mas as mudanças recentes pedem o seu olho:
   [padroes-ritmicos.md](padroes-ritmicos.md), **sem nenhuma notação nova escrita** — falta o
   **revisor de tradição** (decisão 85, regra 2), que é pessoa, não documento. Nada dali entra no app.
 - As **22 gravações** (`A0`) e as digitações de baixo (`FM-2`).
-- Os **26 itens `legado`** esperam a revisão da `F6-7` para virarem `publicado`.
+- Os **22 itens `legado`** esperam a revisão da `F6-7` para virarem `publicado`. (Eram 26: as fusões
+  por superfície e a divisão do quiz de teoria mudaram a conta, não o trabalho.)

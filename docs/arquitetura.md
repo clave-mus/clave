@@ -97,7 +97,7 @@ gerador de arte inteiro.
 | 5 | Progresso é aba, com pílula de streak no cabeçalho | Não é aba; mora no Perfil; sem streak | Navegação + telas |
 | 6 | Cinco abas (Hoje · Treinar · Rotinas · Progresso · Perfil) | Proposta: três (Praticar · Catálogo · Perfil) | Navegação |
 | 7 | Catálogo navegado por módulo | Catálogo plano com portas por objetivo, área, contexto e busca | Tela + classificação |
-| 8 | 20 exercícios, com duplicatas por superfície; quase tudo múltipla escolha | ~18 famílias curadas passando nos 7 itens do portão | Curadoria |
+| 8 | 16 exercícios, **já sem as duplicatas por superfície** (decisão 16); quase tudo múltipla escolha | ~18 famílias curadas passando nos 7 itens do portão | Curadoria |
 | 9 | **Eixo de voz inexistente** — nada de solfejo, cantar a tônica, cantar o grau | Bloco inteiro e explicitamente "muito poderoso" na visão | Famílias novas |
 | 10 | Visualizador de escalas/arpejos/shapes **não existe como item** — só componentes dentro de exercícios | Ferramenta central da visão, e superfície compartilhada da seção "Visualização musical" | Item novo + reuso |
 | 11 | Backing track existe, **sem isolar/remover instrumentos** | Requisito explícito da visão | Ferramenta + fonte de áudio |

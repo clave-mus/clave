@@ -15,8 +15,8 @@ atual, com link para a decisão que explica cada escolha.
 ```
 Rotina          "Internalizar Fá maior"        o que se estuda, e em que ordem
  └ Etapa        "achar a nota no braço, 8 min"  um passo da rotina
-    └ Instância  braco-ache · casas 0-5         um item COM uma configuração
-       └ Item    braco-ache                     a declaração no catálogo
+    └ Instância  ache-a-nota · braço · casas 0-5   um item COM uma configuração
+       └ Item    ache-a-nota                       a declaração no catálogo
 ```
 
 **Item** é uma declaração, não uma tela (decisão 15). Ele diz o que pergunta, o que exige do mundo,
@@ -24,7 +24,7 @@ como pode ser conferido e quais parâmetros respeita. Exercícios e ferramentas 
 (decisão 17): o que muda é ter `make` (o Player roda) ou `screen` (tela própria).
 
 **Instância** é `{ itemId, settings, params }` — um item com uma configuração. **Nada exige que duas
-instâncias tenham itens diferentes:** três variantes de `braco-ache` em Fá, Sol e Dó são três
+instâncias tenham itens diferentes:** três variantes de `ache-a-nota` em Fá, Sol e Dó são três
 instâncias do mesmo item.
 
 **Etapa** é um **conjunto** de instâncias (decisão 7). Com uma, é uma etapa comum; com mais de uma,

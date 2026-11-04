@@ -217,6 +217,13 @@ musical é compartilhado, e só execução e particularidades técnicas são esp
 **Consequência:** exercícios que são a mesma tarefa em superfícies diferentes **se fundem** num só
 com seletor de superfície.
 
+**Feito em 04/11/2026** (`F1-4`). Onze ids viraram quatro. E a fusão mostrou que esta decisão é mais
+forte do que parecia: **a superfície escolhe o que a pergunta consegue cobrar.** "Qual nota é essa?"
+valida **grafia** na pauta (Dó♯ ≠ Ré♭, porque a pauta distingue) e **altura** no teclado e no braço
+(onde a tecla é a mesma); "qual intervalo é esse?" cobra a **qualidade** na pauta e o **número de
+semitons** no braço. Três telas separadas escondiam essa diferença — não eram três cópias, eram três
+contratos de validação diferentes com o mesmo nome.
+
 ### 17 · Ferramenta e exercício são o mesmo tipo de objeto
 
 Registro unificado, tela separada quando precisar. Itens do tipo Série usam o Player comum; itens
@@ -250,6 +257,11 @@ escala precisou escolher um módulo só e caiu em Teoria.
 **Substitui:** a decisão 6 de 29/10.
 
 ### 20 · Oito portas por objetivo no beta
+
+> **Feito em 04/11/2026** (`D2`): `src/catalog/portas.ts`, com os itens de cada porta, e o catálogo
+> passou a abrir **por objetivo** por padrão. Quais itens ficam atrás de cada porta está em `P5` de
+> [decisoes-provisorias.md](decisoes-provisorias.md), à espera de aval — e **duas portas (ritmo e
+> técnica) têm menos de 4 itens visíveis**, porque o resto delas é rascunho.
 
 Uma porta só existe se tiver **pelo menos 4 itens atrás dela e pelo menos um deles bom**.
 
@@ -665,7 +677,12 @@ Revisão item a item de 03/11. Além das três fusões por superfície já plane
   removido** — ao contrário: é o que permite criar os exercícios específicos sem duplicar drone e
   metrônomo em cada um.
 
-Saldo: 26 itens viram **20**, com muito mais parâmetro.
+Saldo previsto: 26 itens viram **20**, com muito mais parâmetro.
+
+**Feito em 04/11/2026.** O saldo real foi **27**: 16 exercícios e 11 ambientes/tarefas. A diferença não
+é erro de conta — é que entre 03/11 e 04/11 entraram os **cinco itens da tarefa com metrônomo**
+(decisão 90), que não existiam quando esta decisão foi escrita. E **`ambiente` ainda existe**: tirá-lo
+depende de o drone virar camada, que não foi feito.
 
 ### 54 · Generalizar para todas as escalas, sempre que possível
 
