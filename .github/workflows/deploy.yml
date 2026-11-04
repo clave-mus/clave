@@ -68,9 +68,13 @@ jobs:
 
       # `wrangler` é devDependency: a versão vem do package-lock, e não de uma ação de terceiro
       # pinada por tag. É a mesma disciplina de SHA que o ci.yml usa para as ações oficiais.
+      #
+      # A configuração (nome do projeto, pasta e o modo de página única) está em `wrangler.jsonc`, e é
+      # **a mesma** que o build do painel do Cloudflare usa. Um arquivo, dois caminhos de publicação —
+      # se fossem dois, eles divergiriam no primeiro ajuste.
       - name: Deploy
         if: steps.cred.outputs.tem == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler pages deploy dist --project-name=clave --branch="${{ github.ref_name }}"
+        run: npx wrangler deploy
