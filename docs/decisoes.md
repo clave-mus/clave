@@ -2042,6 +2042,78 @@ valer quando houver gente de fora usando.
 
 ---
 
+### 105 · As rotinas se partem pelo que o mundo exige, não pelo assunto
+
+Pedido do Paulo em 04/11/2026, e é a correção de um erro meu: eu tinha feito **uma** rotina "De bolso"
+com cinco assuntos diferentes, e **metade das etapas não cabia no bolso de verdade** — pauta e braço
+pedem olhar e tocar na tela.
+
+**O eixo certo não é o assunto: é o que a prática exige do mundo.** Cinco rotinas viraram nove:
+
+| Rotina | O que ela exige |
+|---|---|
+| **De bolso** | só ouvido. Nenhuma etapa pede olhar nem responder |
+| **Teoria no silêncio** | só olhos. Nenhuma etapa faz nem recebe som |
+| **Mapear o instrumento na rua** | olhos e dedos na tela, sem instrumento |
+| **Treino de ouvido no fone** | fone e uma mão livre |
+| **Mapear o braço na rua** | olhos e dedos na tela |
+| **Mapear o braço com o instrumento** | o instrumento na mão |
+
+**A consequência que vale mais que a divisão:** a rotina "De bolso" só existe porque o **ciclo sem
+tela** (`F6-1`) existe — e ela é **quatro variações do mesmo item**, com objetos e tempos de pensar
+diferentes. Foi isso que obrigou `ScreenProps` a receber a configuração da instância: sem ela, quatro
+etapas do mesmo ambiente seriam quatro cópias idênticas.
+
+**Nada impõe ordem.** As quatro de "não estou com o instrumento" são **modo livre** (cartões, qualquer
+ordem), e o executor guiado ganhou **"deixar para o final"** ao lado de "pular" — e as duas são coisas
+diferentes: pular marca a etapa como passada, deixar para o final diz *"não agora"* e a devolve no fim,
+sem desfecho.
+
+**Um achado, não um descuido:** `braco-com-instrumento` tem **três** etapas. Os itens que exigem o
+instrumento hoje são técnica, harmonia, drone e as cinco tarefas com metrônomo, e **nenhum deles
+pergunta uma nota do braço**. Falta o exercício que pede para tocar a nota no instrumento de verdade —
+é a `F6-4`, e até ela essa rotina é sobre *tocar*, não sobre *mapear*.
+
+---
+
+### 106 · Número no histórico não é proibido — o que é proibido é ser central
+
+Esclarecimento do Paulo em 04/11/2026, sobre a decisão 14 e a decisão 100.
+
+> *"não sou totalmente contra números no histórico de progresso. o que eu não queria era tornar isso
+> uma coisa central do produto. se o usuário quiser ver seus acertos, claro, vamos mostrar! só não
+> vamos esfregar na cara dele pra não gamificar a coisa."*
+
+**A regra não é "sem números": é "nada central, nada esfregado na cara".** Isto muda como as decisões
+14 e 100 devem ser lidas por quem vier depois:
+
+- **O que continua fora** é o que *gamifica*: percentual apresentado como domínio, recorde, sequência
+  de dias, comparação entre pessoas, andamento como pontuação, rótulo sobre quem usa.
+- **O que pode entrar** é contagem que a pessoa foi procurar. O histórico já mostra `acertos/total`, e
+  isso está certo; mostrar mais, no Perfil, a pedido dela, também estaria.
+- **O que não muda:** o percentual de acerto segue fora (decisão 100) — não porque é número, mas porque
+  **o chute dá 50% e o número não significa nada**. E autoavaliação nunca vira acerto (decisão 5).
+
+**A diferença entre as duas coisas é onde o número mora, não se ele existe.** Progresso não é aba
+(decisão 11), e é isso que impede o número de ser central — não a ausência dele.
+
+---
+
+### 107 · A tabela de digitações de piano é responsabilidade da IA, com a dúvida escrita
+
+O Bernardo Garcia declinou: disse que **não quer tomar essa decisão e não teria certeza**. O Paulo
+passou a `FM-6` para mim.
+
+**Isto muda o que a tabela pode afirmar.** Ela ia ser "revisada por um pianista"; passa a ser
+"compilada de fontes, com a confiança de cada linha escrita". A diferença não é de forma: é que
+**nenhuma linha pode ser apresentada como convenção estabelecida sem fonte que a estabeleça** — e onde
+as fontes divergirem, a tabela registra a divergência em vez de escolher.
+
+É a mesma regra dos padrões rítmicos (decisão 85) aplicada a um caso em que o revisor não existe: o que
+não tem fonte não entra, e o que tem fonte entra **dizendo qual**.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.
