@@ -2183,6 +2183,43 @@ existem para permitir.
 
 ---
 
+### 110 · A revisão de uso de 04/11 — três decisões nossas caem
+
+O Paulo usou o app de ponta a ponta e escreveu ~90 pontos. O plano está em
+[revisao-04-11.md](revisao-04-11.md) e as rotinas dele em [rotinas-do-paulo.md](rotinas-do-paulo.md).
+Aqui ficam só as decisões que **mudam o que já estava decidido**.
+
+**A decisão 16 estava meio errada.** Fundimos onze itens em quatro porque "a mesma pergunta em
+superfícies diferentes é o mesmo exercício". Ele, usando: *"essas superfícies são diferentes demais
+pro exercício ser o mesmo. Pense: como a pessoa chegaria nesses exercícios?"*
+
+**Ele está certo sobre a porta de entrada e nós estávamos certos sobre o motor.** A fusão foi boa
+para o código — um motor, e a validação muda com a superfície — e ruim para a navegação: um item que
+é três coisas na cabeça de quem procura. **O corte certo é leitura (pauta) × instrumento
+(teclado/baixo/violão)**, e dentro de instrumento uma escolha só, em vez de "braço" e depois "violão
+ou baixo".
+
+**"Montar uma sessão" vira o call to action principal.** A rotina deixa de ser a porta: a pessoa diz
+o que quer praticar, como consegue praticar agora e quanto tempo tem — e a sessão montada **pode
+virar rotina** depois. Isso herda a conversa das decisões 105 e 109 e a resolve: *sessão* é a
+instância, *rotina* é o que se guarda.
+
+**Personalização tem limite — regra nova, e vale para o catálogo todo.** Palavras dele: *"não tem
+porque personalizar dificuldade em um exercício tão simples; exercícios fáceis demais não precisam de
+progressão assim."* O irmão disso aparece em cinco exercícios: **opções que deveriam somar estão
+sendo exclusivas** (níveis de leitura rítmica, suspensos nos acordes, tercinas × semicolcheias).
+
+**E uma regra pedagógica que vale para todo exercício de leitura:** *"não adianta dar o gabarito
+sonoro, porque aí o músico usa o ouvido e não os olhos."* Isso muda o desenho do deslocamento de
+padrão e de qualquer coisa de leitura que fosse revelar tocando.
+
+**Saem do catálogo:** todas as aulas (e os links sobre os exercícios), `sustentar-e-cortar`,
+`legato-staccato` e os itens de teoria **menos** intervalos em texto. As aulas voltam depois,
+refeitas — com material interativo e um roteiro mais linear —, mas **não antes de o app servir ao
+Paulo**, que é a ordem que ele pediu.
+
+---
+
 ## Em aberto
 
 Decisões que ainda não foram tomadas, com quem precisa decidir.
