@@ -67,7 +67,7 @@ const en: Shape<typeof pt> = {
     deleteConfirm: 'Delete "{name}"? This cannot be undone.',
     cancel: 'Keep it',  },
   doTime: {
-    title: 'Routines from us',
+    title: 'Community routines',
     sub: 'Ready to use. Adopting one makes your own copy — change it however you like.',
     adopt: 'Adopt',
     adopted: 'Adopted: it is yours now',
@@ -322,7 +322,7 @@ const en: Shape<typeof pt> = {
     repeat: 'Do it again',
     close: 'Close',
     freeHint: 'Free mode: any order you like, leave and come back whenever.',
-    adoptedToStart: 'This is a routine from us, so starting it made a copy of your own.',
+    adoptedToStart: 'This is a community routine, so starting it made a copy of your own.',
   },
   onboarding: {
     whatPlay: 'What do you play?',

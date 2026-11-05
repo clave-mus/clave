@@ -67,7 +67,7 @@ const pt = {
     deleteConfirm: 'Apagar "{name}"? Não dá para desfazer.',
     cancel: 'Manter',  },
   doTime: {
-    title: 'Rotinas do time',
+    title: 'Rotinas da comunidade',
     sub: 'Prontas para usar. Adotar faz uma cópia sua — a sua cópia você muda à vontade.',
     adopt: 'Adotar',
     adopted: 'Adotada: agora é sua',
@@ -322,7 +322,7 @@ const pt = {
     repeat: 'Fazer de novo',
     close: 'Encerrar',
     freeHint: 'Modo livre: faça na ordem que quiser, saia e volte à vontade.',
-    adoptedToStart: 'Esta é uma rotina do time, então ela virou uma cópia sua ao começar.',
+    adoptedToStart: 'Esta é uma rotina da comunidade, então ela virou uma cópia sua ao começar.',
   },
   onboarding: {
     whatPlay: 'O que você toca?',

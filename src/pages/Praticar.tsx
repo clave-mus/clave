@@ -162,41 +162,8 @@ export default function Praticar() {
         </section>
       )}
 
-      {/* **Sem rotina própria, as do time vêm primeiro** — a tela dizia "monte a sua" com nove
-          montadas logo abaixo, e a mensagem contradizia o que estava na frente dela. Com rotina
-          própria, a sua vem primeiro: a do time já virou cópia e não precisa de vitrine.
-          O layout disto segue em aberto (o Paulo quer experimentar). */}
-      {doTime.length > 0 && (
-        <section className="sec">
-          <SecTitle>{t('doTime.title')}</SecTitle>
-          <p className="muted" style={{ margin: '0 var(--gutter) 12px' }}>{t('doTime.sub')}</p>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {doTime.map(r => {
-              const total = tempoTotal(r);
-              const adotada = rotinas.some(x => x.origem?.rotinaId === r.id);
-              return (
-                <div key={r.id} className="panel" style={{ display: 'grid', gap: 8 }}>
-                  <div className="row" style={{ justifyContent: 'space-between' }}>
-                    <b>{r.nome}</b>
-                    <div className="row">
-                      <Btn small to={`/rotina/${r.id}/fazer`}>{t('session.start')}</Btn>
-                      {adotada
-                        ? <span className="muted">{t('doTime.adopted')}</span>
-                        : <Btn small tone="ghost" onClick={() => adotar(r)}>{t('doTime.adopt')}</Btn>}
-                    </div>
-                  </div>
-                  <p className="muted" style={{ margin: 0 }}>{r.notas}</p>
-                  <small className="muted">
-                    {t('editor.itemsOf', { n: r.etapas.length })}
-                    {total ? ` · ${t('editor.minutes', { n: Math.round(total / 60) })}` : ''}
-                  </small>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
+      {/* P8: suas rotinas vêm antes das da comunidade — a do time só faz sentido como vitrine
+          enquanto você não tem a sua; depois, ela já virou cópia e não precisa aparecer na frente. */}
       {rotinas.length > 0 && (
         <section className="sec">
           <SecTitle link={{ to: '/catalogo', label: t('home.seeAll') }}>{t('routines.yours')}</SecTitle>
@@ -256,6 +223,37 @@ export default function Praticar() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {doTime.length > 0 && (
+        <section className="sec">
+          <SecTitle>{t('doTime.title')}</SecTitle>
+          <p className="muted" style={{ margin: '0 var(--gutter) 12px' }}>{t('doTime.sub')}</p>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {doTime.map(r => {
+              const total = tempoTotal(r);
+              const adotada = rotinas.some(x => x.origem?.rotinaId === r.id);
+              return (
+                <div key={r.id} className="panel" style={{ display: 'grid', gap: 8 }}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <b>{r.nome}</b>
+                    <div className="row">
+                      <Btn small to={`/rotina/${r.id}/fazer`}>{t('session.start')}</Btn>
+                      {adotada
+                        ? <span className="muted">{t('doTime.adopted')}</span>
+                        : <Btn small tone="ghost" onClick={() => adotar(r)}>{t('doTime.adopt')}</Btn>}
+                    </div>
+                  </div>
+                  <p className="muted" style={{ margin: 0 }}>{r.notas}</p>
+                  <small className="muted">
+                    {t('editor.itemsOf', { n: r.etapas.length })}
+                    {total ? ` · ${t('editor.minutes', { n: Math.round(total / 60) })}` : ''}
+                  </small>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
