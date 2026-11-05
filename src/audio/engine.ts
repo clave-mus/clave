@@ -262,6 +262,9 @@ export class Clock {
   private next = 0;
   private index = 0;
   private onStep: (index: number, time: number) => void;
+  /** Context a que `aoResumir` está ligado, para desligar em `stop()`. */
+  private ctx: BaseAudioContext | undefined;
+  private aoResumir: (() => void) | undefined;
   constructor(bpm: number, stepsPerBeat: number, onStep: (index: number, time: number) => void) {
     this.bpm = bpm;
     this.stepsPerBeat = stepsPerBeat;
@@ -270,11 +273,31 @@ export class Clock {
   get stepDur() {
     return 60 / this.bpm / this.stepsPerBeat;
   }
+  /**
+   * B1: o primeiro toque cria o contexto, mas ele some suspenso até o navegador liberar o som —
+   * e enquanto suspenso, `now()` fica **congelado**. Ancorar `next` contra um tempo congelado faz
+   * os primeiros passos colarem (todos "devidos" assim que o contexto resumir) e depois travar (o
+   * relógio nunca mais encontra um `horizon` maior que `next`). Por isso só se ancora quando o
+   * contexto já está `running` de verdade — senão, espera o `statechange`.
+   */
   start() {
     this.stop();
     this.index = 0;
-    this.next = now() + 0.08;
-    this.timer = window.setInterval(() => this.tick(), 25);
+    const c = audio();
+    const comecar = () => {
+      this.next = now() + 0.08;
+      this.timer = window.setInterval(() => this.tick(), 25);
+    };
+    if (c.state === 'running') { comecar(); return; }
+    this.ctx = c;
+    this.aoResumir = () => { if (c.state === 'running') this.pararEspera(comecar); };
+    c.addEventListener('statechange', this.aoResumir);
+  }
+  private pararEspera(depois?: () => void) {
+    if (this.ctx && this.aoResumir) this.ctx.removeEventListener('statechange', this.aoResumir);
+    this.ctx = undefined;
+    this.aoResumir = undefined;
+    depois?.();
   }
   private tick() {
     const horizon = now() + 0.12;
@@ -285,11 +308,12 @@ export class Clock {
     }
   }
   stop() {
+    this.pararEspera();
     if (this.timer !== undefined) window.clearInterval(this.timer);
     this.timer = undefined;
   }
   get running() {
-    return this.timer !== undefined;
+    return this.timer !== undefined || !!this.aoResumir;
   }
 }
 
