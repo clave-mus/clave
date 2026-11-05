@@ -13,7 +13,6 @@ import { Chip, Field, PageHead, Tag } from '../components/ui';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { lerAbertura } from '../routines/edicao';
 import NotFound from './NotFound';
-import { lessonProgress } from './Estudar';
 import { itemText, useT } from '../i18n';
 
 const OPEN_KEY = 'clave:treinar-abertos';
@@ -34,7 +33,7 @@ function loadPor(): Por {
 
 export default function Treinar() {
   const t = useT();
-  const { MODULES, moduleById, lessonById } = useContent();
+  const { MODULES, moduleById } = useContent();
   const stats = useStore(s => s.stats);
   const { hash } = useLocation();
   const [mobileOnly, setMobileOnly] = useState(false);
@@ -72,9 +71,9 @@ export default function Treinar() {
       {por === 'area' && catalogByModule({ mobileOnly, revisao }).map(entry => {
         const m = moduleById[entry.module];
         const items = entry.exercises.length + entry.tools.length;
-        if (!items && !entry.lessons.length) return null;
+        if (!items) return null;
         const isOpen = open.includes(m.id);
-        const counts = [items ? t('train.countItems', { count: items }) : '', entry.lessons.length ? t('train.countLessons', { count: entry.lessons.length }) : ''].filter(Boolean).join(' · ');
+        const counts = t('train.countItems', { count: items });
         return (
           <section key={m.id} id={`mod-${m.id}`} className="sec mod">
             <h2 className="mod-h">
@@ -86,29 +85,8 @@ export default function Treinar() {
               </button>
             </h2>
             {isOpen && (
-              <div id={`mod-body-${m.id}`} className={`mod-body ${entry.lessons.length && items ? '' : 'solo'}`}>
-                {entry.lessons.length > 0 && (
-                  <div>
-                    <div className="eyebrow" style={{ marginBottom: 8 }}>{t('train.lessons')}</div>
-                    <div className="mod-lessons">
-                      {entry.lessons.map(id => (
-                        <Link key={id} to={`/estudar/${id}`} className="ex-card">
-                          <span className="acc" style={{ background: m.color }} />
-                          <div style={{ minWidth: 0 }}>
-                            <h3>{lessonById[id].title}</h3>
-                            <div className="progressbar" style={{ marginTop: 10 }}><i style={{ width: `${lessonProgress(id, stats) * 100}%` }} /></div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {items > 0 && (
-                  <div>
-                    {entry.lessons.length > 0 && <div className="eyebrow" style={{ marginBottom: 8 }}>{t('train.items')}</div>}
-                    <GradeDeItens exercicios={entry.exercises} ferramentas={entry.tools} color={m.color} stats={stats} />
-                  </div>
-                )}
+              <div id={`mod-body-${m.id}`} className="mod-body solo">
+                <GradeDeItens exercicios={entry.exercises} ferramentas={entry.tools} color={m.color} stats={stats} />
               </div>
             )}
           </section>
@@ -241,7 +219,7 @@ export function ItemPage() {
   const { id = '' } = useParams();
   const location = useLocation();
   const t = useT();
-  const { LESSONS, moduleById } = useContent();
+  const { moduleById } = useContent();
   const revisao = useRevisao();
   const item = itemById[id];
   if (!item) return <NotFound />;
@@ -258,14 +236,12 @@ export function ItemPage() {
 
   // Aberto a partir de uma etapa de rotina: a configuração DA ETAPA, vinda no state da navegação.
   const daEtapa = lerAbertura(location.state);
-  const lesson = LESSONS.find(l => l.exercises.includes(id));
   const area = moduleById[item.primaryModule];
 
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <Link to={`/catalogo#${item.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
-        {lesson && <Link to={`/estudar/${lesson.id}`} className="eyebrow" style={{ textDecoration: 'none', color: 'var(--accent)' }}>{t('train.lesson', { title: lesson.title })}</Link>}
       </div>
 
       {isSeries(item) ? (

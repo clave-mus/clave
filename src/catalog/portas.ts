@@ -33,6 +33,13 @@ export interface Porta {
   destaque?: boolean;
   /** Leva ao nivelamento em vez de ao catálogo. */
   diagnostico?: boolean;
+  /**
+   * Abaixo do mínimo de 4 itens da decisão 20, **por ora** — a revisão de 04/11 (`P7`) tirou os
+   * itens de teoria, e isso esvaziou esta porta. O Paulo decidiu deixar assim enquanto não decide o
+   * destino (completar com outros itens, ou fundir/remover a porta). Sem este campo o teste da
+   * regra dos 4 falha de propósito — é para não apodrecer em silêncio como as outras portas.
+   */
+  abaixoDoMinimoPorOra?: true;
 }
 
 export const PORTAS: readonly Porta[] = [
@@ -47,19 +54,19 @@ export const PORTAS: readonly Porta[] = [
     itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'maos-livres', 'ambiente'],
   },
   {
-    id: 'harmonia',
+    id: 'harmonia', abaixoDoMinimoPorOra: true,
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
-    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'teoria-campo'],
+    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse'],
   },
   {
-    id: 'teoria',
+    id: 'teoria', abaixoDoMinimoPorOra: true,
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'teoria-intervalos', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
+    itens: ['teoria-intervalos', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'teoria-tonalidades', 'leitura', 'ritmo'],
+    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',

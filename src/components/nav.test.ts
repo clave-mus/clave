@@ -37,7 +37,7 @@ describe('endereços antigos', () => {
 
   it('cobre tudo que saiu da navegação', () => {
     expect(Object.keys(REDIRECTS).sort()).toEqual(
-      ['/comunidade', '/estudar', '/mentor', '/progresso', '/rotinas', '/treinar'],
+      ['/comunidade', '/mentor', '/progresso', '/rotinas', '/treinar'],
     );
   });
 

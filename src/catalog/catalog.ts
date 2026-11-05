@@ -12,10 +12,6 @@ import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
-import { teoriaGraus } from './items/teoria-graus';
-import { teoriaAcordes } from './items/teoria-acordes';
-import { teoriaCampo } from './items/teoria-campo';
-import { teoriaTonalidades } from './items/teoria-tonalidades';
 import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
@@ -32,10 +28,6 @@ export const EXERCISES: CatalogItem[] = [
   queAcordeEEsse,
   pautaArmadura,
   pautaEscala,
-  teoriaGraus,
-  teoriaAcordes,
-  teoriaCampo,
-  teoriaTonalidades,
   teoriaIntervalos,
   ouvidoTecla,
   ouvidoIntervalo,

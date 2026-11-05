@@ -71,13 +71,9 @@ export const SKILL_TAGS = {
   // teoria
   'theory.interval_naming': 'Nomear um intervalo visto (na pauta ou no instrumento) pela qualidade e número.',
   'theory.chord_identification': 'Reconhecer um acorde visto e dar a cifra.',
-  'theory.chord_construction': 'Saber quais notas formam um acorde a partir da cifra.',
   'theory.scale_identification': 'Reconhecer uma escala escrita e dar o nome.',
-  'theory.scale_degrees': 'Relacionar nota e grau dentro de uma tonalidade.',
-  'theory.modes': 'Saber a estrutura dos modos e o que distingue um do outro.',
   'theory.harmonic_field': 'Saber o acorde de cada grau do campo harmônico.',
   'theory.key_relations': 'Relações entre tonalidades: relativa menor, quantidade de acidentes.',
-  'theory.reharmonization': 'Substituições de acordes (ex.: sub5).',
   // mapa do instrumento: saber onde as notas estão (conhecimento, não controle motor)
   'fretboard.note_naming': 'Dar o nome da nota de uma casa marcada no braço.',
   'fretboard.note_finding': 'Achar no braço a casa de uma nota dada.',
@@ -128,7 +124,6 @@ export const CONTENT_TAGS = {
   'scale.blues': 'Escala blues.',
   // harmonia
   'harmony.diatonic_field': 'Campo harmônico diatônico.',
-  'harmony.tritone_sub': 'Substituto trítono (sub5).',
   // ritmo
   'rhythm.quarter': 'Semínimas e mínimas.',
   'rhythm.eighth': 'Colcheias e contratempo.',

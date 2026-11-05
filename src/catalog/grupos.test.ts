@@ -71,8 +71,8 @@ describe('a mesma instância em vários grupos', () => {
   });
 
   it('instância fora de todo grupo devolve lista vazia, e isso é o caso comum', () => {
-    expect(gruposDaInstancia(inst('teoria-graus'))).toEqual([]);
-    expect(companheirosDe(inst('teoria-graus'), sempre)).toEqual([]);
+    expect(gruposDaInstancia(inst('teoria-intervalos'))).toEqual([]);
+    expect(companheirosDe(inst('teoria-intervalos'), sempre)).toEqual([]);
   });
 
   // O ponto da mudança: o MESMO item em superfícies diferentes cai em grupos diferentes.
