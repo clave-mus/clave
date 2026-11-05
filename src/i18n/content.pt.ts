@@ -22,7 +22,7 @@ const ptContent = {
     harmonia: { nome: 'Acompanhar e entender harmonia', apoio: 'Campo harmônico, cifras e condução: o que sustenta a música.' },
     teoria: { nome: 'Aprender teoria musical', apoio: 'Os nomes e as razões por trás do que você já toca.' },
     leitura: { nome: 'Aprender a ler partitura', apoio: 'Da nota escrita ao som, sem travar.' },
-    ritmo: { nome: 'Melhorar ritmo e groove', apoio: 'Subdivisão, leitura rítmica e tocar no tempo.' },
+    ritmo: { nome: 'Ritmo e pulso interno', apoio: 'Subdivisão, leitura rítmica e tocar no tempo.' },
     tecnica: { nome: 'Melhorar técnica e precisão', apoio: 'Coordenação, independência dos dedos e controle do som.' },
     improviso: { nome: 'Improvisar e solar', apoio: 'O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário.' },
     comecar: { nome: 'Não sei por onde começar', apoio: 'Três perguntas e uma rotina sugerida. Dá para mudar tudo depois.' },

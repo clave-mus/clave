@@ -25,7 +25,7 @@ const pt = {
     no: 'Não',
     nameLabel: 'Como o Clave te chama',
     namePlaceholder: 'Seu nome',
-    instrument: 'Instrumento',
+    instrument: 'Instrumento principal',
     bars: 'Compassos {a} e {b}',
   },
   nav: {

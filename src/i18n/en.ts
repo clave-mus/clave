@@ -25,7 +25,7 @@ const en: Shape<typeof pt> = {
     no: 'No',
     nameLabel: 'What should Clave call you',
     namePlaceholder: 'Your name',
-    instrument: 'Instrument',
+    instrument: 'Main instrument',
     bars: 'Bars {a} and {b}',
   },
   nav: {
