@@ -100,7 +100,8 @@ audiar uma sequência de graus · ler uma melodia e audiá-la.
    metrônomo no modo zen; com metrônomo e X compassos por acorde no modo difícil. Primeiras cinco
    casas. → **`M5` calcula as posições** (`max_fret=5`, `kind='chord'`)
 4. **Combinações de graus** (sortear `1256` e achar as formas próximas, priorizando as espalhadas
-   por várias cordas), por grau do campo. → **`M1`**
+   por várias cordas), por grau do campo. **A pessoa escolhe as formas ou sorteia** — as duas.
+   → **`M1`** + **`M5`**
 5. **Modos gregos**: sortear uns 4 graus (`1765`) e tocar em todos os modos da tonalidade, em
    posições diferentes. Precisa só de metrônomo, sorteio e drone. → **`M1`**
 6. **Pentatônicas diatônicas**, com drone e bateria. Solfejar os graus, depois motivos.
@@ -131,4 +132,4 @@ toca as tônicas · quintas · terças · sétimas · arpejos sorteados · two-f
 | ✅ | o nome: **ciclo de rotinas** |
 | ✅ | o gerador antigo, em `docs/doado/leitura-partituras/` |
 | ✅ | as revisões da versão antiga — não havia nada novo |
-| ❓ | Nas combinações de graus: **o app sorteia as formas, ou ele escolhe quais tocar?** (dúvida dele) |
+| ✅ | combinações de graus: **as duas** — a pessoa escolhe as formas **ou** sorteia |

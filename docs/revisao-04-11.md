@@ -198,6 +198,8 @@ Em ordem de quanto atrapalham o uso.
 | **M2** | **Arquitetura de ajudas reutilizáveis** (ele listou): repetir o estímulo · mudar a velocidade **sem gerar outra questão** · separar o que soou junto · ouvir nota a nota · ouvir referência tonal · mostrar o visual · dica progressiva · revelar o gabarito. Hoje parte disso existe espalhada e sem contrato |
 | **M3** | **Voz para o hands-free**: escolha de voz, velocidade, repetições do estímulo |
 | **M5** | **Portar o gerador de formas** (`docs/doado/gerador_arpejos_baixo.py`) para TypeScript, com os 21 testes **portados primeiro**. Ele calcula modo → acorde por graus → **posições no braço**, e é o que destrava a `M1` e a `FM-2`. Preservar as duas decisões dele: corda solta não conta no vão, e vão 4 para voicing / 5 para arpejo |
+| **M5b** | **Caminhos de escala.** Uma escala é um acorde com mais notas, para a busca: `kind: 'arpeggio'` + `direction: 'ascending'` com os 7 graus **já gera os caminhos de subir a escala no braço**. ⚠️ **O problema novo é explosão** — milhares de caminhos quase idênticos. A chave que os distingue é a **distribuição por corda** (3-3-2, 2-2-2-2…), que é como baixista e guitarrista já falam disso. Serve de dedupe **e** de filtro ("quero 3 notas por corda"). **Não sugerir dedos** — mostrar o caminho (`A21`) |
+| **M5c** | **Extensões de escala**: dada uma posição âncora, que notas da escala alcançam **à esquerda, à direita, acima e abaixo** — sem deslocar a mão, e com um deslocamento. É outra pergunta sobre o mesmo índice de braço, não outro motor |
 | **M4** | **Metrônomo reformulado**: ±1 bpm · escolher **quais tempos tocam** · tocar um compasso e silenciar o próximo (e extrapolações) · modo 1/1 sem acento. ⚠️ Há um conflito entre "escolher tempos" e "subdivisão" — 👤 resolver antes |
 
 ---
@@ -232,7 +234,7 @@ Tudo marcado 👤 acima, mais estes, que o Paulo deixou explicitamente em aberto
 - ✅ as **revisões da versão antiga**: ele conferiu, não há nada novo
 - o nome do agrupamento de pares opostos (`P4`)
 - o conflito entre "quais tempos tocam" e "subdivisão" no metrônomo (`M4`)
-- nas combinações de graus: **o app sorteia as formas ou ele escolhe?** (dúvida dele)
+- ✅ combinações de graus: **as duas** — escolher ou sortear
 
 E uma regra que esta revisão criou e vale para todas elas:
 
