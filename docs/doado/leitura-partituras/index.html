@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title data-i18n="appTitle">Prática de Leitura à Primeira Vista</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <div id="settings-overlay"></div>
+
+  <!-- ============================== SIDEBAR / OPÇÕES ============================== -->
+  <aside id="settings">
+    <div class="brand-header">
+      <div class="brand"><span class="dot"></span><div><h1 data-i18n="appTitle">Prática de Leitura à Primeira Vista</h1></div></div>
+      <div style="display:flex; gap: 8px;">
+        <select id="langSelect" class="lang-select" title="Language">
+            <option value="pt">PT</option>
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+        </select>
+        <button id="themeToggle" class="action-btn" style="padding: 0 8px;" title="Alternar Tema">☀️</button>
+        <button class="close-btn" id="closeSettingsBtn">&times;</button>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend data-i18n="setGeneral">Configurações gerais</legend>
+      <div class="row">
+        <label class="field-label" data-i18n="dispMode">Modo de Exibição</label>
+        <select id="displayMode">
+          <option value="scroll" data-i18n="dispScroll">Rolagem Contínua</option>
+          <option value="page" data-i18n="dispPage">Leitura Estática (Páginas)</option>
+        </select>
+      </div>
+      <div class="row" id="pageLinesRow" style="display:none;">
+        <label class="field-label" data-i18n="linesPage">Linhas por Página</label>
+        <select id="pageLinesSelect">
+          <option value="2" data-i18n="lines2">2 Linhas</option>
+          <option value="3" data-i18n="lines3">3 Linhas</option>
+          <option value="4" data-i18n="lines4">4 Linhas</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="field-label" data-i18n="timeSig">Fórmula de Compasso</label>
+        <select id="timeSigSelect">
+          <option value="4/4">4/4</option>
+          <option value="3/4">3/4</option>
+          <option value="2/4">2/4</option>
+          <option value="5/4">5/4</option>
+          <option value="7/4">7/4</option>
+          <option value="6/8">6/8</option>
+          <option value="9/8">9/8</option>
+          <option value="12/8">12/8</option>
+          <option value="6/4">6/4</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="field-label" data-i18n="clef">Clave</label>
+        <select id="clefSelect">
+          <option value="bass" data-i18n="clefBass">Clave de Fá</option>
+          <option value="treble" data-i18n="clefTreble">Clave de Sol</option>
+          <option value="alto" data-i18n="clefAlto">Clave de Dó 3ªL</option>
+          <option value="tenor" data-i18n="clefTenor">Clave de Dó 4ªL</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="field-label" for="keySelect" data-i18n="key">Tom</label>
+        <select id="keySelect"></select>
+      </div>
+      <div class="col" style="gap:4px;">
+        <label class="check"><input type="checkbox" id="pentaToggle"> <span data-i18n="pentaOnly">Restringir à Escala Pentatônica</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="extRange">Extensão de Notas</legend>
+      <div class="row">
+        <label class="field-label" data-i18n="position">Posição</label>
+        <select id="positionMode">
+          <option value="free" data-i18n="posFree">Livre (usar limite abaixo)</option>
+          <option value="0" data-i18n="pos0">Posição 0 (Soltas + Casas 1-4)</option>
+          <option value="1" data-i18n="pos1">1ª posição (Casas 1-4)</option>
+          <option value="2" data-i18n="pos2">2ª posição (Casas 2-5)</option>
+          <option value="3" data-i18n="pos3">3ª posição (Casas 3-6)</option>
+          <option value="4" data-i18n="pos4">4ª posição (Casas 4-7)</option>
+          <option value="5" data-i18n="pos5">5ª posição (Casas 5-8)</option>
+          <option value="6" data-i18n="pos6">6ª posição (Casas 6-9)</option>
+          <option value="7" data-i18n="pos7">7ª posição (Casas 7-10)</option>
+          <option value="8" data-i18n="pos8">8ª posição (Casas 8-11)</option>
+          <option value="9" data-i18n="pos9">9ª posição (Casas 9-12)</option>
+          <option value="10" data-i18n="pos10">10ª posição (Casas 10-13)</option>
+          <option value="11" data-i18n="pos11">11ª posição (Casas 11-14)</option>
+          <option value="12" data-i18n="pos12">12ª posição (Casas 12-15)</option>
+        </select>
+      </div>
+      <div class="row grid2" id="rangeRow">
+        <div><label class="field-label" data-i18n="lowest">Mais grave</label><select id="lowNote"></select></div>
+        <div><label class="field-label" data-i18n="highest">Mais aguda</label><select id="highNote"></select></div>
+      </div>
+      <div class="hint" id="positionHint" style="color: var(--secondary);" data-i18n="posHint">No modo livre, as notas serão geradas dentro do limite definido acima, independentemente da posição no braço.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="genMode">Modo de Geração</legend>
+      <div class="row">
+        <select id="genMode">
+          <option value="random" data-i18n="gmRandom">Aleatório</option>
+          <option value="triads" data-i18n="gmArps">Arpejos</option>
+          <option value="groove" data-i18n="gmGroove">Groove Repetitivo</option>
+          <option value="sequences" data-i18n="gmScales">Padrões de Escala</option>
+          <option value="pedal" data-i18n="gmPedal">Nota Pivô</option>
+        </select>
+      </div>
+      <div class="hint" id="genModeHint" style="margin-bottom: 8px;" data-i18n="gmHint">Aleatório: notas sorteadas de acordo com a escala, alcance e limites de salto.</div>
+      
+      <div id="sequencesOpts" class="row" style="display:none; padding-top:4px; border-top: 1px solid var(--line);">
+        <label class="field-label" data-i18n="scalePat">Padrão Escalar:</label>
+        <select id="seqPattern">
+            <option value="thirds" data-i18n="spThirds">Em Terças (1-3, 2-4...)</option>
+            <option value="fourths" data-i18n="spFourths">Em Quartas (1-4, 2-5...)</option>
+            <option value="fifths" data-i18n="spFifths">Em Quintas (1-5, 2-6...)</option>
+            <option value="sixths" data-i18n="spSixths">Em Sextas (1-6, 2-7...)</option>
+            <option value="zigzag" data-i18n="spZigzag">Zigue-Zague (1-2-3-4, 3-4-5-6...)</option>
+            <option value="group3" data-i18n="spGrp3">Grupos de 3 (1-2-3, 2-3-4...)</option>
+            <option value="group4" data-i18n="spGrp4">Grupos de 4 (1-2-3-4, 2-3-4-5...)</option>
+            <option value="diatonic_arps" data-i18n="spArps">Arpejos Diatônicos (1-3-5, 2-4-6...)</option>
+            <option value="hanon" data-i18n="spHanon">Padrão Hanon (1-3-2-4, 2-4-3-5...)</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="jumpLim">Limite de Salto entre Notas</legend>
+      <div class="row"><input type="range" id="intervalSlider" min="0" max="13" step="1" value="6"></div>
+      <div class="row between"><span class="hint" id="intervalLabel">Máximo: 8ª (Oitava)</span></div>
+      <div class="hint" style="font-size:10px;" data-i18n="jumpHint">Define a distância máxima permitida de uma nota para a próxima.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="rhythmFigs">Figuras Rítmicas</legend>
+      <div class="hint" style="margin-bottom:6px;" data-i18n="rhythmHint">Ajuste o peso (chance de aparecer) de cada figura (0 a 100).</div>
+      <div class="col">
+        <div><div class="prob-row"><label data-i18n="rfWhole">Semibreve</label><span id="lblWWhole">0</span></div><input type="range" id="wWhole" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rfHalf">Mínima</label><span id="lblWHalf">0</span></div><input type="range" id="wHalf" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rfQuarter">Semínima</label><span id="lblWQuarter">100</span></div><input type="range" id="wQuarter" min="0" max="100" value="100"></div>
+        <div><div class="prob-row"><label data-i18n="rfEighth">Colcheia</label><span id="lblWEighth">0</span></div><input type="range" id="wEighth" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rfSixteenth">Semicolcheia</label><span id="lblWSixteenth">0</span></div><input type="range" id="wSixteenth" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rfDotted">Notas pontuadas</label><span id="lblWDotted">0</span></div><input type="range" id="wDotted" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rfRests">Pausas</label><span id="lblProbRest">5%</span></div><input type="range" id="probRest" min="0" max="100" value="5"></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="tupletsFieldset">
+      <legend data-i18n="tuplets">Quiálteras</legend>
+      <div class="hint" style="margin-bottom:6px;" data-i18n="tupletHint">Grupos irregulares condizentes com o compasso (0 a 100).</div>
+      <div class="col">
+        <!-- Simples -->
+        <div id="wrap_tHalf"><div class="prob-row"><label data-i18n="tpHalf">Tercinas de Mínima</label><span id="lblTHalf">0</span></div><input type="range" id="w_tHalf" min="0" max="100" value="0"></div>
+        <div id="wrap_dHemiola"><div class="prob-row"><label data-i18n="tpHemiola">Duínas de Semínima (Hemiola)</label><span id="lblDHemiola">0</span></div><input type="range" id="w_dHemiola" min="0" max="100" value="0"></div>
+        <div id="wrap_tQuarter"><div class="prob-row"><label data-i18n="tpQuarter">Tercinas de Semínima</label><span id="lblTQuarter">0</span></div><input type="range" id="w_tQuarter" min="0" max="100" value="0"></div>
+        <div id="wrap_qEighth"><div class="prob-row"><label data-i18n="qpEighth">Quintinas de Colcheia</label><span id="lblQEighth">0</span></div><input type="range" id="w_qEighth" min="0" max="100" value="0"></div>
+        <div id="wrap_tEighth"><div class="prob-row"><label data-i18n="tpEighth">Tercinas de Colcheia</label><span id="lblTEighth">0</span></div><input type="range" id="w_tEighth" min="0" max="100" value="0"></div>
+        <div id="wrap_qSixteenth"><div class="prob-row"><label data-i18n="qpSixteenth">Quintinas de Semicolcheia</label><span id="lblQSixteenth">0</span></div><input type="range" id="w_qSixteenth" min="0" max="100" value="0"></div>
+        <div id="wrap_tSixteenth"><div class="prob-row"><label data-i18n="tpSixteenth">Sextinas de Semicolcheia</label><span id="lblTSixteenth">0</span></div><input type="range" id="w_tSixteenth" min="0" max="100" value="0"></div>
+        
+        <!-- Compostos -->
+        <div id="wrap_dQuarter"><div class="prob-row"><label data-i18n="dpQuarter">Duínas de Semínima</label><span id="lblDQuarter">0</span></div><input type="range" id="w_dQuarter" min="0" max="100" value="0"></div>
+        <div id="wrap_dEighth"><div class="prob-row"><label data-i18n="dpEighth">Duínas de Colcheia</label><span id="lblDEighth">0</span></div><input type="range" id="w_dEighth" min="0" max="100" value="0"></div>
+        <div id="wrap_quadEighth"><div class="prob-row"><label data-i18n="quadEighth">Quartinas de Colcheia</label><span id="lblQuadEighth">0</span></div><input type="range" id="w_quadEighth" min="0" max="100" value="0"></div>
+        <div id="wrap_compQSixteenth"><div class="prob-row"><label data-i18n="compQSixteenth">Quintinas de Semicolcheia</label><span id="lblCompQSixteenth">0</span></div><input type="range" id="w_compQSixteenth" min="0" max="100" value="0"></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="rhythmCellsFieldset">
+      <legend data-i18n="rcTitle">Células Rítmicas Essenciais</legend>
+      <div class="hint" style="margin-bottom:6px;" data-i18n="rcHint">Padrões fixos de 1 tempo. Aumente para treinar uma leitura específica.</div>
+      <div class="col">
+        <div><div class="prob-row"><label data-i18n="rc1">4 Semicolcheias</label><span id="lblC1">0</span></div><input type="range" id="w_c1" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc2">1 Colcheia + 2 Semicolcheias</label><span id="lblC2">0</span></div><input type="range" id="w_c2" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc3">2 Semicolcheias + 1 Colcheia</label><span id="lblC3">0</span></div><input type="range" id="w_c3" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc4">1 Semicolcheia + 1 Colcheia + 1 Semicolcheia</label><span id="lblC4">0</span></div><input type="range" id="w_c4" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc5">Colcheia Pontuada + Semicolcheia</label><span id="lblC5">0</span></div><input type="range" id="w_c5" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc6">Semicolcheia + Colcheia Pontuada</label><span id="lblC6">0</span></div><input type="range" id="w_c6" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc7">Pausa de Semicolcheia + 3 Semicolcheias</label><span id="lblC7">0</span></div><input type="range" id="w_c7" min="0" max="100" value="0"></div>
+        <div><div class="prob-row"><label data-i18n="rc8">Colcheia + Pausa de Semicolcheia + Semicolcheia</label><span id="lblC8">0</span></div><input type="range" id="w_c8" min="0" max="100" value="0"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="extra">Extra</legend>
+      <div class="col">
+          <div><div class="prob-row"><label data-i18n="exTies" title="Cria síncopes ligando tempos fracos e cruzando compassos">Ligaduras de Valor (Síncopes)</label><span id="lblProbTie">0%</span></div><input type="range" id="probTie" min="0" max="100" value="0"></div>
+          <div><div class="prob-row"><label data-i18n="exChrom" title="Injeta notas meio tom distantes antes da nota alvo">Aproximação Cromática</label><span id="lblProbChromatic">0%</span></div><input type="range" id="probChromatic" min="0" max="100" value="0"></div>
+          <div><div class="prob-row"><label data-i18n="exGhost">Ghost Notes (X)</label><span id="lblProbGhost">0%</span></div><input type="range" id="probGhost" min="0" max="100" value="0"></div>
+          <div><div class="prob-row"><label data-i18n="exStac">Staccato</label><span id="lblProbStaccato">0%</span></div><input type="range" id="probStaccato" min="0" max="100" value="0"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="audioSettings">Volume e Áudio</legend>
+      <div class="col">
+          <div class="row">
+            <label class="field-label" data-i18n="synthTimbre">Timbre do Synth</label>
+            <select id="synthSoundSelect" style="flex:1;">
+              <option value="sawtooth" data-i18n="waveSaw">Onda Dente de Serra</option>
+              <option value="square" data-i18n="waveSquare">Onda Quadrada</option>
+              <option value="sine" data-i18n="waveSine">Onda Senoidal</option>
+            </select>
+          </div>
+          <div><div class="prob-row"><label data-i18n="volClick">Volume do Metrônomo</label><span id="lblVolClick">100%</span></div><input type="range" id="volClick" min="0" max="100" value="100"></div>
+          <div><div class="prob-row"><label data-i18n="volSynth">Volume do Sintetizador</label><span id="lblVolSynth">50%</span></div><input type="range" id="volSynth" min="0" max="100" value="50"></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="stringsFieldset">
+      <legend data-i18n="bassStrings">Cordas do Contrabaixo</legend>
+      <div class="pillrow" id="stringsRow">
+        <span class="pill" data-string="B">B</span>
+        <span class="pill active" data-string="E">E</span>
+        <span class="pill active" data-string="A">A</span>
+        <span class="pill active" data-string="D">D</span>
+        <span class="pill active" data-string="G">G</span>
+        <span class="pill" data-string="C">C</span>
+      </div>
+      <div class="hint" style="font-size:10px;" data-i18n="bassHint">Determina o desenho matemático das posições no braço.</div>
+    </fieldset>
+
+  </aside>
+
+  <!-- ============================== ÁREA PRINCIPAL E PARTITURA ============================== -->
+  <main id="main">
+    <div id="transport">
+      <div style="display:flex; gap:8px;">
+        <button id="playPauseBtn" class="transport-btn btn-green"><span class="icon">▶</span> <span data-i18n="btnStart">Iniciar</span></button>
+        <button id="stopBtn" class="transport-btn" disabled><span class="icon">■</span> <span data-i18n="btnStop">Parar</span></button>
+      </div>
+      
+      <button class="action-btn" id="openSettingsBtn" style="font-weight: 600; color:var(--text-0);">⚙️ <span data-i18n="btnOpts">Opções</span></button>
+      
+      <div class="spacer" style="flex:0.2"></div>
+
+      <div class="bpm-box">
+        <span class="field-label" style="margin-right: -4px;">BPM</span>
+        <input type="range" id="bpmSlider" min="30" max="220" value="60">
+        <div class="bpm-btns-col">
+          <button id="bpmInc" class="bpm-btn" title="+1 BPM">▲</button>
+          <button id="bpmDec" class="bpm-btn" title="-1 BPM">▼</button>
+        </div>
+        <input type="number" class="readout" id="bpmReadout" min="30" max="220" value="60">
+      </div>
+      
+      <div class="spacer" style="flex:0.2"></div>
+
+      <button class="action-btn on" id="countInBtn"><span class="led"></span><span data-i18n="btnCount">Contagem</span></button>
+      <button class="action-btn on" id="noteAudioBtn"><span class="led"></span><span data-i18n="btnNoteAudio">Som das Notas</span></button>
+      <button class="action-btn on" id="clickAudioBtn"><span class="led"></span><span data-i18n="btnClick">Metrônomo</span></button>
+      <div class="spacer"></div>
+      <div id="status" data-i18n="stsReady">pronto</div>
+    </div>
+
+    <div id="score-wrap">
+      
+      <div id="welcome-screen">
+          <h2><span data-i18n="wel1">Clique em</span> <span style="color:var(--primary-glow)">▶ <span data-i18n="btnStart">Iniciar</span></span> <span data-i18n="wel2">ou pressione</span> <kbd style="background:var(--bg-3); padding:2px 8px; border-radius:4px; border: 1px solid var(--line);" data-i18n="space">Espaço</kbd> <span data-i18n="wel3">para gerar uma partitura!</span></h2>
+          <p data-i18n="welSub">Clique em "⚙️ Opções" para mexer nos detalhes.</p>
+      </div>
+
+      <div id="playhead"></div>
+      <div id="clefpanel"><svg id="clefsvg"></svg></div>
+      <div id="score-scroll"></div>
+      <div id="countin-flash"></div>
+    </div>
+  </main>
+
+</div>
+
+<script src="vexflow.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

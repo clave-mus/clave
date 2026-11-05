@@ -164,7 +164,7 @@ Em ordem de quanto atrapalham o uso.
 | **P6** | **Varredura: opções redundantes.** Tonalidade + material cromático dizem a mesma coisa; "região grave/média/aguda" não tem função clara em vários itens. **Varrer todos** |  |
 | **P7** | **Remoções.** Aulas (todas, e os links sobre os exercícios) · `sustentar-e-cortar` · `legato-staccato` · os itens de teoria **menos** intervalos em texto | ✅ decidido |
 | **P8** | "Rotinas do time" → **"Rotinas da comunidade"**. **Suas rotinas vêm antes.** Na rotina da comunidade, só **Começar**; "adotar" aparece depois | ✅ decidido |
-| **P9** | **Conjunto de rotinas**: ciclar entre rotinas, oferecendo a que está há mais tempo sem fazer | 👤 **o nome** |
+| **P9** | **Ciclo de rotinas** *(nome dele)*: ciclar entre rotinas, oferecendo a que está há mais tempo sem fazer | ✅ |
 | **P10** | **Checklist de repertório** (jazz standards), com passos fixos por música | 👤 |
 | **P11** | **Nivelamento geral e por habilidade**, gerando rotina especializada | 👤 |
 | **P12** | **Tags/etiquetas**: hoje não fazem nada visível. Repensar — e o filtro "só sem instrumento" precisa do par **"só com instrumento"** | 👤 |
@@ -180,7 +180,8 @@ Em ordem de quanto atrapalham o uso.
 | **X3** | **Audiação — a família inteira.** `a` solfejar intervalo/escala/arpejo a partir de uma referência → gabarito · `b` ler melodia → audiar → gabarito · `c` ver padrão no braço → audiar → gabarito · `d` receber sequência de graus → audiar · `e` audiar ritmo. **Validação por microfone é opcional e não é prioridade** | grande |
 | **X4** | **Ordem variada de graus** nas escalas e modos: começa na tônica grave, sobe passando por todas, volta à tônica | média |
 | **X5** | **Reconhecer progressões.** Tocar acordes dizendo nome e grau, depois perguntar · progressões de 4 compassos · **dicas progressivas** (revela um grau por vez) · inversões, extensões, empréstimo modal | grande |
-| **X6** | **Gerador de leitura, reformulado.** 👤 O Paulo vai anexar a ferramenta antiga dele. Hoje gera 8 dós seguidos com dó-ré-mi | grande |
+| **X6** | **Gerador de leitura, reformulado.** A ferramenta antiga está em `docs/doado/leitura-partituras/` e tem os modos que faltam: padrões de escala (terças, quartas, zigue-zague, grupos, Hanon), arpejos com cifra, groove com *fill*, nota pivô, enclosures, e **posição do braço como filtro de notas**. Levar também as **âncoras de tempo** (mudar BPM sem reiniciar). ⚠️ **Não copiar a interface** — ver `X6b` | grande |
+| **X6b** | **O problema de UX do gerador antigo**, nas palavras dele: *"era tão customizável que era difícil de usar"*. São ~60 controles, e **26 são pesos de 0 a 100**. O desenho proposto: **(1) preset primeiro, parâmetro depois** — a pessoa escolhe "síncopes em 4/4" e começa; **(2) peso vira lista de marcar** — o que a pessoa quer dizer é *quais figuras podem aparecer*, não a probabilidade de cada uma; o peso contínuo é ferramenta de especialista e vai para uma gaveta "avançado"; **(3) o que varia, varia a cada rodada** — em vez de a pessoa configurar vinte coisas, o exercício muda sozinho entre as rodadas (ele já pediu isso em `X1`) | média |
 | **X7** | **Reconhecer o baixo**: acorde + nota grave, dizer que grau o baixo tocou | média |
 | **X8** | **Achar nota no instrumento, reformulado.** Automático nota a nota, com tempo configurável · som e gabarito visual opcionais · botão de pular · **gabarito mostra TODAS as posições** (hoje impõe uma resposta certa onde há várias) | média |
 | **X9** | **Construir intervalo, consertado e movido.** Sai de `ache-a-nota` e vira o par de `que-intervalo-e-esse` · sem escolha de intervalos · **enarmônicos** (quinta aumentada ≠ sexta menor) · validar o acidente certo (a quinta de Si é Fá♯) · opção de ver o **nome**, a **posição** ou os dois | média |
@@ -196,6 +197,7 @@ Em ordem de quanto atrapalham o uso.
 | **M1** | **O ciclador.** Embaralha ou sorteia alvos, fica X compassos em cada, avisa o próximo **visualmente** e a troca **sonoramente**, mostra a forma. É a base de **toda** a rotina de baixo dele |
 | **M2** | **Arquitetura de ajudas reutilizáveis** (ele listou): repetir o estímulo · mudar a velocidade **sem gerar outra questão** · separar o que soou junto · ouvir nota a nota · ouvir referência tonal · mostrar o visual · dica progressiva · revelar o gabarito. Hoje parte disso existe espalhada e sem contrato |
 | **M3** | **Voz para o hands-free**: escolha de voz, velocidade, repetições do estímulo |
+| **M5** | **Portar o gerador de formas** (`docs/doado/gerador_arpejos_baixo.py`) para TypeScript, com os 21 testes **portados primeiro**. Ele calcula modo → acorde por graus → **posições no braço**, e é o que destrava a `M1` e a `FM-2`. Preservar as duas decisões dele: corda solta não conta no vão, e vão 4 para voicing / 5 para arpejo |
 | **M4** | **Metrônomo reformulado**: ±1 bpm · escolher **quais tempos tocam** · tocar um compasso e silenciar o próximo (e extrapolações) · modo 1/1 sem acento. ⚠️ Há um conflito entre "escolher tempos" e "subdivisão" — 👤 resolver antes |
 
 ---
@@ -213,8 +215,8 @@ Ordenada por **desbloqueio**, não por tamanho. O que está em cima destrava o q
 **Terceiro — o catálogo deixar de confundir**
 `P7` remoções · `P2`+`P3` leitura × instrumento · `P5`+`P6` varreduras · `P8` comunidade · `P14` nomes
 
-**Quarto — o baixo**
-`M1` o ciclador · 👤 as formas do Paulo · `R2` a rotina de tonalidade
+**Quarto — o baixo** *(deixou de estar bloqueado)*
+`M5` portar o gerador de formas · `M1` o ciclador · `R2` a rotina de tonalidade
 
 **Depois** — `P1` montar sessão · `X5` progressões · `X6` gerador · `X2` deslocamento · o resto
 
@@ -224,12 +226,13 @@ Ordenada por **desbloqueio**, não por tamanho. O que está em cima destrava o q
 
 Tudo marcado 👤 acima, mais estes, que o Paulo deixou explicitamente em aberto:
 
-- o **nome** de "conjunto de rotinas"
+- ✅ o nome: é **"ciclo de rotinas"**
+- ✅ as **formas do baixo**: ele deu um **algoritmo** em vez de uma lista — `M5`
+- ✅ o **gerador de leitura**: está em `docs/doado/leitura-partituras/`
+- ✅ as **revisões da versão antiga**: ele conferiu, não há nada novo
 - o nome do agrupamento de pares opostos (`P4`)
 - o conflito entre "quais tempos tocam" e "subdivisão" no metrônomo (`M4`)
-- **as formas e posições** do baixo — ele vai listar
-- o **gerador de leitura** — ele vai anexar a ferramenta antiga
-- **as revisões da versão antiga**, que ele disse que ainda vai passar
+- nas combinações de graus: **o app sorteia as formas ou ele escolhe?** (dúvida dele)
 
 E uma regra que esta revisão criou e vale para todas elas:
 

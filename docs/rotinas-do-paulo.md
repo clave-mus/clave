@@ -12,8 +12,8 @@ montar **hoje**, com o que existe, e o que cada uma ganha conforme as tarefas da
 
 ## O conjunto do ônibus
 
-Cinco rotinas de **12 a 18 minutos**, modo livre. A ideia: sentar no ônibus, abrir o conjunto, e
-fazer a que está há mais tempo sem ser feita. Se não estiver a fim, pula para a próxima.
+Cinco rotinas de **12 a 18 minutos**, modo livre, reunidas num **ciclo de rotinas** (o nome é dele).
+A ideia: sentar no ônibus, abrir o ciclo, e fazer a que está há mais tempo sem ser feita. Se não estiver a fim, pula para a próxima.
 
 ### 1. Ônibus · Ritmo
 
@@ -78,8 +78,9 @@ audiar uma sequência de graus · ler uma melodia e audiá-la.
 
 ## A rotina com o baixo
 
-> ⚠️ **Quase nada disto existe.** Tudo depende do **ciclador** (`M1`) e das **formas** que o Paulo
-> ainda vai listar. O que está aqui é o desenho, para ele conferir antes de alguém construir.
+> ⚠️ **Quase nada disto existe**, mas deixou de estar bloqueado: o Paulo doou um **algoritmo** que
+> calcula as formas em vez de uma lista escrita à mão (`M5`, ver `docs/doado/`). Falta o **ciclador**
+> (`M1`). O que está aqui é o desenho, para ele conferir antes de alguém construir.
 
 **Regra que ele deu e vale para a rotina inteira:** nada de estudar ritmo isolado aqui — isso é o
 ônibus. Mas **tudo com metrônomo**, cuidando da precisão.
@@ -97,7 +98,7 @@ audiar uma sequência de graus · ler uma melodia e audiá-la.
    tonalidade"*. → **`M1`**
 3. **Digitações e posições de tríades e tétrades.** Graus embaralhados, um de cada vez, sem
    metrônomo no modo zen; com metrônomo e X compassos por acorde no modo difícil. Primeiras cinco
-   casas. 👤 **as posições são dele**
+   casas. → **`M5` calcula as posições** (`max_fret=5`, `kind='chord'`)
 4. **Combinações de graus** (sortear `1256` e achar as formas próximas, priorizando as espalhadas
    por várias cordas), por grau do campo. → **`M1`**
 5. **Modos gregos**: sortear uns 4 graus (`1765`) e tocar em todos os modos da tonalidade, em
@@ -126,8 +127,8 @@ toca as tônicas · quintas · terças · sétimas · arpejos sorteados · two-f
 
 | | |
 |---|---|
-| 👤 | **As formas e posições do baixo** — sem elas o ciclador não tem o que mostrar |
-| 👤 | **O nome** de "conjunto de rotinas" |
-| 👤 | **A ferramenta antiga de gerar partituras**, que ele vai anexar |
-| 👤 | **As revisões da versão antiga**, que ele disse que ainda tem |
+| ✅ | as formas — ele deu o **algoritmo** (`M5`), que é melhor que a lista |
+| ✅ | o nome: **ciclo de rotinas** |
+| ✅ | o gerador antigo, em `docs/doado/leitura-partituras/` |
+| ✅ | as revisões da versão antiga — não havia nada novo |
 | ❓ | Nas combinações de graus: **o app sorteia as formas, ou ele escolhe quais tocar?** (dúvida dele) |
