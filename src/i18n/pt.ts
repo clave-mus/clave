@@ -853,7 +853,7 @@ const pt = {
       '7M#5': 'Maior com sétima maior e quinta aumentada',
       sus2: 'Suspenso (2ª)',
       sus4: 'Suspenso (4ª)',
-      '7M': 'Com sétima maior',
+      '7M': 'Maior com sétima maior',
       '7': 'Dominante (com sétima)',
       m7: 'Menor com sétima',
       m7b5: 'Meio-diminuto',
