@@ -22,6 +22,16 @@ function loadOpen(): string[] {
   try { const v = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
 }
 
+const POR_KEY = 'clave:treinar-por';
+type Por = 'objetivo' | 'area';
+/**
+ * Por objetivo × por área também fica lembrado (B3): sem isso, voltar de um exercício ou de uma
+ * aula — que remonta esta tela — sempre caía em "por objetivo", mesmo vindo de dentro de "por área".
+ */
+function loadPor(): Por {
+  try { const v = localStorage.getItem(POR_KEY); return v === 'area' ? 'area' : 'objetivo'; } catch { return 'objetivo'; }
+}
+
 export default function Treinar() {
   const t = useT();
   const { MODULES, moduleById, lessonById } = useContent();
@@ -29,14 +39,18 @@ export default function Treinar() {
   const { hash } = useLocation();
   const [mobileOnly, setMobileOnly] = useState(false);
   /** Por objetivo é o PADRÃO (decisão 20b): a pessoa chega com uma pergunta, não com o nome de uma área. */
-  const [por, setPor] = useState<'objetivo' | 'area'>('objetivo');
+  const [por, setPorState] = useState<Por>(loadPor);
+  const setPor = (p: Por) => { setPorState(p); try { localStorage.setItem(POR_KEY, p); } catch { /* sem armazenamento: só não lembra */ } };
   const revisao = useRevisao();
   const [open, setOpen] = useState<string[]>(loadOpen);
   useEffect(() => { try { localStorage.setItem(OPEN_KEY, JSON.stringify(open)); } catch { /* sem armazenamento: só não lembra */ } }, [open]);
-  // /treinar#theory abre o módulo e rola até ele (é para onde voltam as telas de exercício e de aula)
+  // /treinar#theory abre o módulo e rola até ele (é para onde voltam as telas de exercício e de aula).
+  // Esse link só existe em "por área" (é onde a seção do módulo existe de fato) — então chegar com
+  // hash também troca pra lá, senão a seção não existe pra rolar até ela.
   useEffect(() => {
     const id = decodeURIComponent(hash.slice(1));
     if (!MODULES.some(m => m.id === id)) return;
+    setPor('area');
     setOpen(o => (o.includes(id) ? o : [...o, id]));
     requestAnimationFrame(() => document.getElementById(`mod-${id}`)?.scrollIntoView());
   }, [hash, MODULES]);
