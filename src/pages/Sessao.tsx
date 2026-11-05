@@ -120,14 +120,14 @@ export default function Sessao() {
   // ---------------------------------------------------------------- antes de começar
   if (!sessao) {
     if (rotina.etapas.length === 0) {
-      return <div className="empty"><h1>{t('session.none')}</h1><div><Btn to={`/rotina/${rotina.id}`}>{t('session.build')}</Btn></div></div>;
+      return <div className="empty"><h1>{t('session.none')}</h1>{!rotina.doTime && <div><Btn to={`/rotina/${rotina.id}`}>{t('session.build')}</Btn></div>}</div>;
     }
     return (
       <div className="sessao-abrir" style={{ display: 'grid', gap: 18 }}>
         <Tag>{rotina.modo === 'guiado' ? t('editor.guided') : t('editor.free')}</Tag>
         <h1>{rotina.nome}</h1>
         {rotina.notas && <p className="muted">{rotina.notas}</p>}
-        <Problemas problemas={problemas} rotinaId={rotina.id} />
+        <Problemas problemas={problemas} rotinaId={rotina.id} editavel={!rotina.doTime} />
         <div className="row">
           {podeRetomar && guardada ? (
             <>
@@ -137,7 +137,7 @@ export default function Sessao() {
           ) : (
             <Btn onClick={() => iniciar(rotina)}>{t('session.start')}</Btn>
           )}
-          <Btn tone="ghost" to={`/rotina/${rotina.id}`}>{t('routines.edit')}</Btn>
+          {!rotina.doTime && <Btn tone="ghost" to={`/rotina/${rotina.id}`}>{t('routines.edit')}</Btn>}
         </div>
         {podeRetomar && guardada && (
           <p className="muted">{t('session.resumeFrom', {
@@ -419,7 +419,7 @@ function registrarTarefa(id: string, module: Parameters<typeof logActivity>[0]['
   logActivity({ id, title, module, seconds, sessao, autoavaliacao });
 }
 
-function Problemas({ problemas, rotinaId }: { problemas: { etapaId: string; itemId: string; substitutos: string[] }[]; rotinaId: string }) {
+function Problemas({ problemas, rotinaId, editavel = true }: { problemas: { etapaId: string; itemId: string; substitutos: string[] }[]; rotinaId: string; editavel?: boolean }) {
   const t = useT();
   if (problemas.length === 0) return null;
   return (
@@ -431,7 +431,7 @@ function Problemas({ problemas, rotinaId }: { problemas: { etapaId: string; item
           {p.substitutos.length === 0 && t('session.missingNone')}
         </p>
       ))}
-      <div><Btn small tone="ghost" to={`/rotina/${rotinaId}`}>{t('session.build')}</Btn></div>
+      {editavel && <div><Btn small tone="ghost" to={`/rotina/${rotinaId}`}>{t('session.build')}</Btn></div>}
     </div>
   );
 }
