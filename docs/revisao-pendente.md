@@ -102,9 +102,9 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|---|
 | `acento-deslocado` | **T3** · deslocamento de acento | o clique: o acento é o `clique-forte` e a subdivisão um `clique` mais baixo — **se dá para ouvir o acento mover** |
 | `subdivisao-alternada` | **T4** · subdivisão alternada | a ordem fixa (da mais lenta para a mais rápida) e o aviso um compasso antes |
-| `sustentar-e-cortar` | **T6** · sustentar e cortar | o som do corte (`aro`): se ele marca o tempo sem confundir com o clique |
-| `legato-staccato` | **T7** · legato e staccato | o app só marca a troca — não ouve. Se isso basta |
 | `deslocamento-ritmico` | **T8** · deslocamento de padrão | os 15 padrões e se a pulsação ancorada no primeiro tempo ajuda ou atrapalha |
+
+> `sustentar-e-cortar` (T6) e `legato-staccato` (T7) saíram do catálogo (revisão de 04/11, `P7`).
 
 **Os textos** (títulos e descrições, em português e inglês) saíram das tabelas das decisões 81 e 83, mas
 são rascunhos: nome de coisa que a pessoa vê é decisão do Paulo.

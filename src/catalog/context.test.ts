@@ -116,9 +116,8 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
     'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
-    // a "tarefa com metrônomo": cinco famílias, todas `tarefa` — terminam na autoavaliação
-    'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'sustentar-e-cortar': 'tarefa',
-    'legato-staccato': 'tarefa', 'deslocamento-ritmico': 'tarefa',
+    // a "tarefa com metrônomo": três famílias, todas `tarefa` — terminam na autoavaliação
+    'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'deslocamento-ritmico': 'tarefa',
   };
 
   it('toda série declara `kind: serie`', () => {

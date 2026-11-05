@@ -672,8 +672,6 @@ const en: Shape<typeof pt> = {
     tecnica: { title: 'Technique routines', desc: 'Hand patterns with a metronome. The app picks the finger order; you pick the tempo.' },
     'acento-deslocado': { title: 'Accent shift', desc: 'The same notes, and the accent moves every round. Play along with the click.' },
     'subdivisao-alternada': { title: 'Alternating subdivisions', desc: 'The click stays the same and the subdivision changes, announced a bar ahead. Something you cannot do on your own.' },
-    'sustentar-e-cortar': { title: 'Sustain and cut', desc: 'Hold the note for an exact number of beats and cut on the beat.' },
-    'legato-staccato': { title: 'Alternating legato and staccato', desc: 'The same passage, and the app marks when to switch articulation.' },
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
     warmupTechnique: 'Technique warm-up',
     warmupMetronome: 'Metronome warm-up',

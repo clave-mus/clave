@@ -69,7 +69,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'tecnica',
     // Entra sabendo que enche depois — é o que a decisão 20 diz dela, textualmente.
-    itens: ['tecnica', 'metronomo', 'sustentar-e-cortar', 'legato-staccato', 'acento-deslocado', 'subdivisao-alternada'],
+    itens: ['tecnica', 'metronomo', 'acento-deslocado', 'subdivisao-alternada'],
   },
   {
     id: 'improviso',

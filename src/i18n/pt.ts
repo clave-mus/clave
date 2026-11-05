@@ -673,8 +673,6 @@ const pt = {
     tecnica: { title: 'Rotinas de técnica', desc: 'Padrões de mão com metrônomo. O app escolhe a ordem dos dedos; você escolhe o andamento.' },
     'acento-deslocado': { title: 'Deslocamento de acento', desc: 'As mesmas notas, e o acento muda de lugar a cada rodada. Toque junto com o clique.' },
     'subdivisao-alternada': { title: 'Subdivisão alternada', desc: 'O clique fica igual e a subdivisão muda, avisada um compasso antes. Algo que você não consegue fazer sozinho.' },
-    'sustentar-e-cortar': { title: 'Sustentar e cortar', desc: 'Segure a nota por um número exato de tempos e corte no tempo.' },
-    'legato-staccato': { title: 'Legato e staccato alternados', desc: 'A mesma passagem, e o app marca quando trocar a articulação.' },
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
     warmupTechnique: 'Aquecimento técnico',
     warmupMetronome: 'Aquecimento com metrônomo',
