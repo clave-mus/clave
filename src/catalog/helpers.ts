@@ -102,11 +102,11 @@ export function porSuperficie(ctx: Ctx, opts: { semOitavas?: boolean } = {}): Se
  * oferecer um controle que não faz nada.
  */
 const ACHAR_MODOS = { nota: 'settings.askNote', intervalo: 'settings.askInterval' } as const;
-export const ACHAR = ({ t }: Ctx): Setting[] => [
-  { id: 'pedido', label: t('settings.ask'), type: 'single',
-    options: (Object.keys(ACHAR_MODOS) as (keyof typeof ACHAR_MODOS)[]).map(id => ({ id, label: t(ACHAR_MODOS[id]) })) },
-  { id: 'intervalos', label: t('settings.intervals'), type: 'multi', quando: s => s.pedido === 'intervalo',
-    options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, { t } as Ctx), tier: i.tier })) },
+export const ACHAR = (ctx: Ctx): Setting[] => [
+  { id: 'pedido', label: ctx.t('settings.ask'), type: 'single',
+    options: (Object.keys(ACHAR_MODOS) as (keyof typeof ACHAR_MODOS)[]).map(id => ({ id, label: ctx.t(ACHAR_MODOS[id]) })) },
+  { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', quando: s => s.pedido === 'intervalo',
+    options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
 ];
 
 /** O intervalo sorteado entre os escolhidos, com o número de semitons e o rótulo pronto. */
