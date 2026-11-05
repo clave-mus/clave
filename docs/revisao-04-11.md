@@ -190,6 +190,59 @@ Em ordem de quanto atrapalham o uso.
 | **X12** | **Jogo de arrastar**: 4 notas marcadas no braço/teclado e 4 peças com nomes para encaixar | média |
 | **X13** | **Teoria dos modos**: *"lídio é um modo menor com quais alterações?"* e *"de qual grau do campo menor?"* — perguntar pelos **dois** campos | pequena |
 
+## 6b. Uma ideia para elaborar: **quem manda no relógio**
+
+O Paulo descreveu dois modos para o ciclador — **zen** (internalizar as posições, solfejar sempre,
+devagar, sem metrônomo, ficar no acorde o tempo que precisar) e **difícil** (pôr as formas na ponta
+dos dedos, sem solfejar, X compassos por acorde com troca automática) — e perguntou se a ideia não
+se aplica a outros exercícios.
+
+**Aplica, e há uma evidência forte de que não é invenção:** ele chegou à mesma distinção **duas
+vezes, por caminhos diferentes**. A segunda foi no deslocamento de padrão, onde pediu um nível
+*manual* ("serve pra entenderem, pegarem a manha") e um *automático* ("essa é a graça e a
+dificuldade do exercício").
+
+### O eixo é um só, e os outros são consequência
+
+Parecem três diferenças — solfejar ou não, com metrônomo ou sem, ver o gabarito ou não — mas são
+sintomas de **uma**:
+
+> **Quem manda no relógio: a pessoa ou o tempo.**
+
+| | A pessoa manda | O tempo manda |
+|---|---|---|
+| Para quê | **entender e internalizar** | **automatizar e executar** |
+| Avança | quando ela quiser; pode repetir | sozinho; perdeu, perdeu |
+| Verbalizar | solfejar sempre | não dá tempo, e tudo bem |
+| Ajudas | à mão | caras ou indisponíveis |
+
+Solfejar cabe no primeiro porque **há tempo**; não cabe no segundo pelo mesmo motivo. Não é uma
+escolha separada — é o relógio decidindo.
+
+### Onde aplica, e onde não
+
+Aplica onde há **execução**: leitura rítmica (ler no seu tempo × o compasso passa), hands-free
+(pensar à vontade × poucos segundos), audiação (*"tenta pelo tempo que for necessário"*, palavras
+dele × o gabarito vem), achar nota no braço, deslocamento de padrão, o ciclador.
+
+**Não aplica onde só há conhecimento** — as perguntas de teoria em texto. Ali o relógio só
+acrescentaria pressão, e pressão sem execução é cronômetro, não exercício.
+
+### ⚠️ Dois cuidados, e o primeiro é sério
+
+**1. Isto não pode virar "nível de dificuldade".** Nível está na lista do que nunca entra, e por um
+motivo que vale aqui: rótulo sobre quem usa. **Isto não é nível** — é *o que você está fazendo
+agora*. A mesma pessoa usa os dois **no mesmo dia, no mesmo material**, e o zen não é "o fácil": é
+o modo em que se aprende a coisa. Quem implementar precisa ler isto, porque a tentação de desenhar
+como escada é grande.
+
+**2. O app já tem esse eixo — nas rotinas.** *Guiado* (etapa em foco, tempo sugerido) × *livre*
+(cartões, cronômetro quieto) é **o mesmo eixo um nível acima**. Se o exercício usar outras palavras,
+a pessoa aprende dois vocabulários para a mesma ideia. 👤 **Decidir se compartilham vocabulário** —
+e, se sim, qual.
+
+---
+
 ## 7. Motores — a trilha `M`
 
 | | O quê |
