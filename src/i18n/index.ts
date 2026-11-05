@@ -26,9 +26,9 @@ export type Translate = (key: MessageKey, vars?: Vars) => string;
 
 export const MESSAGES: Record<Locale, Shape<typeof pt>> = { pt, en };
 
-/** Português para quem tem o navegador em português; inglês para todo o resto. */
+/** Português por padrão; inglês só para quem tem o navegador explicitamente em inglês. */
 export function detectLocale(languages: readonly string[] = typeof navigator === 'undefined' ? [] : navigator.languages): Locale {
-  return languages.some(l => l.toLowerCase().startsWith('pt')) ? 'pt' : 'en';
+  return languages.some(l => l.toLowerCase().startsWith('en')) ? 'en' : 'pt';
 }
 /** null no estado quer dizer "automático": segue o navegador. */
 export function resolveLocale(choice: Locale | null): Locale {

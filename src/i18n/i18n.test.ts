@@ -62,8 +62,11 @@ describe('detecção do idioma', () => {
     expect(detectLocale(['pt-BR'])).toBe('pt');
     expect(detectLocale(['fr-FR', 'pt-PT'])).toBe('pt');
   });
-  it('cai em inglês para o resto', () => {
+  it('reconhece inglês explícito', () => {
     expect(detectLocale(['es-AR', 'en-US'])).toBe('en');
-    expect(detectLocale([])).toBe('en');
+  });
+  it('cai em português quando não detecta nada', () => {
+    expect(detectLocale([])).toBe('pt');
+    expect(detectLocale(['es-AR', 'fr-FR'])).toBe('pt');
   });
 });
