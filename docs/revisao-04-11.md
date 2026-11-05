@@ -190,56 +190,90 @@ Em ordem de quanto atrapalham o uso.
 | **X12** | **Jogo de arrastar**: 4 notas marcadas no braço/teclado e 4 peças com nomes para encaixar | média |
 | **X13** | **Teoria dos modos**: *"lídio é um modo menor com quais alterações?"* e *"de qual grau do campo menor?"* — perguntar pelos **dois** campos | pequena |
 
-## 6b. Uma ideia para elaborar: **quem manda no relógio**
+## 6b. **Internalizar e Automatizar** — os dois modos do ciclador
 
-O Paulo descreveu dois modos para o ciclador — **zen** (internalizar as posições, solfejar sempre,
-devagar, sem metrônomo, ficar no acorde o tempo que precisar) e **difícil** (pôr as formas na ponta
-dos dedos, sem solfejar, X compassos por acorde com troca automática) — e perguntou se a ideia não
-se aplica a outros exercícios.
+Fechado com o Paulo em 05/11/2026. **Isto vale para a família do ciclador** — shapes de arpejo,
+caminhos de escala, combinações de graus, modos — **e para mais nada.** Ele recusou
+explicitamente leitura rítmica e técnica, e a recusa é boa: nos dois a camada de nomes não é o
+ponto.
 
-**Aplica, e há uma evidência forte de que não é invenção:** ele chegou à mesma distinção **duas
-vezes, por caminhos diferentes**. A segunda foi no deslocamento de padrão, onde pediu um nível
-*manual* ("serve pra entenderem, pegarem a manha") e um *automático* ("essa é a graça e a
-dificuldade do exercício").
+### O que são, e o que NÃO são
 
-### O eixo é um só, e os outros são consequência
+> **Atenção é finita, e os dois modos existem porque não dá para carregar as duas coisas ao mesmo
+> tempo.**
 
-Parecem três diferenças — solfejar ou não, com metrônomo ou sem, ver o gabarito ou não — mas são
-sintomas de **uma**:
-
-> **Quem manda no relógio: a pessoa ou o tempo.**
-
-| | A pessoa manda | O tempo manda |
+| | **Internalizar** *(padrão)* | **Automatizar** |
 |---|---|---|
-| Para quê | **entender e internalizar** | **automatizar e executar** |
-| Avança | quando ela quiser; pode repetir | sozinho; perdeu, perdeu |
-| Verbalizar | solfejar sempre | não dá tempo, e tudo bem |
-| Ajudas | à mão | caras ou indisponíveis |
+| A atenção está em | **som e significado** — o nome, o grau, o intervalo, a qualidade do arpejo | **a mão** — destreza, regularidade, velocidade |
+| O que se larga | nada; é por isso que é difícil | **o nomear**, de propósito |
+| O que se ganha | a nota deixa de ser uma casa e vira um som com nome | a capacidade liberada vira velocidade |
 
-Solfejar cabe no primeiro porque **há tempo**; não cabe no segundo pelo mesmo motivo. Não é uma
-escolha separada — é o relógio decidindo.
+**Nenhum dos dois é o modo fácil**, e isto precisa estar escrito porque a tentação de desenhar como
+escada é grande. Nas palavras dele: *"solfejar enquanto toca é muito difícil, e essa é a prática
+mais importante."* **Os dois são atenção plena, apontada para lugares diferentes.**
 
-### Onde aplica, e onde não
+**A velocidade não define o modo** — ela é o que se **compra** ao largar o nome. Tocar rápido
+solfejando é quase impossível; tocar devagar sem solfejar não serve para nada. As duas combinações
+cruzadas são vazias, e é por isso que existem dois modos e não quatro.
 
-Aplica onde há **execução**: leitura rítmica (ler no seu tempo × o compasso passa), hands-free
-(pensar à vontade × poucos segundos), audiação (*"tenta pelo tempo que for necessário"*, palavras
-dele × o gabarito vem), achar nota no braço, deslocamento de padrão, o ciclador.
+**O gatilho de troca é a monotonia, não o desempenho.** *"Quando o modo zen se tornar monótono"* —
+não "quando você dominar". Quem decide é quem pratica, e **isso não vira medida**.
 
-**Não aplica onde só há conhecimento** — as perguntas de teoria em texto. Ali o relógio só
-acrescentaria pressão, e pressão sem execução é cronômetro, não exercício.
+### ⚠️ A assimetria que parece invertida e não é
 
-### ⚠️ Dois cuidados, e o primeiro é sério
+| | Nomes das notas |
+|---|---|
+| **Internalizar** | **escondidos** por padrão, com um toque para conferir |
+| **Automatizar** | **podem aparecer** — e há uma opção de ligar e desligar |
 
-**1. Isto não pode virar "nível de dificuldade".** Nível está na lista do que nunca entra, e por um
-motivo que vale aqui: rótulo sobre quem usa. **Isto não é nível** — é *o que você está fazendo
-agora*. A mesma pessoa usa os dois **no mesmo dia, no mesmo material**, e o zen não é "o fácil": é
-o modo em que se aprende a coisa. Quem implementar precisa ler isto, porque a tentação de desenhar
-como escada é grande.
+O modo cujo propósito **é** nomear **esconde** os nomes; o modo que **larga** o nomear pode
+mostrá-los. Parece ao contrário e é exatamente certo:
 
-**2. O app já tem esse eixo — nas rotinas.** *Guiado* (etapa em foco, tempo sugerido) × *livre*
-(cartões, cronômetro quieto) é **o mesmo eixo um nível acima**. Se o exercício usar outras palavras,
-a pessoa aprende dois vocabulários para a mesma ideia. 👤 **Decidir se compartilham vocabulário** —
-e, se sim, qual.
+- Em **internalizar**, mostrar o nome deixa a pessoa **ler em vez de produzir** — e destrói o
+  exercício.
+- Em **automatizar**, o nome é só contexto. Nas palavras dele: *"continua sendo legal ter uma noção
+  do lugar das notas, só deixa de ser prioridade."* Não carrega nada, então mostrar não custa.
+
+**Esconder em automatizar seria economia de tela, nunca mecânica** — ele foi explícito. A opção de
+ver ou não ver fica.
+
+### O app não verifica — e tudo bem
+
+**Não há como saber se a pessoa está solfejando.** O que o app faz é **configurar em volta**: dar
+tempo ou não, pôr metrônomo ou não, mostrar ou esconder os nomes. O modo é **um preset mais uma
+declaração de intenção** — e o Paulo achou suficiente. Nomear a intenção é coisa que um app de
+estudo consegue fazer, e cobrar não é.
+
+### A tela muda de cor
+
+Pedido dele: **cada modo tem a sua paleta**, com uma transição entre as duas. É o que torna o modo
+perceptível sem precisar ler um rótulo.
+
+Dois cuidados para quem implementar:
+
+- **Cor não pode ser o único sinal.** O nome do modo fica visível junto — daltonismo, e também
+  telas no sol.
+- **Respeitar `prefers-reduced-motion`** na transição.
+- ⚠️ Isto **multiplica a superfície de tema**, e o tema escuro já tem problema de contraste (`U2`).
+  Resolver a `U2` **antes** de criar duas paletas novas, ou o problema nasce dobrado.
+
+### Onde aplica — o teste
+
+Duas condições, e as duas precisam valer:
+
+> **(1) a pessoa está tocando** · **(2) há uma camada de nomes que dá para carregar ou largar**
+
+| | |
+|---|---|
+| Shapes de arpejo, caminhos de escala, combinações de graus, modos | ✅ a família do ciclador |
+| Leitura rítmica · técnica | ❌ recusado por ele |
+| Achar nota no instrumento | ❌ o nome **é** a pergunta; largá-lo não deixa exercício |
+| Hands-free e audiação | ❌ não há parte motora para descarregar |
+| Teoria em texto | ❌ |
+
+👤 **Fica em aberto:** se este par compartilha vocabulário com *guiado × livre* das rotinas, que é um
+eixo parecido um nível acima. São conceitos diferentes (lá é a ordem das etapas; aqui é onde está a
+atenção), então **provavelmente não devem compartilhar** — mas vale decidir de propósito.
 
 ---
 
@@ -247,7 +281,7 @@ e, se sim, qual.
 
 | | O quê |
 |---|---|
-| **M1** | **O ciclador.** Embaralha ou sorteia alvos, fica X compassos em cada, avisa o próximo **visualmente** e a troca **sonoramente**, mostra a forma. É a base de **toda** a rotina de baixo dele |
+| **M1** | **O ciclador.** Embaralha ou sorteia alvos, fica X compassos em cada, avisa o próximo **visualmente** e a troca **sonoramente**, mostra a forma. É a base de **toda** a rotina de baixo dele. **Tem dois modos**, *Internalizar* (padrão) e *Automatizar* — ver § 6b, e leia antes de desenhar: a assimetria dos nomes das notas parece invertida e não é |
 | **M2** | **Arquitetura de ajudas reutilizáveis** (ele listou): repetir o estímulo · mudar a velocidade **sem gerar outra questão** · separar o que soou junto · ouvir nota a nota · ouvir referência tonal · mostrar o visual · dica progressiva · revelar o gabarito. Hoje parte disso existe espalhada e sem contrato |
 | **M3** | **Voz para o hands-free**: escolha de voz, velocidade, repetições do estímulo |
 | **M5** | **Portar o gerador de formas** (`docs/doado/gerador_arpejos_baixo.py`) para TypeScript, com os 21 testes **portados primeiro**. Ele calcula modo → acorde por graus → **posições no braço**, e é o que destrava a `M1` e a `FM-2`. Preservar as duas decisões dele: corda solta não conta no vão, e vão 4 para voicing / 5 para arpejo |
