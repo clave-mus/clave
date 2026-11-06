@@ -133,6 +133,7 @@ Continuam existindo como **assunto**; o que saiu foi a porta, por não ter catá
 | **Progressão por habilidade** (em vez de por exercício) | depois do beta | é a ideia mais forte da variação automática, mas **afirmar transferência de habilidade sem dado é irresponsável** (decisão 9) |
 | **Regras de escrita no voice leading** (quintas paralelas, dobramento, resolução da sensível) | Fase 2 | cada regra precisa de uma decisão sobre **em que tradição ela vale** — no jazz, quintas paralelas são vocabulário. Entram como aviso, nunca como erro |
 | **Microfone nos exercícios além de voz e ritmo relativo** | depois | ritmo alinhado ao clique exige calibração de latência, e é de onde vem a fama de "glitchy" (decisão 43) |
+| **"Quer dificultar? acrescente colcheias"** — o preset sugerindo o próximo passo | depois | ideia do Paulo em 06/11/2026, no preset *Ligaduras* da leitura rítmica. Adiada **por ele**, como questão de experiência de uso. O que ela pede embaixo não é pequeno: saber *há quanto tempo a pessoa usa aquele preset* é guardar histórico de uso por exercício, e aí a sugestão encosta na fronteira do que nunca entra — medir a pessoa. **O que traria de volta:** decidir se o aviso é estático (o preset diz qual é o próximo, para todo mundo, sem olhar ninguém) ou se o app passa a acompanhar uso por exercício. São desenhos diferentes, não graus do mesmo |
 
 ---
 
