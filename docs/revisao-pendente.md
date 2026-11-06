@@ -102,6 +102,12 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|
 | `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
 
+### Faça o intervalo (`X9`+`B4`, revisão de 04/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `faca-o-intervalo` | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
+
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
 | Id | Família | O que só você confere |

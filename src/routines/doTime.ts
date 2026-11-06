@@ -124,7 +124,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 6, politica: 'ordem', porque: 'o intervalo nas duas direções: reconhecer o desenho numa vez, construí-lo na outra',
         instancias: [
           i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' }),
-          i('ache-a-nota', { superficie: 'braco', pedido: 'intervalo', intervalos: ['M3', 'J5', 'M6'], instrumento: 'auto', casas: '0-12' }),
+          i('faca-o-intervalo', { superficie: 'braco', instrumento: 'auto' }),
         ] },
       { minutos: 5, porque: 'desenho de acorde no braço, formas abertas',
         instancias: [i('que-acorde-e-esse', { superficie: 'braco', formas: 'abertos' })] },

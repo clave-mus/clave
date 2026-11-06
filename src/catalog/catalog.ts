@@ -9,6 +9,7 @@
 import { queNotaEEssa } from './items/que-nota-e-essa';
 import { acheANota } from './items/ache-a-nota';
 import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
+import { facaOIntervalo } from './items/faca-o-intervalo';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
@@ -25,6 +26,7 @@ export const EXERCISES: CatalogItem[] = [
   queNotaEEssa,
   acheANota,
   queIntervaloEEsse,
+  facaOIntervalo,
   queAcordeEEsse,
   pautaArmadura,
   pautaEscala,

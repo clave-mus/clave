@@ -7,13 +7,15 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 // exercise_id é estável: rotinas, tentativas e configurações salvas apontam para ele. Renomear ou
 // tirar um id quebra esses dados em silêncio. Para mudar esta lista, migre os dados antes.
 //
-// Esta lista **mudou duas vezes**: nas fusões por superfície de 04/11/2026 (decisão 16), onze ids
-// viraram quatro (migração em `state/migrate.ts`, `FUNDIDOS`, e em `routines/storage.ts`); e na
+// Esta lista **mudou três vezes**: nas fusões por superfície de 04/11/2026 (decisão 16), onze ids
+// viraram quatro (migração em `state/migrate.ts`, `FUNDIDOS`, e em `routines/storage.ts`); na
 // revisão de 04/11 (`P7`), que tirou quatro itens de teoria sem equivalente — sem migração, porque
 // não há para onde migrar: uma etapa de rotina que apontava para um deles passa a aparecer como
-// "falta algo" (`session.missingTitle`), que é o caminho já existente para isso (F3-3).
+// "falta algo" (`session.missingTitle`), que é o caminho já existente para isso (F3-3); e no X9
+// (06/11), que moveu o modo "intervalo" de `ache-a-nota` para `faca-o-intervalo` — também sem
+// migração: o modo estava QUEBRADO (B4), então não havia resposta válida salva para preservar.
 const STABLE_IDS = [
-  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse',
+  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse',
   'pauta-armadura', 'pauta-escala',
   'teoria-intervalos',
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
