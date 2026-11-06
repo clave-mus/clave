@@ -571,6 +571,22 @@ select.sel {
   border-radius: var(--r); background-color: var(--raised);
   display: grid; place-items: center; min-height: 48px;
 }
+/* B11: o gradiente mora aqui, maior que a caixa (inset negativo), pra girar e derivar sem deixar
+   buraco nas bordas. Só `transform` anima — roda no compositor, não repinta; animar o próprio
+   background-position dos ~20 campos de uma tela custaria layout/paint a cada quadro. */
+.field-block::before {
+  content: ""; position: absolute; inset: -25%; pointer-events: none;
+  background-image: var(--field-bg);
+  animation: field-drift 52s ease-in-out infinite;
+  animation-delay: var(--field-delay, 0s);
+  /* prefers-reduced-motion já desliga toda animação/transição globalmente (regra no topo deste
+     arquivo) — nada extra a fazer aqui. */
+}
+@keyframes field-drift {
+  0%   { transform: translate(0%, 0%) rotate(0deg); }
+  50%  { transform: translate(3%, -3.5%) rotate(7deg); }
+  100% { transform: translate(0%, 0%) rotate(0deg); }
+}
 .field-block::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   opacity: var(--grain-opacity);
