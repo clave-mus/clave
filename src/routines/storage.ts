@@ -4,10 +4,11 @@
 // rotina compartilhada por link é dado fora do controle do app, e quando o formato mudar o link
 // antigo quebra se não houver migração.
 import { settingsFundidos } from '../state/migrate';
-import { FORMATO_ROTINA, type Etapa, type Instancia, type Rotina, type SessaoDeRotina } from './types';
+import { FORMATO_ROTINA, type Ciclo, type Etapa, type Instancia, type Rotina, type SessaoDeRotina } from './types';
 
 const KEY = 'clave:rotinas';
 const KEY_SESSAO = 'clave:rotina-sessao';
+const KEY_CICLOS = 'clave:ciclos';
 
 export function novoId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
@@ -258,4 +259,67 @@ export function gravarSessao(s: SessaoDeRotina | null) {
   else {
     try { localStorage.removeItem(KEY_SESSAO); } catch { /* sem armazenamento */ }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Ciclos de rotinas (P9) — mesmo padrão de disco e assinatura das rotinas, em chave própria.
+// ---------------------------------------------------------------------------
+
+export function novoCiclo(nome: string): Ciclo {
+  return { id: novoId(), nome, rotinaIds: [] };
+}
+
+function ehCiclo(c: unknown): c is Ciclo {
+  if (!c || typeof c !== 'object') return false;
+  const o = c as Partial<Ciclo>;
+  return typeof o.id === 'string' && o.id.length > 0 && typeof o.nome === 'string' &&
+    Array.isArray(o.rotinaIds) && o.rotinaIds.every(x => typeof x === 'string');
+}
+
+/** Todos os ciclos da pessoa. O que não for um ciclo válido é descartado em silêncio. */
+export function lerCiclos(): Ciclo[] {
+  const raw = lerJSON<unknown[]>(KEY_CICLOS);
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(ehCiclo);
+}
+
+const ouvintesCiclos = new Set<() => void>();
+const avisarCiclos = () => ouvintesCiclos.forEach(f => f());
+
+export function gravarCiclos(ciclos: Ciclo[]) {
+  gravarJSON(KEY_CICLOS, ciclos);
+  avisarCiclos();
+}
+
+/** Chama `f` sempre que os ciclos mudarem. Devolve a função que cancela. */
+export function aoMudarCiclos(f: () => void): () => void {
+  ouvintesCiclos.add(f);
+  return () => { ouvintesCiclos.delete(f); };
+}
+
+let ultimaLeituraCiclos: { raw: string | null; ciclos: Ciclo[] } | null = null;
+
+/** Os ciclos, com a mesma referência enquanto o disco não mudar (ver `rotinasEstaveis`). */
+export function ciclosEstaveis(): Ciclo[] {
+  let raw: string | null = null;
+  try { raw = localStorage.getItem(KEY_CICLOS); } catch { /* sem armazenamento */ }
+  if (ultimaLeituraCiclos && ultimaLeituraCiclos.raw === raw) return ultimaLeituraCiclos.ciclos;
+  ultimaLeituraCiclos = { raw, ciclos: lerCiclos() };
+  return ultimaLeituraCiclos.ciclos;
+}
+
+export const CHAVE_CICLOS = KEY_CICLOS;
+
+export function salvarCiclo(c: Ciclo): Ciclo[] {
+  const todos = lerCiclos();
+  const i = todos.findIndex(x => x.id === c.id);
+  const novos = i >= 0 ? todos.map(x => (x.id === c.id ? c : x)) : [...todos, c];
+  gravarCiclos(novos);
+  return novos;
+}
+
+export function apagarCiclo(id: string): Ciclo[] {
+  const novos = lerCiclos().filter(c => c.id !== id);
+  gravarCiclos(novos);
+  return novos;
 }

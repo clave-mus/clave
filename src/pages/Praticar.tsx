@@ -19,9 +19,9 @@ import { resumoDaEtapa } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
 import { resolverInstancia } from '../routines/ciclagem';
 import { removerEtapa } from '../routines/edicao';
-import { tempoTotal, type Etapa, type Rotina } from '../routines/types';
-import { useRotinas } from '../routines/hooks';
-import { apagarRotina, copiarRotina, gravarRotinas, novaRotina } from '../routines/storage';
+import { tempoTotal, type Ciclo, type Etapa, type Rotina } from '../routines/types';
+import { useCiclos, useRotinas } from '../routines/hooks';
+import { apagarCiclo, apagarRotina, copiarRotina, gravarRotinas, novaRotina, novoCiclo, salvarCiclo } from '../routines/storage';
 import { ROTINAS_DO_TIME, rotinasDoTime } from '../routines/doTime';
 import { Btn, Chip, SecTitle } from '../components/ui';
 import { itemText, useLocale, useNaming, useT } from '../i18n';
@@ -55,7 +55,9 @@ export default function Praticar() {
   const history = useStore(s => s.history);
   const revisao = useRevisao();
   const rotinas = useRotinas();
+  const ciclos = useCiclos();
   const [apagando, setApagando] = useState<string | null>(null);
+  const [apagandoCiclo, setApagandoCiclo] = useState<string | null>(null);
   const naming = useNaming();
   const locale = useLocale();
   const params = useGlobalParams();
@@ -82,6 +84,13 @@ export default function Praticar() {
     const nova = novaRotina(t('routines.newName'));
     gravarRotinas([...rotinas, nova]);
     navigate(`/rotina/${nova.id}`);
+  };
+
+  /** Cria um ciclo vazio e abre o editor dele — é lá que se escolhe quais rotinas entram (P9). */
+  const criarCiclo = () => {
+    const novo = novoCiclo(t('cycles.newName'));
+    salvarCiclo(novo);
+    navigate(`/ciclo/${novo.id}`);
   };
 
   /**
@@ -227,6 +236,35 @@ export default function Praticar() {
         </section>
       )}
 
+      {ciclos.length > 0 && (
+        <section className="sec">
+          <SecTitle>{t('cycles.yours')}</SecTitle>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {ciclos.map((c: Ciclo) => (
+              <div key={c.id} className="panel" style={{ display: 'grid', gap: 8 }}>
+                <div className="row" style={{ justifyContent: 'space-between' }}>
+                  <b>{c.nome}</b>
+                  {apagandoCiclo === c.id ? (
+                    <div className="row">
+                      <span className="muted">{t('editor.deleteConfirm', { name: c.nome })}</span>
+                      <Btn small tone="ghost" onClick={() => { apagarCiclo(c.id); setApagandoCiclo(null); }}>{t('cycles.deleteCycle')}</Btn>
+                      <Btn small tone="mu" onClick={() => setApagandoCiclo(null)}>{t('editor.keep')}</Btn>
+                    </div>
+                  ) : (
+                    <div className="row">
+                      {c.rotinaIds.length > 0 && <Btn small to={`/ciclo/${c.id}/fazer`}>{t('cycles.enter')}</Btn>}
+                      <Btn small tone="ghost" to={`/ciclo/${c.id}`}>{t('routines.edit')}</Btn>
+                      <Btn small tone="ghost" onClick={() => setApagandoCiclo(c.id)}>{t('cycles.deleteCycle')}</Btn>
+                    </div>
+                  )}
+                </div>
+                <small className="muted">{t('cycles.memberCount', { count: c.rotinaIds.length })}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {doTime.length > 0 && (
         <section className="sec">
           <SecTitle>{t('doTime.title')}</SecTitle>
@@ -261,6 +299,7 @@ export default function Praticar() {
       {rotinas.length > 0 && (
         <div className="row" style={{ padding: '0 var(--gutter)' }}>
           <Btn small tone="ghost" onClick={criarVazia}>{t('routines.create')}</Btn>
+          <Btn small tone="ghost" onClick={criarCiclo}>{t('cycles.create')}</Btn>
         </div>
       )}
 

@@ -6,6 +6,8 @@ import Praticar from './pages/Praticar';
 import Onboarding from './pages/Onboarding';
 import Editor from './pages/Editor';
 import Sessao from './pages/Sessao';
+import CicloEditor from './pages/CicloEditor';
+import Ciclo from './pages/Ciclo';
 import Recebida from './pages/Recebida';
 import Perfil from './pages/Perfil';
 import Progresso from './pages/Progresso';
@@ -28,6 +30,8 @@ export default function App() {
           <Route path="estudar/*" element={<Navigate to="/catalogo" replace />} />
           <Route path="rotina/:id" element={<Editor />} />
           <Route path="rotina/:id/fazer" element={<Sessao />} />
+          <Route path="ciclo/:id" element={<CicloEditor />} />
+          <Route path="ciclo/:id/fazer" element={<Ciclo />} />
           {/* Rotina que chegou por link (decisão 23). Não pede conta. */}
           <Route path="r/:dados" element={<Recebida />} />
           <Route path="perfil" element={<Perfil />} />

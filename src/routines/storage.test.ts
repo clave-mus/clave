@@ -5,8 +5,9 @@
 // do controle do app.
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  aoMudarRotinas, apagarRotina, copiarRotina, ehRotina, gravarRotinas, gravarSessao, lerRotinas, lerSessao,
-  migrarRotina, novaEtapa, novaRotina, rotinasEstaveis, salvarRotina,
+  aoMudarCiclos, aoMudarRotinas, apagarCiclo, apagarRotina, ciclosEstaveis, copiarRotina, ehRotina,
+  gravarCiclos, gravarRotinas, gravarSessao, lerCiclos, lerRotinas, lerSessao, migrarRotina, novaEtapa,
+  novaRotina, novoCiclo, rotinasEstaveis, salvarCiclo, salvarRotina,
 } from './storage';
 import { FORMATO_ROTINA, tempoTotal, valorDaRotacao, type Rotina } from './types';
 
@@ -336,5 +337,60 @@ describe('as fusões por superfície na leitura (decisão 16)', () => {
 
   it('instância de item não fundido passa intacta', () => {
     expect(lida('ouvido-escala', { direcao: 'sobe' })).toEqual({ itemId: 'ouvido-escala', settings: { direcao: 'sobe' } });
+  });
+});
+
+describe('ciclos de rotinas (P9)', () => {
+  it('o ciclo ida e volta pelo disco sai idêntico', () => {
+    const c = { ...novoCiclo('Ônibus'), rotinaIds: ['r1', 'r2'] };
+    salvarCiclo(c);
+    expect(lerCiclos()).toEqual([c]);
+  });
+
+  it('salvar de novo substitui em vez de duplicar', () => {
+    const c = novoCiclo('Ônibus');
+    salvarCiclo(c);
+    salvarCiclo({ ...c, rotinaIds: ['r1'] });
+    const todos = lerCiclos();
+    expect(todos).toHaveLength(1);
+    expect(todos[0].rotinaIds).toEqual(['r1']);
+  });
+
+  it('apagar tira só o pedido', () => {
+    const a = novoCiclo('A'), b = novoCiclo('B');
+    salvarCiclo(a); salvarCiclo(b);
+    expect(apagarCiclo(a.id).map(c => c.nome)).toEqual(['B']);
+  });
+
+  it('sem nada no disco, devolve lista vazia em vez de quebrar', () => {
+    expect(lerCiclos()).toEqual([]);
+  });
+
+  it('lixo no disco não derruba a tela', () => {
+    mem.set('clave:ciclos', '{isto não é json');
+    expect(lerCiclos()).toEqual([]);
+    mem.set('clave:ciclos', JSON.stringify(['nada a ver', 42, null, { id: 'x' }]));
+    expect(lerCiclos()).toEqual([]);
+  });
+
+  it('avisa quem escuta quando se grava, salva ou apaga', () => {
+    let avisos = 0;
+    const parar = aoMudarCiclos(() => { avisos++; });
+    const c = novoCiclo('A');
+    salvarCiclo(c);
+    expect(avisos).toBe(1);
+    apagarCiclo(c.id);
+    expect(avisos).toBe(2);
+    gravarCiclos([]);
+    expect(avisos).toBe(3);
+    parar();
+  });
+
+  it('ciclosEstaveis devolve a MESMA referência enquanto o disco não muda, e nova quando muda', () => {
+    salvarCiclo(novoCiclo('A'));
+    expect(ciclosEstaveis()).toBe(ciclosEstaveis());
+    salvarCiclo(novoCiclo('B'));
+    const depois = ciclosEstaveis();
+    expect(depois.map(c => c.nome)).toEqual(['A', 'B']);
   });
 });

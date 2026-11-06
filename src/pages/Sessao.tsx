@@ -5,7 +5,7 @@
 // **O que esta tela não faz, de propósito:** não avança sozinha, não bloqueia, não esconde nada
 // quando o tempo sugerido passa, não dá nota, não celebra e não mostra percentual. É a decisão 4 e a
 // lista do que nunca entra.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { itemById } from '../catalog';
 import ItemScreen from '../catalog/ItemScreen';
@@ -73,6 +73,22 @@ export default function Sessao() {
   );
 
   useEffect(() => { if (sessao) gravarSessao(sessao); }, [sessao]);
+
+  /**
+   * Carimba `ultimaPraticaEm` na rotina quando a sessão fecha a PRIMEIRA etapa.
+   *
+   * É o piso do ciclo de rotinas (P9, `routines/ciclo.ts`): abrir e não fechar nada não conta,
+   * nem terminar tudo é exigido — qualquer etapa fechada já basta. Uma estampa por sessão: sem o
+   * `estampada.current`, o tique do relógio regravaria a rotina a cada segundo depois da primeira.
+   */
+  const estampada = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sessao || !rotina) return;
+    if (Object.keys(sessao.desfechos).length === 0) return;
+    if (estampada.current === sessao.sessaoId) return;
+    estampada.current = sessao.sessaoId;
+    salvarRotina({ ...rotina, ultimaPraticaEm: Date.now() });
+  }, [sessao, rotina]);
 
   // O cronômetro é CRESCENTE e por etapa. Um tique por segundo; pausada, não soma.
   //

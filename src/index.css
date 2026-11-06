@@ -414,6 +414,25 @@ select.sel {
 .ex-card.add { justify-content: center; align-items: center; color: var(--ink-soft); border-style: dashed; font-weight: 540; }
 .ex-card.add:hover { color: var(--ink); }
 
+/* ---------- carrossel de ciclo (P9): rotinas lado a lado, arrasta ou toca numa lateral ---------- */
+.ciclo-trilha {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-block: 8px; padding-inline: calc(50% - min(78vw, 340px) / 2);
+  scrollbar-width: none;
+}
+.ciclo-trilha::-webkit-scrollbar { display: none; }
+.ciclo-card {
+  --dist: 0;
+  flex: 0 0 min(78vw, 340px); width: min(78vw, 340px); scroll-snap-align: center;
+  display: grid; gap: 4px; text-align: left; align-content: start;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 18px 20px; cursor: pointer; font: inherit; color: inherit;
+  transform: scale(calc(1 - 0.12 * var(--dist))); opacity: calc(1 - 0.5 * var(--dist));
+  transition: transform .2s ease, opacity .2s ease, border-color .15s;
+}
+.ciclo-card.on { border-color: var(--rule-strong); cursor: default; }
+.ciclo-card b { font-family: var(--display); font-weight: 620; font-size: 19px; letter-spacing: -0.015em; }
+
 .cover-card { text-decoration: none; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); display: block; min-width: 0; overflow: hidden; transition: transform .18s, border-color .15s; }
 .cover-card:hover { transform: translateY(-2px); border-color: var(--rule-strong); }
 .cover-card .lbl { padding: 13px 15px 16px; }

@@ -109,6 +109,27 @@ export interface Rotina {
   origem?: { rotinaId: string; autor?: string };
   /** Rotina publicada pelo time: adotá-la cria uma cópia da pessoa, e é a cópia que evolui. */
   doTime?: boolean;
+  /**
+   * Quando a pessoa fechou a última etapa aqui (ms desde 1970). Alimenta a ordenação do ciclo de
+   * rotinas (P9): a mais antiga sem praticar vem primeiro. `undefined` conta como "nunca".
+   *
+   * **Não é "pratiquei hoje"** (`execucao.praticou`, que aceita só tempo correndo): o piso aqui é
+   * ter fechado ao menos uma etapa — abrir a rotina por engano e sair não conta.
+   */
+  ultimaPraticaEm?: number;
+}
+
+/**
+ * Um ciclo de rotinas (P9, 06/11/2026). **Lista curada e nomeada** — não "todas as rotinas da
+ * pessoa" — porque pode haver mais de um ciclo (o Paulo: "ciclo de ônibus" é só parte das rotinas).
+ *
+ * A pessoa escolhe quais rotinas entram; o ciclo não inventa membros. Quem decide a ORDEM de
+ * exibição é `ordenarPorAntiguidade` (ciclo.ts), não este array — `rotinaIds` é só a lista.
+ */
+export interface Ciclo {
+  id: string;
+  nome: string;
+  rotinaIds: string[];
 }
 
 /** Uma execução em andamento. É o que faz "fechar a página e retomar" funcionar. */
