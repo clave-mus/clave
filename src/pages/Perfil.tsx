@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { GoalId } from '../data/modules';
 import { useContent } from '../data/localized';
-import { resetAll, setLocale, setState, setTheme, updateProfile, useStore } from '../state/store';
+import { resetAll, setAudiarAutoavaliar, setLocale, setState, setTheme, updateProfile, useStore } from '../state/store';
 import { detectLocale, LOCALES, useLocale, useT } from '../i18n';
 import { Btn, Chip, PageHead, SecTitle } from '../components/ui';
 import AccountPanel from '../components/AccountPanel';
@@ -13,6 +13,7 @@ export default function Perfil() {
   const naming = useStore(s => s.naming);
   const locale = useStore(s => s.locale);
   const theme = useStore(s => s.theme);
+  const audiarAutoavaliar = useStore(s => s.audiarAutoavaliar);
   const t = useT();
   const { PORTAS, INSTRUMENTS } = useContent();
   const detected = LOCALES.find(l => l.id === detectLocale())!.name;
@@ -60,6 +61,10 @@ export default function Perfil() {
               <Chip on={naming === null} onClick={() => setState(s => ({ ...s, naming: null }))}>{t('profile.noteNamesAuto', { names: autoNames })}</Chip>
               <Chip on={naming === 'pt'} onClick={() => setState(s => ({ ...s, naming: 'pt' }))}>Dó Ré Mi</Chip>
               <Chip on={naming === 'en'} onClick={() => setState(s => ({ ...s, naming: 'en' }))}>C D E</Chip>
+            </div>
+            <div className="row"><span className="eyebrow">{t('profile.audiarAsk')}</span>
+              <Chip on={audiarAutoavaliar} onClick={() => setAudiarAutoavaliar(true)}>{t('common.yes')}</Chip>
+              <Chip on={!audiarAutoavaliar} onClick={() => setAudiarAutoavaliar(false)}>{t('common.no')}</Chip>
             </div>
           </div>
         </section>

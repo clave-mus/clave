@@ -23,7 +23,6 @@ export const NAV: NavItem[] = [
 /** Endereços antigos que ainda chegam de link salvo, e para onde eles vão agora. */
 export const REDIRECTS: Record<string, string> = {
   '/treinar': '/catalogo',
-  '/estudar': '/catalogo',
   '/progresso': '/perfil/historico',
   '/rotinas': '/',
   '/comunidade': '/',

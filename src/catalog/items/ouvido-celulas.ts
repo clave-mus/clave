@@ -1,4 +1,4 @@
-import { ALL_SCALES, pick, plain, randInt, scaleDegreeLabels, scaleDegs, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
+import { ALL_SCALES, celulaDeGraus, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -32,17 +32,9 @@ export const ouvidoCelulas: CatalogItem = {
 
     // BUG 1 (consertado): o gerador antigo era `clamp(anterior + pick([-2,-1,1,2]), 0, top)`, e
     // nas bordas o clamp devolvia o MESMO grau — saía `5 5 4`. Agora o passo é sorteado DENTRO
-    // do que cabe, em vez de cortado depois.
-    const cell = () => {
-      const out: number[] = [randInt(0, top)];
-      while (out.length < size) {
-        const de = out[out.length - 1];
-        const cabem = [-2, -1, 1, 2].filter(d => de + d >= 0 && de + d <= top);
-        out.push(de + pick(cabem));
-      }
-      return out;
-    };
-    const c = cell();
+    // do que cabe, em vez de cortado depois. A função mora em helpers.ts (`celulaDeGraus`) —
+    // `audiar` (X3) usa a mesma regra para gerar a sequência de graus que a pessoa audia.
+    const c = celulaDeGraus(top, size);
     const key = (x: number[]) => x.map(i => degs[i]).join(' ');
 
     // BUG 2 (consertado): os distratores eram células sorteadas do zero e diferiam demais. A

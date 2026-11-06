@@ -11,7 +11,7 @@
 // de quando ela existe. As descrições abaixo são a definição de cada etiqueta, para o time; o app
 // não as mostra.
 
-export const TAXONOMY_VERSION = 2;
+export const TAXONOMY_VERSION = 3;
 
 // ---------------------------------------------------------------------------
 // Objeto musical × tarefa (FM-3, decisão 40)
@@ -49,6 +49,10 @@ export const TAREFAS = {
   nomear: 'Nomear ou calcular, sem tocar nem ouvir.',
   explorar: 'Explorar livremente, sem pergunta.',
   criar: 'Criar ou improvisar.',
+  /** X3 (06/11): nenhuma tarefa existente cobre isto — não é `ouvir` (que já chega tocado, pra
+   *  reconhecer), nem `cantar` (voz é opcional aqui), nem `nomear` (o som confere, só não entra
+   *  antes). É produzir o som internamente, sem apoio externo, antes de a conferência vir. */
+  audiar: 'Imaginar o som internamente, antes de conferir ouvindo.',
 } as const;
 export type TarefaId = keyof typeof TAREFAS;
 
@@ -71,13 +75,9 @@ export const SKILL_TAGS = {
   // teoria
   'theory.interval_naming': 'Nomear um intervalo visto (na pauta ou no instrumento) pela qualidade e número.',
   'theory.chord_identification': 'Reconhecer um acorde visto e dar a cifra.',
-  'theory.chord_construction': 'Saber quais notas formam um acorde a partir da cifra.',
   'theory.scale_identification': 'Reconhecer uma escala escrita e dar o nome.',
-  'theory.scale_degrees': 'Relacionar nota e grau dentro de uma tonalidade.',
-  'theory.modes': 'Saber a estrutura dos modos e o que distingue um do outro.',
   'theory.harmonic_field': 'Saber o acorde de cada grau do campo harmônico.',
   'theory.key_relations': 'Relações entre tonalidades: relativa menor, quantidade de acidentes.',
-  'theory.reharmonization': 'Substituições de acordes (ex.: sub5).',
   // mapa do instrumento: saber onde as notas estão (conhecimento, não controle motor)
   'fretboard.note_naming': 'Dar o nome da nota de uma casa marcada no braço.',
   'fretboard.note_finding': 'Achar no braço a casa de uma nota dada.',
@@ -98,6 +98,9 @@ export const SKILL_TAGS = {
   'ear.scale_quality': 'Identificar uma escala ou modo ouvido.',
   'ear.scale_degrees': 'Identificar os graus de notas ouvidas em relação a uma tônica.',
   'ear.rhythm_recognition': 'Reconhecer um ritmo ouvido.',
+  /** X3 (06/11): o oposto de ear.*_identification — a pessoa produz o som na cabeça ANTES do
+   *  app confirmar, em vez de reconhecer algo que já tocou. */
+  'ear.audiation': 'Audiar: imaginar o som internamente antes de conferir ouvindo, sem tocar nem escolher.',
 } as const;
 export type SkillTag = keyof typeof SKILL_TAGS;
 
@@ -128,7 +131,6 @@ export const CONTENT_TAGS = {
   'scale.blues': 'Escala blues.',
   // harmonia
   'harmony.diatonic_field': 'Campo harmônico diatônico.',
-  'harmony.tritone_sub': 'Substituto trítono (sub5).',
   // ritmo
   'rhythm.quarter': 'Semínimas e mínimas.',
   'rhythm.eighth': 'Colcheias e contratempo.',

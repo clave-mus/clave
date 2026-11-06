@@ -5,7 +5,7 @@
 // **O que esta tela não faz, de propósito:** não avança sozinha, não bloqueia, não esconde nada
 // quando o tempo sugerido passa, não dá nota, não celebra e não mostra percentual. É a decisão 4 e a
 // lista do que nunca entra.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { itemById } from '../catalog';
 import ItemScreen from '../catalog/ItemScreen';
@@ -74,6 +74,22 @@ export default function Sessao() {
 
   useEffect(() => { if (sessao) gravarSessao(sessao); }, [sessao]);
 
+  /**
+   * Carimba `ultimaPraticaEm` na rotina quando a sessão fecha a PRIMEIRA etapa.
+   *
+   * É o piso do ciclo de rotinas (P9, `routines/ciclo.ts`): abrir e não fechar nada não conta,
+   * nem terminar tudo é exigido — qualquer etapa fechada já basta. Uma estampa por sessão: sem o
+   * `estampada.current`, o tique do relógio regravaria a rotina a cada segundo depois da primeira.
+   */
+  const estampada = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sessao || !rotina) return;
+    if (Object.keys(sessao.desfechos).length === 0) return;
+    if (estampada.current === sessao.sessaoId) return;
+    estampada.current = sessao.sessaoId;
+    salvarRotina({ ...rotina, ultimaPraticaEm: Date.now() });
+  }, [sessao, rotina]);
+
   // O cronômetro é CRESCENTE e por etapa. Um tique por segundo; pausada, não soma.
   //
   // As dependências são os três booleanos, e não `sessao`: a sessão muda a cada tique, e depender
@@ -120,14 +136,14 @@ export default function Sessao() {
   // ---------------------------------------------------------------- antes de começar
   if (!sessao) {
     if (rotina.etapas.length === 0) {
-      return <div className="empty"><h1>{t('session.none')}</h1><div><Btn to={`/rotina/${rotina.id}`}>{t('session.build')}</Btn></div></div>;
+      return <div className="empty"><h1>{t('session.none')}</h1>{!rotina.doTime && <div><Btn to={`/rotina/${rotina.id}`}>{t('session.build')}</Btn></div>}</div>;
     }
     return (
       <div className="sessao-abrir" style={{ display: 'grid', gap: 18 }}>
         <Tag>{rotina.modo === 'guiado' ? t('editor.guided') : t('editor.free')}</Tag>
         <h1>{rotina.nome}</h1>
         {rotina.notas && <p className="muted">{rotina.notas}</p>}
-        <Problemas problemas={problemas} rotinaId={rotina.id} />
+        <Problemas problemas={problemas} rotinaId={rotina.id} editavel={!rotina.doTime} />
         <div className="row">
           {podeRetomar && guardada ? (
             <>
@@ -137,7 +153,7 @@ export default function Sessao() {
           ) : (
             <Btn onClick={() => iniciar(rotina)}>{t('session.start')}</Btn>
           )}
-          <Btn tone="ghost" to={`/rotina/${rotina.id}`}>{t('routines.edit')}</Btn>
+          {!rotina.doTime && <Btn tone="ghost" to={`/rotina/${rotina.id}`}>{t('routines.edit')}</Btn>}
         </div>
         {podeRetomar && guardada && (
           <p className="muted">{t('session.resumeFrom', {
@@ -419,7 +435,7 @@ function registrarTarefa(id: string, module: Parameters<typeof logActivity>[0]['
   logActivity({ id, title, module, seconds, sessao, autoavaliacao });
 }
 
-function Problemas({ problemas, rotinaId }: { problemas: { etapaId: string; itemId: string; substitutos: string[] }[]; rotinaId: string }) {
+function Problemas({ problemas, rotinaId, editavel = true }: { problemas: { etapaId: string; itemId: string; substitutos: string[] }[]; rotinaId: string; editavel?: boolean }) {
   const t = useT();
   if (problemas.length === 0) return null;
   return (
@@ -431,7 +447,7 @@ function Problemas({ problemas, rotinaId }: { problemas: { etapaId: string; item
           {p.substitutos.length === 0 && t('session.missingNone')}
         </p>
       ))}
-      <div><Btn small tone="ghost" to={`/rotina/${rotinaId}`}>{t('session.build')}</Btn></div>
+      {editavel && <div><Btn small tone="ghost" to={`/rotina/${rotinaId}`}>{t('session.build')}</Btn></div>}
     </div>
   );
 }

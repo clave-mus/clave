@@ -291,8 +291,8 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
   // superfícies que ficam no próprio palco (teclado, braço, pauta)
   if (sf.kind === 'keyboard') {
     const marks: Record<number, string> = {};
-    if (picked) marks[Number(picked)] = phase === 'right' ? 'var(--mu)' : 'var(--ve)';
-    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m })) marks[m] = 'var(--mu)';
+    if (picked) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
+    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m })) marks[m] = 'var(--ok)';
     return (
       <div className="stage dark">
         {fb}
@@ -306,10 +306,13 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
-    if (picked) { const [s, f] = picked.split(':').map(Number); marks.push({ s, f, color: phase === 'right' ? 'var(--mu)' : 'var(--ve)' }); }
+    if (picked) {
+      const [s, f] = picked.split(':').map(Number);
+      marks.push({ s, f, color: phase === 'right' ? 'var(--ok)' : 'var(--err)', label: phase === 'right' ? '✓' : undefined });
+    }
     if (phase === 'wrong') {
       const strings = sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i);
-      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f })) marks.push({ s, f, color: 'var(--mu)', label: '✓' });
+      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f })) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
     }
     return (
       <div className="stage dark">

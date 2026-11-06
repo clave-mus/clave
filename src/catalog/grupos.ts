@@ -1,9 +1,8 @@
 // Grupos por propósito: que itens fazem sentido **na mesma etapa de rotina** (decisão 95).
 //
 // O critério NÃO é "treina a mesma habilidade" — é "serve ao mesmo propósito agora". A diferença
-// importa: `technique.tempo_control` junta metrônomo com "sustentar e cortar" porque os dois usam
-// clique, e eles não combinam num aquecimento de mão. Foi por medir pelas `skillTags` que o
-// aquecimento não apareceu no primeiro levantamento.
+// importa: dois itens podem compartilhar `skillTags` e ainda não combinarem numa mesma etapa, se o
+// que cada um pede da pessoa agora for diferente (um pede metrônomo, o outro silêncio, por exemplo).
 //
 // **Um item entra em vários grupos.** É o que resolve a objeção certa de que um exercício serve a
 // vários propósitos: não é preciso eleger o principal.
@@ -35,10 +34,6 @@ export interface GrupoDeRodizio {
 const na = (itemId: string, superficie: string): MembroDeGrupo => ({ itemId, settings: { superficie } });
 
 export const GRUPOS: readonly GrupoDeRodizio[] = [
-  {
-    id: 'aquecimento-mao', nome: 'grupos.aquecimento-mao',
-    itens: [{ itemId: 'tecnica' }, { itemId: 'sustentar-e-cortar' }, { itemId: 'legato-staccato' }],
-  },
   {
     id: 'ritmo-metronomo', nome: 'grupos.ritmo-metronomo',
     itens: [{ itemId: 'acento-deslocado' }, { itemId: 'subdivisao-alternada' }, { itemId: 'deslocamento-ritmico' }],

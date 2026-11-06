@@ -23,9 +23,16 @@ export const disponivel = () => typeof window !== 'undefined' && 'speechSynthesi
  *
  * Fala **devagar** (`rate: 0.9`): nome de nota e de intervalo são curtos e se perdem na velocidade
  * padrão, sobretudo em português com a voz errada instalada.
+ *
+ * B8: a estimativa era só `tamanho/9`, e isso falha justo para graus — "1 3 5" tem 5 caracteres,
+ * mas são TRÊS palavras ditas com pausa entre elas; a conta antiga dava ~0,6s pra o que a voz leva
+ * uns 2s pra dizer. O ciclo agendava o próximo enunciado antes do gabarito acabar de falar, e por
+ * isso o gabarito "colava" no enunciado seguinte. Cada palavra pesa seu próprio tempo mínimo, e o
+ * tamanho do texto ainda entra, pra frases mais longas que graus isolados.
  */
 export function falar(texto: string, locale: Locale): number {
-  const estimativa = Math.max(1, Math.min(6, texto.length / 9));
+  const palavras = texto.trim().split(/\s+/).filter(Boolean).length;
+  const estimativa = Math.max(1, Math.min(6, palavras * 0.5 + texto.length / 12));
   if (!disponivel() || !texto.trim()) return estimativa;
   try {
     window.speechSynthesis.cancel();

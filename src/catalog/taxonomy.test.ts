@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { LESSONS } from '../data/content';
 import { MODULE_LIST } from '../data/modules';
 import { EXERCISES } from './catalog';
 import { AMBIENTES } from './index';
@@ -8,21 +7,23 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 // exercise_id é estável: rotinas, tentativas e configurações salvas apontam para ele. Renomear ou
 // tirar um id quebra esses dados em silêncio. Para mudar esta lista, migre os dados antes.
 //
-// Esta lista **mudou uma vez**, nas fusões por superfície de 04/11/2026 (decisão 16): onze ids viraram
-// quatro. A migração está em `state/migrate.ts` (`FUNDIDOS`) e em `routines/storage.ts`, e tem teste
-// nos dois lugares — rotina, histórico e estatística de quem já usava o app atravessam.
+// Esta lista **mudou três vezes**: nas fusões por superfície de 04/11/2026 (decisão 16), onze ids
+// viraram quatro (migração em `state/migrate.ts`, `FUNDIDOS`, e em `routines/storage.ts`); na
+// revisão de 04/11 (`P7`), que tirou quatro itens de teoria sem equivalente — sem migração, porque
+// não há para onde migrar: uma etapa de rotina que apontava para um deles passa a aparecer como
+// "falta algo" (`session.missingTitle`), que é o caminho já existente para isso (F3-3); e no X9
+// (06/11), que moveu o modo "intervalo" de `ache-a-nota` para `faca-o-intervalo` — também sem
+// migração: o modo estava QUEBRADO (B4), então não havia resposta válida salva para preservar.
 const STABLE_IDS = [
-  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse',
+  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse',
   'pauta-armadura', 'pauta-escala',
-  'teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades', 'teoria-intervalos',
+  'teoria-intervalos',
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
 ];
 
-// Aula tem assunto mas não tem tarefa — ninguém "toca" uma aula.
 const assuntos: [string, Assunto][] = [
   ...EXERCISES.map(e => [`exercício ${e.id}`, e as Assunto] as [string, Assunto]),
   ...AMBIENTES.map(a => [`ambiente ${a.id}`, a as Assunto] as [string, Assunto]),
-  ...LESSONS.map(l => [`aula ${l.id}`, l as Assunto] as [string, Assunto]),
 ];
 const items: [string, Classification][] = [
   ...EXERCISES.map(e => [`exercício ${e.id}`, e] as [string, Classification]),
@@ -51,22 +52,9 @@ describe('taxonomia', () => {
     expect(MODULE_LIST.map(m => m.id)).toEqual(Object.keys(MODULES));
   });
 
-  it('toda etiqueta do vocabulário é usada por algum exercício ou aula', () => {
+  it('toda etiqueta do vocabulário é usada por algum exercício ou ferramenta', () => {
     const used = new Set<string>(assuntos.flatMap(([, c]) => [...c.skillTags, ...c.contentTags]));
     expect([...Object.keys(SKILL_TAGS), ...Object.keys(CONTENT_TAGS)].filter(t => !used.has(t))).toEqual([]);
-  });
-
-  it('cada exercício ligado a uma aula compartilha com ela pelo menos uma etiqueta', () => {
-    const byId = Object.fromEntries(EXERCISES.map(e => [e.id, e]));
-    const orphans: string[] = [];
-    for (const lesson of LESSONS) {
-      const tags = new Set([...lesson.skillTags, ...lesson.contentTags]);
-      for (const id of lesson.exercises) {
-        const ex = byId[id];
-        if (![...ex.skillTags, ...ex.contentTags].some(t => tags.has(t))) orphans.push(`${lesson.id} → ${id}`);
-      }
-    }
-    expect(orphans).toEqual([]);
   });
 });
 

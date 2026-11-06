@@ -4,28 +4,19 @@ import { acidentesDaArmadura, ENARMONIAS, INVERTE, theoryQuestion } from './help
 import { resolveParams } from './params';
 import { majorTonic, mod, noteName, pc, relativeMinor } from '../theory/core';
 import { translate, type MessageKey, type Vars } from '../i18n';
-// A decisão 53: `quiz-teoria` era o único item com QUATRO objetos. O ponto da divisão é que cada um
-// dos quatro passe a ter **um só** — e que nenhum outro item volte a acumular.
-describe('a divisão do quiz de teoria (decisão 53)', () => {
-  it('cada um dos quatro itens de teoria tem um objeto só', () => {
-    for (const id of ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades']) {
-      expect(EXERCISES.find(e => e.id === id)?.objetos, id).toHaveLength(1);
-    }
-  });
 
-  it('os quatro objetos são diferentes entre si — era isso que estava empacotado num item', () => {
-    const objs = ['teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades']
-      .map(id => EXERCISES.find(e => e.id === id)!.objetos![0]);
-    expect(new Set(objs).size).toBe(4);
-    expect([...objs].sort()).toEqual(['acordes', 'escalas', 'harmonia', 'notacao']);
-  });
-
-  it('e nenhum item do catálogo acumula mais de três objetos', () => {
+// A decisão 53 criou quatro itens de teoria, um por tópico, pra `quiz-teoria` (que acumulava
+// quatro objetos) deixar de existir. A revisão de 04/11 (`P7`) tirou os quatro itens de novo — só
+// ficou `teoria-intervalos`, que usa um dos tópicos (`intervalo-nomeado`). Os TÓPICOS continuam:
+// `theoryQuestion()` é motor, testado por conta própria, e os outros seis ficam disponíveis mesmo
+// sem um item que os exponha hoje (igual a `tools/cadencia-familias.ts` depois do mesmo P7).
+describe('nenhum item do catálogo acumula mais de três objetos', () => {
+  it('a regra que a decisão 53 criou continua valendo', () => {
     for (const e of EXERCISES) expect((e.objetos ?? []).length, e.id).toBeLessThanOrEqual(3);
   });
 });
 
-// Os quatro tópicos novos (04/11/2026). O que importa travar é que **a resposta certa é certa**: numa
+// Os sete tópicos de teoria em texto. O que importa travar é que **a resposta certa é certa**: numa
 // pergunta de texto gerada, um erro de cálculo dá uma alternativa correta que o app marca como errada,
 // e nada acusa — nem o tipo, nem a tela.
 describe('os tópicos novos de teoria', () => {

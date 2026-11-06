@@ -25,19 +25,28 @@ export function Field({ seed, color = 'var(--accent)', className, style, label }
   label?: ReactNode;
 }) {
   const h = hash(seed);
+  // B11: `h` é um inteiro de 32 bits SEM sinal (por causa do `>>> 0` em hash()). Usar `>>` (shift com
+  // sinal) nele reinterpreta qualquer hash ≥ 2^31 como negativo, e os `% 55`/`% 65` saíam negativos
+  // também — o centro do gradiente ia parar fora da caixa (até y1 = -42%), e o campo lia como vazio.
+  // Em ~40% das sementes reais do app. `>>>` em tudo resolve, porque mantém `h` sem sinal o tempo todo.
   const x1 = 18 + (h % 60);
-  const y1 = 10 + ((h >> 6) % 55);
-  const x2 = 20 + ((h >> 12) % 65);
-  const y2 = 40 + ((h >> 18) % 55);
+  const y1 = 10 + ((h >>> 6) % 55);
+  const x2 = 20 + ((h >>> 12) % 65);
+  const y2 = 40 + ((h >>> 18) % 55);
+  // B11: o gradiente deriva lentamente, pra o campo deixar de ser estático. Vai pro `::before` (um
+  // pseudo-elemento não aceita `style` do React) via custom property; `--field-delay` NEGATIVO faz
+  // cada campo começar num ponto diferente do próprio ciclo, pra campos vizinhos não pulsarem juntos.
+  const gradient =
+    `radial-gradient(62% 62% at ${x1}% ${y1}%, color-mix(in srgb, ${color} 78%, transparent) 0%, transparent 68%),` +
+    `radial-gradient(54% 54% at ${x2}% ${y2}%, color-mix(in srgb, ${color} 34%, transparent) 0%, transparent 66%)`;
+  const delay = -(h % 50);
   return (
     <div
       className={`field-block ${className ?? ''}`}
       style={{
         ...style,
-        // a cor entra duas vezes, em opacidades diferentes, para o campo ter profundidade
-        backgroundImage:
-          `radial-gradient(62% 62% at ${x1}% ${y1}%, color-mix(in srgb, ${color} 78%, transparent) 0%, transparent 68%),` +
-          `radial-gradient(54% 54% at ${x2}% ${y2}%, color-mix(in srgb, ${color} 34%, transparent) 0%, transparent 66%)`,
+        ['--field-bg' as string]: gradient,
+        ['--field-delay' as string]: `${delay}s`,
       }}
       aria-hidden={label ? undefined : true}
     >

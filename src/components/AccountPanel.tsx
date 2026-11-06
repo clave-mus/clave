@@ -33,14 +33,14 @@ export default function AccountPanel() {
             {!confirmDelete ? (
               <Btn small tone="ghost" onClick={() => setConfirmDelete(true)}>{t('account.delete')}</Btn>
             ) : (
-              <div className="row panel" style={{ padding: 12, background: 'var(--ve)' }}>
+              <div className="row panel" style={{ padding: 12, background: 'var(--err-quiet)' }}>
                 <span>{t('account.deleteWarn')}</span>
                 <Btn small tone="ghost" onClick={() => deleteAccount().catch(e => setError(String(e.message ?? e)))}>{t('common.deleteAll')}</Btn>
                 <Btn small tone="mu" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Btn>
               </div>
             )}
           </div>
-          {error && <span style={{ color: 'var(--ve)' }}>{error}</span>}
+          {error && <span style={{ color: 'var(--err-strong)' }}>{error}</span>}
         </div>
       </section>
     );
@@ -115,7 +115,7 @@ export default function AccountPanel() {
 
         {step === 'enviado' && <span>{t('account.sent', { email })}</span>}
 
-        {error && <span style={{ color: 'var(--ve)' }}>{error}</span>}
+        {error && <span style={{ color: 'var(--err-strong)' }}>{error}</span>}
       </div>
     </section>
   );

@@ -34,6 +34,20 @@
   --accent-quiet: #f3e2d6;  /* fundo de destaque sutil */
   --accent-strong: #9e3c20; /* texto DENTRO do destaque sutil: o acento puro não passa em AA ali */
 
+  /* --- certo e errado (U1): uma cor só para cada, em todo o app — antes "errado" não tinha cor
+     própria (caía num cinza neutro ou num tom de área sem relação com o sentido). O tom de "certo"
+     é o próprio acento, que já fazia esse papel; "errado" é novo e escolhido pra ficar na mesma
+     família quente do campo, sem se confundir com o acento. ⚠️ Tonalidade exata é provisória —
+     o Paulo ainda não viu em tela. */
+  --ok: var(--accent);
+  --ok-ink: var(--accent-ink);
+  --ok-quiet: var(--accent-quiet);
+  --ok-strong: var(--accent-strong);
+  --err: #a3372e;
+  --err-ink: #fff8f2;
+  --err-quiet: #f3e0dc;
+  --err-strong: #822921;
+
   /* --- cores das cinco áreas: família quente do campo, com duas âncoras frias --- */
   --area-1: #c14a2b;
   --area-2: #b07a1e;
@@ -85,12 +99,16 @@
     --rule: #2c282b;
     --rule-strong: #464143;
     --ink: #f1ece6;
-    --ink-soft: #a39b92;
-    --ink-faint: #8a837c;
+    --ink-soft: #c4bcb2;
+    --ink-faint: #a69e94;
     --accent: #f08a4b;
     --accent-ink: #1a1012;
     --accent-quiet: #2e2019;
     --accent-strong: #f3a575;
+    --err: #e2726a;
+    --err-ink: #1a1012;
+    --err-quiet: #3a2220;
+    --err-strong: #f09a92;
     --area-1: #f08a4b;
     --area-2: #e0b256;
     --area-3: #7aa8c8;
@@ -109,12 +127,16 @@
   --rule: #2c282b;
   --rule-strong: #464143;
   --ink: #f1ece6;
-  --ink-soft: #a39b92;
-  --ink-faint: #8a837c;
+  --ink-soft: #c4bcb2;
+  --ink-faint: #a69e94;
   --accent: #f08a4b;
   --accent-ink: #1a1012;
   --accent-quiet: #2e2019;
   --accent-strong: #f3a575;
+  --err: #e2726a;
+  --err-ink: #1a1012;
+  --err-quiet: #3a2220;
+  --err-strong: #f09a92;
   --area-1: #f08a4b;
   --area-2: #e0b256;
   --area-3: #7aa8c8;
@@ -305,7 +327,16 @@ main.page { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 34
 .switch input:checked { background: var(--accent); }
 .switch input:checked::after { left: 20px; }
 
-.range { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--rule-strong); }
+/* B7: a trilha visual é fina (4px), mas a área de toque precisa ser bem maior que isso — no
+   celular, um alvo de 4px de altura faz o dedo perder contato a cada leve desvio vertical, e o
+   valor "sobe e desce" a cada vez que o toque sai e volta a entrar na trilha. O padding alarga só
+   a área de toque; `background-clip` mantém a trilha visualmente fina. */
+.range {
+  -webkit-appearance: none; appearance: none; width: 100%;
+  height: 4px; padding: 14px 0; box-sizing: content-box;
+  border-radius: 2px; background: var(--rule-strong); background-clip: content-box;
+  touch-action: none;
+}
 .range::-webkit-slider-thumb { -webkit-appearance: none; width: 19px; height: 19px; border-radius: 50%; background: var(--accent); border: 0; cursor: pointer; }
 .range::-moz-range-thumb { width: 19px; height: 19px; border-radius: 50%; background: var(--accent); border: 0; cursor: pointer; }
 
@@ -383,6 +414,25 @@ select.sel {
 .ex-card.add { justify-content: center; align-items: center; color: var(--ink-soft); border-style: dashed; font-weight: 540; }
 .ex-card.add:hover { color: var(--ink); }
 
+/* ---------- carrossel de ciclo (P9): rotinas lado a lado, arrasta ou toca numa lateral ---------- */
+.ciclo-trilha {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-block: 8px; padding-inline: calc(50% - min(78vw, 340px) / 2);
+  scrollbar-width: none;
+}
+.ciclo-trilha::-webkit-scrollbar { display: none; }
+.ciclo-card {
+  --dist: 0;
+  flex: 0 0 min(78vw, 340px); width: min(78vw, 340px); scroll-snap-align: center;
+  display: grid; gap: 4px; text-align: left; align-content: start;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 18px 20px; cursor: pointer; font: inherit; color: inherit;
+  transform: scale(calc(1 - 0.12 * var(--dist))); opacity: calc(1 - 0.5 * var(--dist));
+  transition: transform .2s ease, opacity .2s ease, border-color .15s;
+}
+.ciclo-card.on { border-color: var(--rule-strong); cursor: default; }
+.ciclo-card b { font-family: var(--display); font-weight: 620; font-size: 19px; letter-spacing: -0.015em; }
+
 .cover-card { text-decoration: none; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); display: block; min-width: 0; overflow: hidden; transition: transform .18s, border-color .15s; }
 .cover-card:hover { transform: translateY(-2px); border-color: var(--rule-strong); }
 .cover-card .lbl { padding: 13px 15px 16px; }
@@ -413,8 +463,9 @@ select.sel {
   font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 5px 12px; border-radius: var(--pill);
 }
-.stage .feedback.ok { background: var(--accent-quiet); color: var(--accent-strong); }
-.stage .feedback.bad { background: var(--raised); color: var(--ink-soft); }
+.stage .feedback.ok { background: var(--ok-quiet); color: var(--ok-strong); }
+.stage .feedback.ok::before { content: '✓ '; }
+.stage .feedback.bad { background: var(--err-quiet); color: var(--err-strong); }
 
 .staff-svg, .kbd-svg, .fret-svg, .rhythm-svg { width: 100%; height: auto; display: block; }
 .staff-svg { max-width: 560px; }
@@ -445,12 +496,13 @@ select.sel {
 }
 .ans:hover:not(:disabled) { border-color: var(--rule-strong); background: var(--raised); }
 .ans .k { position: absolute; left: 8px; top: 5px; font-family: var(--mono); font-size: 10px; color: var(--ink-soft); }
-.ans.right { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
-.ans.right .k { color: var(--accent-ink); opacity: .7; }
-.ans.wrong { border-color: var(--rule-strong); color: var(--ink-faint); text-decoration: line-through; }
+.ans.right { background: var(--ok); border-color: var(--ok); color: var(--ok-ink); font-weight: 650; }
+.ans.right .k { color: var(--ok-ink); opacity: .7; }
+.ans.right::before { content: '✓'; position: absolute; right: 8px; top: 5px; font-size: 13px; }
+.ans.wrong { border-color: var(--err); background: var(--err-quiet); color: var(--err-strong); text-decoration: line-through; }
 .ans:disabled { cursor: default; }
 .ans.rhythm { padding: 10px 12px; }
-.ans.rhythm.right { --staff-ink: var(--accent-ink); }
+.ans.rhythm.right { --staff-ink: var(--ok-ink); }
 
 .letters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }
 .letters .ans { padding-inline: 4px; }
@@ -537,6 +589,22 @@ select.sel {
   position: relative; isolation: isolate; overflow: hidden;
   border-radius: var(--r); background-color: var(--raised);
   display: grid; place-items: center; min-height: 48px;
+}
+/* B11: o gradiente mora aqui, maior que a caixa (inset negativo), pra girar e derivar sem deixar
+   buraco nas bordas. Só `transform` anima — roda no compositor, não repinta; animar o próprio
+   background-position dos ~20 campos de uma tela custaria layout/paint a cada quadro. */
+.field-block::before {
+  content: ""; position: absolute; inset: -25%; pointer-events: none;
+  background-image: var(--field-bg);
+  animation: field-drift 52s ease-in-out infinite;
+  animation-delay: var(--field-delay, 0s);
+  /* prefers-reduced-motion já desliga toda animação/transição globalmente (regra no topo deste
+     arquivo) — nada extra a fazer aqui. */
+}
+@keyframes field-drift {
+  0%   { transform: translate(0%, 0%) rotate(0deg); }
+  50%  { transform: translate(3%, -3.5%) rotate(7deg); }
+  100% { transform: translate(0%, 0%) rotate(0deg); }
 }
 .field-block::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;

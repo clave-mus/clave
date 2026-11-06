@@ -65,6 +65,7 @@ ver o risco registrado em [equipe.md](../equipe.md).
 | [FM-motores.md](FM-motores.md) | Motores e **enumeradores** do catálogo | — | `FM-1` feita. `FM-4` e `FM-5` são funções puras, sem interface — bom primeiro PR |
 | [F6-exercicios.md](F6-exercicios.md) | Exercícios novos e curadoria | F1 | Inclui tarefas 👤 de curadoria |
 | [F7-F9-resto.md](F7-F9-resto.md) | Variação, onboarding, plataforma | F3 | |
+| [RV-revisao-04-11.md](RV-revisao-04-11.md) | **O lote da revisão de 04/11** | — | **É por onde se começa hoje.** Ordem de execução dentro do arquivo; uma tarefa por commit |
 
 ## Convenções
 

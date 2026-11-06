@@ -68,6 +68,16 @@ export interface Activity {
    * a pessoa de fato percebe ao terminar.
    */
   autoavaliacao?: 'facil' | 'esforco' | 'nao';
+  /**
+   * Autoavaliação POR PERGUNTA, dentro de uma mesma atividade (X3, 06/11) — diferente de
+   * `autoavaliacao`, que é uma vez só ao fim da etapa. Existe porque `audiar` pergunta "você
+   * tinha ouvido assim?" depois de CADA estímulo, não uma vez ao fim.
+   *
+   * Mora separado de `correct`/`total` pelo mesmo motivo que `autoavaliacao` mora separado deles:
+   * é opinião da pessoa, não validação — o app não ouve o que ela audiou. Contar isto como acerto
+   * afirmaria uma conferência que não existe.
+   */
+  autoavaliadas?: { sim: number; total: number };
 }
 /** Sessão da conta (Supabase). Null = sem conta, só localStorage. */
 export interface Account {
@@ -84,6 +94,13 @@ export interface State {
   /** Nome das notas escolhido no perfil; null = segue o idioma. */
   naming: Naming | null;
   sound: boolean;
+  /**
+   * Pergunta "você tinha ouvido assim?" depois de CADA estímulo do `audiar` (X3, 06/11). Começa
+   * ligado; fica salvo no Perfil, junto de som/tema/idioma. **Só controla a pergunta por item do
+   * audiar** — a autoavaliação por ETAPA (`tecnica`, `no-instrumento`) é outra coisa e continua
+   * perguntando do jeito de sempre, sem relação com este interruptor.
+   */
+  audiarAutoavaliar: boolean;
   /**
    * Modo de revisão (decisão 91): mostra os itens em `rascunho`, que ninguém mais vê. É para quem
    * constrói ou revisa itens. **Não há controle para isto no Perfil, de propósito**: quem testa o
@@ -123,6 +140,7 @@ export const DEFAULT_STATE: State = {
   theme: null,
   naming: null,
   sound: true,
+  audiarAutoavaliar: true,
   revisao: false,
   stats: {},
   history: [],
@@ -242,6 +260,9 @@ export function setAccount(account: Account | null) {
 }
 export function setLocale(locale: Locale | null) {
   setState(s => ({ ...s, locale }));
+}
+export function setAudiarAutoavaliar(v: boolean) {
+  setState(s => ({ ...s, audiarAutoavaliar: v }));
 }
 /** Tema claro, escuro, ou null para seguir o sistema. Escreve o atributo que src/index.css lê. */
 export function setTheme(theme: Theme | null) {

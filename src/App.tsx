@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import { REDIRECTS, reescreverRotaLegada } from './components/nav';
-import Estudar, { GenrePage, LessonPage } from './pages/Estudar';
 import Praticar from './pages/Praticar';
 import Onboarding from './pages/Onboarding';
 import Editor from './pages/Editor';
 import Sessao from './pages/Sessao';
+import CicloEditor from './pages/CicloEditor';
+import Ciclo from './pages/Ciclo';
 import Recebida from './pages/Recebida';
 import Perfil from './pages/Perfil';
 import Progresso from './pages/Progresso';
@@ -25,12 +26,12 @@ export default function App() {
           <Route index element={<Praticar />} />
           <Route path="catalogo" element={<Treinar />} />
           <Route path="catalogo/:id" element={<ItemPage />} />
-          {/* As aulas longas seguem acessíveis, sem aba própria (decisão 24). */}
-          <Route path="estudar/genero/:id" element={<GenrePage />} />
-          <Route path="estudar/:id" element={<LessonPage />} />
-          <Route path="estudar/todas" element={<Estudar />} />
+          {/* Aulas saiu do app (revisão de 04/11, P7); endereços antigos ainda caem de pé. */}
+          <Route path="estudar/*" element={<Navigate to="/catalogo" replace />} />
           <Route path="rotina/:id" element={<Editor />} />
           <Route path="rotina/:id/fazer" element={<Sessao />} />
+          <Route path="ciclo/:id" element={<CicloEditor />} />
+          <Route path="ciclo/:id/fazer" element={<Ciclo />} />
           {/* Rotina que chegou por link (decisão 23). Não pede conta. */}
           <Route path="r/:dados" element={<Recebida />} />
           <Route path="perfil" element={<Perfil />} />

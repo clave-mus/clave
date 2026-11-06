@@ -95,27 +95,6 @@ export function porSuperficie(ctx: Ctx, opts: { semOitavas?: boolean } = {}): Se
   ];
 }
 
-/**
- * O que a pergunta pede: a nota pelo nome, ou o intervalo a partir de uma nota (F6-4).
- *
- * `intervalos` só aparece no segundo modo — pedir "qual terça" quando a pergunta é "toque o Fá" seria
- * oferecer um controle que não faz nada.
- */
-const ACHAR_MODOS = { nota: 'settings.askNote', intervalo: 'settings.askInterval' } as const;
-export const ACHAR = ({ t }: Ctx): Setting[] => [
-  { id: 'pedido', label: t('settings.ask'), type: 'single',
-    options: (Object.keys(ACHAR_MODOS) as (keyof typeof ACHAR_MODOS)[]).map(id => ({ id, label: t(ACHAR_MODOS[id]) })) },
-  { id: 'intervalos', label: t('settings.intervals'), type: 'multi', quando: s => s.pedido === 'intervalo',
-    options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, { t } as Ctx), tier: i.tier })) },
-];
-
-/** O intervalo sorteado entre os escolhidos, com o número de semitons e o rótulo pronto. */
-export function intervaloPedido(s: S, ctx: Ctx) {
-  const ids = arr(s.intervalos, ['M3', 'J5']);
-  const iv = INTERVALS.find(i => i.id === pick(ids)) ?? INTERVALS[0];
-  return { num: iv.num, semis: semisFor(iv.num, iv.q), rotulo: ivLabel(iv.id, ctx) };
-}
-
 /** As teclas pretas, por classe de altura. */
 export const PRETAS = [1, 3, 6, 8, 10];
 
@@ -204,6 +183,22 @@ export function scaleSound(tonic: number, id: ScaleId, dir?: SettingValue): numb
   const d = (dir ?? 'sobe') as Direcao | 'ambos';
   if (d === 'ambos') return [...scaleMidi(tonic, id, 'sobe'), ...scaleMidi(tonic, id, 'desce').slice(1)];
   return scaleMidi(tonic, id, d);
+}
+
+/**
+ * Uma célula de graus: um passeio de `size` graus dentro da escala, onde cada vizinho dista 1 ou 2
+ * posições e nenhum grau se repete. Extraído de `ouvido-celulas` (X3, 06/11) para `audiar` usar a
+ * mesma regra — motor duplicado é proibido, e as duas BUG fixes documentadas lá (clamp nas bordas
+ * devolvendo o mesmo grau; distratores inválidos) valem igual para quem gerar graus depois.
+ */
+export function celulaDeGraus(top: number, size: number): number[] {
+  const out: number[] = [randInt(0, top)];
+  while (out.length < size) {
+    const de = out[out.length - 1];
+    const cabem = [-2, -1, 1, 2].filter(d => de + d >= 0 && de + d <= top);
+    out.push(de + pick(cabem));
+  }
+  return out;
 }
 
 export const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);

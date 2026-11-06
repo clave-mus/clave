@@ -59,7 +59,7 @@ describe('os cinco contextos', () => {
   it('em silêncio, nada que toque som', () => {
     expect(cabeNoContexto(itemById['ouvido-intervalo']!, 'silencio')).toBe(false);
     // quiz de teoria é texto puro: cabe sem fone
-    expect(cabeNoContexto(itemById['teoria-graus']!, 'silencio')).toBe(true);
+    expect(cabeNoContexto(itemById['teoria-intervalos']!, 'silencio')).toBe(true);
   });
 
   // Era vazio até 04/11/2026, e o teste dizia "quando a F6-1 entrar, isto vira toBeGreaterThan(0)".
@@ -98,7 +98,7 @@ describe('o motivo de não caber', () => {
   });
 
   it('não dá motivo para o que cabe', () => {
-    expect(porQueNaoCabe(itemById['teoria-graus']!, 'onibus')).toBeNull();
+    expect(porQueNaoCabe(itemById['teoria-intervalos']!, 'onibus')).toBeNull();
   });
 });
 
@@ -115,10 +115,9 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
-    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
-    // a "tarefa com metrônomo": cinco famílias, todas `tarefa` — terminam na autoavaliação
-    'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'sustentar-e-cortar': 'tarefa',
-    'legato-staccato': 'tarefa', 'deslocamento-ritmico': 'tarefa',
+    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', audiar: 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    // a "tarefa com metrônomo": três famílias, todas `tarefa` — terminam na autoavaliação
+    'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'deslocamento-ritmico': 'tarefa',
   };
 
   it('toda série declara `kind: serie`', () => {

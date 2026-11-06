@@ -73,8 +73,8 @@ describe('o que está declarado', () => {
     }
   });
 
-  it('os cinco itens da tarefa com metrônomo são rascunho — construídos, não publicados', () => {
-    for (const id of ['acento-deslocado', 'subdivisao-alternada', 'sustentar-e-cortar', 'legato-staccato', 'deslocamento-ritmico']) {
+  it('os três itens restantes da tarefa com metrônomo são rascunho — construídos, não publicados', () => {
+    for (const id of ['acento-deslocado', 'subdivisao-alternada', 'deslocamento-ritmico']) {
       expect(estadoDe(itens.find(i => i.id === id)?.publicacao), id).toBe('rascunho');
     }
   });

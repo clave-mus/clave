@@ -9,13 +9,10 @@
 import { queNotaEEssa } from './items/que-nota-e-essa';
 import { acheANota } from './items/ache-a-nota';
 import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
+import { facaOIntervalo } from './items/faca-o-intervalo';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
-import { teoriaGraus } from './items/teoria-graus';
-import { teoriaAcordes } from './items/teoria-acordes';
-import { teoriaCampo } from './items/teoria-campo';
-import { teoriaTonalidades } from './items/teoria-tonalidades';
 import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
@@ -29,13 +26,10 @@ export const EXERCISES: CatalogItem[] = [
   queNotaEEssa,
   acheANota,
   queIntervaloEEsse,
+  facaOIntervalo,
   queAcordeEEsse,
   pautaArmadura,
   pautaEscala,
-  teoriaGraus,
-  teoriaAcordes,
-  teoriaCampo,
-  teoriaTonalidades,
   teoriaIntervalos,
   ouvidoTecla,
   ouvidoIntervalo,

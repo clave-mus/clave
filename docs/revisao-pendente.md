@@ -94,7 +94,19 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | O que só você confere |
 |---|---|
-| `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela a casa, e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira o **tempo de espera** padrão (8 s), se "ouvir a nota antes" ajuda ou entrega demais, e se mostrar **uma** posição na revelação é melhor que mostrar todas as casas daquela nota |
+| `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela **todas** as casas onde ela existe na faixa inteira (X8, 06/11/2026: antes marcava uma só, sorteada), e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira os tempos padrão de espera (8 s) e de exibição da resposta (4 s), e se "ouvir a nota antes" ajuda ou entrega demais |
+
+### Audiar (`X3`, revisão de 04/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
+
+### Faça o intervalo (`X9`+`B4`, revisão de 04/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `faca-o-intervalo` | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
@@ -102,9 +114,9 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|---|
 | `acento-deslocado` | **T3** · deslocamento de acento | o clique: o acento é o `clique-forte` e a subdivisão um `clique` mais baixo — **se dá para ouvir o acento mover** |
 | `subdivisao-alternada` | **T4** · subdivisão alternada | a ordem fixa (da mais lenta para a mais rápida) e o aviso um compasso antes |
-| `sustentar-e-cortar` | **T6** · sustentar e cortar | o som do corte (`aro`): se ele marca o tempo sem confundir com o clique |
-| `legato-staccato` | **T7** · legato e staccato | o app só marca a troca — não ouve. Se isso basta |
 | `deslocamento-ritmico` | **T8** · deslocamento de padrão | os 15 padrões e se a pulsação ancorada no primeiro tempo ajuda ou atrapalha |
+
+> `sustentar-e-cortar` (T6) e `legato-staccato` (T7) saíram do catálogo (revisão de 04/11, `P7`).
 
 **Os textos** (títulos e descrições, em português e inglês) saíram das tabelas das decisões 81 e 83, mas
 são rascunhos: nome de coisa que a pessoa vê é decisão do Paulo.

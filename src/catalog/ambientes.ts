@@ -70,10 +70,37 @@ export const AMBIENTES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     settings: ctx => [
       { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
+      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1, format: v => `${v} s` },
       { id: 'ouvirAntes', label: ctx.t('onInstrument.hearFirst'), type: 'toggle' },
+      { id: 'mostrarBraco', label: ctx.t('onInstrument.showFretboard'), type: 'toggle' },
     ],
-    defaults: { esperar: 8, ouvirAntes: true },
+    defaults: { esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
     screen: () => import('../tools/NoInstrumento'),
+  },
+  {
+    // X3 (06/11/2026). **Tarefa**, não série: igual ao `no-instrumento`, o app não ouve — mostra o
+    // alvo, espera o clique que revela, e confere com autoavaliação. A diferença daqui é que a
+    // autoavaliação é POR RODADA, não só ao fim da etapa (pedido do Paulo, para ver como fica) —
+    // `tools/Audiar.tsx` respeita `state.audiarAutoavaliar` para isso ser desligável.
+    //
+    // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
+    id: 'audiar', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
+    primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
+    contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
+    settings: ctx => [
+      {
+        id: 'estimulos', label: ctx.t('audiar.stimuli'), type: 'multi',
+        options: [
+          { id: 'referencia', label: ctx.t('audiar.stimulusReference') },
+          { id: 'graus', label: ctx.t('audiar.stimulusDegrees') },
+        ],
+      },
+      { id: 'drone', label: ctx.t('audiar.drone'), type: 'toggle' },
+    ],
+    defaults: { estimulos: ['referencia', 'graus'], drone: false },
+    screen: () => import('../tools/Audiar'),
   },
   {
     id: 'ambiente', kind: 'ambiente',
@@ -141,24 +168,6 @@ export const AMBIENTES: CatalogItem[] = [
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
     primaryModule: 'technique', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
-    settings: noSettings, defaults: {},
-    screen: () => import('../tools/Cadencia'),
-  },
-  {
-    id: 'sustentar-e-cortar', kind: 'tarefa',
-    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
-    contentTags: ['rhythm.quarter'],
-    settings: noSettings, defaults: {},
-    screen: () => import('../tools/Cadencia'),
-  },
-  {
-    id: 'legato-staccato', kind: 'tarefa',
-    publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
-    contentTags: ['rhythm.quarter'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),
   },

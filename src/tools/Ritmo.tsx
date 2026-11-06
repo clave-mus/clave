@@ -5,11 +5,11 @@ import { atTime, Clock, drum } from '../audio/engine';
 import RhythmScore from '../components/music/RhythmScore';
 import { Btn, Chip } from '../components/ui';
 import {
-  LEVELS, METER_IDS, METERS,
-  type Figure, type Level, type MeterId, type RestKind, type Trait,
+  FAMILIAS, LEVELS, METER_IDS, METERS,
+  type Familia, type Figure, type Level, type MeterId, type RestKind, type Trait,
 } from '../theory/rhythm-cells';
 import {
-  BAR_COUNTS, barSignature, DEFAULT_SETTINGS, generateExercise, offeredBy, timeline,
+  BAR_COUNTS, barSignature, DEFAULT_SETTINGS, generateExercise, offeredBy, PRESET_POUCAS_NOTAS, timeline,
   type Exercise, type RhythmSettings,
 } from '../theory/rhythm-gen';
 import { tempoName, useToolLog } from './common';
@@ -17,6 +17,11 @@ import { useT } from '../i18n';
 
 const STORE = 'clave:ritmo';
 const HISTORY = 30;
+
+/** ±10 a 30 bpm por sorteio (X1); o teto é quem decide até onde isso pode subir. */
+const SORTEIO_BPM = { min: 10, max: 30 };
+const BPM_MIN = 30;
+const TETO_BPM = { min: 60, max: 140, padrao: 100 };
 
 function loadSettings(): RhythmSettings {
   try {
@@ -27,6 +32,7 @@ function loadSettings(): RhythmSettings {
       figures: { ...DEFAULT_SETTINGS.figures, ...raw.figures },
       restKinds: { ...DEFAULT_SETTINGS.restKinds, ...raw.restKinds },
       traits: { ...DEFAULT_SETTINGS.traits, ...raw.traits },
+      familias: { ...DEFAULT_SETTINGS.familias, ...raw.familias },
     };
     const sane = s.meter in METERS && LEVELS.some(l => l.level === s.level) && BAR_COUNTS.includes(s.bars);
     return sane ? s : DEFAULT_SETTINGS;
@@ -44,6 +50,13 @@ function make(s: RhythmSettings, prev?: Exercise): { ex?: Exercise; error?: stri
   } catch (err) {
     return { error: err instanceof Error ? err.message : '' };
   }
+}
+
+/** Novo andamento sorteado: desloca ±[10,30] bpm, sem passar do teto nem do mínimo da régua. */
+function sortearBpm(atual: number, teto: number): number {
+  const mag = SORTEIO_BPM.min + Math.random() * (SORTEIO_BPM.max - SORTEIO_BPM.min);
+  const novo = atual + (Math.random() < 0.5 ? -mag : mag);
+  return Math.round(Math.min(teto, Math.max(BPM_MIN, novo)));
 }
 
 const FIGURES: Figure[] = ['w', 'h', 'q', '8', '16'];
@@ -69,10 +82,16 @@ export default function Ritmo() {
   const [running, setRunning] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [count, setCount] = useState<number | null>(null);
+  // X1: andamento sorteado a cada exercício, volume separado, e a coloração da figura tocando.
+  const [sortear, setSortear] = useState(false);
+  const [tetoBpm, setTetoBpm] = useState(TETO_BPM.padrao);
+  const [volClick, setVolClick] = useState(0.7);
+  const [volSound, setVolSound] = useState(1);
+  const [highlight, setHighlight] = useState(true);
   const clock = useRef<Clock | null>(null);
   const timers = useRef<number[]>([]);
-  const live = useRef({ sound, click, loop });
-  live.current = { sound, click, loop };
+  const live = useRef({ sound, click, loop, volClick, volSound });
+  live.current = { sound, click, loop, volClick, volSound };
 
   const ex = history[idx];
   const m = METERS[ex.meter];
@@ -102,7 +121,7 @@ export default function Ritmo() {
       const tick = i - lead;
       if (tick < 0) {
         if (i % m.beatTicks === 0) {
-          drum(i === 0 ? 'clique-forte' : 'clique', t, 1);
+          drum(i === 0 ? 'clique-forte' : 'clique', t, L.volClick);
           later(t, () => setCount(i / m.beatTicks + 1));
         }
         return;
@@ -113,10 +132,10 @@ export default function Ritmo() {
         return;
       }
       const pos = tick % total;
-      if (L.click && pos % m.beatTicks === 0) drum(pos % m.barTicks === 0 ? 'clique-forte' : 'clique', t, 0.7);
+      if (L.click && pos % m.beatTicks === 0) drum(pos % m.barTicks === 0 ? 'clique-forte' : 'clique', t, L.volClick);
       const e = byTick.get(pos);
       if (!e) return;
-      if (e.attack && L.sound) drum('aro', t);
+      if (e.attack && L.sound) drum('aro', t, L.volSound);
       later(t, () => { setCount(null); setActive(`${e.bar}:${e.index}`); });
     });
     clock.current = c;
@@ -136,7 +155,10 @@ export default function Ritmo() {
     const next = [...history.slice(0, idx + 1), r.ex].slice(-HISTORY);
     setHistory(next);
     setIdx(next.length - 1);
-  }, [ex, history, idx]);
+    // "Sortear bpm a cada exercício" (X1): cada compasso NOVO conta, venha do botão "Novo
+    // exercício" ou de mudar um filtro — os dois chamam push(). Voltar no histórico não conta.
+    if (sortear) setBpm(b => sortearBpm(b, tetoBpm));
+  }, [ex, history, idx, sortear, tetoBpm]);
 
   const update = (patch: Partial<RhythmSettings>) => {
     const s = { ...settings, ...patch };
@@ -163,8 +185,13 @@ export default function Ritmo() {
   const offered = offeredBy(settings.meter, settings.level);
   const restricted = FIGURES.some(f => offered.figures.has(f) && !settings.figures[f]) ||
     TRAITS.some(t => offered.traits.has(t) && !settings.traits[t]) ||
+    FAMILIAS.some(f => offered.familias.has(f) && !settings.familias[f]) ||
     (offered.rests.size > 0 && (!settings.rests || RESTS.some(r => offered.rests.has(r) && !settings.restKinds[r])));
-  const resetFilters = () => update({ figures: DEFAULT_SETTINGS.figures, rests: true, restKinds: DEFAULT_SETTINGS.restKinds, traits: DEFAULT_SETTINGS.traits });
+  const resetFilters = () => update({
+    figures: DEFAULT_SETTINGS.figures, rests: true, restKinds: DEFAULT_SETTINGS.restKinds,
+    traits: DEFAULT_SETTINGS.traits, familias: DEFAULT_SETTINGS.familias, metaNotas: undefined,
+  });
+  const presetPoucasNotas = () => update(PRESET_POUCAS_NOTAS);
   const fromLevel = (has: boolean) => (has ? undefined : t('rhythm.higherLevels'));
   // Problemas de configuração vêm do gerador como código; qualquer outro erro é um defeito.
   const errorText = (code: string) =>
@@ -200,7 +227,7 @@ export default function Ritmo() {
           <span>{t('rhythm.status', { level: ex.level, name: t(`rhythm.levels.l${ex.level}.name`), meter: ex.meter, bars: ex.bars.length })}{restricted && ` · ${t('rhythm.restricted')}`}</span>
           {count !== null && <b className="ritmo-count">{count}</b>}
         </div>
-        <RhythmScore exercise={ex} active={active} />
+        <RhythmScore exercise={ex} active={highlight ? active : null} />
         {error !== null && (
           <div className="ritmo-warn" role="alert">
             <span>{errorText(error)}</span>
@@ -227,6 +254,26 @@ export default function Ritmo() {
           <label className="switch"><input type="checkbox" id="rt-click" checked={click} onChange={e => setClick(e.target.checked)} />{t('rhythm.click')}</label>
           <label className="switch"><input type="checkbox" id="rt-count" checked={countIn} onChange={e => setCountIn(e.target.checked)} />{t('rhythm.countIn')}</label>
           <label className="switch"><input type="checkbox" id="rt-loop" checked={loop} onChange={e => setLoop(e.target.checked)} />{t('rhythm.loop')}</label>
+          <label className="switch"><input type="checkbox" id="rt-highlight" checked={highlight} onChange={e => setHighlight(e.target.checked)} />{t('rhythm.highlight')}</label>
+        </div>
+        <div className="row">
+          <label className="switch"><input type="checkbox" id="rt-sortear-bpm" checked={sortear} onChange={e => setSortear(e.target.checked)} />{t('rhythm.randomBpm')}</label>
+          {sortear && (
+            <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+              <span>{t('rhythm.bpmCeiling')} · {tetoBpm}</span>
+              <input className="range" type="range" min={TETO_BPM.min} max={TETO_BPM.max} value={tetoBpm} onChange={e => setTetoBpm(Number(e.target.value))} id="rt-teto-bpm" />
+            </label>
+          )}
+        </div>
+        <div className="row">
+          <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+            <span>{t('rhythm.volClick')} · {Math.round(volClick * 100)}%</span>
+            <input className="range" type="range" min={0} max={100} value={Math.round(volClick * 100)} onChange={e => setVolClick(Number(e.target.value) / 100)} id="rt-vol-click" />
+          </label>
+          <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+            <span>{t('rhythm.volSound')} · {Math.round(volSound * 100)}%</span>
+            <input className="range" type="range" min={0} max={100} value={Math.round(volSound * 100)} onChange={e => setVolSound(Number(e.target.value) / 100)} id="rt-vol-sound" />
+          </label>
         </div>
       </div>
 
@@ -264,7 +311,19 @@ export default function Ritmo() {
               ))}
             </div>
           </div>
-          <div><Btn small tone="ghost" onClick={resetFilters} disabled={!restricted}>{t('rhythm.restoreLevel')}</Btn></div>
+          <div className="field">
+            <span>{t('rhythm.familias')}</span>
+            <div className="row">
+              {FAMILIAS.map((f: Familia) => (
+                <Chip key={f} on={settings.familias[f] && offered.familias.has(f)} disabled={!offered.familias.has(f)} title={fromLevel(offered.familias.has(f))}
+                  onClick={() => update({ familias: { ...settings.familias, [f]: !settings.familias[f] } })}>{t(`rhythm.familyNames.${f}`)}</Chip>
+              ))}
+            </div>
+          </div>
+          <div className="row">
+            <Btn small tone="ghost" onClick={resetFilters} disabled={!restricted}>{t('rhythm.restoreLevel')}</Btn>
+            <Btn small tone="ghost" onClick={presetPoucasNotas}>{t('rhythm.presetSparse')}</Btn>
+          </div>
         </div>
       )}
 

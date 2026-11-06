@@ -36,8 +36,17 @@ describe('as portas apontam para itens que existem', () => {
 });
 
 describe('a regra da decisão 20: pelo menos 4 itens por porta', () => {
-  it('toda porta por objetivo declara 4 ou mais itens', () => {
-    for (const p of porObjetivo) expect(p.itens.length, p.id).toBeGreaterThanOrEqual(4);
+  it('toda porta por objetivo declara 4 ou mais itens, exceto a exceção marcada de propósito', () => {
+    for (const p of porObjetivo) {
+      if (p.abaixoDoMinimoPorOra) continue;
+      expect(p.itens.length, p.id).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  // P7 (04/11) tirou os itens de teoria e esvaziou estas duas. O Paulo decidiu deixar assim por
+  // ora — se a lista crescer, é porque alguém decidiu o destino de propósito, não por acidente.
+  it('as únicas portas abaixo do mínimo são harmonia e teoria, e por ora', () => {
+    expect(porObjetivo.filter(p => p.abaixoDoMinimoPorOra).map(p => p.id).sort()).toEqual(['harmonia', 'teoria']);
   });
 
   it('a entrada do nivelamento é a única sem itens, e é a única marcada como diagnóstico', () => {
@@ -102,17 +111,11 @@ describe('os textos das nove entradas (decisão 79)', () => {
   });
 });
 
-// A divisão do quiz de teoria (decisão 53) existia por um problema de PORTA: quem procura campo
-// harmônico não procura "quiz de teoria". Então o teste é de porta.
-describe('a divisão do quiz de teoria resolveu o problema que a motivou', () => {
-  it('cada um dos quatro itens de teoria está atrás de uma porta diferente do que era', () => {
-    expect(portasDoItem('teoria-campo')).toContain('harmonia');
-    expect(portasDoItem('teoria-tonalidades')).toContain('leitura');
-    expect(portasDoItem('teoria-graus')).toContain('teoria');
-    expect(portasDoItem('teoria-acordes')).toContain('teoria');
-  });
-
-  it('e `quiz-teoria` não está atrás de nenhuma, porque não existe mais', () => {
-    expect(portasDoItem('quiz-teoria')).toEqual([]);
+describe('itens que não existem mais não ficam atrás de porta nenhuma', () => {
+  // `quiz-teoria` (decisão 53) e os quatro itens de teoria que vieram da divisão dele (`P7`).
+  it('nenhum aparece em `portasDoItem`', () => {
+    for (const id of ['quiz-teoria', 'teoria-graus', 'teoria-acordes', 'teoria-campo', 'teoria-tonalidades']) {
+      expect(portasDoItem(id), id).toEqual([]);
+    }
   });
 });

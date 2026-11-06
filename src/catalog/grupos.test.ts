@@ -71,8 +71,8 @@ describe('a mesma instância em vários grupos', () => {
   });
 
   it('instância fora de todo grupo devolve lista vazia, e isso é o caso comum', () => {
-    expect(gruposDaInstancia(inst('teoria-graus'))).toEqual([]);
-    expect(companheirosDe(inst('teoria-graus'), sempre)).toEqual([]);
+    expect(gruposDaInstancia(inst('teoria-intervalos'))).toEqual([]);
+    expect(companheirosDe(inst('teoria-intervalos'), sempre)).toEqual([]);
   });
 
   // O ponto da mudança: o MESMO item em superfícies diferentes cai em grupos diferentes.
@@ -126,12 +126,6 @@ describe('companheirosDe', () => {
     expect(companheirosDe(inst('acento-deslocado'), sempre).length).toBe(2);
   });
 
-  it('com o portão ligado, "Aquecimento de mão" só oferece `tecnica`: os outros dois são rascunho', () => {
-    const podeVer = (id: string) => visivel(ITEMS.find(x => x.id === id)?.publicacao, false, true);
-    expect(companheirosDe(inst('tecnica'), podeVer)).toEqual([]);
-    expect(companheirosDe(inst('sustentar-e-cortar'), podeVer).map(m => m.itemId)).toEqual(['tecnica']);
-  });
-
   it('todo companheiro é um item do catálogo', () => {
     for (const m of TODAS) {
       for (const c of companheirosDe(m, sempre)) expect(ITEMS.some(x => x.id === c.itemId), c.itemId).toBe(true);
@@ -141,10 +135,10 @@ describe('companheirosDe', () => {
 
 describe('o que está em rascunho nos grupos', () => {
   // Não é defeito: é o portão da decisão 91 funcionando. Fica medido para ninguém se assustar.
-  it('dois grupos estão quase vazios até o Paulo publicar os itens da tarefa com metrônomo', () => {
+  it('"Ritmo com metrônomo" está quase vazio até o Paulo publicar os itens da tarefa com metrônomo', () => {
     const rascunhos = TODAS.map(m => m.itemId).filter(id => estadoDe(ITEMS.find(i => i.id === id)?.publicacao) === 'rascunho');
     expect([...new Set(rascunhos)].sort()).toEqual([
-      'acento-deslocado', 'deslocamento-ritmico', 'legato-staccato', 'subdivisao-alternada', 'sustentar-e-cortar',
+      'acento-deslocado', 'deslocamento-ritmico', 'subdivisao-alternada',
     ]);
   });
 });
