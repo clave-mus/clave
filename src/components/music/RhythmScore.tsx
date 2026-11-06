@@ -3,24 +3,33 @@
 // na mesma altura. Os compassos se distribuem em linhas conforme a largura disponível.
 import { useEffect, useRef, useState } from 'react';
 import { Beam, BarlineType, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tuplet, Voice, type StemmableNote } from 'vexflow/bravura';
-import { METERS, type Meter, type NoteValue } from '../../theory/rhythm-cells';
+import { METERS, type Meter } from '../../theory/rhythm-cells';
 import type { Bar, Exercise, RhythmEvent } from '../../theory/rhythm-gen';
 import { useT } from '../../i18n';
 
 const LINE_H = 96; // altura lógica de cada linha
 const ONLY_MIDDLE_LINE = [0, 1, 2, 3, 4].map(i => ({ visible: i === 2 }));
-const EV_W: Record<NoteValue, number> = { w: 40, h: 32, q: 26, '8': 21, '16': 17 };
 const CLEF_W = 34;
 const TIME_W = 26;
+/** O espaço à esquerda é reservado em TODA linha, mesmo onde a fórmula não é desenhada — é o que
+ *  faz os compassos da primeira linha terem exatamente a mesma largura dos das outras. */
+const HEAD_W = CLEF_W + TIME_W;
+/** Unidades lógicas por tick. Dá a largura do compasso a partir da DURAÇÃO dele, não do que ele
+ *  contém: é isso que mantém o tamanho igual de um exercício para o outro. */
+const W_POR_TICK = 3.2;
 
-/** Largura mínima confortável de um compasso, em unidades lógicas. */
-const barMinWidth = (bar: Bar) => 24 + bar.events.reduce((s, e) => s + EV_W[e.value] + (e.dots ? 8 : 0), 0);
-
-/** Quantos compassos por linha: o máximo que cabe, preferindo divisores do total para as linhas ficarem iguais. */
+/**
+ * Quantos compassos por linha.
+ *
+ * **Não depende do conteúdo** (06/11/2026, pedido do Paulo). Antes dependia: a largura mínima era a
+ * soma das figuras do compasso, então quatro compassos caíam em uma linha quando o exercício era
+ * ralo e em duas quando era denso — a página mudava de forma a cada "novo exercício", e ele leu isso
+ * como confusão, com razão. Agora a largura vem da fórmula de compasso, que não muda entre sorteios.
+ */
 function barsPerLine(ex: Exercise, logicalW: number): number {
   const n = ex.bars.length;
-  const widest = Math.max(...ex.bars.map(barMinWidth));
-  const fit = Math.max(1, Math.min(n, 4, Math.floor((logicalW - CLEF_W - TIME_W) / widest)));
+  const larguraDoCompasso = METERS[ex.meter].barTicks * W_POR_TICK;
+  const fit = Math.max(1, Math.min(n, 4, Math.floor((logicalW - HEAD_W) / larguraDoCompasso)));
   for (let k = fit; k > 1; k--) if (n % k === 0) return k;
   return 1;
 }
@@ -132,15 +141,14 @@ function draw(el: HTMLDivElement, ex: Exercise, width: number, els: Map<string, 
     svg?.removeAttribute('width');
     svg?.removeAttribute('height');
 
-    const head = CLEF_W + (l === 0 ? TIME_W : 0);
-    const mins = bars.map(barMinWidth);
-    const sum = mins.reduce((a, z) => a + z, 0);
-    // Se a última linha tiver menos compassos, mantém a largura de compasso das outras linhas.
-    const avail = (logicalW - head - 2) * (bars.length / k);
+    // **Todo compasso tem a mesma largura**, aqui e nas outras linhas: o espaço da fórmula é
+    // reservado sempre (`HEAD_W`), e a sobra é dividida em partes iguais por `k` — não pelo número
+    // de compassos desta linha, senão a última linha incompleta esticaria os seus.
+    const porCompasso = (logicalW - HEAD_W - 2) / k;
     let x = 0;
     bars.forEach((bar, j) => {
       const bi = l * k + j;
-      const w = (avail * mins[j]) / sum + (j === 0 ? head : 0);
+      const w = porCompasso + (j === 0 ? HEAD_W : 0);
       const stave = new Stave(x, 0, w, { space_above_staff_ln: 4 });
       stave.setConfigForLines(ONLY_MIDDLE_LINE);
       stave.setBegBarType(BarlineType.NONE);
