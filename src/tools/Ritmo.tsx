@@ -304,7 +304,7 @@ export default function Ritmo() {
         </div>
       </div>
 
-      <button type="button" className="ritmo-more" aria-expanded={advanced} onClick={() => setAdvanced(a => !a)}>
+      <button type="button" className="more-toggle" aria-expanded={advanced} onClick={() => setAdvanced(a => !a)}>
         {t(advanced ? 'rhythm.hideAdjust' : 'rhythm.showAdjust')}
       </button>
       {advanced && (

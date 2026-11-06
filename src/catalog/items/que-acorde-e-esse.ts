@@ -14,7 +14,7 @@ export const queAcordeEEsse: CatalogItem = {
   settings: ctx => [
     SUP(ctx, ['pauta', 'teclado', 'braco'], v => (v === 'braco' ? { arp: 0.04 } : v === 'pauta' ? { arp: 0.08 } : {})),
     { ...CLEFS(ctx), quando: s => s.superficie === 'pauta' },
-    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', quando: s => s.superficie !== 'braco',
+    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', quando: s => s.superficie !== 'braco', justify: true,
       options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.superficie === 'pauta' },
     // No braço as formas são posições reais, e não acordes montados: por isso a lista é de formas.

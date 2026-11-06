@@ -58,7 +58,8 @@ export interface ChoiceOption {
 
 /** Onde a pessoa responde. */
 export type Surface =
-  | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean }
+  /** `compact`: botões menores, para lista longa de qualidade (U7) — cifra em si já é curta. */
+  | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean; compact?: boolean }
   | { kind: 'letters'; accidentals: boolean }
   | { kind: 'keyboard'; lo: number; hi: number }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
@@ -134,6 +135,14 @@ export interface Setting {
    * criaria ordem de avaliação e re-render em cascata; aqui a tela só filtra.
    */
   quando?: (s: Record<string, SettingValue>) => boolean;
+  /**
+   * Para `'multi'`: estica os chips para preencher a linha, em vez de ficarem alinhados à
+   * esquerda com o seu tamanho natural (U8). Existe porque uma lista longa (as treze qualidades
+   * de acorde) deixa o último chip sozinho e pequeno na última linha — e aqui isso parece
+   * esquecido, não intencional. Opt-in: a maioria das listas é curta, e esticar chip de rótulo
+   * longo também pode ficar pior.
+   */
+  justify?: true;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {

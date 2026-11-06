@@ -7,7 +7,7 @@
 //
 // Os textos vêm de ctx.t (src/i18n): os fixos por chave e os de teoria montados com a gramática de
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
-import { buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
+import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
@@ -204,7 +204,15 @@ export function celulaDeGraus(top: number, size: number): number[] {
 export const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
 export const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 export const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));
-export const ALL_CHORDS = Object.keys(CHORDS) as ChordId[];
+/**
+ * Todas as qualidades de acorde, em **ordem de complexidade** (U7, 06/11/2026): tríades comuns
+ * primeiro, tétrades depois, as duas mais raras por último. Aprovada pelo Paulo — não é mais a
+ * ordem de declaração de `CHORDS` em `core.ts`, que é de quando cada uma foi acrescentada.
+ * `helpers.test.ts` confere que o conjunto continua batendo com `CHORDS` se uma nova entrar lá.
+ */
+export const ALL_CHORDS: ChordId[] = ['maior', 'menor', 'dim', 'aum', 'sus2', 'sus4', '7', '7M', 'm7', 'm7b5', 'dim7', '7M#5', 'm7M'];
+/** Reordena qualquer lista de qualidades (ex.: a seleção da pessoa) pela ordem de complexidade acima. */
+export const porComplexidade = (ids: ChordId[]) => [...ids].sort((a, b) => ALL_CHORDS.indexOf(a) - ALL_CHORDS.indexOf(b));
 export const ALL_SCALES = ALL_SCALE_IDS;
 
 // O `tier` é dica de dificuldade relativa, só para a variação automática pré-marcar (F2-2).

@@ -374,9 +374,9 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
   if (sf.kind === 'choices') {
     const rhythm = sf.options.some(o => o.rhythm);
     return (
-      <div className={`answers ${sf.wide ? 'wide' : ''} ${rhythm ? 'rhythm' : ''}`}>
+      <div className={`answers ${sf.wide ? 'wide' : ''} ${sf.compact ? 'compact' : ''} ${rhythm ? 'rhythm' : ''}`}>
         {sf.options.map((o, i) => (
-          <button key={o.id} type="button" className={`ans ${rhythm ? 'rhythm' : ''} ${state(o.id, ok(optionResponse(o)))}`} disabled={phase !== 'ask'} onClick={() => onAnswer(optionResponse(o), o.id)}>
+          <button key={o.id} type="button" className={`ans ${sf.compact ? 'compact' : ''} ${rhythm ? 'rhythm' : ''} ${state(o.id, ok(optionResponse(o)))}`} disabled={phase !== 'ask'} onClick={() => onAnswer(optionResponse(o), o.id)}>
             {i < 9 && <span className="k">{i + 1}</span>}
             {o.rhythm ? <RhythmLine bars={o.rhythm} label={t('player.option', { n: i + 1 })} /> : o.label}
           </button>
@@ -440,7 +440,7 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
             <div className="row">{s.options!.map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
           )}
           {s.type === 'multi' && (
-            <div className="row">{s.options!.map(o => {
+            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{s.options!.map(o => {
               const cur = (values[s.id] as string[]) ?? [];
               const on = cur.includes(o.id);
               return <Chip key={o.id} on={on} onClick={() => {

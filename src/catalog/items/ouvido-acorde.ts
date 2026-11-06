@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, arr, chordName, chordTypes, pick, tonicaNaRegiao } from '../helpers';
+import { ALL_CHORDS, CHORDS, arr, chordName, chordTypes, pick, porComplexidade, tonicaNaRegiao } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -11,7 +11,7 @@ export const ouvidoAcorde: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
   publicacao: LEGADO,
-  settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', options: chordTypes(ctx.t, ALL_CHORDS) },
+  settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true, present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1, format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) }],
   defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2 },
@@ -30,7 +30,9 @@ export const ouvidoAcorde: CatalogItem = {
     const ms = CHORDS[type].degs.map(([, semi]) => root + semi);
     return {
       prompt: ctx.t('quiz.earChord'), visual: { kind: 'ear' },
-      surface: { kind: 'choices', options: chordTypes(ctx.t, types) }, expected: { kind: 'option', id: type },
+      // As opções de resposta saem em ordem de complexidade (U7), não na ordem em que a pessoa
+      // marcou os chips — senão a ordem dos botões mudaria dependendo de como ela configurou.
+      surface: { kind: 'choices', compact: types.length > 6, options: chordTypes(ctx.t, porComplexidade(types)) }, expected: { kind: 'option', id: type },
       sound: { groups: [ms] }, autoplay: true, reveal: chordName(ctx.t, type),
     };
   },
