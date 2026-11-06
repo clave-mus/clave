@@ -781,6 +781,12 @@ const pt = {
     sustain: 'Duração das notas',
     cellSize: 'Notas por célula',
     rhythmValues: 'Figuras',
+    rhythmGroup_basico: 'Semínima e colcheias',
+    rhythmGroup_pausas: 'Pausas e mínimas',
+    rhythmGroup_contratempo: 'Contratempo',
+    rhythmGroup_semis: 'Semicolcheias',
+    rhythmGroup_sincope: 'Síncope e pontuadas',
+    rhythmGroup_tercinas: 'Tercinas',
   },
   quiz: {
     relativeMajorOf: 'Qual é o relativo maior de {key}?',

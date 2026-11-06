@@ -1,7 +1,50 @@
-import { CELLS, RHYTHM_PRESETS, randomBars, shuffle } from '../helpers';
+import { CELLS, arr, randomBars, shuffle } from '../helpers';
 import type { CellId, MessageKey } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
+
+/**
+ * Grupos de figuras que **se somam** (P5, 06/11/2026).
+ *
+ * Antes eram seis níveis exclusivos — `semis` OU `tercinas` —, e quem queria os dois juntos não
+ * tinha como. É o defeito que a revisão chamou de *"opções que deveriam ser complementares estão
+ * sendo mutuamente exclusivas"*. Agora a pessoa marca o que pode aparecer, e as células são a união
+ * dos grupos marcados.
+ */
+const GRUPOS: { id: string; cells: CellId[] }[] = [
+  { id: 'basico', cells: ['q', '8-8'] },
+  { id: 'pausas', cells: ['qr', 'h'] },
+  { id: 'contratempo', cells: ['8r-8'] },
+  { id: 'semis', cells: ['16x4', '8-16-16', '16-16-8'] },
+  { id: 'sincope', cells: ['8-8', '8.-16', '16-8-16', '8r-8'] },
+  { id: 'tercinas', cells: ['3x8'] },
+];
+
+/**
+ * Os seis níveis antigos, agora **atalhos** — o mesmo desenho de `ouvido-acorde`. Cada um reproduz
+ * exatamente as células que o nível antigo tinha (o teste confere); nada se perdeu, só deixou de ser
+ * a única forma de escolher.
+ */
+const ATALHOS: { id: string; grupos: string[] }[] = [
+  { id: 'duas', grupos: ['basico'] },
+  { id: 'pausas', grupos: ['basico', 'pausas'] },
+  { id: 'contratempo', grupos: ['basico', 'contratempo'] },
+  { id: 'semis', grupos: ['basico', 'semis'] },
+  { id: 'sincope', grupos: ['sincope'] },
+  { id: 'tercinas', grupos: ['basico', 'tercinas'] },
+];
+
+/**
+ * As células de uma seleção de grupos.
+ *
+ * Se a união tem menos de duas células (só `contratempo`, ou só `tercinas`), o compasso sairia
+ * igual em todos os tempos e **não haveria três alternativas diferentes** para a pergunta — então a
+ * base entra. É a única situação em que o app acrescenta algo que a pessoa não marcou.
+ */
+export function celulasDe(grupos: readonly string[]): CellId[] {
+  const uniao = [...new Set(GRUPOS.filter(g => grupos.includes(g.id)).flatMap(g => g.cells))];
+  return uniao.length >= 2 ? uniao : [...new Set<CellId>([...uniao, 'q', '8-8'])];
+}
 
 export const ritmoOuvido: CatalogItem = {
   id: 'ritmo-ouvido',
@@ -11,11 +54,15 @@ export const ritmoOuvido: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],
   publicacao: LEGADO,
-  settings: ctx => [{ id: 'nivel', label: ctx.t('settings.rhythmValues'), type: 'single', options: RHYTHM_PRESETS.map(p => ({ id: p.id, label: ctx.t(`theory.rhythmPresets.${p.id}` as MessageKey) })) }],
-  defaults: { nivel: 'duas' },
+  settings: ctx => [{
+    id: 'figuras', label: ctx.t('settings.rhythmValues'), type: 'multi',
+    options: GRUPOS.map(g => ({ id: g.id, label: ctx.t(`settings.rhythmGroup_${g.id}` as MessageKey) })),
+  }],
+  defaults: { figuras: ['basico'] },
+  presets: ATALHOS.map(a => ({ id: a.id, nome: `theory.rhythmPresets.${a.id}` as MessageKey, settings: { figuras: a.grupos } })),
   presentation: { bpm: 84 },
   make(s, ctx) {
-    const cells = (RHYTHM_PRESETS.find(p => p.id === s.nivel) ?? RHYTHM_PRESETS[0]).cells;
+    const cells = celulasDe(arr(s.figuras, ['basico']));
     const bar = randomBars(cells, 1);
     const key = (b: CellId[][]) => b[0].join('|');
     const others = new Map<string, CellId[][]>();

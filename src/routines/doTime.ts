@@ -98,7 +98,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { porque: 'nota pelo nome, com referência: o único de ouvido que responde no teclado',
         instancias: [i('ouvido-tecla', { referencia: true, pretas: false })] },
       { porque: 'ritmo de ouvido, nível de entrada',
-        instancias: [i('ritmo-ouvido', { nivel: 'duas' })] },
+        instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
     ],
   },
   {
@@ -186,7 +186,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',
         instancias: [i('que-nota-e-essa', { superficie: 'pauta', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
       { minutos: 5, porque: 'ritmo só, no nível de entrada (semínima e colcheias)',
-        instancias: [i('ritmo-ouvido', { nivel: 'duas' })] },
+        instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
       { minutos: 5, porque: 'os dois juntos, no ambiente de leitura corrida',
         instancias: [i('leitura')] },
     ],

@@ -780,6 +780,12 @@ const en: Shape<typeof pt> = {
     sustain: 'Note length',
     cellSize: 'Notes per cell',
     rhythmValues: 'Note values',
+    rhythmGroup_basico: 'Quarter and eighth notes',
+    rhythmGroup_pausas: 'Rests and half notes',
+    rhythmGroup_contratempo: 'Offbeats',
+    rhythmGroup_semis: 'Sixteenth notes',
+    rhythmGroup_sincope: 'Syncopation and dotted notes',
+    rhythmGroup_tercinas: 'Triplets',
   },
   quiz: {
     relativeMajorOf: 'What is the relative major of {key}?',
