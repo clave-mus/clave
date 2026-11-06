@@ -232,7 +232,9 @@ export function generateExercise(s: RhythmSettings, opts: GenerateOptions = {}):
   const bars = cellsByBar.map(cells => barOf(cells, () => tupletId++));
 
   // Antecipação: colcheia (ou semi) no fim do compasso ligada ao tempo 1 do compasso seguinte.
-  if (s.level >= 4 && s.traits.ligadura && s.traits.sincope) {
+  // Desacoplada do nível (06/11/2026, pedido do Paulo): depende só do trait `ligadura` — um
+  // exercício de nível baixo também pode pedir ligadura entre compassos.
+  if (s.traits.ligadura) {
     for (let b = 0; b < bars.length - 1; b++) {
       const last = bars[b].events[bars[b].events.length - 1];
       const first = bars[b + 1].events[0];
@@ -285,7 +287,7 @@ export function validateExercise(ex: Exercise, s?: RhythmSettings): string[] {
     const allowed = new Set(poolFor(s).map(c => c.id));
     ex.bars.forEach((bar, bi) => bar.cells.forEach(id => { if (!allowed.has(id)) out.push(`compasso ${bi + 1}: célula ${id} fora das configurações`); }));
     const crossTie = ex.bars.some((bar, bi) => bi < ex.bars.length - 1 && bar.events[bar.events.length - 1].tie);
-    if (crossTie && !(s.traits.ligadura && s.traits.sincope)) out.push('ligadura entre compassos com ligaduras desligadas');
+    if (crossTie && !s.traits.ligadura) out.push('ligadura entre compassos com ligaduras desligadas');
   }
   return out;
 }
