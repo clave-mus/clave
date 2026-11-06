@@ -70,9 +70,11 @@ export const AMBIENTES: CatalogItem[] = [
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     settings: ctx => [
       { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
+      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1, format: v => `${v} s` },
       { id: 'ouvirAntes', label: ctx.t('onInstrument.hearFirst'), type: 'toggle' },
+      { id: 'mostrarBraco', label: ctx.t('onInstrument.showFretboard'), type: 'toggle' },
     ],
-    defaults: { esperar: 8, ouvirAntes: true },
+    defaults: { esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
     screen: () => import('../tools/NoInstrumento'),
   },
   {
