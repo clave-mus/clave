@@ -94,7 +94,7 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | O que só você confere |
 |---|---|
-| `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela a casa, e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira o **tempo de espera** padrão (8 s), se "ouvir a nota antes" ajuda ou entrega demais, e se mostrar **uma** posição na revelação é melhor que mostrar todas as casas daquela nota |
+| `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela **todas** as casas onde ela existe na faixa inteira (X8, 06/11/2026: antes marcava uma só, sorteada), e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira os tempos padrão de espera (8 s) e de exibição da resposta (4 s), e se "ouvir a nota antes" ajuda ou entrega demais |
 
 ### Audiar (`X3`, revisão de 04/11/2026)
 
