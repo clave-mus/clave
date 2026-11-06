@@ -206,6 +206,22 @@ export function scaleSound(tonic: number, id: ScaleId, dir?: SettingValue): numb
   return scaleMidi(tonic, id, d);
 }
 
+/**
+ * Uma célula de graus: um passeio de `size` graus dentro da escala, onde cada vizinho dista 1 ou 2
+ * posições e nenhum grau se repete. Extraído de `ouvido-celulas` (X3, 06/11) para `audiar` usar a
+ * mesma regra — motor duplicado é proibido, e as duas BUG fixes documentadas lá (clamp nas bordas
+ * devolvendo o mesmo grau; distratores inválidos) valem igual para quem gerar graus depois.
+ */
+export function celulaDeGraus(top: number, size: number): number[] {
+  const out: number[] = [randInt(0, top)];
+  while (out.length < size) {
+    const de = out[out.length - 1];
+    const cabem = [-2, -1, 1, 2].filter(d => de + d >= 0 && de + d <= top);
+    out.push(de + pick(cabem));
+  }
+  return out;
+}
+
 export const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
 export const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 export const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));

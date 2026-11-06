@@ -76,6 +76,31 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/NoInstrumento'),
   },
   {
+    // X3 (06/11/2026). **Tarefa**, não série: igual ao `no-instrumento`, o app não ouve — mostra o
+    // alvo, espera o clique que revela, e confere com autoavaliação. A diferença daqui é que a
+    // autoavaliação é POR RODADA, não só ao fim da etapa (pedido do Paulo, para ver como fica) —
+    // `tools/Audiar.tsx` respeita `state.audiarAutoavaliar` para isso ser desligável.
+    //
+    // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
+    id: 'audiar', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
+    primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
+    contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
+    settings: ctx => [
+      {
+        id: 'estimulos', label: ctx.t('audiar.stimuli'), type: 'multi',
+        options: [
+          { id: 'referencia', label: ctx.t('audiar.stimulusReference') },
+          { id: 'graus', label: ctx.t('audiar.stimulusDegrees') },
+        ],
+      },
+      { id: 'drone', label: ctx.t('audiar.drone'), type: 'toggle' },
+    ],
+    defaults: { estimulos: ['referencia', 'graus'], drone: false },
+    screen: () => import('../tools/Audiar'),
+  },
+  {
     id: 'ambiente', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['escalas'], tarefas: ['cantar', 'tocar'],

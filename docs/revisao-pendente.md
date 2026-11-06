@@ -96,6 +96,12 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|
 | `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela a casa, e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira o **tempo de espera** padrão (8 s), se "ouvir a nota antes" ajuda ou entrega demais, e se mostrar **uma** posição na revelação é melhor que mostrar todas as casas daquela nota |
 
+### Audiar (`X3`, revisão de 04/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
+
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
 | Id | Família | O que só você confere |
