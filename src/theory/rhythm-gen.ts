@@ -11,7 +11,7 @@
 // com síncope algumas colcheias do fim do compasso são ligadas ao tempo 1 do seguinte (antecipação).
 import {
   cellsFor, METERS, TPQ, VALUE_TICKS,
-  type Cell, type Figure, type Level, type Meter, type MeterId, type NoteValue, type RestKind, type Trait,
+  type Cell, type Familia, type Figure, type Level, type Meter, type MeterId, type NoteValue, type RestKind, type Trait,
 } from './rhythm-cells';
 
 export interface RhythmSettings {
@@ -22,6 +22,16 @@ export interface RhythmSettings {
   rests: boolean;
   restKinds: Record<RestKind, boolean>;
   traits: Record<Trait, boolean>;
+  /** Família aditiva (X1): quais estilos de subdivisão podem aparecer. Célula sem família marcada
+   *  (nota simples, pausa) não entra neste filtro — ele só restringe o que É subdividido. */
+  familias: Record<Familia, boolean>;
+  /**
+   * Preferência por um número de notas soantes no compasso (X1, preset "8 posições, 2 notas").
+   * `undefined` é o padrão de sempre: sem preferência, e a regra de "não passar de meio compasso
+   * de pausa" vale. Definido, troca essa regra por esta preferência — as duas juntas se
+   * contradiriam (poucas notas implica muita pausa).
+   */
+  metaNotas?: number;
 }
 
 export const BAR_COUNTS = [2, 4, 8];
@@ -33,6 +43,21 @@ export const DEFAULT_SETTINGS: RhythmSettings = {
   rests: true,
   restKinds: { h: true, q: true, '8': true, '16': true },
   traits: { pontuada: true, sincope: true, ligadura: true, quialtera: true },
+  familias: { binaria: true, ternaria: true, quaternaria: true, pontuada: true },
+};
+
+/** Preset "8 posições, 2 notas" (X1): compasso curto, majoritariamente pausado, com poucas
+ *  semicolcheias soltas e sincopadas — para quem está começando a ler ritmo. */
+export const PRESET_POUCAS_NOTAS: RhythmSettings = {
+  meter: '2/4',
+  bars: 4,
+  level: 4,
+  figures: { w: false, h: false, q: false, '8': false, '16': true },
+  rests: true,
+  restKinds: { h: true, q: true, '8': true, '16': true },
+  traits: DEFAULT_SETTINGS.traits,
+  familias: DEFAULT_SETTINGS.familias,
+  metaNotas: 2,
 };
 
 export interface RhythmEvent {
@@ -73,13 +98,21 @@ export function rng(seed: number): () => number {
 
 // ---------- filtro do catálogo ----------
 
-/** Células que podem aparecer com essas configurações. */
+/**
+ * Células que podem aparecer com essas configurações.
+ *
+ * `familia` é um OU entre si (basta uma marcada bater), diferente de `figures`/`traits`, que são E
+ * entre si (a célula precisa de TODAS as que usa ligadas) — porque família é "este estilo pode
+ * aparecer", não "esta célula exige todos os estilos que ela mistura". E célula sem família
+ * marcada (nota simples, pausa) não entra neste filtro: ele só restringe o que É subdividido.
+ */
 export function poolFor(s: RhythmSettings): Cell[] {
   return cellsFor(METERS[s.meter]).filter(c =>
     c.level <= s.level &&
     c.figures.every(f => s.figures[f]) &&
     (c.rests.length === 0 || (s.rests && c.rests.every(r => s.restKinds[r]))) &&
-    c.traits.every(t => s.traits[t]));
+    c.traits.every(t => s.traits[t]) &&
+    (c.familia.length === 0 || c.familia.some(fam => s.familias[fam])));
 }
 
 /** O que o nível oferece nessa fórmula de compasso, antes das restrições do usuário (para a interface). */
@@ -89,6 +122,7 @@ export function offeredBy(meter: MeterId, level: Level) {
     figures: new Set(cells.flatMap(c => c.figures)),
     rests: new Set(cells.flatMap(c => c.rests)),
     traits: new Set(cells.flatMap(c => c.traits)),
+    familias: new Set(cells.flatMap(c => c.familia)),
   };
 }
 
@@ -163,13 +197,20 @@ export function barSignature(bar: Bar): string {
 }
 
 /** Penalidade de bom senso de um compasso candidato (0 = perfeito). */
-function penalty(cells: Cell[], ctx: { m: Meter; level: Level; index: number; total: number; prev?: Cell[]; avoid?: Set<string> }): number {
-  const { m, level, index, total, prev, avoid } = ctx;
+function penalty(cells: Cell[], ctx: { m: Meter; level: Level; index: number; total: number; prev?: Cell[]; avoid?: Set<string>; metaNotas?: number }): number {
+  const { m, level, index, total, prev, avoid, metaNotas } = ctx;
   const evs = cells.flatMap(c => c.events);
   const restTicks = evs.filter(e => e.rest).reduce((s, e) => s + e.dur, 0);
   let p = 0;
-  if (restTicks === m.barTicks) p += 1000;
-  else if (restTicks > m.barTicks / 2) p += 100;
+  // Com `metaNotas` definido (preset "poucas notas", X1), a regra de sempre vira o contrário do
+  // que se quer: aqui pausa demais É o objetivo, e quem decide "demais" é a meta de notas abaixo.
+  if (metaNotas === undefined) {
+    if (restTicks === m.barTicks) p += 1000;
+    else if (restTicks > m.barTicks / 2) p += 100;
+  } else {
+    const soantes = evs.filter(e => !e.rest).length;
+    p += Math.abs(soantes - metaNotas) * 8;
+  }
   // Duas pausas de pulso inteiro seguidas: escreve-se uma pausa maior, ou é silêncio demais.
   for (let i = 1; i < cells.length; i++) if (cells[i].events.every(e => e.rest) && cells[i - 1].events.every(e => e.rest)) p += 20;
   if (prev && prev.map(c => c.id).join() === cells.map(c => c.id).join()) p += 30;
@@ -218,7 +259,7 @@ export function generateExercise(s: RhythmSettings, opts: GenerateOptions = {}):
       let bestP = Infinity;
       for (let t = 0; t < 40 && bestP > 0; t++) {
         const cand = randomBar(pool, m, ok, weight, r);
-        const p = penalty(cand, { m, level: s.level, index: b, total: n, prev: cellsByBar[b - 1], avoid: opts.avoid });
+        const p = penalty(cand, { m, level: s.level, index: b, total: n, prev: cellsByBar[b - 1], avoid: opts.avoid, metaNotas: s.metaNotas });
         if (p < bestP) { best = cand; bestP = p; }
       }
       best.forEach(c => used.add(c.id));

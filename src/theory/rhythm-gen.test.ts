@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CELLS, METER_IDS, METERS, parsePattern, type Level } from './rhythm-cells';
 import {
-  barSignature, checkSettings, DEFAULT_SETTINGS, generateExercise, poolFor, timeline, validateExercise,
+  BAR_COUNTS, barSignature, checkSettings, DEFAULT_SETTINGS, generateExercise, poolFor, PRESET_POUCAS_NOTAS, timeline, validateExercise,
   type RhythmSettings,
 } from './rhythm-gen';
 
@@ -211,6 +211,75 @@ describe('configurações', () => {
     const less = poolFor(settings({ level: 3, figures: { ...DEFAULT_SETTINGS.figures, '16': false } })).map(c => c.id);
     expect(less.every(id => full.includes(id))).toBe(true);
     expect(less.length).toBeLessThan(full.length);
+  });
+});
+
+describe('família aditiva (X1)', () => {
+  const FAMILIAS = ['binaria', 'ternaria', 'quaternaria', 'pontuada'] as const;
+  const soFamilia = (fam: (typeof FAMILIAS)[number]) => settings({
+    level: 5,
+    familias: Object.fromEntries(FAMILIAS.map(f => [f, f === fam])) as RhythmSettings['familias'],
+  });
+
+  it('cada família sozinha gera compasso válido, em toda fórmula e todo tamanho — ligada ou no nível 5', () => {
+    for (const fam of FAMILIAS) {
+      for (const meter of METER_IDS) for (const bars of BAR_COUNTS) {
+        const s = { ...soFamilia(fam), meter, bars };
+        const why = checkSettings(s);
+        // Algumas famílias não têm célula na fórmula composta (6/8) — e aí o motivo é ESTE, não um defeito.
+        if (why) { expect(why).toBe('noFigures'); continue; }
+        expect(validateExercise(generateExercise(s, { seed: 7 }), s)).toEqual([]);
+      }
+    }
+  });
+
+  it('é OU, não E: ligar uma família não exige as outras', () => {
+    const full = poolFor(settings({ level: 5 })).length;
+    const soBinaria = poolFor(soFamilia('binaria')).length;
+    expect(soBinaria).toBeGreaterThan(0);
+    expect(soBinaria).toBeLessThan(full);
+  });
+
+  it('célula sem família (nota simples, pausa) passa mesmo com todas as famílias desligadas', () => {
+    const s = settings({ level: 1, familias: { binaria: false, ternaria: false, quaternaria: false, pontuada: false } });
+    const ids = poolFor(s).map(c => c.id);
+    expect(ids).toContain('q'); // semínima simples: sem família, não devia ser filtrada
+    expect(ids).toContain('rq'); // pausa de semínima: idem
+  });
+
+  it('desligar todas as famílias não impede gerar (sobra o material sem família)', () => {
+    const s = settings({ level: 1, familias: { binaria: false, ternaria: false, quaternaria: false, pontuada: false } });
+    expect(checkSettings(s)).toBeNull();
+    expect(validateExercise(generateExercise(s, { seed: 3 }), s)).toEqual([]);
+  });
+});
+
+describe('preset "8 posições, 2 notas" (X1)', () => {
+  it('gera compasso válido', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      expect(validateExercise(generateExercise(PRESET_POUCAS_NOTAS, { seed }), PRESET_POUCAS_NOTAS)).toEqual([]);
+    }
+  });
+
+  it('fica mesmo perto de duas notas, bem mais pausado que o padrão', () => {
+    let soantes = 0;
+    const N = 40;
+    for (let seed = 1; seed <= N; seed++) {
+      const ex = generateExercise(PRESET_POUCAS_NOTAS, { seed });
+      soantes += ex.bars.reduce((s, b) => s + b.events.filter(e => !e.rest).length, 0) / ex.bars.length;
+    }
+    // Compare com o padrão: ao nível 2 normal, uma figura por tempo já dá 2+ notas por tempo em média.
+    expect(soantes / N).toBeLessThan(3);
+  });
+
+  it('metaNotas desliga a regra de "no máximo meio compasso de pausa" — aqui pausa maioria é o alvo', () => {
+    const m = METERS[PRESET_POUCAS_NOTAS.meter];
+    let algumaBemPausada = false;
+    for (let seed = 1; seed <= 30 && !algumaBemPausada; seed++) {
+      const ex = generateExercise(PRESET_POUCAS_NOTAS, { seed });
+      algumaBemPausada = ex.bars.some(b => b.events.filter(e => e.rest).reduce((s, e) => s + e.dur, 0) > m.barTicks / 2);
+    }
+    expect(algumaBemPausada).toBe(true);
   });
 });
 
