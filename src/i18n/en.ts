@@ -472,6 +472,11 @@ const en: Shape<typeof pt> = {
     meter: 'Time signature',
     subdivision: 'Subdivision',
     tap: 'Tap',
+    grid: 'Which positions play',
+    gridCell: 'Position {n}: tap to turn on, off, or accent',
+    barCycle: 'Play and mute',
+    barCycleAlways: 'Always',
+    barCycleOnOff: '{on} plays, {off} mutes',
   },
   ambient: {
     drone: 'Drone',

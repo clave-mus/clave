@@ -472,6 +472,11 @@ const pt = {
     meter: 'Compasso',
     subdivision: 'Subdivisão',
     tap: 'Tap',
+    grid: 'Quais posições tocam',
+    gridCell: 'Posição {n}: toque para ligar, desligar ou acentuar',
+    barCycle: 'Tocar e silenciar',
+    barCycleAlways: 'Sempre',
+    barCycleOnOff: '{on} toca, {off} silencia',
   },
   ambient: {
     drone: 'Drone',
