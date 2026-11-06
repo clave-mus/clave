@@ -11,54 +11,141 @@
 // com síncope algumas colcheias do fim do compasso são ligadas ao tempo 1 do seguinte (antecipação).
 import {
   cellsFor, METERS, TPQ, VALUE_TICKS,
-  type Cell, type Familia, type Figure, type Level, type Meter, type MeterId, type NoteValue, type RestKind, type Trait,
+  type Cell, type Figure, type Meter, type MeterId, type NoteValue, type RestKind, type Trait,
 } from './rhythm-cells';
 
 export interface RhythmSettings {
   meter: MeterId;
   bars: number;
-  level: Level;
   figures: Record<Figure, boolean>;
   rests: boolean;
   restKinds: Record<RestKind, boolean>;
   traits: Record<Trait, boolean>;
-  /** Família aditiva (X1): quais estilos de subdivisão podem aparecer. Célula sem família marcada
-   *  (nota simples, pausa) não entra neste filtro — ele só restringe o que É subdividido. */
-  familias: Record<Familia, boolean>;
   /**
-   * Preferência por um número de notas soantes no compasso (X1, preset "8 posições, 2 notas").
-   * `undefined` é o padrão de sempre: sem preferência, e a regra de "não passar de meio compasso
-   * de pausa" vale. Definido, troca essa regra por esta preferência — as duas juntas se
-   * contradiriam (poucas notas implica muita pausa).
+   * Quanto as células COM pausa pesam, de 0 (nenhuma pausa) a 2 (o dobro do normal). 1 é o de
+   * sempre. Substitui o liga/desliga como único controle: "poucas pausas" é o que quase todo
+   * preset quer, e isso não se diz com um booleano.
    */
-  metaNotas?: number;
+  pausas: number;
+  /**
+   * Chance de ligar a última figura de um compasso à primeira do seguinte (a *antecipação*).
+   *
+   * Virou configuração em 06/11/2026 porque o preset de ligaduras precisa dela alta: com o valor
+   * fixo de antes (0,22) e só mínimas e semínimas, **nenhuma ligadura saía** — a antecipação ainda
+   * exigia colcheia, e as duas únicas células com ligadura também.
+   */
+  chanceDeLigadura: number;
+  /**
+   * Como o compasso é montado. `celulas` é o de sempre: sorteia do catálogo de `rhythm-cells.ts`.
+   * `esparso` é posicional — sorteia N casas numa grade de semicolcheias e o resto vira pausa
+   * (pedido do Paulo: *"pra cada compasso, você sorteia 2 números entre 1 e 8"*).
+   */
+  modo?: 'celulas' | 'esparso';
+  /** Quantas notas soam por compasso no modo `esparso`. */
+  notasPorCompasso?: number;
 }
 
 export const BAR_COUNTS = [2, 4, 8];
+export const PAUSAS = { min: 0, max: 2, padrao: 1 };
+
 export const DEFAULT_SETTINGS: RhythmSettings = {
   meter: '4/4',
   bars: 4,
-  level: 2,
   figures: { w: true, h: true, q: true, '8': true, '16': true },
   rests: true,
   restKinds: { h: true, q: true, '8': true, '16': true },
   traits: { pontuada: true, sincope: true, ligadura: true, quialtera: true },
-  familias: { binaria: true, ternaria: true, quaternaria: true, pontuada: true },
+  pausas: PAUSAS.padrao,
+  chanceDeLigadura: 0.22,
 };
 
-/** Preset "8 posições, 2 notas" (X1): compasso curto, majoritariamente pausado, com poucas
- *  semicolcheias soltas e sincopadas — para quem está começando a ler ritmo. */
-export const PRESET_POUCAS_NOTAS: RhythmSettings = {
-  meter: '2/4',
-  bars: 4,
-  level: 4,
-  figures: { w: false, h: false, q: false, '8': false, '16': true },
-  rests: true,
-  restKinds: { h: true, q: true, '8': true, '16': true },
-  traits: DEFAULT_SETTINGS.traits,
-  familias: DEFAULT_SETTINGS.familias,
-  metaNotas: 2,
-};
+// ---------- presets ----------
+//
+// **Os presets são a porta de entrada** (decidido com o Paulo em 06/11/2026), no lugar da escada
+// de níveis que existia antes. Um preset não é um modo: é só **um pacote nomeado de valores de
+// parâmetro**. Depois de escolher um, tudo continua ajustável — é o desenho que o `X6b` propõe,
+// *preset primeiro, parâmetro depois*.
+//
+// A lista e a ordem são do Paulo. Os quatro primeiros são cumulativos (cada um acrescenta uma
+// figura) e todos vão com **poucas pausas, sem ligadura e sem pontuada**, como ele pediu.
+// Quiáltera fica fora de todos: nenhum preset dele menciona tercina.
+
+export interface Preset {
+  id: string;
+  settings: Partial<RhythmSettings>;
+}
+
+const SEM_ENFEITE = { pontuada: false, sincope: true, ligadura: false, quialtera: false };
+const POUCAS_PAUSAS = 0.45;
+
+export const PRESETS: Preset[] = [
+  {
+    id: 'minimas',
+    settings: {
+      figures: { w: false, h: true, q: false, '8': false, '16': false },
+      traits: SEM_ENFEITE, pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
+    id: 'seminimas',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': false, '16': false },
+      traits: SEM_ENFEITE, pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
+    id: 'colcheias',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': true, '16': false },
+      traits: SEM_ENFEITE, pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
+    id: 'semicolcheias',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': true, '16': true },
+      traits: SEM_ENFEITE, pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
+    // Só mínimas e semínimas, e a ligadura é o assunto — por isso a chance vai a 0,85 e as células
+    // de semínima ligada entram. Sem isso este preset geraria ZERO ligaduras (ver `chanceDeLigadura`).
+    id: 'ligaduras',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': false, '16': false },
+      traits: { pontuada: false, sincope: true, ligadura: true, quialtera: false },
+      pausas: 0.3, chanceDeLigadura: 0.85, modo: 'celulas',
+    },
+  },
+  {
+    id: 'pontuadas',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': true, '16': false },
+      traits: { pontuada: true, sincope: true, ligadura: false, quialtera: false },
+      pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
+    // "Notas esparsas" (nome do Paulo). Compasso quase todo pausado, com duas semicolcheias
+    // soltas: 2/4 dá exatamente as oito casas que ele descreveu.
+    id: 'esparsas',
+    settings: {
+      meter: '2/4',
+      figures: { w: false, h: false, q: false, '8': false, '16': true },
+      traits: { pontuada: false, sincope: true, ligadura: false, quialtera: false },
+      modo: 'esparso', notasPorCompasso: 2,
+    },
+  },
+];
+
+export const presetById = Object.fromEntries(PRESETS.map(p => [p.id, p]));
+
+/** As configurações de um preset, completadas com o padrão. Mantém `bars`, que é escolha de tela. */
+export function aplicarPreset(atual: RhythmSettings, id: string): RhythmSettings {
+  const p = presetById[id];
+  if (!p) return atual;
+  return { ...DEFAULT_SETTINGS, bars: atual.bars, meter: atual.meter, ...p.settings };
+}
 
 export interface RhythmEvent {
   at: number; // ticks desde o início do compasso
@@ -77,7 +164,6 @@ export interface Bar {
 export interface Exercise {
   seed: number;
   meter: MeterId;
-  level: Level;
   bars: Bar[];
 }
 
@@ -101,28 +187,23 @@ export function rng(seed: number): () => number {
 /**
  * Células que podem aparecer com essas configurações.
  *
- * `familia` é um OU entre si (basta uma marcada bater), diferente de `figures`/`traits`, que são E
- * entre si (a célula precisa de TODAS as que usa ligadas) — porque família é "este estilo pode
- * aparecer", não "esta célula exige todos os estilos que ela mistura". E célula sem família
- * marcada (nota simples, pausa) não entra neste filtro: ele só restringe o que É subdividido.
+ * **Sem filtro de nível desde 06/11/2026:** o que a célula usa — figuras, pausas e recursos — já
+ * diz tudo que o nível dizia, e com granularidade melhor. A escada saiu da tela junto.
  */
 export function poolFor(s: RhythmSettings): Cell[] {
   return cellsFor(METERS[s.meter]).filter(c =>
-    c.level <= s.level &&
     c.figures.every(f => s.figures[f]) &&
     (c.rests.length === 0 || (s.rests && c.rests.every(r => s.restKinds[r]))) &&
-    c.traits.every(t => s.traits[t]) &&
-    (c.familia.length === 0 || c.familia.some(fam => s.familias[fam])));
+    c.traits.every(t => s.traits[t]));
 }
 
-/** O que o nível oferece nessa fórmula de compasso, antes das restrições do usuário (para a interface). */
-export function offeredBy(meter: MeterId, level: Level) {
-  const cells = cellsFor(METERS[meter]).filter(c => c.level <= level);
+/** O que esta fórmula de compasso tem a oferecer, antes das restrições do usuário (para a interface). */
+export function offeredBy(meter: MeterId) {
+  const cells = cellsFor(METERS[meter]);
   return {
     figures: new Set(cells.flatMap(c => c.figures)),
     rests: new Set(cells.flatMap(c => c.rests)),
     traits: new Set(cells.flatMap(c => c.traits)),
-    familias: new Set(cells.flatMap(c => c.familia)),
   };
 }
 
@@ -191,41 +272,93 @@ function barOf(cells: Cell[], nextTuplet: () => number): Bar {
   return { cells: cells.map(c => c.id), events };
 }
 
+// ---------- modo esparso (posicional) ----------
+//
+// O outro jeito de montar um compasso, e o pedido do Paulo em 06/11/2026 nas palavras dele:
+// *"pra cada compasso, você sorteia 2 números entre 1 e 8 e os que caírem serão as notas daquele
+// compasso. o resto vai ser pausa."* Oito casas de semicolcheia = um compasso de 2/4.
+//
+// **Por que não dá para fazer isso com células.** O catálogo monta o compasso encaixando padrões
+// prontos; aqui o compasso nasce de um sorteio de posições, e qualquer uma das combinações pode
+// sair. Enumerar as 2⁸ combinações como células seria descrever à mão o que uma linha de sorteio
+// resolve. São duas estratégias de montagem, não dois geradores: o resto do arquivo — validação,
+// linha do tempo, desenho — não sabe a diferença.
+
+/** As casas de semicolcheia de um compasso. */
+const casasDe = (m: Meter) => m.barTicks / VALUE_TICKS['16'];
+
+/**
+ * Junta pausas vizinhas no que a escrita pede: quatro semicolcheias de pausa dentro de um tempo
+ * viram uma pausa de semínima, duas dentro de meio tempo viram uma de colcheia.
+ *
+ * **Sem isto o compasso fica ilegível** — sete pausas de semicolcheia enfileiradas é o tipo de
+ * coisa que nenhuma partitura escreve, e era o risco real deste modo.
+ */
+function agruparPausas(soa: boolean[], inicio: number, fim: number, out: RhythmEvent[], at: (i: number) => number) {
+  const vazio = (a: number, b: number) => soa.slice(a, b).every(x => !x);
+  const pausa = (i: number, value: NoteValue, dur: number) =>
+    out.push({ at: at(i), dur, value, dots: 0, rest: true, tie: false, cell: 0 });
+  if (vazio(inicio, fim) && fim - inicio === 4) { pausa(inicio, 'q', VALUE_TICKS.q); return; }
+  for (let meio = inicio; meio < fim; meio += 2) {
+    if (vazio(meio, meio + 2)) { pausa(meio, '8', VALUE_TICKS['8']); continue; }
+    for (let i = meio; i < meio + 2; i++) if (!soa[i]) pausa(i, '16', VALUE_TICKS['16']);
+      else out.push({ at: at(i), dur: VALUE_TICKS['16'], value: '16', dots: 0, rest: false, tie: false, cell: 0 });
+  }
+}
+
+/** Um compasso esparso: `notas` casas sorteadas soam, o resto é pausa agrupada. */
+export function barraEsparsa(m: Meter, notas: number, r: () => number): Bar {
+  const n = casasDe(m);
+  const soa = Array<boolean>(n).fill(false);
+  const alvo = Math.max(1, Math.min(n, Math.round(notas)));
+  let postas = 0;
+  // sorteio sem repetição: tenta uma casa livre até preencher o alvo
+  while (postas < alvo) {
+    const i = Math.floor(r() * n);
+    if (soa[i]) continue;
+    soa[i] = true;
+    postas++;
+  }
+  const events: RhythmEvent[] = [];
+  const at = (i: number) => i * VALUE_TICKS['16'];
+  // tempo a tempo (quatro casas), para a pausa de semínima nunca atravessar o pulso
+  for (let t = 0; t < n; t += 4) agruparPausas(soa, t, Math.min(t + 4, n), events, at);
+  events.sort((a, b) => a.at - b.at);
+  return { cells: [], events };
+}
+
 /** Assinatura de um compasso, para comparar compassos entre exercícios. */
 export function barSignature(bar: Bar): string {
   return bar.events.map(e => `${e.rest ? 'r' : ''}${e.value}${e.dots ? '.' : ''}${e.tie ? '~' : ''}${e.tuplet ? 't' : ''}`).join(' ');
 }
 
-/** Penalidade de bom senso de um compasso candidato (0 = perfeito). */
-function penalty(cells: Cell[], ctx: { m: Meter; level: Level; index: number; total: number; prev?: Cell[]; avoid?: Set<string>; metaNotas?: number }): number {
-  const { m, level, index, total, prev, avoid, metaNotas } = ctx;
+/**
+ * Penalidade de bom senso de um compasso candidato (0 = perfeito).
+ *
+ * Onde antes se lia `level <= 2`, hoje se lê `simples` — o conjunto escolhido não tem
+ * semicolcheia nem quiáltera. É a mesma intenção ("nos começos, soe conclusivo") sem depender da
+ * escada que saiu.
+ */
+function penalty(cells: Cell[], ctx: { m: Meter; simples: boolean; index: number; total: number; prev?: Cell[]; avoid?: Set<string> }): number {
+  const { m, simples, index, total, prev, avoid } = ctx;
   const evs = cells.flatMap(c => c.events);
   const restTicks = evs.filter(e => e.rest).reduce((s, e) => s + e.dur, 0);
   let p = 0;
-  // Com `metaNotas` definido (preset "poucas notas", X1), a regra de sempre vira o contrário do
-  // que se quer: aqui pausa demais É o objetivo, e quem decide "demais" é a meta de notas abaixo.
-  if (metaNotas === undefined) {
-    if (restTicks === m.barTicks) p += 1000;
-    else if (restTicks > m.barTicks / 2) p += 100;
-  } else {
-    const soantes = evs.filter(e => !e.rest).length;
-    p += Math.abs(soantes - metaNotas) * 8;
-  }
+  if (restTicks === m.barTicks) p += 1000;
+  else if (restTicks > m.barTicks / 2) p += 100;
   // Duas pausas de pulso inteiro seguidas: escreve-se uma pausa maior, ou é silêncio demais.
   for (let i = 1; i < cells.length; i++) if (cells[i].events.every(e => e.rest) && cells[i - 1].events.every(e => e.rest)) p += 20;
   if (prev && prev.map(c => c.id).join() === cells.map(c => c.id).join()) p += 30;
-  if (level >= 2 && cells.length >= 3 && cells.every(c => c.id === cells[0].id)) p += 3; // a mesma célula em todos os tempos cansa
+  if (cells.length >= 3 && cells.every(c => c.id === cells[0].id)) p += 3; // a mesma célula em todos os tempos cansa
   if (avoid?.has(barSignature(barOf(cells, () => 0)))) p += 10;
-  if (index === 0 && level <= 2 && evs[0].rest) p += 5;
+  if (index === 0 && simples && evs[0].rest) p += 5;
   if (index === total - 1) {
     const last = evs[evs.length - 1];
     if (last.rest || last.tie) p += 4;
-    if (level <= 3 && last.dur < TPQ) p += 2; // nos níveis iniciais, terminar numa figura longa soa conclusivo
+    if (simples && last.dur < TPQ) p += 2; // num conjunto simples, terminar numa figura longa soa conclusivo
   }
   return p;
 }
-
-const focus = (cellLevel: Level, level: Level) => (cellLevel === level ? 3 : cellLevel === level - 1 ? 1.4 : 0.8);
 
 export interface GenerateOptions {
   seed?: number;
@@ -239,16 +372,20 @@ export function generateExercise(s: RhythmSettings, opts: GenerateOptions = {}):
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
   const r = rng(seed);
   const m = METERS[s.meter];
-  const pool = poolFor(s);
-  const ok = completable(pool, m);
-  const hasLevelCells = pool.some(c => c.level === s.level);
   const n = Math.max(1, Math.round(s.bars));
 
-  let cellsByBar: Cell[][] = [];
-  for (let attempt = 0; attempt < 6; attempt++) {
+  let bars: Bar[];
+  if (s.modo === 'esparso') {
+    bars = Array.from({ length: n }, () => barraEsparsa(m, s.notasPorCompasso ?? 2, r));
+  } else {
+    const pool = poolFor(s);
+    const ok = completable(pool, m);
+    // "Simples" no lugar do nível: sem semicolcheia e sem quiáltera à vista.
+    const simples = !s.figures['16'] && !s.traits.quialtera;
     const used = new Set<string>();
-    const weight = (c: Cell) => c.weight * focus(c.level, s.level) * (used.has(c.id) ? 1.5 : 1);
-    cellsByBar = [];
+    const weight = (c: Cell) =>
+      c.weight * (c.rests.length ? s.pausas : 1) * (used.has(c.id) ? 1.5 : 1);
+    const cellsByBar: Cell[][] = [];
     for (let b = 0; b < n; b++) {
       // Frase A B A C: em cada bloco de 4, às vezes o 3º compasso retoma o 1º.
       if (b % 4 === 2 && b < n - 1 && r() < 0.4) {
@@ -259,31 +396,30 @@ export function generateExercise(s: RhythmSettings, opts: GenerateOptions = {}):
       let bestP = Infinity;
       for (let t = 0; t < 40 && bestP > 0; t++) {
         const cand = randomBar(pool, m, ok, weight, r);
-        const p = penalty(cand, { m, level: s.level, index: b, total: n, prev: cellsByBar[b - 1], avoid: opts.avoid, metaNotas: s.metaNotas });
+        const p = penalty(cand, { m, simples, index: b, total: n, prev: cellsByBar[b - 1], avoid: opts.avoid });
         if (p < bestP) { best = cand; bestP = p; }
       }
       best.forEach(c => used.add(c.id));
       cellsByBar.push(best);
     }
-    // O exercício precisa ter material do nível escolhido, senão o nível não muda nada.
-    if (!hasLevelCells || cellsByBar.some(bar => bar.some(c => c.level === s.level))) break;
+    let tupletId = 0;
+    bars = cellsByBar.map(cells => barOf(cells, () => tupletId++));
   }
 
-  let tupletId = 0;
-  const bars = cellsByBar.map(cells => barOf(cells, () => tupletId++));
-
-  // Antecipação: colcheia (ou semi) no fim do compasso ligada ao tempo 1 do compasso seguinte.
-  // Desacoplada do nível (06/11/2026, pedido do Paulo): depende só do trait `ligadura` — um
-  // exercício de nível baixo também pode pedir ligadura entre compassos.
-  if (s.traits.ligadura) {
+  // Antecipação: a última figura do compasso ligada ao tempo 1 do seguinte.
+  //
+  // Duas coisas mudaram em 06/11/2026, e juntas destravam o preset de ligaduras: a chance virou
+  // configuração (`chanceDeLigadura`), e a figura pode ser até uma **semínima** — antes só
+  // colcheia ou menor, o que sozinho já zerava as ligaduras de um exercício sem colcheias.
+  if (s.traits.ligadura && s.chanceDeLigadura > 0) {
     for (let b = 0; b < bars.length - 1; b++) {
       const last = bars[b].events[bars[b].events.length - 1];
       const first = bars[b + 1].events[0];
-      if (!last.rest && !last.tie && !last.tuplet && last.dur <= TPQ / 2 && !first.rest && !first.tuplet && r() < 0.22) last.tie = true;
+      if (!last.rest && !last.tie && !last.tuplet && last.dur <= TPQ && !first.rest && !first.tuplet && r() < s.chanceDeLigadura) last.tie = true;
     }
   }
 
-  const ex: Exercise = { seed, meter: s.meter, level: s.level, bars };
+  const ex: Exercise = { seed, meter: s.meter, bars };
   const problems = validateExercise(ex, s);
   if (problems.length) throw new GenerationError(`Exercício inválido: ${problems[0]}`);
   return ex;

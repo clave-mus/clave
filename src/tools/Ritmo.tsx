@@ -1,27 +1,36 @@
 // Leitura rítmica: compassos gerados sob demanda para ler em silêncio (no ônibus, sem instrumento)
 // ou, se quiser, ouvir com metrônomo. A geração fica em theory/rhythm-gen.ts; aqui é só a tela.
+//
+// **A entrada é o PRESET** (06/11/2026, decidido com o Paulo). Antes era uma escada de níveis, e a
+// escada tinha dois problemas: trancava as caixinhas de marcar ("aparece em níveis mais altos") e
+// obrigava a pedir o nível 5 — que liga tudo — para alcançar uma única figura. O preset não é um
+// modo: é um pacote nomeado de valores, e tudo continua ajustável embaixo. É o desenho do `X6b`,
+// *preset primeiro, parâmetro depois*.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { atTime, Clock, drum } from '../audio/engine';
+import { atTime, Clock, drum, type Drum } from '../audio/engine';
+import FiguraIcon from '../components/music/FiguraIcon';
 import RhythmScore from '../components/music/RhythmScore';
 import { Btn, Chip } from '../components/ui';
+import { METER_IDS, METERS, type Figure, type MeterId, type RestKind, type Trait } from '../theory/rhythm-cells';
 import {
-  FAMILIAS, LEVELS, METER_IDS, METERS,
-  type Familia, type Figure, type Level, type MeterId, type RestKind, type Trait,
-} from '../theory/rhythm-cells';
-import {
-  BAR_COUNTS, barSignature, DEFAULT_SETTINGS, generateExercise, offeredBy, PRESET_POUCAS_NOTAS, timeline,
-  type Exercise, type RhythmSettings,
+  aplicarPreset, BAR_COUNTS, barSignature, DEFAULT_SETTINGS, generateExercise, offeredBy, PAUSAS, PRESETS,
+  timeline, type Exercise, type RhythmSettings,
 } from '../theory/rhythm-gen';
 import { tempoName, useToolLog } from './common';
-import { useT } from '../i18n';
+import { useT, type MessageKey } from '../i18n';
 
 const STORE = 'clave:ritmo';
+/** O preset escolhido mora à parte das configurações: ele é *de onde elas vieram*, não uma delas. */
+const STORE_PRESET = 'clave:ritmo-preset';
 const HISTORY = 30;
 
 /** ±10 a 30 bpm por sorteio (X1); o teto é quem decide até onde isso pode subir. */
 const SORTEIO_BPM = { min: 10, max: 30 };
 const BPM_MIN = 30;
 const TETO_BPM = { min: 60, max: 140, padrao: 100 };
+/** O ritmo entra mais alto que o clique: é ele que se está lendo (pedido do Paulo). */
+const VOL = { ritmo: 1, clique: 0.4 };
+const TIMBRES: Drum[] = ['aro', 'caixa', 'bumbo', 'chimbal'];
 
 function loadSettings(): RhythmSettings {
   try {
@@ -32,16 +41,27 @@ function loadSettings(): RhythmSettings {
       figures: { ...DEFAULT_SETTINGS.figures, ...raw.figures },
       restKinds: { ...DEFAULT_SETTINGS.restKinds, ...raw.restKinds },
       traits: { ...DEFAULT_SETTINGS.traits, ...raw.traits },
-      familias: { ...DEFAULT_SETTINGS.familias, ...raw.familias },
     };
-    const sane = s.meter in METERS && LEVELS.some(l => l.level === s.level) && BAR_COUNTS.includes(s.bars);
-    return sane ? s : DEFAULT_SETTINGS;
+    return s.meter in METERS && BAR_COUNTS.includes(s.bars) ? s : DEFAULT_SETTINGS;
   } catch {
     return DEFAULT_SETTINGS;
   }
 }
 function saveSettings(s: RhythmSettings) {
   try { localStorage.setItem(STORE, JSON.stringify(s)); } catch { /* sem armazenamento: só não lembra */ }
+}
+
+function loadPreset(): string | null {
+  try {
+    const id = localStorage.getItem(STORE_PRESET);
+    return id && PRESETS.some(p => p.id === id) ? id : null;
+  } catch { return null; }
+}
+function savePreset(id: string | null) {
+  try {
+    if (id) localStorage.setItem(STORE_PRESET, id);
+    else localStorage.removeItem(STORE_PRESET);
+  } catch { /* sem armazenamento: só não lembra */ }
 }
 
 function make(s: RhythmSettings, prev?: Exercise): { ex?: Exercise; error?: string } {
@@ -66,6 +86,7 @@ const TRAITS: Trait[] = ['pontuada', 'sincope', 'ligadura', 'quialtera'];
 export default function Ritmo() {
   const t = useT();
   const [settings, setSettings] = useState(loadSettings);
+  const [preset, setPreset] = useState<string | null>(loadPreset);
   const [history, setHistory] = useState<Exercise[]>(() => {
     const first = make(settings);
     return first.ex ? [first.ex] : [generateExercise(DEFAULT_SETTINGS)];
@@ -82,16 +103,16 @@ export default function Ritmo() {
   const [running, setRunning] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [count, setCount] = useState<number | null>(null);
-  // X1: andamento sorteado a cada exercício, volume separado, e a coloração da figura tocando.
   const [sortear, setSortear] = useState(false);
   const [tetoBpm, setTetoBpm] = useState(TETO_BPM.padrao);
-  const [volClick, setVolClick] = useState(0.7);
-  const [volSound, setVolSound] = useState(1);
+  const [volClick, setVolClick] = useState(VOL.clique);
+  const [volSound, setVolSound] = useState(VOL.ritmo);
+  const [timbre, setTimbre] = useState<Drum>('caixa');
   const [highlight, setHighlight] = useState(true);
   const clock = useRef<Clock | null>(null);
   const timers = useRef<number[]>([]);
-  const live = useRef({ sound, click, loop, volClick, volSound });
-  live.current = { sound, click, loop, volClick, volSound };
+  const live = useRef({ sound, click, loop, volClick, volSound, timbre });
+  live.current = { sound, click, loop, volClick, volSound, timbre };
 
   const ex = history[idx];
   const m = METERS[ex.meter];
@@ -135,7 +156,7 @@ export default function Ritmo() {
       if (L.click && pos % m.beatTicks === 0) drum(pos % m.barTicks === 0 ? 'clique-forte' : 'clique', t, L.volClick);
       const e = byTick.get(pos);
       if (!e) return;
-      if (e.attack && L.sound) drum('aro', t, L.volSound);
+      if (e.attack && L.sound) drum(L.timbre, t, L.volSound);
       later(t, () => { setCount(null); setActive(`${e.bar}:${e.index}`); });
     });
     clock.current = c;
@@ -147,6 +168,7 @@ export default function Ritmo() {
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
   useEffect(() => { stop(); }, [ex, stop]);
   useEffect(() => { saveSettings(settings); }, [settings]);
+  useEffect(() => { savePreset(preset); }, [preset]);
 
   const push = useCallback((s: RhythmSettings) => {
     const r = make(s, ex);
@@ -156,12 +178,20 @@ export default function Ritmo() {
     setHistory(next);
     setIdx(next.length - 1);
     // "Sortear bpm a cada exercício" (X1): cada compasso NOVO conta, venha do botão "Novo
-    // exercício" ou de mudar um filtro — os dois chamam push(). Voltar no histórico não conta.
+    // exercício" ou de mudar um ajuste — os dois chamam push(). Voltar no histórico não conta.
     if (sortear) setBpm(b => sortearBpm(b, tetoBpm));
   }, [ex, history, idx, sortear, tetoBpm]);
 
   const update = (patch: Partial<RhythmSettings>) => {
     const s = { ...settings, ...patch };
+    setSettings(s);
+    push(s);
+  };
+  /** Mexer num ajuste solta o preset: o que está na tela já não é mais exatamente ele. */
+  const ajustar = (patch: Partial<RhythmSettings>) => { setPreset(null); update(patch); };
+  const escolherPreset = (id: string) => {
+    const s = aplicarPreset(settings, id);
+    setPreset(id);
     setSettings(s);
     push(s);
   };
@@ -182,17 +212,10 @@ export default function Ritmo() {
     return () => window.removeEventListener('keydown', onKey);
   }, [toggle, next, back]);
 
-  const offered = offeredBy(settings.meter, settings.level);
-  const restricted = FIGURES.some(f => offered.figures.has(f) && !settings.figures[f]) ||
-    TRAITS.some(t => offered.traits.has(t) && !settings.traits[t]) ||
-    FAMILIAS.some(f => offered.familias.has(f) && !settings.familias[f]) ||
-    (offered.rests.size > 0 && (!settings.rests || RESTS.some(r => offered.rests.has(r) && !settings.restKinds[r])));
-  const resetFilters = () => update({
-    figures: DEFAULT_SETTINGS.figures, rests: true, restKinds: DEFAULT_SETTINGS.restKinds,
-    traits: DEFAULT_SETTINGS.traits, familias: DEFAULT_SETTINGS.familias, metaNotas: undefined,
-  });
-  const presetPoucasNotas = () => update(PRESET_POUCAS_NOTAS);
-  const fromLevel = (has: boolean) => (has ? undefined : t('rhythm.higherLevels'));
+  const offered = offeredBy(settings.meter);
+  const esparso = settings.modo === 'esparso';
+  const semPreset = preset === null;
+  const noMeter = (has: boolean) => (has ? undefined : t('rhythm.notInMeter'));
   // Problemas de configuração vêm do gerador como código; qualquer outro erro é um defeito.
   const errorText = (code: string) =>
     code === 'noFigures' ? t('rhythm.errorNoFigures')
@@ -201,37 +224,33 @@ export default function Ritmo() {
 
   return (
     <div className="ritmo">
-      <div className="ritmo-quick">
-        <label className="ritmo-field">
-          <span>{t('rhythm.meter')}</span>
-          <select className="sel" id="rt-meter" value={settings.meter} onChange={e => update({ meter: e.target.value as MeterId })}>
-            {METER_IDS.map(id => <option key={id} value={id}>{id}</option>)}
-          </select>
-        </label>
-        <label className="ritmo-field">
-          <span>{t('rhythm.bars')}</span>
-          <select className="sel" id="rt-bars" value={settings.bars} onChange={e => update({ bars: Number(e.target.value) })}>
-            {BAR_COUNTS.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
-        <label className="ritmo-field">
-          <span>{t('rhythm.level')}</span>
-          <select className="sel" id="rt-level" value={settings.level} onChange={e => update({ level: Number(e.target.value) as Level })}>
-            {LEVELS.map(l => <option key={l.level} value={l.level}>{l.level} · {t(`rhythm.levels.l${l.level}.name`)}</option>)}
-          </select>
-        </label>
+      {/* ---- os presets: a porta de entrada ---- */}
+      <div className="field">
+        <span>{t('rhythm.presets')}</span>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          {PRESETS.map(p => (
+            <Chip key={p.id} on={preset === p.id} title={t(`rhythm.presetHints.${p.id}` as MessageKey)}
+              onClick={() => escolherPreset(p.id)}>
+              {t(`rhythm.presetNames.${p.id}` as MessageKey)}
+            </Chip>
+          ))}
+        </div>
+        {preset && <p className="muted" style={{ margin: 0, fontSize: 14 }}>{t(`rhythm.presetHints.${preset}` as MessageKey)}</p>}
       </div>
 
       <section className="ritmo-stage" aria-live="polite">
         <div className="ritmo-status">
-          <span>{t('rhythm.status', { level: ex.level, name: t(`rhythm.levels.l${ex.level}.name`), meter: ex.meter, bars: ex.bars.length })}{restricted && ` · ${t('rhythm.restricted')}`}</span>
+          <span>
+            {t('rhythm.statusShort', { meter: ex.meter, bars: ex.bars.length })}
+            {preset ? ` · ${t(`rhythm.presetNames.${preset}` as MessageKey)}` : ` · ${t('rhythm.restricted')}`}
+          </span>
           {count !== null && <b className="ritmo-count">{count}</b>}
         </div>
         <RhythmScore exercise={ex} active={highlight ? active : null} />
         {error !== null && (
           <div className="ritmo-warn" role="alert">
             <span>{errorText(error)}</span>
-            <Btn small tone="ghost" onClick={resetFilters}>{t('rhythm.restoreFigures')}</Btn>
+            <Btn small tone="ghost" onClick={() => escolherPreset('semicolcheias')}>{t('rhythm.restoreFigures')}</Btn>
           </div>
         )}
       </section>
@@ -257,23 +276,31 @@ export default function Ritmo() {
           <label className="switch"><input type="checkbox" id="rt-highlight" checked={highlight} onChange={e => setHighlight(e.target.checked)} />{t('rhythm.highlight')}</label>
         </div>
         <div className="row">
+          <span className="eyebrow">{t('rhythm.timbre')}</span>
+          {TIMBRES.map(k => (
+            <Chip key={k} on={timbre === k} onClick={() => { setTimbre(k); drum(k, 0, volSound); }}>
+              {t(`rhythm.timbreNames.${k}` as MessageKey)}
+            </Chip>
+          ))}
+        </div>
+        <div className="row">
+          <label className="ritmo-field" style={{ flex: '1 1 150px' }}>
+            <span>{t('rhythm.volSound')} · {Math.round(volSound * 100)}%</span>
+            <input className="range" type="range" min={0} max={100} value={Math.round(volSound * 100)} onChange={e => setVolSound(Number(e.target.value) / 100)} id="rt-vol-sound" />
+          </label>
+          <label className="ritmo-field" style={{ flex: '1 1 150px' }}>
+            <span>{t('rhythm.volClick')} · {Math.round(volClick * 100)}%</span>
+            <input className="range" type="range" min={0} max={100} value={Math.round(volClick * 100)} onChange={e => setVolClick(Number(e.target.value) / 100)} id="rt-vol-click" />
+          </label>
+        </div>
+        <div className="row">
           <label className="switch"><input type="checkbox" id="rt-sortear-bpm" checked={sortear} onChange={e => setSortear(e.target.checked)} />{t('rhythm.randomBpm')}</label>
           {sortear && (
-            <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+            <label className="ritmo-field" style={{ flex: '1 1 150px' }}>
               <span>{t('rhythm.bpmCeiling')} · {tetoBpm}</span>
               <input className="range" type="range" min={TETO_BPM.min} max={TETO_BPM.max} value={tetoBpm} onChange={e => setTetoBpm(Number(e.target.value))} id="rt-teto-bpm" />
             </label>
           )}
-        </div>
-        <div className="row">
-          <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
-            <span>{t('rhythm.volClick')} · {Math.round(volClick * 100)}%</span>
-            <input className="range" type="range" min={0} max={100} value={Math.round(volClick * 100)} onChange={e => setVolClick(Number(e.target.value) / 100)} id="rt-vol-click" />
-          </label>
-          <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
-            <span>{t('rhythm.volSound')} · {Math.round(volSound * 100)}%</span>
-            <input className="range" type="range" min={0} max={100} value={Math.round(volSound * 100)} onChange={e => setVolSound(Number(e.target.value) / 100)} id="rt-vol-sound" />
-          </label>
         </div>
       </div>
 
@@ -282,48 +309,72 @@ export default function Ritmo() {
       </button>
       {advanced && (
         <div className="settings ritmo-adv">
-          <p className="muted">{t(`rhythm.levels.l${settings.level}.desc`)} {t('rhythm.turnOff')}</p>
-          <div className="field">
-            <span>{t('rhythm.figures')}</span>
-            <div className="row">
-              {FIGURES.map(f => (
-                <Chip key={f} on={settings.figures[f] && offered.figures.has(f)} disabled={!offered.figures.has(f)} title={fromLevel(offered.figures.has(f))}
-                  onClick={() => update({ figures: { ...settings.figures, [f]: !settings.figures[f] } })}>{t(`rhythm.figureNames.${f}`)}</Chip>
-              ))}
-            </div>
+          <p className="muted">{t('rhythm.advancedNote')}</p>
+
+          {/* A fórmula e o tamanho desceram para cá (06/11): são ajuste, não a primeira pergunta. */}
+          <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>
+            <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+              <span>{t('rhythm.meterLong')}</span>
+              <select className="sel" id="rt-meter" value={settings.meter} onChange={e => ajustar({ meter: e.target.value as MeterId })}>
+                {METER_IDS.map(id => <option key={id} value={id}>{id}</option>)}
+              </select>
+            </label>
+            <label className="ritmo-field" style={{ flex: '1 1 160px' }}>
+              <span>{t('rhythm.barsLong')}</span>
+              <select className="sel" id="rt-bars" value={settings.bars} onChange={e => update({ bars: Number(e.target.value) })}>
+                {BAR_COUNTS.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
           </div>
-          <div className="field">
-            <span>{t('rhythm.rests')}</span>
-            <div className="row">
-              <label className="switch"><input type="checkbox" id="rt-rests" checked={settings.rests} onChange={e => update({ rests: e.target.checked })} />{t('rhythm.withRests')}</label>
-              {RESTS.map(r => (
-                <Chip key={r} on={settings.rests && settings.restKinds[r] && offered.rests.has(r)} disabled={!settings.rests || !offered.rests.has(r)} title={fromLevel(offered.rests.has(r))}
-                  onClick={() => update({ restKinds: { ...settings.restKinds, [r]: !settings.restKinds[r] } })}>{t(`rhythm.restNames.${r}`)}</Chip>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <span>{t('rhythm.traits')}</span>
-            <div className="row">
-              {TRAITS.map(tr => (
-                <Chip key={tr} on={settings.traits[tr] && offered.traits.has(tr)} disabled={!offered.traits.has(tr)} title={fromLevel(offered.traits.has(tr))}
-                  onClick={() => update({ traits: { ...settings.traits, [tr]: !settings.traits[tr] } })}>{t(`rhythm.traitNames.${tr}`)}</Chip>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <span>{t('rhythm.familias')}</span>
-            <div className="row">
-              {FAMILIAS.map((f: Familia) => (
-                <Chip key={f} on={settings.familias[f] && offered.familias.has(f)} disabled={!offered.familias.has(f)} title={fromLevel(offered.familias.has(f))}
-                  onClick={() => update({ familias: { ...settings.familias, [f]: !settings.familias[f] } })}>{t(`rhythm.familyNames.${f}`)}</Chip>
-              ))}
-            </div>
-          </div>
-          <div className="row">
-            <Btn small tone="ghost" onClick={resetFilters} disabled={!restricted}>{t('rhythm.restoreLevel')}</Btn>
-            <Btn small tone="ghost" onClick={presetPoucasNotas}>{t('rhythm.presetSparse')}</Btn>
-          </div>
+
+          {/* No modo esparso as figuras não são sorteadas de células: o compasso vem de um sorteio
+              de posições, então estes controles não teriam efeito nenhum e ficam fora. */}
+          {!esparso && (
+            <>
+              <div className="field">
+                <span>{t('rhythm.figures')}</span>
+                <div className="row">
+                  {FIGURES.map(f => (
+                    <Chip key={f} on={settings.figures[f] && offered.figures.has(f)} disabled={!offered.figures.has(f)} title={noMeter(offered.figures.has(f))}
+                      onClick={() => ajustar({ figures: { ...settings.figures, [f]: !settings.figures[f] } })}>
+                      <span className="ritmo-fig"><FiguraIcon value={f} />{t(`rhythm.figureNames.${f}`)}</span>
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div className="field">
+                <span>{t('rhythm.rests')}</span>
+                <div className="row">
+                  <label className="switch"><input type="checkbox" id="rt-rests" checked={settings.rests} onChange={e => ajustar({ rests: e.target.checked })} />{t('rhythm.withRests')}</label>
+                  {RESTS.map(r => (
+                    <Chip key={r} on={settings.rests && settings.restKinds[r] && offered.rests.has(r)} disabled={!settings.rests || !offered.rests.has(r)} title={noMeter(offered.rests.has(r))}
+                      onClick={() => ajustar({ restKinds: { ...settings.restKinds, [r]: !settings.restKinds[r] } })}>{t(`rhythm.restNames.${r}`)}</Chip>
+                  ))}
+                </div>
+                <label className="ritmo-field" style={{ maxWidth: 320 }}>
+                  <span>{t('rhythm.restAmount')} · {Math.round(settings.pausas * 100)}%</span>
+                  <input className="range" type="range" min={PAUSAS.min * 100} max={PAUSAS.max * 100} step={5}
+                    disabled={!settings.rests} value={Math.round(settings.pausas * 100)}
+                    onChange={e => ajustar({ pausas: Number(e.target.value) / 100 })} id="rt-pausas" />
+                </label>
+              </div>
+
+              <div className="field">
+                <span>{t('rhythm.traits')}</span>
+                <div className="row">
+                  {TRAITS.map(tr => (
+                    <Chip key={tr} on={settings.traits[tr] && offered.traits.has(tr)} disabled={!offered.traits.has(tr)} title={noMeter(offered.traits.has(tr))}
+                      onClick={() => ajustar({ traits: { ...settings.traits, [tr]: !settings.traits[tr] } })}>{t(`rhythm.traitNames.${tr}`)}</Chip>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {!semPreset && (
+            <div><Btn small tone="ghost" onClick={() => escolherPreset(preset)}>{t('rhythm.restoreLevel')}</Btn></div>
+          )}
         </div>
       )}
 
