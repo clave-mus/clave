@@ -16,7 +16,8 @@ export const queIntervaloEEsse: CatalogItem = {
     { ...CLEFS(ctx), quando: s => s.superficie !== 'braco' },
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
     { id: 'forma', label: ctx.t('settings.form'), type: 'single', quando: s => s.superficie !== 'braco',
-      options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }] },
+      // `ambas` (P5): melódico e harmônico são complementares, e antes só dava um OU outro.
+      options: [{ id: 'melodico', label: ctx.t('settings.melodic') }, { id: 'harmonico', label: ctx.t('settings.harmonic') }, { id: 'ambas', label: ctx.t('settings.both') }] },
     { ...INST(ctx), quando: s => s.superficie === 'braco' },
   ],
   defaults: { superficie: 'pauta', claves: ['sol'], intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], forma: 'melodico', instrumento: 'auto' },
@@ -49,11 +50,12 @@ export const queIntervaloEEsse: CatalogItem = {
       lower = notaNaPauta(ctx, [b - 1, b + 9 - (iv.num - 1)], () => (Math.random() < 0.25 ? pick([1, -1]) : 0));
       upper = transpose(lower, { num: iv.num, semis: semisFor(iv.num, iv.q) });
     } while (Math.abs(upper.acc) > 1);
-    const columns = s.forma === 'harmonico' ? [[lower, upper]] : [[lower], [upper]];
+    const harmonico = s.forma === 'ambas' ? Math.random() < 0.5 : s.forma === 'harmonico';
+    const columns = harmonico ? [[lower, upper]] : [[lower], [upper]];
     return {
       prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'staff', clef, columns },
       surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: ivLabel(i, ctx) })) }, expected: { kind: 'option', id },
-      sound: { groups: s.forma === 'harmonico' ? [[midi(lower), midi(upper)]] : [[midi(lower)], [midi(upper)]] },
+      sound: { groups: harmonico ? [[midi(lower), midi(upper)]] : [[midi(lower)], [midi(upper)]] },
       reveal: ivLabel(id, ctx),
     };
   },
