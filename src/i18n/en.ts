@@ -676,6 +676,17 @@ const en: Shape<typeof pt> = {
     statusShort: '{meter} · {bars} bars',
     hint: 'Read while tapping the pulse with your foot and speaking the rhythm (ta, ta-ka, ta-ka-di-mi). No headphones? Turn the sound off and play anyway: the highlight moves in time and you check in silence. Shortcuts: space plays, N generates another, ← goes back.',
   },
+  melodyHarmony: {
+    degree_1: 'root',
+    degree_3: 'third',
+    degree_5: 'fifth',
+    degree_7: 'seventh',
+    isChordTone: '{note} is the {degree} of {chord}.',
+    isNotChordTone: '{note} is the {interval} of {chord}.',
+    clash: 'It sits {distance} from {note}, the {degree} of the chord — this can create tension.',
+    distSemitone: 'a semitone',
+    distMinorNinth: 'a minor ninth',
+  },
   music: {
     keyboard: 'Keyboard',
     neck: 'Instrument fretboard',

@@ -39,6 +39,23 @@ export interface RelacaoNotaAcorde {
 }
 
 /**
+ * O intervalo trazido para dentro da oitava: a 11ª vira 4ª, a 9ª vira 2ª.
+ *
+ * Existe porque o número composto é **artefato do nosso voicing**, não da relação. O mesmo Dó sai
+ * como 6ª sobre Mi menor e como 11ª sobre Sol só porque a melodia foi parar mais longe num caso
+ * que no outro — e isso atrapalha justamente a comparação que o exercício quer. O Paulo pediu os
+ * dois, com o reduzido por padrão.
+ *
+ * A oitava justa **não** vira uníssono: "uníssono" não descreveria uma nota que soa uma oitava
+ * acima da fundamental.
+ */
+export function reduzir(iv: { num: number; semis: number }): { num: number; semis: number } {
+  const num = ((iv.num - 1) % 7) + 1;
+  const semis = mod(iv.semis, 12);
+  return num === 1 && semis === 0 && iv.num > 1 ? { num: 8, semis: 12 } : { num, semis };
+}
+
+/**
  * Monta o acorde em posição fundamental e põe a melodia **acima da nota mais aguda dele**.
  *
  * As duas coisas são do desenho, não arbitrárias: em posição fundamental o grau continua audível, e

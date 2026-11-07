@@ -676,6 +676,18 @@ const pt = {
     statusShort: '{meter} · {bars} compassos',
     hint: 'Leia batendo o pulso no pé e falando o ritmo (tá, ta-ka, ta-ka-di-mi). Sem fone? Desligue o som e toque assim mesmo: o destaque anda no andamento e você confere em silêncio. Atalhos: espaço toca, N gera outro, ← volta.',
   },
+  melodyHarmony: {
+    degree_1: 'fundamental',
+    degree_3: 'terça',
+    degree_5: 'quinta',
+    degree_7: 'sétima',
+    isChordTone: '{note} é a {degree} de {chord}.',
+    isNotChordTone: '{note} é a {interval} de {chord}.',
+    // A única frase avaliativa do item, e só onde há semitom — critério do Paulo.
+    clash: 'Fica a {distance} de {note}, a {degree} do acorde — pode gerar tensão.',
+    distSemitone: 'um semitom',
+    distMinorNinth: 'uma nona menor',
+  },
   music: {
     keyboard: 'Teclado',
     neck: 'Braço do instrumento',
