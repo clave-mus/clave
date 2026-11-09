@@ -688,7 +688,7 @@ const en: Shape<typeof pt> = {
     clash: 'It sits {distance} from {note}, the {degree} of the chord — this can create tension.',
     distSemitone: 'a semitone',
     distMinorNinth: 'a minor ninth',
-    hint: 'Hear how each note sounds over each chord of a harmonic field. Spot the tensions, and listen to the quality of every combination. This is what internalises the relationship between melody and harmony.',
+    hint: 'Spot the tensions, and listen to the quality of every combination. This is what internalises the relationship between melody and harmony.',
     tip: 'Sing the melody note, if you can.',
     key: 'Key',
     silence: 'Silence',
@@ -738,7 +738,7 @@ const en: Shape<typeof pt> = {
   tools: {
     'no-instrumento': { title: 'On your instrument', desc: 'Clave shows the note, you find it and play it on the real neck.' },
     audiar: { title: 'Audiate', desc: 'The reference plays, it tells you what to audiate. You hear it in your head before checking.' },
-    'relacoes-melodia-harmonia': { title: 'Melody against harmony', desc: 'One note stays put while the chords of the field pass underneath. Hear where it belongs to the chord and where it clashes.' },
+    'relacoes-melodia-harmonia': { title: 'Melody against harmony', desc: 'Hear how each note sounds over each chord of a harmonic field.' },
     'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },
     metronomo: { title: 'Metronome', desc: 'Pulse, time signature, subdivision and tap tempo.' },
     ambiente: { title: 'Sing and play', desc: 'Harmonic drone, metronome and a timer with a goal.' },

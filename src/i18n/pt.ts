@@ -689,7 +689,7 @@ const pt = {
     clash: 'Fica a {distance} de {note}, a {degree} do acorde — pode gerar tensão.',
     distSemitone: 'um semitom',
     distMinorNinth: 'uma nona menor',
-    hint: 'Ouça como cada nota soa em cima de cada acorde de um campo harmônico. Identifique tensões e preste atenção na qualidade de cada combinação. Isso é essencial pra internalizar a relação entre melodia e harmonia.',
+    hint: 'Identifique tensões e preste atenção na qualidade de cada combinação. Isso é essencial pra internalizar a relação entre melodia e harmonia.',
     tip: 'Se puder, cante a nota da melodia.',
     key: 'Tonalidade',
     silence: 'Silenciar',
@@ -740,7 +740,7 @@ const pt = {
   tools: {
     'no-instrumento': { title: 'No instrumento', desc: 'O Clave mostra a nota, você acha e toca no braço de verdade.' },
     audiar: { title: 'Audiar', desc: 'Toca a referência, diz o que audiar. Você ouve na cabeça antes de conferir.' },
-    'relacoes-melodia-harmonia': { title: 'Relações entre melodia e harmonia', desc: 'Uma nota fica parada e os acordes do campo passam por baixo dela. Ouça onde ela é nota do acorde e onde ela atrita.' },
+    'relacoes-melodia-harmonia': { title: 'Relações entre melodia e harmonia', desc: 'Ouça como cada nota soa em cima de cada acorde de um campo harmônico.' },
     'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
     metronomo: { title: 'Metrônomo', desc: 'Pulso, compasso, subdivisão e tap tempo.' },
     ambiente: { title: 'Solfejar e tocar', desc: 'Drone de contexto harmônico, metrônomo e cronômetro com meta.' },
