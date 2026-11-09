@@ -1,4 +1,5 @@
-import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
+import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao } from '../helpers';
+import { acomodarMelodiaEAcorde } from '../../theory/nota-sobre-acorde';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -22,8 +23,15 @@ export const ouvidoCelulas: CatalogItem = {
     // comportamento de antes — rotina salva continua soando igual, sem migração.
     { id: 'graus', label: ctx.t('settings.contextChord'), type: 'multi', justify: true,
       options: ['1', '2', '3', '4', '5', '6', '7'].map(n => ({ id: n, label: n })) },
-    { id: 'tetrade', label: ctx.t('settings.tetrad'), type: 'toggle' }],
-  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false },
+    { id: 'tetrade', label: ctx.t('settings.tetrad'), type: 'toggle' },
+    // O Paulo notou (09/11) que a melodia caía embaixo do acorde com frequência, e que isso
+    // atrapalha ouvir o grau. Quem se move é o ACORDE — ver `acordeForaDaMelodia`, que explica por
+    // quê e traz a medição. "Abaixo" existe porque ele quis manter a opção.
+    { id: 'registro', label: ctx.t('settings.melodyRegister'), type: 'single', options: [
+      { id: 'acima', label: ctx.t('settings.melodyAbove') },
+      { id: 'abaixo', label: ctx.t('settings.melodyBelow') },
+    ] }],
+  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima' },
   presentation: { gap: 0.55},
   make(s, ctx) {
     const id = (ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId;
@@ -88,25 +96,32 @@ export const ouvidoCelulas: CatalogItem = {
     const temCampo = top === 7;
     const possiveis = temCampo ? arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= top) : [];
     const grauDoAcorde = possiveis.length ? pick(possiveis) : 1;
-    const acorde = temCampo
+    const acordeNaEscala = temCampo
       ? (s.tetrade ? [0, 2, 4, 6] : [0, 2, 4]).map(p => {
         const i = grauDoAcorde - 1 + p;
         return tonic + semis[i % top] + 12 * Math.floor(i / top);
       })
       : [tonic, tonic + (semis.find(x => x === 3 || x === 4) ?? 4), tonic + 7];
 
+    // Quem se move é o acorde; a melodia só sobe quando descer o acorde o tiraria da região.
+    // Os limites são os da região GLOBAL, não os da faixa estreita em que a tônica é sorteada: a
+    // faixa estreita diz onde a tônica cai, a região diz o que a pessoa aguenta ouvir e tocar.
+    const { acorde, melodia } = acomodarMelodiaEAcorde(
+      acordeNaEscala, c.map(i => tonic + semis[i]),
+      s.registro === 'abaixo' ? 'abaixo' : 'acima', regiao(ctx));
+
     return {
       prompt: ctx.t('quiz.cells'),
       visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
       surface: { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }, expected: { kind: 'option', id: key(c) },
       sound: {
-        groups: [acorde, ...c.map(i => [tonic + semis[i]])],
+        groups: [acorde, ...melodia.map(n => [n])],
         // Ouvir o acorde sozinho e cada nota sozinha (pedido do Paulo). Aqui separar AJUDA: a
         // pergunta é qual grau cada nota é, e isolá-la não entrega nada — o grau continua a
         // depender de ouvi-la contra o acorde. Em `ouvido-intervalo` seria o oposto.
         partes: [
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [acorde] },
-          ...c.map((i, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[tonic + semis[i]]] })),
+          ...melodia.map((nota, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[nota]] })),
         ],
       },
       autoplay: true, reveal: key(c),

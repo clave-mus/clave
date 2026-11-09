@@ -151,3 +151,55 @@ export function analisar(acorde: readonly Note[], melodia: Note, chord: ChordId)
 
   return { grauDoAcorde, intervalo: intervalBetween(acorde[0], melodia), atritos };
 }
+
+/**
+ * Acomoda acorde e melodia em oitavas para que a melodia seja a voz de cima (ou de baixo).
+ *
+ * **Mexe primeiro no acorde, e só na melodia se precisar** — e a ordem é o ponto. A primeira
+ * tentativa subia a melodia acima do acorde inteiro, e eu medi: MIDI 100, 2637 Hz no pior caso.
+ * Estridente, e incantável, num exercício cuja dica é "cante a nota".
+ *
+ * Então:
+ *
+ * 1. desce o acorde o mínimo para ficar **inteiro abaixo** da melodia. Se o acorde continuar
+ *    dentro da região, pronto — a melodia nem se move, e fica onde a região a pôs;
+ * 2. se descer tirasse o acorde da região, o acorde fica e **a melodia sobe o mínimo para não ser
+ *    mais grave que a fundamental do acorde**. Uma oitava resolve, e o pior caso vai a 1319 Hz, não
+ *    a 2637.
+ *
+ * O passo 2 existe porque sem ele a guarda da região devolvia o acorde para cima da melodia e
+ * recriava justamente o que o Paulo reclamou. Medido: era 51% dos casos, e a versão só com o passo
+ * 1 ainda deixava uma fração — que eu primeiro li como zero por arredondar a porcentagem.
+ *
+ * Os deslocamentos são **um só para o acorde inteiro** e **um só para a melodia inteira**: um
+ * acorde é um bloco, e mover vozes soltas mudaria a inversão; uma célula é um contorno, e mover
+ * notas soltas quebraria o desenho que a pessoa tenta identificar.
+ *
+ * `limites` são o piso e o teto **da região em vigor**, nunca um número escrito aqui — tentei com
+ * um chão absoluto e o teste de região pegou: o acorde saía por baixo do piso configurado.
+ */
+export function acomodarMelodiaEAcorde(
+  acorde: readonly number[],
+  melodia: readonly number[],
+  melodiaFica: 'acima' | 'abaixo',
+  limites: { lo: number; hi: number },
+): { acorde: number[]; melodia: number[] } {
+  const desloca = (ns: readonly number[], d: number) => ns.map(n => n + d);
+  if (melodiaFica === 'acima') {
+    let d = 0;
+    while (Math.max(...acorde) + d >= Math.min(...melodia)) d -= 12;
+    if (Math.min(...acorde) + d >= limites.lo) return { acorde: desloca(acorde, d), melodia: [...melodia] };
+    let m = 0;
+    while (Math.min(...melodia) + m < Math.min(...acorde)) m += 12;
+    return { acorde: [...acorde], melodia: desloca(melodia, m) };
+  }
+  let d = 0;
+  while (Math.min(...acorde) + d <= Math.max(...melodia)) d += 12;
+  if (Math.max(...acorde) + d <= limites.hi) return { acorde: desloca(acorde, d), melodia: [...melodia] };
+  let m = 0;
+  while (Math.max(...melodia) + m > Math.max(...acorde)) m -= 12;
+  // E a melodia também não sai da região: descer por baixo do piso seria trocar um defeito por
+  // outro. Quando não há oitava livre, aceita-se a sobreposição parcial.
+  while (Math.min(...melodia) + m < limites.lo) m += 12;
+  return { acorde: [...acorde], melodia: desloca(melodia, m) };
+}
