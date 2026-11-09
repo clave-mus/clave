@@ -108,6 +108,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   return (
     <div className="rmh" style={{ display: 'grid', gap: 18 }}>
       <p className="muted">{t('melodyHarmony.hint')}</p>
+      {soarMelodia && <p className="rmh-dica">{t('melodyHarmony.tip')}</p>}
 
       <div className="field">
         <span>{t('melodyHarmony.key')}</span>

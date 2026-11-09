@@ -576,6 +576,12 @@ select.sel {
 /* O atrito é marcado por COR e por "!" — cor sozinha não serve (daltonismo, e tela no sol). */
 .rmh-rel.atrito { color: var(--accent); font-weight: 600; }
 .rmh-frase { max-width: 62ch; font-size: 15px; }
+/* A dica é conselho, não instrução: menor que o texto de apoio e marcada por um filete, para
+   se ler como nota de margem em vez de competir com o enunciado. */
+.rmh-dica {
+  max-width: 62ch; font-size: 13.5px; color: var(--ink-faint);
+  border-left: 2px solid var(--rule); padding-left: 10px; margin-top: -8px;
+}
 /* Silenciar é SAÍDA, não um quarto modo: sem preenchimento, borda tracejada, texto miúdo — some
    visualmente da fileira de modos e continua ali para quem não descobriu que apertar de novo cala. */
 .rmh-silenciar {
