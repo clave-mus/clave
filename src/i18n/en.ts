@@ -689,6 +689,9 @@ const en: Shape<typeof pt> = {
     distSemitone: 'a semitone',
     distMinorNinth: 'a minor ninth',
     hint: 'Pick a note and let the chords pass underneath it. The row shows what it is over each degree of the field; "!" marks a semitone.',
+    key: 'Key',
+    silence: 'Silence everything',
+    reduce: 'Reduce the interval to within the octave (4th, not 11th)',
     field: 'Harmonic field',
     field_maior: 'Major',
     field_menor: 'Natural minor',
@@ -706,8 +709,6 @@ const en: Shape<typeof pt> = {
     stopNote: 'Stop the note',
     chromatic: 'Notes outside the scale',
     soundMelody: 'Sound the melody',
-    hold: 'Hold the note',
-    asSounds: 'Interval as it sounds',
     singIt: 'The melody will not sound: sing the note over the chord and use "Note only" to check.',
   },
   music: {

@@ -690,6 +690,9 @@ const pt = {
     distSemitone: 'um semitom',
     distMinorNinth: 'uma nona menor',
     hint: 'Escolha uma nota e deixe os acordes passarem por baixo dela. A fileira mostra o que ela é sobre cada grau do campo; o "!" marca onde há semitom.',
+    key: 'Tonalidade',
+    silence: 'Silenciar tudo',
+    reduce: 'Reduzir o intervalo à oitava (4ª em vez de 11ª)',
     field: 'Campo harmônico',
     field_maior: 'Maior',
     field_menor: 'Menor natural',
@@ -707,8 +710,6 @@ const pt = {
     stopNote: 'Parar a nota',
     chromatic: 'Notas de fora da escala',
     soundMelody: 'Soar a melodia',
-    hold: 'Travar a nota',
-    asSounds: 'Intervalo como soa',
     singIt: 'A melodia não vai soar: cante a nota por cima do acorde e use "Só a nota" para conferir.',
   },
   music: {

@@ -576,6 +576,14 @@ select.sel {
 /* O atrito é marcado por COR e por "!" — cor sozinha não serve (daltonismo, e tela no sol). */
 .rmh-rel.atrito { color: var(--accent); font-weight: 600; }
 .rmh-frase { max-width: 62ch; font-size: 15px; }
+/* Silenciar é SAÍDA, não um quarto modo: sem preenchimento, borda tracejada, texto miúdo — some
+   visualmente da fileira de modos e continua ali para quem não descobriu que apertar de novo cala. */
+.rmh-silenciar {
+  margin-left: auto; background: none; border: 1px dashed var(--rule); border-radius: var(--r-sm);
+  color: var(--ink-soft); font: inherit; font-size: 13px; padding: 8px 12px; min-height: 40px; cursor: pointer;
+}
+.rmh-silenciar:hover:not(:disabled) { border-color: var(--rule-strong); color: var(--ink); }
+.rmh-silenciar:disabled { opacity: 0.35; cursor: default; }
 .ritmo-hint { max-width: 62ch; font-size: 14px; }
 @media (max-width: 760px) {
   .ritmo-quick { gap: 7px; }

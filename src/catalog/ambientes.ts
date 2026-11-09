@@ -111,7 +111,10 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'relacoes-melodia-harmonia', kind: 'tarefa',
     publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
     objetos: ['harmonia', 'melodia'], tarefas: ['ouvir'],
-    primaryModule: 'perception.harmonic',
+    // Nas DUAS percepções, a pedido do Paulo: a nota é melódica, o acorde embaixo é harmônico, e
+    // o exercício é exatamente o encontro dos dois. `primaryModule` segue sendo a harmônica, que é
+    // a que conta no histórico.
+    primaryModule: 'perception.harmonic', tambemEm: ['perception.melodic'],
     skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
     contentTags: ['harmony.diatonic_field', 'chord.triads', 'scale.major', 'scale.minor'],
     settings: ctx => [
@@ -124,10 +127,9 @@ export const AMBIENTES: CatalogItem[] = [
       // Padrão restrito à escala; abrir para as doze é escolha de quem usa (decisão do Paulo).
       { id: 'cromatico', label: ctx.t('melodyHarmony.chromatic'), type: 'toggle' },
       { id: 'soarMelodia', label: ctx.t('melodyHarmony.soundMelody'), type: 'toggle' },
-      { id: 'travar', label: ctx.t('melodyHarmony.hold'), type: 'toggle' },
-      { id: 'intervaloSoante', label: ctx.t('melodyHarmony.asSounds'), type: 'toggle' },
+      { id: 'reduzirOitava', label: ctx.t('melodyHarmony.reduce'), type: 'toggle' },
     ],
-    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, travar: false, intervaloSoante: false },
+    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, reduzirOitava: true },
     screen: () => import('../tools/RelacoesMelodiaHarmonia'),
   },
   {

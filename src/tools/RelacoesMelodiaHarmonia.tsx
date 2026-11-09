@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { drone, pararDrones } from '../audio/engine';
 import { useGlobalParams } from '../catalog/params';
 import { descreverRelacao } from '../catalog/relacao-texto';
-import { buildChord, harmonicField, midi, note, noteName, type ModoDoCampo, type Note } from '../theory/core';
+import { buildChord, harmonicField, majorTonic, midi, noteName, pc, type ModoDoCampo, type Note } from '../theory/core';
 import { intervalShort } from '../theory/names';
 import { analisar, melodiaAcimaDe, notasCromaticas, reduzir } from '../theory/nota-sobre-acorde';
 import { Btn, Chip } from '../components/ui';
@@ -22,6 +22,8 @@ import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 import type { Ctx, SettingValue } from '../catalog/types';
 
 const CAMPOS: ModoDoCampo[] = ['maior', 'menor', 'menor-harmonica', 'menor-melodica'];
+/** A roda das quintas, de 6 bemóis a 6 sustenidos — as treze grafias de tonalidade que existem. */
+const QUINTAS = Array.from({ length: 13 }, (_, i) => i - 6);
 
 export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRunning?: (r: boolean) => void; settings?: Record<string, SettingValue> }) {
   const t = useT();
@@ -32,19 +34,20 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   const [campo, setCampo] = useState<ModoDoCampo>(() => (CAMPOS.includes(settings?.campo as ModoDoCampo) ? settings!.campo as ModoDoCampo : 'maior'));
   // Padrão: só as notas da escala. Abrir para as doze é opt-in — decisão do Paulo em 07/11.
   const [cromatico, setCromatico] = useState(settings?.cromatico === true);
-  const [reduzido, setReduzido] = useState(settings?.intervaloSoante !== true);
+  const [reduzido, setReduzido] = useState(settings?.reduzirOitava !== false);
   const [soarMelodia, setSoarMelodia] = useState(settings?.soarMelodia !== false);
   const [iNota, setINota] = useState(0);
   const [iAcorde, setIAcorde] = useState(0);
 
-  // A tônica vem da tonalidade global quando há uma; com "livre", Dó — é preciso UMA para montar
-  // o campo, e inventar uma diferente a cada render deixaria a grade instável.
-  const tonica: Note = useMemo(() => note(0, 0, 4), []);
-  const tonicaPc = params.key?.tonic ?? 0;
-  const raiz: Note = useMemo(() => {
-    const doze = notasCromaticas(tonica, 'maior');
-    return { ...doze.find(d => (midi(d.nota) - midi(tonica) + 12) % 12 === tonicaPc)!.nota };
-  }, [tonica, tonicaPc]);
+  // A tonalidade vale pela RODA DAS QUINTAS, como no Harmonia: é o que garante Si♭ e não Lá♯.
+  // Começa na tonalidade global quando há uma, e daí em diante quem manda é o seletor da tela.
+  const [quintas, setQuintas] = useState(() => {
+    const doPerfil = params.key?.tonic;
+    if (doPerfil === undefined) return 0;
+    const achada = QUINTAS.find(f => pc(majorTonic(f)) === doPerfil);
+    return achada ?? 0;
+  });
+  const raiz: Note = useMemo(() => ({ ...majorTonic(quintas), oct: 4 }), [quintas]);
 
   const campoAtual = useMemo(() => harmonicField(raiz, campo), [raiz, campo]);
   const todasAsNotas = useMemo(() => notasCromaticas(raiz, campo), [raiz, campo]);
@@ -107,6 +110,16 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
       <p className="muted">{t('melodyHarmony.hint')}</p>
 
       <div className="field">
+        <span>{t('melodyHarmony.key')}</span>
+        <div className="row">
+          <select className="sel" value={quintas} onChange={e => { setQuintas(Number(e.target.value)); setINota(0); }}
+            aria-label={t('melodyHarmony.key')} id="rmh-tom">
+            {QUINTAS.map(f => <option key={f} value={f}>{noteName(majorTonic(f), naming)}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="field">
         <span>{t('melodyHarmony.field')}</span>
         <div className="row">
           {CAMPOS.map(c => (
@@ -154,12 +167,17 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
         </Btn>
         <Btn tone={modo === 'acorde' ? undefined : 'ghost'} onClick={() => alternar('acorde')}>{t('melodyHarmony.playChord')}</Btn>
         <Btn tone={modo === 'nota' ? undefined : 'ghost'} onClick={() => alternar('nota')}>{t('melodyHarmony.playNote')}</Btn>
+        {/* Volta por pedido do Paulo: apertar o modo ligado já silencia, mas isso não é óbvio, e
+            quem não descobrir fica sem saída. Estética própria de propósito — é escape, não modo. */}
+        <button type="button" className="rmh-silenciar" onClick={() => setModo('nada')} disabled={modo === 'nada'}>
+          {t('melodyHarmony.silence')}
+        </button>
       </div>
 
       <div className="row">
         <label className="switch"><input type="checkbox" checked={cromatico} onChange={e => { setCromatico(e.target.checked); setINota(0); }} />{t('melodyHarmony.chromatic')}</label>
         <label className="switch"><input type="checkbox" checked={soarMelodia} onChange={e => setSoarMelodia(e.target.checked)} />{t('melodyHarmony.soundMelody')}</label>
-        <label className="switch"><input type="checkbox" checked={!reduzido} onChange={e => setReduzido(!e.target.checked)} />{t('melodyHarmony.asSounds')}</label>
+        <label className="switch"><input type="checkbox" checked={reduzido} onChange={e => setReduzido(e.target.checked)} />{t('melodyHarmony.reduce')}</label>
       </div>
 
       {!soarMelodia && <p className="muted">{t('melodyHarmony.singIt')}</p>}

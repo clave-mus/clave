@@ -11,13 +11,28 @@ describe('catálogo por módulo', () => {
   it('segue a ordem dos módulos', () => {
     expect(all.map(e => e.module)).toEqual(MODULE_LIST.map(m => m.id));
   });
-  it('cada exercício e ferramenta aparece exatamente uma vez', () => {
+  // Era "exatamente uma vez". Mudou em 09/11, quando `tambemEm` passou a deixar um item aparecer
+  // em mais de uma área (ver taxonomy.ts) — mas só nas que ele DECLARA, nunca por acidente.
+  it('cada exercício e ferramenta aparece uma vez por área declarada, e em nenhuma outra', () => {
     const count = (ids: string[]) => ids.reduce<Record<string, number>>((a, id) => ({ ...a, [id]: (a[id] ?? 0) + 1 }), {});
     const exercises = count(all.flatMap(e => e.exercises));
     const tools = count(all.flatMap(e => e.tools));
     expect(Object.keys(exercises).sort()).toEqual(EXERCISES.map(e => e.id).sort());
     expect(Object.keys(tools).sort()).toEqual(AMBIENTES.map(t => t.id).sort());
-    [exercises, tools].forEach(c => Object.values(c).forEach(n => expect(n).toBe(1)));
+    for (const i of [...EXERCISES, ...AMBIENTES]) {
+      const esperado = 1 + (i.tambemEm?.length ?? 0);
+      expect(({ ...exercises, ...tools })[i.id], i.id).toBe(esperado);
+    }
+  });
+
+  it('quem aparece em duas áreas aparece nas que declarou', () => {
+    const comSegunda = [...EXERCISES, ...AMBIENTES].filter(i => i.tambemEm?.length);
+    for (const i of comSegunda) {
+      for (const m of [i.primaryModule, ...i.tambemEm!]) {
+        const area = all.find(a => a.module === m)!;
+        expect([...area.exercises, ...area.tools], `${i.id} em ${m}`).toContain(i.id);
+      }
+    }
   });
   it('o filtro "sem instrumento" tira exercícios e ferramentas que precisam dele', () => {
     const mobile = catalogByModule({ mobileOnly: true });
@@ -53,7 +68,7 @@ describe('catálogo por módulo', () => {
   describe('o portão desligado (hoje)', () => {
     it('o catálogo inteiro aparece, inclusive os rascunhos', () => {
       const ids = (e: ReturnType<typeof catalogByModule>) => e.flatMap(m => [...m.exercises, ...m.tools]);
-      const todos = [...EXERCISES, ...AMBIENTES].map(i => i.id);
+      const todos = [...EXERCISES, ...AMBIENTES].flatMap(i => Array(1 + (i.tambemEm?.length ?? 0)).fill(i.id));
       expect(ids(catalogByModule()).sort()).toEqual(todos.sort());
     });
   });
