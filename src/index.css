@@ -568,6 +568,8 @@ select.sel {
    sozinha, que é o que se espera ao ver sete caixas quebrarem em 4 + 3. */
 .rmh-grade { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .rmh-grade > .rmh-cel { flex: 0 0 92px; }
+/* As notas seguem a mesma regra dos acordes: centradas, e cada linha por si quando quebram. */
+.rmh-notas { justify-content: center; }
 .rmh-cel {
   display: grid; gap: 3px; justify-items: center; padding: 11px 6px; cursor: pointer;
   background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);
@@ -593,14 +595,17 @@ select.sel {
    que agarrar, e metade das opções ficava inalcançável. Em tela estreita sem toque a grade comum
    quebra em duas linhas e continua inteira, que é melhor que uma faixa que não se move. */
 @media (max-width: 760px) and (pointer: coarse) {
+  /* ⚠️ `justify-content: flex-start` desfaz o `center` da regra base, e não é detalhe: num
+     contêiner que rola, centralizar faz o conteúdo transbordar dos DOIS lados, e o começo fica
+     inalcançável — não há rolagem negativa. */
   .rmh-grade {
     display: flex; overflow-x: auto; scroll-snap-type: x proximity;
-    gap: 8px; padding-bottom: 6px;
+    justify-content: flex-start; gap: 8px; padding-bottom: 6px;
   }
   .rmh-cel { flex: 0 0 29%; scroll-snap-align: start; }
   .rmh-notas {
     display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity;
-    padding-bottom: 6px;
+    justify-content: flex-start; padding-bottom: 6px;
   }
   .rmh-notas .chip { flex: 0 0 auto; scroll-snap-align: start; }
 
