@@ -13,18 +13,12 @@ posição do padrão**.
 
 ---
 
-## 1. O nome 👤
-
-Não está fechado. Proponho o par:
+## 1. Os nomes — fechados pelo Paulo em 09/11/2026
 
 | | |
 |---|---|
-| exploração | **Padrões pela escala** |
-| exercício | **Reconhecer o padrão na escala** |
-
-O par espelha o que já existe (*Relações entre melodia e harmonia* ↔ *Reconhecer melodia na
-harmonia*), e o verbo "pela" é o que o exercício faz: o padrão anda pela escala. **Decisão do
-Paulo.**
+| exploração | **Explorar padrões pela escala** |
+| exercício | **Reconhecer padrões pela escala** |
 
 ---
 
@@ -36,15 +30,15 @@ modos que o Paulo pediu — exploração e exercício — são dois itens:
 
 | id | kind | o que é |
 |---|---|---|
-| `padroes-escala` | `tarefa` | a tela de exploração, com a escada e as posições |
-| `reconhecer-padrao-escala` | `serie` | o exercício de adivinhar, pelo `Player` |
+| `explorar-padroes-escala` | `tarefa` | a tela de exploração, com a escada e as posições |
+| `reconhecer-padroes-escala` | `serie` | o exercício de adivinhar, pelo `Player` |
 
 **E eles se ligam pela opção (c) que o Paulo escolheu** — o exercício nasce do padrão que está
 sendo explorado — usando um mecanismo que **já existe e não precisa ser inventado**:
 
 ```ts
 // na tela de exploração, botão "me teste neste padrão"
-navigate(`/catalogo/reconhecer-padrao-escala`, {
+navigate(`/catalogo/reconhecer-padroes-escala`, {
   state: { instancia: { escala, padrao: '0-2-1-4', contexto } },
 });
 ```
@@ -123,7 +117,7 @@ diferença aqui é que **repetir é permitido**.
 
 ---
 
-## 4. A tela de exploração (`padroes-escala`, kind `tarefa`)
+## 4. A tela de exploração (`explorar-padroes-escala`, kind `tarefa`)
 
 `src/tools/PadroesDeEscala.tsx`. **Espelha o Relações**, e reaproveita o que lá já funciona: o
 seletor de tonalidade pelo ciclo das quintas, o `drone` com `Carater`, o registro `vivos` +
@@ -170,11 +164,30 @@ embaixo (`1-3-2-5`).
 sequência, com o agendamento do `Clock`; `setTimeout` não serve.
 
 **3 · O contexto que sustenta.** O grid do Relações, reaproveitado: `silenciar` · `só a tônica` ·
-os sete acordes do campo. Em escala de sete notas o campo existe; **na pentatônica e na blues não
-existe campo**, e aí a faixa fica com `silenciar` · `tônica (nota)` · `tônica (tríade)` — a mesma
-saída que o `ouvido-celulas` já usa, e por boa razão: empilhar terças numa pentatônica dá salto de
-escala, não tríade. Como a pentatônica é o **padrão** do item, este caso é o que a pessoa vê
-primeiro. 👤 confirmar que está bom.
+os sete acordes do campo.
+
+**A pentatônica tem campo, sim** — decisão do Paulo em 09/11/2026, e ele está certo. Eu tinha dito
+que não dava, mas isso valia para a leitura errada: empilhar terças *dentro* da pentatônica dá
+Dó–Mi–Lá no grau I, que não é tríade. O campo da pentatônica é **o campo da escala de que ela é
+subconjunto**:
+
+```ts
+const PAI: Partial<Record<ScaleId, ScaleId>> = {
+  'penta-maior': 'maior',   // [0,2,4,7,9]   ⊂ [0,2,4,5,7,9,11]
+  'penta-menor': 'menor',   // [0,3,5,7,10]  ⊂ [0,2,3,5,7,8,10]
+  blues: 'menor',           // penta-menor + ♭5
+};
+/** A escala em que as terças do campo são empilhadas. Só três escalas têm pai. */
+export const escalaDoCampo = (id: ScaleId): ScaleId => PAI[id] ?? id;
+```
+
+As outras dez têm sete notas e empilham terças nelas mesmas, que é o que o `ouvido-celulas` já faz
+e está correto — inclusive nos modos, onde a terça empilhada dá o acorde modal certo.
+
+**Isto não é só uniformidade de código.** O campo de Dó maior tem **Fá e Si**, notas que a
+pentatônica não tem. Então o padrão é pentatônico e a harmonia embaixo é mais larga que ele, e o
+atrito vem exatamente daí — é o encontro que o Relações estuda, agora com um desenho em movimento
+em cima.
 
 O contexto é drone sustentado, caráter `acorde`; o padrão soa no caráter `destaque`, como no
 Relações.
@@ -189,9 +202,9 @@ menos 3 notas escrito.
 
 ---
 
-## 5. O exercício (`reconhecer-padrao-escala`, kind `serie`)
+## 5. O exercício (`reconhecer-padroes-escala`, kind `serie`)
 
-`src/catalog/items/reconhecer-padrao-escala.ts`.
+`src/catalog/items/reconhecer-padroes-escala.ts`.
 
 ### Configurações
 
@@ -259,6 +272,8 @@ embrulha e **centraliza cada linha** (flex-wrap, não grid — grid deixa a últ
 - **Motor novo de escala.** `theory/core.ts` já dá graus, semitons e grafia por tonalidade; o
   motor novo só compõe posições.
 - **Mexer no `ouvido-celulas`.** É vizinho temático, não é este item.
+- **Pôr o crédito ao ChicagoBassBuddy no `ouvido-celulas`.** Perguntei, e o Paulo decidiu que não
+  (09/11/2026). O crédito é deste exercício.
 
 ---
 
@@ -283,12 +298,15 @@ embrulha e **centraliza cada linha** (flex-wrap, não grid — grid deixa a últ
 
 ## 10. Decisões 👤 pendentes
 
-1. **Os nomes** dos dois itens (seção 1).
-2. **O texto de abertura** (seção 4).
-3. **O contexto na pentatônica**: `tônica (nota)` · `tônica (tríade)`, já que campo harmônico não
-   existe ali — e a pentatônica é o padrão do item.
-4. **Em que grupos os dois itens entram.** O Relações ficou na percepção melódica *e* na harmônica.
-   Este é melódico; proponho `perception.melodic` só.
-5. **O crédito ao ChicagoBassBuddy também no `ouvido-celulas`?** Perguntei antes e ficou sem
-   resposta: o vídeo é sobre células pentatônicas, e aquele item pode ter saído da mesma fonte. Se
-   saiu, o crédito deveria estar lá também.
+Sobraram duas, e nenhuma bloqueia o motor nem o exercício — dá para começar a codar.
+
+1. **O texto de abertura** da tela de exploração (seção 4). Proposta escrita lá.
+2. **Em que grupos os dois itens entram.** O Relações ficou na percepção melódica *e* na harmônica.
+   Este é melódico — o padrão é um desenho de melodia, e o campo embaixo é só contexto. Proponho
+   `perception.melodic` só, nos dois.
+
+### Já decidido (09/11/2026)
+
+- os nomes dos dois itens (seção 1);
+- a pentatônica tem campo harmônico, o da escala de que ela é subconjunto (seção 4, faixa 3);
+- o crédito ao ChicagoBassBuddy **não** vai também no `ouvido-celulas` (seção 8).
