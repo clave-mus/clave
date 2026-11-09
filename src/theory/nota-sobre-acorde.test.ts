@@ -3,7 +3,7 @@
 // Os dois primeiros testes são os **exemplos que ele deu**, literais — se algum deles quebrar, o
 // motor deixou de dizer o que ele pediu que dissesse.
 import { describe, expect, it } from 'vitest';
-import { analisar, vozear } from './nota-sobre-acorde';
+import { analisar, notasCromaticas, vozear } from './nota-sobre-acorde';
 import { buildScale, harmonicField, midi, mod, note, noteName, type ModoDoCampo } from './core';
 
 const C = note(0, 0, 4); // Dó4
@@ -31,6 +31,62 @@ describe('os exemplos do Paulo', () => {
     expect(r.atritos[0].semitons).toBe(1);
     // e o intervalo de Mi até Dó é uma sexta menor
     expect(r.intervalo).toEqual({ num: 6, semis: 8 });
+  });
+});
+
+describe('notas de fora da escala (pedido de 07/11)', () => {
+  const doze = notasCromaticas(C, 'maior');
+
+  it('são doze, em ordem de altura, começando na tônica', () => {
+    expect(doze).toHaveLength(12);
+    expect(doze.map(x => x.label)).toEqual(['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7']);
+  });
+
+  it('o exemplo do Paulo: ♭6 em Dó maior é Lá♭, nunca Sol♯', () => {
+    const b6 = doze.find(x => x.label === '♭6')!;
+    expect(noteName(b6.nota, 'pt')).toBe('Lá♭');
+  });
+
+  it('cada grau alterado mantém a letra do grau e só muda o acidente', () => {
+    expect(noteName(doze.find(x => x.label === '♭2')!.nota, 'pt')).toBe('Ré♭');
+    expect(noteName(doze.find(x => x.label === '♭3')!.nota, 'pt')).toBe('Mi♭');
+    expect(noteName(doze.find(x => x.label === '♭5')!.nota, 'pt')).toBe('Sol♭');
+    expect(noteName(doze.find(x => x.label === '♭7')!.nota, 'pt')).toBe('Si♭');
+  });
+
+  it('marca o que é do campo e o que é de fora — maior tem 7 dentro e 5 fora', () => {
+    expect(doze.filter(x => x.noCampo).map(x => x.label)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+  });
+
+  it('os graus se nomeiam contra a MAIOR, então em menor o Dó continua ♭3', () => {
+    const la = note(5, 0, 4);
+    const menor = notasCromaticas(la, 'menor');
+    const b3 = menor.find(x => x.label === '♭3')!;
+    expect(noteName(b3.nota, 'pt')).toBe('Dó');
+    expect(b3.noCampo, 'em Lá menor o Dó é do campo').toBe(true);
+    const terca = menor.find(x => x.label === '3')!;
+    expect(noteName(terca.nota, 'pt')).toBe('Dó♯');
+    expect(terca.noCampo, 'e o Dó♯ é de fora').toBe(false);
+  });
+
+  it('nos quatro campos: sempre 12 notas, 12 classes de altura distintas', () => {
+    for (const modo of ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as ModoDoCampo[]) {
+      const d = notasCromaticas(C, modo);
+      expect(d).toHaveLength(12);
+      expect(new Set(d.map(x => mod(midi(x.nota), 12))).size, modo).toBe(12);
+      expect(d.filter(x => x.noCampo).length, `${modo}: o campo tem 7 notas`).toBe(7);
+    }
+  });
+
+  it('toda nota de fora serve ao motor como qualquer outra', () => {
+    for (const d of campoDeDo) {
+      for (const g of doze.filter(x => !x.noCampo)) {
+        const v = vozear(d.root, d.chord, g.nota);
+        const r = analisar(v.acorde, v.melodia, d.chord);
+        expect(midi(v.melodia)).toBeGreaterThan(Math.max(...v.acorde.map(midi)));
+        expect(r.intervalo.num).toBeGreaterThan(0);
+      }
+    }
   });
 });
 

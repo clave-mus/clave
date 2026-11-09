@@ -10,7 +10,7 @@
 // onde há semitom, e mora na camada de texto, não aqui.
 //
 // A frase se monta em `src/i18n/`, como todo texto. Aqui não há string.
-import { buildChord, CHORDS, intervalBetween, midi, mod, type ChordId, type Note } from './core';
+import { buildChord, buildScale, CHORDS, intervalBetween, midi, mod, type ChordId, type ModoDoCampo, type Note } from './core';
 
 /**
  * Uma nota do acorde a um semitom da melodia — a origem matemática do atrito, e o único critério
@@ -36,6 +36,46 @@ export interface RelacaoNotaAcorde {
   intervalo: { num: number; semis: number };
   /** As notas do acorde a um semitom da melodia. Vazio quando não há nenhuma. */
   atritos: Atrito[];
+}
+
+/** Uma das doze notas que a melodia pode ser, já grafada e nomeada por grau. */
+export interface GrauCromatico {
+  /** Como se chama: `1`, `♭2`, `2`, `♭3`… */
+  label: string;
+  nota: Note;
+  /** A nota pertence ao campo escolhido, ou é de fora dele? */
+  noCampo: boolean;
+}
+
+/** Os cinco graus que não estão na escala maior, nomeados como ela os nomeia. */
+const ALTERADOS = [2, 3, 5, 6, 7];
+
+/**
+ * As doze notas que a melodia pode ser sobre um campo, **grafadas certo**.
+ *
+ * O Paulo pediu notas de fora da escala (07/11/2026), e o exemplo dele — *"uma 6♭ na escala
+ * maior"* — é justamente o caso em que a grafia erra fácil: em Dó, ♭6 é **Lá♭**, nunca Sol♯.
+ *
+ * **Os graus se nomeiam sempre contra a escala MAIOR da tônica**, qualquer que seja o campo
+ * escolhido. É como se fala — em Lá menor, o Dó continua sendo "♭3" e o Dó♯ é "3" —, e resolve a
+ * grafia sozinho: cada nota de fora é um grau da maior **rebaixado**, então a letra vem do grau e
+ * o acidente vem da alteração. Nada de tabela por classe de altura, que é onde Lá♭ vira Sol♯.
+ *
+ * ⚠️ O trítono sai como **♭5**, e não ♯4 — para os cinco alterados ficarem todos em bemol, que é
+ * como a fileira aparece nos métodos. Os dois nomes são defensáveis; este é escolha, não dedução.
+ */
+export function notasCromaticas(tonic: Note, modo: ModoDoCampo): GrauCromatico[] {
+  const maior = buildScale(tonic, 'maior');
+  const doCampo = new Set(buildScale(tonic, modo).map(n => mod(midi(n) - midi(tonic), 12)));
+
+  const todas: GrauCromatico[] = maior.map((nota, i) => ({ label: String(i + 1), nota, noCampo: false }));
+  for (const g of ALTERADOS) {
+    const base = maior[g - 1];
+    todas.push({ label: `♭${g}`, nota: { ...base, acc: base.acc - 1 }, noCampo: false });
+  }
+  return todas
+    .map(x => ({ ...x, noCampo: doCampo.has(mod(midi(x.nota) - midi(tonic), 12)) }))
+    .sort((a, b) => mod(midi(a.nota) - midi(tonic), 12) - mod(midi(b.nota) - midi(tonic), 12));
 }
 
 /**

@@ -16,7 +16,12 @@ Falta o que está abaixo.
 
 ---
 
-## 1. Estender o `drone` para dois timbres
+## 1. Estender o `drone` para dois timbres ✅ feito
+
+*(mantido aqui como registro; `Carater` em `audio/engine.ts`, parâmetro opcional no fim — os dois
+chamadores antigos não mudaram.)*
+
+### Como era
 
 **Problema:** `tone()` tem timbre mas duração fixa; `drone()` sustenta mas só tem um timbre (pad de
 serra). O Paulo quer **a melodia destacada no timbre** — e quer **segurar** para soar. Hoje dá para
@@ -155,9 +160,31 @@ Com cinco, é a célula de hoje com mais contexto.
   semitom. Há teste varrendo as 196 combinações atrás de adjetivo proibido.
 - Não publique nada: item novo nasce rascunho (decisão 91).
 
+## Respondido pelo Paulo em 07/11
+
+| | |
+|---|---|
+| Estender `ouvido-celulas` ou criar novo? | **Estender**, mantendo o id |
+| O nome do exercício de adivinhar | *"Reconheça/identifique a melodia na harmonia"* — fica **"Reconhecer a melodia na harmonia"** como rascunho, para ele fechar a redação |
+| Tétrade além de tríade? | **Sim**, as duas |
+| Notas de fora da escala | **Sim** — acréscimo dele: as doze, não as sete |
+
+## As doze notas, e por que a grafia precisou de regra própria ✅ feito
+
+Pedido de 07/11: *"incluir também notas de fora da escala, como uma 6♭ na escala maior"*.
+
+`notasCromaticas()` em `theory/nota-sobre-acorde.ts`. **Os graus se nomeiam sempre contra a escala
+maior da tônica**, qualquer que seja o campo — é como se fala (em Lá menor, Dó é "♭3" e Dó♯ é "3"),
+e resolve a grafia sozinho: a letra vem do grau, o acidente vem da alteração.
+
+⚠️ Conferi o `notaGrafada` de `contexto-musical.ts`, que a auditoria do `P6` achou morto: ele daria
+**Sol♯** para ♭6 em Dó maior, porque decide bemol/sustenido pela tonalidade e não pelo grau. Não
+serve aqui, e continua sem uso.
+
+👤 **O trítono sai como ♭5, não ♯4** — para os cinco alterados ficarem todos em bemol, como a
+fileira aparece nos métodos. Os dois nomes são defensáveis; é escolha, e dá para trocar.
+
 ## 👤 Em aberto
 
-1. **Estender `ouvido-celulas` ou criar item novo?** Recomendação acima.
-2. **O nome e a descrição** do exercício de adivinhar, se ele for o `ouvido-celulas` renomeado.
-3. Se o contexto pode ser **tétrade** além de tríade — a ideia dele dizia "começar só com as
-   tríades", o que sugere tétrade depois, mas não foi decidido.
+1. A redação final do nome do exercício de adivinhar.
+2. O trítono: ♭5 (atual) ou ♯4.

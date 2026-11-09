@@ -226,19 +226,39 @@ export function drum(kind: Drum, t: number, vel = 1) {
   src.start(t); src.stop(t + 0.3);
 }
 
-/** Drone contínuo (nota pedal) para estudar com contexto harmônico. Devolve a função que para. */
-export function drone(midis: number[], vel = 0.7): () => void {
+/**
+ * Os dois caracteres do drone.
+ *
+ * `fundo` é o de sempre — serra escura, feita para ficar embaixo sem incomodar. `destaque` nasceu
+ * em 07/11/2026 para "Relações entre melodia e harmonia", onde a melodia precisa ser **ouvida
+ * como melodia** por cima do acorde: onda triangular, filtro aberto e ataque mais rápido, para
+ * falar na frente em vez de somar à massa.
+ */
+export type Carater = 'fundo' | 'destaque';
+const CARATER: Record<Carater, { tipo: OscillatorType; corte: number; ataque: number; ganho: number }> = {
+  fundo: { tipo: 'sawtooth', corte: 900, ataque: 1.2, ganho: 0.16 },
+  destaque: { tipo: 'triangle', corte: 2600, ataque: 0.25, ganho: 0.22 },
+};
+
+/**
+ * Drone contínuo (nota pedal) para estudar com contexto harmônico. Devolve a função que para.
+ *
+ * ⚠️ `carater` entra **no fim e opcional** de propósito: os chamadores antigos (`Audiar`,
+ * `Ambiente`) não mudam uma linha nem um som.
+ */
+export function drone(midis: number[], vel = 0.7, carater: Carater = 'fundo'): () => void {
+  const { tipo, corte, ataque, ganho } = CARATER[carater];
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
-  f.type = 'lowpass'; f.frequency.value = 900;
+  f.type = 'lowpass'; f.frequency.value = corte;
   f.connect(out).connect(master);
   const t = c.currentTime;
   out.gain.setValueAtTime(0.0001, t);
-  out.gain.exponentialRampToValueAtTime(0.16 * vel, t + 1.2);
+  out.gain.exponentialRampToValueAtTime(ganho * vel, t + ataque);
   const oscs = midis.flatMap(m => [-6, 6].map(det => {
     const o = c.createOscillator();
-    o.type = 'sawtooth'; o.frequency.value = hz(m); o.detune.value = det;
+    o.type = tipo; o.frequency.value = hz(m); o.detune.value = det;
     o.connect(f); o.start(t);
     return o;
   }));
