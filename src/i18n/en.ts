@@ -308,6 +308,8 @@ const en: Shape<typeof pt> = {
     questions: { one: '{count} question', other: '{count} questions' },
     seeAll: 'Open the catalog',
     openCatalog: 'Open the catalog',
+    exploreCatalog: 'Explore our catalog',
+    exploreCatalogText: 'Exercises and tools by goal, by area or by instrument. Set them up your way and save them into a routine.',
     emptyTitle: 'Build your routine',
     emptyText: 'Open an exercise, set it up your way and use "Save to a routine". It stays here, one tap from starting.',
     noneFitText: 'The steps in this routine need your instrument. Switch the context above, or add something you can do without it.',

@@ -308,6 +308,8 @@ const pt = {
     questions: { one: '{count} pergunta', other: '{count} perguntas' },
     seeAll: 'Ver o catálogo',
     openCatalog: 'Abrir o catálogo',
+    exploreCatalog: 'Explore nosso catálogo',
+    exploreCatalogText: 'Exercícios e ferramentas por objetivo, por área ou por instrumento. Configure do seu jeito e salve numa rotina.',
     emptyTitle: 'Monte a sua rotina',
     emptyText: 'Abra um exercício, configure do seu jeito e use "Salvar numa rotina". Ela fica aqui, a um toque de começar.',
     noneFitText: 'As etapas desta rotina pedem o instrumento. Troque o contexto acima, ou acrescente algo que dê para fazer sem ele.',

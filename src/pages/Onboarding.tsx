@@ -58,12 +58,11 @@ export default function Onboarding() {
           <Tag>{t('onboarding.step', { i: step + 1, n: steps.length })}</Tag>
           <button type="button" onClick={finish} style={{ background: 'none', border: 0, color: 'var(--muted)', cursor: 'pointer' }}>{t('onboarding.skip')}</button>
         </div>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', alignItems: 'start', gap: 32 }}>
-          <div style={{ display: 'grid', gap: 20 }}>
-            <h1 style={{ fontSize: 'clamp(46px, 7vw, 88px)' }}>{s.title}</h1>
-            {s.body}
-          </div>
-          <Field seed={s.title} className="field-square" style={{ width: '100%', maxWidth: 320, justifySelf: 'center' }} />
+        {/* Havia um campo decorativo grande à direita, nos dois passos. Saiu a pedido do Paulo em
+            09/11: era enfeite sem função ao lado da primeira pergunta que o app faz. */}
+        <div style={{ display: 'grid', gap: 20, maxWidth: 560 }}>
+          <h1 style={{ fontSize: 'clamp(46px, 7vw, 88px)' }}>{s.title}</h1>
+          {s.body}
         </div>
         <div className="row">
           {step > 0 && <Btn tone="ghost" onClick={() => setStep(step - 1)}>{t('common.back')}</Btn>}

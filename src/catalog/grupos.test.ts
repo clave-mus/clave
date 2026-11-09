@@ -134,11 +134,16 @@ describe('companheirosDe', () => {
 });
 
 describe('o que está em rascunho nos grupos', () => {
-  // Não é defeito: é o portão da decisão 91 funcionando. Fica medido para ninguém se assustar.
-  it('"Ritmo com metrônomo" está quase vazio até o Paulo publicar os itens da tarefa com metrônomo', () => {
+  // Não é defeito: é o portão da decisão 91 funcionando. Fica medido para ninguém se assustar —
+  // e para um rascunho não entrar num grupo sem ninguém reparar.
+  it('o inventário de rascunhos dentro de grupos é exatamente este', () => {
     const rascunhos = TODAS.map(m => m.itemId).filter(id => estadoDe(ITEMS.find(i => i.id === id)?.publicacao) === 'rascunho');
     expect([...new Set(rascunhos)].sort()).toEqual([
-      'acento-deslocado', 'deslocamento-ritmico', 'subdivisao-alternada',
+      // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
+      'acento-deslocado', 'deslocamento-ritmico',
+      // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
+      'relacoes-melodia-harmonia',
+      'subdivisao-alternada',
     ]);
   });
 });

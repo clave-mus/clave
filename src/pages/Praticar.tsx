@@ -303,6 +303,17 @@ export default function Praticar() {
         </div>
       )}
 
+      {/* Pedido do Paulo em 09/11: uma porta para o catálogo que aparece SEMPRE. Antes só havia o
+          "Ver o catálogo" no título das rotinas (que some quando não há nenhuma) e o botão do
+          estado vazio — ou seja, quem já tinha rotina quase não via a saída para explorar. */}
+      <section className="sec">
+        <div className="panel" style={{ display: 'grid', gap: 10, justifyItems: 'start' }}>
+          <b>{t('home.exploreCatalog')}</b>
+          <p className="muted" style={{ margin: 0 }}>{t('home.exploreCatalogText')}</p>
+          <Btn to="/catalogo">{t('home.openCatalog')}</Btn>
+        </div>
+      </section>
+
       {descoberta && (
         <section className="sec">
           <SecTitle>{t('home.discoverTitle')}</SecTitle>
