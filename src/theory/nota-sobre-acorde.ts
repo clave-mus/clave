@@ -90,9 +90,14 @@ export function notasCromaticas(tonic: Note, modo: ModoDoCampo): GrauCromatico[]
  * acima da fundamental.
  */
 export function reduzir(iv: { num: number; semis: number }): { num: number; semis: number } {
-  const num = ((iv.num - 1) % 7) + 1;
-  const semis = mod(iv.semis, 12);
-  return num === 1 && semis === 0 && iv.num > 1 ? { num: 8, semis: 12 } : { num, semis };
+  // Tira oitavas inteiras das DUAS medidas ao mesmo tempo, e para na oitava — nunca abaixo dela.
+  //
+  // A primeira versão usava resto (`% 7` e `% 12`) e quebrava na **oitava diminuta**: Lá até Lá♭
+  // é 8ª com 11 semitons, e o resto a transformava em "uníssono de 11 semitons", que não existe —
+  // a tela mostrou `1?`. Oitava alterada continua sendo oitava: não há 7ª entre duas notas Lá.
+  let { num, semis } = iv;
+  while (num > 8) { num -= 7; semis -= 12; }
+  return { num, semis };
 }
 
 /**

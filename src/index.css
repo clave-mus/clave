@@ -560,6 +560,22 @@ select.sel {
 .more-toggle { justify-self: start; background: none; border: 0; padding: 8px 0; min-height: 44px; cursor: pointer; font-weight: 560; font-size: 14px; color: var(--accent); }
 .ritmo-adv .chip { min-height: 40px; }
 .ritmo-fig { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Relações entre melodia e harmonia: a mesma nota contra o campo inteiro ---------- */
+.rmh-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+.rmh-cel {
+  display: grid; gap: 3px; justify-items: center; padding: 11px 6px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);
+  color: var(--ink); font: inherit; transition: border-color .12s, background .12s;
+}
+.rmh-cel:hover { border-color: var(--rule-strong); background: var(--raised); }
+.rmh-cel.on { border-color: var(--accent); background: var(--accent-quiet); }
+.rmh-roman { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; color: var(--ink-faint); }
+.rmh-cifra { font-family: var(--display); font-weight: 620; font-size: 17px; }
+.rmh-rel { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+/* O atrito é marcado por COR e por "!" — cor sozinha não serve (daltonismo, e tela no sol). */
+.rmh-rel.atrito { color: var(--accent); font-weight: 600; }
+.rmh-frase { max-width: 62ch; font-size: 15px; }
 .ritmo-hint { max-width: 62ch; font-size: 14px; }
 @media (max-width: 760px) {
   .ritmo-quick { gap: 7px; }

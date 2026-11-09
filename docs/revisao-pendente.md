@@ -102,6 +102,12 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|
 | `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
 
+### Relações entre melodia e harmonia (`MH`, 07/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `relacoes-melodia-harmonia` | **Se a frase está musicalmente certa, combinação por combinação.** Ela é gerada, não escrita à mão: o motor apura o grau, o intervalo e o semitom, e a única palavra avaliativa é *"pode gerar tensão"*, só onde há atrito — foi o critério que você deu. Há teste varrendo as 196 combinações atrás de adjetivo que ninguém autorizou, mas **nenhum teste sabe se a frase é boa de ler**. Confira também: o trítono sai como **♭5** e não ♯4 (escolha, para os cinco alterados ficarem todos em bemol); o **timbre novo do drone** (`destaque`, triangular) soa mesmo como melodia por cima do acorde; e se o rótulo curto da grade (`6ªm`, `4ª+`) comunica ou se atrapalha |
+
 ### Faça o intervalo (`X9`+`B4`, revisão de 04/11/2026)
 
 | Id | O que só você confere |

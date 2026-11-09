@@ -4,8 +4,9 @@ import { descreverRelacao } from './relacao-texto';
 import { resolveParams } from './params';
 import type { Ctx } from './types';
 import { translate, type MessageKey, type Vars } from '../i18n';
-import { analisar, reduzir, vozear } from '../theory/nota-sobre-acorde';
+import { analisar, notasCromaticas, reduzir, vozear } from '../theory/nota-sobre-acorde';
 import { buildScale, harmonicField, note, type ModoDoCampo } from '../theory/core';
+import { intervalName, intervalShort } from '../theory/names';
 
 const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
@@ -58,6 +59,27 @@ describe('reduzir', () => {
 
   it('o que já cabe na oitava passa intacto', () => {
     expect(reduzir({ num: 6, semis: 8 })).toEqual({ num: 6, semis: 8 });
+  });
+
+  // Bug pego clicando na tela: Lá♭ sobre Lá menor dá oitava DIMINUTA (8ª, 11 semitons), e a versão
+  // por resto virava "uníssono de 11 semitons" — a célula mostrava `1?`. Não existe 7ª entre dois Lá.
+  it('a oitava diminuta continua oitava, e não vira uníssono nem sétima', () => {
+    expect(reduzir({ num: 8, semis: 11 })).toEqual({ num: 8, semis: 11 });
+  });
+
+  it('nenhuma redução produz qualidade desconhecida, em nenhuma combinação dos quatro campos', () => {
+    for (const modo of ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as ModoDoCampo[]) {
+      for (const d of harmonicField(C, modo)) {
+        for (const g of notasCromaticas(C, modo)) {
+          const v = vozear(d.root, d.chord, g.nota);
+          const r = analisar(v.acorde, v.melodia, d.chord);
+          for (const iv of [r.intervalo, reduzir(r.intervalo)]) {
+            expect(intervalShort(iv, 'pt'), `${modo} ${d.symbol} / ${g.label}`).not.toContain('?');
+            expect(intervalName(iv, 'pt')).not.toContain('undefined');
+          }
+        }
+      }
+    }
   });
 });
 

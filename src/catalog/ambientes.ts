@@ -103,6 +103,34 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Audiar'),
   },
   {
+    // MH (07/11/2026). **Tarefa**, não série: não há resposta a conferir — a pessoa explora como
+    // uma nota soa sobre cada acorde do campo, e com o som da melodia desligado ela CANTA, que o
+    // app também não ouve. Nos dois casos quem sabe como foi é ela (decisão 5).
+    //
+    // O motor é `theory/nota-sobre-acorde.ts` e a frase é `catalog/relacao-texto.ts`.
+    id: 'relacoes-melodia-harmonia', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['harmonia', 'melodia'], tarefas: ['ouvir'],
+    primaryModule: 'perception.harmonic',
+    skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
+    contentTags: ['harmony.diatonic_field', 'chord.triads', 'scale.major', 'scale.minor'],
+    settings: ctx => [
+      { id: 'campo', label: ctx.t('melodyHarmony.field'), type: 'single', options: [
+        { id: 'maior', label: ctx.t('melodyHarmony.field_maior') },
+        { id: 'menor', label: ctx.t('melodyHarmony.field_menor') },
+        { id: 'menor-harmonica', label: ctx.t('melodyHarmony.field_menor-harmonica') },
+        { id: 'menor-melodica', label: ctx.t('melodyHarmony.field_menor-melodica') },
+      ] },
+      // Padrão restrito à escala; abrir para as doze é escolha de quem usa (decisão do Paulo).
+      { id: 'cromatico', label: ctx.t('melodyHarmony.chromatic'), type: 'toggle' },
+      { id: 'soarMelodia', label: ctx.t('melodyHarmony.soundMelody'), type: 'toggle' },
+      { id: 'travar', label: ctx.t('melodyHarmony.hold'), type: 'toggle' },
+      { id: 'intervaloSoante', label: ctx.t('melodyHarmony.asSounds'), type: 'toggle' },
+    ],
+    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, travar: false, intervaloSoante: false },
+    screen: () => import('../tools/RelacoesMelodiaHarmonia'),
+  },
+  {
     id: 'ambiente', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['escalas'], tarefas: ['cantar', 'tocar'],

@@ -116,6 +116,9 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
     'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', audiar: 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    // MH: explora como uma nota soa sobre cada acorde — e com o som da melodia desligado, canta.
+    // Nos dois casos o app não ouve, então termina na autoavaliação.
+    'relacoes-melodia-harmonia': 'tarefa',
     // a "tarefa com metrônomo": três famílias, todas `tarefa` — terminam na autoavaliação
     'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'deslocamento-ritmico': 'tarefa',
   };
