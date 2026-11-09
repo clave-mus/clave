@@ -34,8 +34,8 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   const [campo, setCampo] = useState<ModoDoCampo>(() => (CAMPOS.includes(settings?.campo as ModoDoCampo) ? settings!.campo as ModoDoCampo : 'maior'));
   // Padrão: só as notas da escala. Abrir para as doze é opt-in — decisão do Paulo em 07/11.
   const [cromatico, setCromatico] = useState(settings?.cromatico === true);
-  const [reduzido, setReduzido] = useState(settings?.reduzirOitava !== false);
   const [soarMelodia, setSoarMelodia] = useState(settings?.soarMelodia !== false);
+  const [tetrade, setTetrade] = useState(settings?.tetrade === true);
   const [iNota, setINota] = useState(0);
   const [iAcorde, setIAcorde] = useState(0);
 
@@ -49,7 +49,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   });
   const raiz: Note = useMemo(() => ({ ...majorTonic(quintas), oct: 4 }), [quintas]);
 
-  const campoAtual = useMemo(() => harmonicField(raiz, campo), [raiz, campo]);
+  const campoAtual = useMemo(() => harmonicField(raiz, campo, tetrade), [raiz, campo, tetrade]);
   const todasAsNotas = useMemo(() => notasCromaticas(raiz, campo), [raiz, campo]);
   const notas = useMemo(() => (cromatico ? todasAsNotas : todasAsNotas.filter(n => n.noCampo)), [todasAsNotas, cromatico]);
 
@@ -103,7 +103,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   const alternar = (m: typeof modo) => setModo(atualModo => (atualModo === m ? 'nada' : m));
 
   useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', modo !== 'nada',
-    { settings: { campo, cromatico, soarMelodia } });
+    { settings: { campo, cromatico, soarMelodia, tetrade } });
 
   return (
     <div className="rmh" style={{ display: 'grid', gap: 18 }}>
@@ -145,7 +145,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
           const r = relacaoCom(i);
           const curto = r.grauDoAcorde !== null
             ? t(`melodyHarmony.short_${r.grauDoAcorde}` as MessageKey)
-            : intervalShort(reduzido ? reduzir(r.intervalo) : r.intervalo, conv);
+            : intervalShort(reduzir(r.intervalo), conv);
           return (
             <button key={g.roman} type="button" className={`rmh-cel ${i === iGrau ? 'on' : ''}`}
               onClick={() => setIAcorde(i)} aria-pressed={i === iGrau}>
@@ -159,7 +159,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
         })}
       </div>
 
-      <p className="rmh-frase">{descreverRelacao(atual, { melodia: melodiaFixa, simbolo: grau.symbol, ctx, reduzido })}</p>
+      <p className="rmh-frase">{descreverRelacao(atual, { melodia: melodiaFixa, simbolo: grau.symbol, ctx })}</p>
 
       <div className="row">
         <Btn tone={modo === 'ambos' ? undefined : 'ghost'} onClick={() => alternar(soarMelodia ? 'ambos' : 'acorde')}>
@@ -177,7 +177,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
       <div className="row">
         <label className="switch"><input type="checkbox" checked={cromatico} onChange={e => { setCromatico(e.target.checked); setINota(0); }} />{t('melodyHarmony.chromatic')}</label>
         <label className="switch"><input type="checkbox" checked={soarMelodia} onChange={e => setSoarMelodia(e.target.checked)} />{t('melodyHarmony.soundMelody')}</label>
-        <label className="switch"><input type="checkbox" checked={reduzido} onChange={e => setReduzido(e.target.checked)} />{t('melodyHarmony.reduce')}</label>
+        <label className="switch"><input type="checkbox" checked={tetrade} onChange={e => setTetrade(e.target.checked)} />{t('melodyHarmony.tetrad')}</label>
       </div>
 
       {!soarMelodia && <p className="muted">{t('melodyHarmony.singIt')}</p>}

@@ -116,7 +116,7 @@ export const AMBIENTES: CatalogItem[] = [
     // a que conta no histórico.
     primaryModule: 'perception.harmonic', tambemEm: ['perception.melodic'],
     skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
-    contentTags: ['harmony.diatonic_field', 'chord.triads', 'scale.major', 'scale.minor'],
+    contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor'],
     settings: ctx => [
       { id: 'campo', label: ctx.t('melodyHarmony.field'), type: 'single', options: [
         { id: 'maior', label: ctx.t('melodyHarmony.field_maior') },
@@ -127,9 +127,9 @@ export const AMBIENTES: CatalogItem[] = [
       // Padrão restrito à escala; abrir para as doze é escolha de quem usa (decisão do Paulo).
       { id: 'cromatico', label: ctx.t('melodyHarmony.chromatic'), type: 'toggle' },
       { id: 'soarMelodia', label: ctx.t('melodyHarmony.soundMelody'), type: 'toggle' },
-      { id: 'reduzirOitava', label: ctx.t('melodyHarmony.reduce'), type: 'toggle' },
+      { id: 'tetrade', label: ctx.t('melodyHarmony.tetrad'), type: 'toggle' },
     ],
-    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, reduzirOitava: true },
+    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, tetrade: false },
     screen: () => import('../tools/RelacoesMelodiaHarmonia'),
   },
   {

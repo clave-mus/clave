@@ -1,4 +1,4 @@
-import { ALL_SCALES, celulaDeGraus, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
+import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -14,8 +14,16 @@ export const ouvidoCelulas: CatalogItem = {
   // Era pentatônico-only sem razão (decisão 54): a célula é um desenho de graus, e graus existem
   // em qualquer escala. Agora aceita todas, inclusive as duas melódicas.
   settings: ctx => [{ id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
-    { id: 'tamanho', label: ctx.t('settings.cellSize'), type: 'single', options: [{ id: '3', label: '3' }, { id: '4', label: '4' }] }],
-  defaults: { escala: 'penta-maior', tamanho: '3' },
+    // 1 a 5 (09/11): com uma nota só é "que grau é este, sobre este acorde"; com cinco é a célula
+    // de sempre. O Paulo viu que são o mesmo exercício variando o tamanho, e tinha razão.
+    { id: 'tamanho', label: ctx.t('settings.cellSize'), type: 'single',
+      options: ['1', '2', '3', '4', '5'].map(n => ({ id: n, label: n })) },
+    // O acorde de contexto deixou de ser sempre a tônica. O padrão `['1']` reproduz exatamente o
+    // comportamento de antes — rotina salva continua soando igual, sem migração.
+    { id: 'graus', label: ctx.t('settings.contextChord'), type: 'multi', justify: true,
+      options: ['1', '2', '3', '4', '5', '6', '7'].map(n => ({ id: n, label: n })) },
+    { id: 'tetrade', label: ctx.t('settings.tetrad'), type: 'toggle' }],
+  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false },
   presentation: { gap: 0.55},
   make(s, ctx) {
     const id = (ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId;
@@ -71,12 +79,27 @@ export const ouvidoCelulas: CatalogItem = {
       }
     }
     const tonic = tonicaNaRegiao(ctx, { lo: 57, hi: 64 });
-    const terca = semis.find(x => x === 3 || x === 4) ?? 4;
-    const triad = [tonic, tonic + terca, tonic + 7];
+
+    // O acorde de contexto (09/11). Empilhar terças dentro da escala **só funciona com sete
+    // notas**: numa pentatônica as "terças" são saltos de escala, e o grau I sairia [0,4,9] em vez
+    // da tríade [0,4,7] que o item sempre tocou — mudaria o som do padrão do item, que é
+    // `penta-maior`. Então o campo vale onde existe, e onde não existe fica a tríade de referência
+    // de sempre, que é o que estabelece a tonalidade para o ouvido.
+    const temCampo = top === 7;
+    const possiveis = temCampo ? arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= top) : [];
+    const grauDoAcorde = possiveis.length ? pick(possiveis) : 1;
+    const acorde = temCampo
+      ? (s.tetrade ? [0, 2, 4, 6] : [0, 2, 4]).map(p => {
+        const i = grauDoAcorde - 1 + p;
+        return tonic + semis[i % top] + 12 * Math.floor(i / top);
+      })
+      : [tonic, tonic + (semis.find(x => x === 3 || x === 4) ?? 4), tonic + 7];
+
     return {
-      prompt: ctx.t('quiz.cells'), visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint') },
+      prompt: ctx.t('quiz.cells'),
+      visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
       surface: { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }, expected: { kind: 'option', id: key(c) },
-      sound: { groups: [triad, ...c.map(i => [tonic + semis[i]])] }, autoplay: true, reveal: key(c),
+      sound: { groups: [acorde, ...c.map(i => [tonic + semis[i]])] }, autoplay: true, reveal: key(c),
     };
   },
 };
