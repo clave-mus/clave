@@ -3,6 +3,15 @@ import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
 
+/**
+ * A faixa em que a nota soa **e** o teclado que a pessoa vê. Uma constante só, de propósito: eram
+ * dois números diferentes em dois lugares, e foi exatamente isso que deu errado.
+ *
+ * Dó2 a Si5: o dó central (60) fica no meio, com duas oitavas abaixo e uma acima — que é o que o
+ * Paulo pediu ao dizer "um dó central e teclas abaixo e acima dele".
+ */
+const FAIXA = { lo: 48, hi: 83 };
+
 export const ouvidoTecla: CatalogItem = {
   id: 'ouvido-tecla',
   objetos: ['notas'], tarefas: ['ouvir', 'tocar'],
@@ -17,10 +26,14 @@ export const ouvidoTecla: CatalogItem = {
   make(s, ctx): Question {
     const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
     const p = pick(permitidas);
-    const m = alturaDoPc(ctx, p, { lo: 48, hi: 83 });
+    const m = alturaDoPc(ctx, p, FAIXA);
     return {
       prompt: s.referencia ? ctx.t('quiz.earNoteRef', { note: noteName(note(0), ctx.naming) }) : ctx.t('quiz.earNote'), visual: { kind: 'ear' },
-      surface: { kind: 'keyboard', lo: 60, hi: 71 }, expected: { kind: 'pitchClass', pc: p },
+      // O teclado cobre **a mesma faixa que pode soar**. Era 60–71 enquanto o som sorteava em
+      // 48–83: soava um ré3, não havia tecla de ré3, e o Paulo tinha de clicar uma oitava acima.
+      // A resposta é por classe de altura, então clicar na oitava errada acertava — o errado era a
+      // tela mentir sobre o que tinha soado.
+      surface: { kind: 'keyboard', ...FAIXA }, expected: { kind: 'pitchClass', pc: p },
       sound: { groups: s.referencia ? [[60], [m]] : [[m]] }, autoplay: true,
       reveal: pcName(m, ctx.naming),
     };
