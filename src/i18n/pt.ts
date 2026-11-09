@@ -462,6 +462,7 @@ const pt = {
   },
   player: {
     hits: 'acertos',
+    parts: 'Ouvir em pedaços',
     inARow: 'seguidas',
     progressOf: '{done} de {total}',
     answer: 'Resposta:',
@@ -863,6 +864,8 @@ const pt = {
     hintDown: 'descendo',
     hintUp: 'subindo',
     earChord: 'Que tipo de acorde?',
+    partChord: 'Acorde',
+    partNote: 'Nota {n}',
     cells: 'Que graus você ouviu sobre o acorde?',
     cellsHint: 'primeiro o acorde do grau {degree}',
     rhythm: 'Qual destes ritmos tocou?',

@@ -551,6 +551,16 @@ select.sel {
 .rhythm-score .rs-line { scroll-margin: 90px 0 120px; }
 .rhythm-score .is-active path, .rhythm-score .is-active rect { fill: var(--accent); stroke: var(--accent); }
 .rs-error { padding: 20px 0; }
+
+/* Os pedaços do som, sob o botão grande de ouvir. Menores e discretos de propósito: repetir tudo
+   continua sendo o gesto principal, e isto é a lupa de quem quer destrinchar. */
+.listen-partes { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 10px; }
+.listen-parte {
+  background: none; border: 1px solid var(--rule); border-radius: var(--pill);
+  color: var(--ink-soft); font-size: 12.5px; padding: 5px 12px; min-height: 34px; cursor: pointer;
+  transition: border-color .12s, color .12s;
+}
+.listen-parte:hover { border-color: var(--rule-strong); color: var(--ink); }
 .ritmo-warn { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--accent-quiet); border-radius: var(--r-sm); padding: 10px 13px; font-size: 14.5px; }
 .ritmo-actions { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
 .ritmo-play { display: grid; gap: 10px; padding: 16px; }

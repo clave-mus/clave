@@ -462,6 +462,7 @@ const en: Shape<typeof pt> = {
   },
   player: {
     hits: 'correct',
+    parts: 'Hear it in parts',
     inARow: 'in a row',
     progressOf: '{done} of {total}',
     answer: 'Answer:',
@@ -861,6 +862,8 @@ const en: Shape<typeof pt> = {
     hintDown: 'descending',
     hintUp: 'ascending',
     earChord: 'What kind of chord?',
+    partChord: 'Chord',
+    partNote: 'Note {n}',
     cells: 'Which degrees did you hear over the chord?',
     cellsHint: 'the chord on degree {degree} first',
     rhythm: 'Which of these rhythms played?',

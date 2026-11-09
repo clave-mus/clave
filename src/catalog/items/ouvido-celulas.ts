@@ -99,7 +99,17 @@ export const ouvidoCelulas: CatalogItem = {
       prompt: ctx.t('quiz.cells'),
       visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
       surface: { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }, expected: { kind: 'option', id: key(c) },
-      sound: { groups: [acorde, ...c.map(i => [tonic + semis[i]])] }, autoplay: true, reveal: key(c),
+      sound: {
+        groups: [acorde, ...c.map(i => [tonic + semis[i]])],
+        // Ouvir o acorde sozinho e cada nota sozinha (pedido do Paulo). Aqui separar AJUDA: a
+        // pergunta é qual grau cada nota é, e isolá-la não entrega nada — o grau continua a
+        // depender de ouvi-la contra o acorde. Em `ouvido-intervalo` seria o oposto.
+        partes: [
+          { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [acorde] },
+          ...c.map((i, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[tonic + semis[i]]] })),
+        ],
+      },
+      autoplay: true, reveal: key(c),
     };
   },
 };

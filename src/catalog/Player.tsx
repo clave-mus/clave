@@ -17,7 +17,7 @@ import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
 import { optionResponse, validate } from './validate';
-import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
+import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { paramsRegistraveis } from './registro';
 import PracticePanel from '../components/PracticePanel';
@@ -136,6 +136,20 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     atTime(now() + dur, () => setPlaying(false));
   }, [presentationFor]);
 
+  /**
+   * Toca um pedaço declarado do som (o acorde de contexto, uma nota da melodia).
+   *
+   * **Não conta como escuta** e não mexe em `earReadyAt`: ouvir o acorde sozinho é estudar, não
+   * responder, e somá-lo ao tempo de resposta falsearia a medida.
+   */
+  const playParte = useCallback((question: Question, parte: ParteDoSom) => {
+    if (!getState().sound) return;
+    pararTudo();
+    const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
+    setPlaying(true);
+    atTime(now() + dur, () => setPlaying(false));
+  }, [presentationFor]);
+
   const next = useCallback(() => {
     if (problema) return;
     const nq = make();
@@ -239,7 +253,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} />
 
@@ -277,8 +291,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 }
 
 // ---------------- palco: o que é perguntado ----------------
-function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer }: {
-  q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void; naming: 'pt' | 'en';
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer }: {
+  q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
+  onPlayParte: (p: ParteDoSom) => void; naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
 }) {
   const t = useT();
@@ -297,7 +312,7 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} />}
+        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
           <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && onAnswer({ kind: 'pitch', midi: m }, String(m))} labels="do" />
         </div>
@@ -347,17 +362,29 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
       {v.kind === 'staff' && <Staff clef={v.clef} fifths={v.fifths} columns={v.columns.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={v.columns.length > 4 ? 44 : 64} />}
       {v.kind === 'keyboard' && <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />}
       {v.kind === 'fretboard' && <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />}
-      {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} />{v.hint && <div className="hint">{v.hint}</div>}</>}
+      {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
     </div>
   );
 }
 
-function Listen({ playing, heard, onPlay }: { playing: boolean; heard: boolean; onPlay: () => void }) {
+function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
+  playing: boolean; heard: boolean; onPlay: () => void;
+  partes?: ParteDoSom[]; onPlayParte?: (p: ParteDoSom) => void;
+}) {
   const t = useT();
   return (
     <>
       <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
       <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      {/* Os pedaços só aparecem onde o item os declarou — ver `SoundContent.partes`. Ficam abaixo
+          do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. */}
+      {partes && partes.length > 0 && onPlayParte && (
+        <div className="listen-partes" role="group" aria-label={t('player.parts')}>
+          {partes.map(p => (
+            <button key={p.id} type="button" className="listen-parte" onClick={() => onPlayParte(p)}>{p.label}</button>
+          ))}
+        </div>
+      )}
     </>
   );
 }
