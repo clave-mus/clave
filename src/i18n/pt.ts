@@ -705,7 +705,6 @@ const pt = {
     playNote: 'Só a nota',
     holdNote: 'Soar a nota',
     stopNote: 'Parar a nota',
-    silence: 'Silenciar',
     chromatic: 'Notas de fora da escala',
     soundMelody: 'Soar a melodia',
     hold: 'Travar a nota',

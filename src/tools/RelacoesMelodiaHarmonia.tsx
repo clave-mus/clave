@@ -10,7 +10,7 @@
 // O motor mora em `theory/nota-sobre-acorde.ts` e a frase em `catalog/relacao-texto.ts`; aqui é só
 // tela e som.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { drone } from '../audio/engine';
+import { drone, pararDrones } from '../audio/engine';
 import { useGlobalParams } from '../catalog/params';
 import { descreverRelacao } from '../catalog/relacao-texto';
 import { buildChord, harmonicField, midi, note, noteName, type ModoDoCampo, type Note } from '../theory/core';
@@ -91,6 +91,11 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
 
   useEffect(() => { onRunning?.(modo !== 'nada'); }, [modo, onRunning]);
 
+  // Rede de segurança: cala qualquer drone órfão ao entrar E ao sair. A limpeza dos efeitos acima
+  // já cobre o caminho normal; isto cobre o caminho que der errado, para nunca mais ficar um som
+  // tocando depois que a tela trocou.
+  useEffect(() => { pararDrones(); return pararDrones; }, []);
+
   /** Aperta o modo que já está ligado para silenciar. */
   const alternar = (m: typeof modo) => setModo(atualModo => (atualModo === m ? 'nada' : m));
 
@@ -149,7 +154,6 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
         </Btn>
         <Btn tone={modo === 'acorde' ? undefined : 'ghost'} onClick={() => alternar('acorde')}>{t('melodyHarmony.playChord')}</Btn>
         <Btn tone={modo === 'nota' ? undefined : 'ghost'} onClick={() => alternar('nota')}>{t('melodyHarmony.playNote')}</Btn>
-        {modo !== 'nada' && <Btn tone="mu" onClick={() => setModo('nada')}>{t('melodyHarmony.silence')}</Btn>}
       </div>
 
       <div className="row">

@@ -704,7 +704,6 @@ const en: Shape<typeof pt> = {
     playNote: 'Note only',
     holdNote: 'Sound the note',
     stopNote: 'Stop the note',
-    silence: 'Silence',
     chromatic: 'Notes outside the scale',
     soundMelody: 'Sound the melody',
     hold: 'Hold the note',

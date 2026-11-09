@@ -235,18 +235,46 @@ export function drum(kind: Drum, t: number, vel = 1) {
  * falar na frente em vez de somar à massa.
  */
 export type Carater = 'fundo' | 'acorde' | 'destaque';
-interface PerfilDeDrone { tipo: OscillatorType; corte: number; ataque: number; ganho: number; det: number }
+/**
+ * As alavancas de timbre de um drone, e o que cada uma muda no que se ouve:
+ *
+ * | | |
+ * |---|---|
+ * | `tipo` | o brilho bruto da onda: `sine` é oco, `triangle` é doce, `sawtooth` é cheio, `square` é nasal |
+ * | `corte` | quanto do agudo passa — abaixa para escurecer, levanta para o som cortar por cima |
+ * | `det` | desafinação entre as duas vozes, em cents. **É o que faz o som "mexer"** — e, passando de ~4, vira tremor audível |
+ * | `harm` | um parcial à oitava, bem baixinho. Dá brilho **sem** batimento, que é o outro jeito de mudar o timbre |
+ * | `ataque` | quanto tempo até o volume cheio |
+ */
+interface PerfilDeDrone { tipo: OscillatorType; corte: number; ataque: number; ganho: number; det: number; harm?: number }
 const CARATER: Record<Carater, PerfilDeDrone> = {
   // ⚠️ `fundo` é o drone de sempre (Ambiente, Audiar) e **não muda**: ataque longo e dois
   // osciladores desafinados são o que dá corpo a uma nota pedal que fica minutos no ar.
   fundo: { tipo: 'sawtooth', corte: 900, ataque: 1.2, ganho: 0.16, det: 6 },
   // `acorde` e `destaque` nasceram para "Relações entre melodia e harmonia", onde se aperta e se
   // quer ouvir AGORA — ataque longo ali é espera, não corpo (pedido do Paulo, 09/11).
-  acorde: { tipo: 'sawtooth', corte: 1100, ataque: 0.06, ganho: 0.17, det: 4 },
-  // `det: 0` de propósito: dois osciladores a 12 cents batem umas 3 vezes por segundo, e era
-  // isso que soava como tremor na melodia. Nota de melodia quer altura definida, não coro.
-  destaque: { tipo: 'triangle', corte: 2800, ataque: 0.04, ganho: 0.2, det: 0 },
+  acorde: { tipo: 'sawtooth', corte: 1100, ataque: 0.05, ganho: 0.17, det: 4 },
+  // A melodia andou nos dois extremos: ±6 cents tremia demais, 0 ficou parado demais. ±2,5 é
+  // movimento sem batimento perceptível — a ~3 Hz o ouvido ouve tremor, a ~1 Hz ouve vida.
+  // O `harm` entra junto: brilho por parcial, que destaca sem mexer na afinação.
+  destaque: { tipo: 'triangle', corte: 2800, ataque: 0.03, ganho: 0.2, det: 2.5, harm: 0.12 },
 };
+
+/**
+ * Todo drone vivo, para nenhum ficar tocando sozinho.
+ *
+ * Existe porque aconteceu: um drone ficou soando depois que a tela já tinha trocado. Com a
+ * limpeza só no efeito do React, qualquer caminho que não passe por ele (um erro no meio, um
+ * remonte estranho do modo de desenvolvimento) deixa som órfão — e não há como calá-lo sem
+ * recarregar a página.
+ */
+const vivos = new Set<() => void>();
+
+/** Cala todo drone vivo. A tela chama ao montar e ao sair, e assim nada atravessa a navegação. */
+export function pararDrones() {
+  for (const parar of [...vivos]) parar();
+  vivos.clear();
+}
 
 /**
  * Drone contínuo (nota pedal) para estudar com contexto harmônico. Devolve a função que para.
@@ -255,7 +283,7 @@ const CARATER: Record<Carater, PerfilDeDrone> = {
  * `Ambiente`) não mudam uma linha nem um som.
  */
 export function drone(midis: number[], vel = 0.7, carater: Carater = 'fundo'): () => void {
-  const { tipo, corte, ataque, ganho, det } = CARATER[carater];
+  const { tipo, corte, ataque, ganho, det, harm } = CARATER[carater];
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -271,13 +299,31 @@ export function drone(midis: number[], vel = 0.7, carater: Carater = 'fundo'): (
     o.connect(f); o.start(t);
     return o;
   }));
-  return () => {
+  // O parcial à oitava: brilho sem batimento. Vai por um ganho próprio, bem abaixo do principal.
+  if (harm) {
+    const g = c.createGain();
+    g.gain.value = harm;
+    g.connect(f);
+    for (const m of midis) {
+      const o = c.createOscillator();
+      o.type = 'sine'; o.frequency.value = hz(m + 12);
+      o.connect(g); o.start(t);
+      oscs.push(o);
+    }
+  }
+  let parado = false;
+  const parar = () => {
+    if (parado) return; // chamar duas vezes (efeito + `pararDrones`) não pode reagendar nada
+    parado = true;
+    vivos.delete(parar);
     const s = c.currentTime;
     out.gain.cancelScheduledValues(s);
     out.gain.setValueAtTime(out.gain.value, s);
     out.gain.exponentialRampToValueAtTime(0.0001, s + 0.6);
     oscs.forEach(o => o.stop(s + 0.7));
   };
+  vivos.add(parar);
+  return parar;
 }
 
 /**
