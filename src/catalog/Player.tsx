@@ -43,8 +43,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const soundOn = useStore(s => s.sound);
   const t = useT();
   const { moduleById } = useContent();
+  /**
+   * **O primeiro preset é a entrada do item** (pedido do Paulo, 09/11): quem abre sem nada salvo
+   * cai no atalho mais simples, settings e tonalidade.
+   *
+   * Não vale quando o item foi aberto por uma rotina ou por um link compartilhado — ali a
+   * configuração já veio decidida, e sobrepor a entrada apagaria a escolha de quem montou.
+   */
+  const entrada = initialSettings || initialParams ? undefined : def.presets?.[0];
   // O perfil por baixo, e por cima o que a pessoa escolheu NESTE exercício (decisão 87).
-  const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams);
+  const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams, entrada?.params);
   // Dentro de uma rotina em execução, "salvar numa rotina" é ruído: a pessoa já está numa.
   const emRotina = !!target;
   const saved = useStore(s => s.settings[def.id]);
@@ -54,8 +62,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // tocada. (A primeira versão do link compartilhado deixava `initialSettings` mandar em tudo, e o
   // painel de configurações virava decoração: gravava num lugar que ninguém lia.)
   const [local, setLocal] = useState<Record<string, SettingValue> | null>(initialSettings ?? null);
-  const settings = useMemo(() => ({ ...def.defaults, ...(local ?? saved ?? {}) }), [def, saved, local]);
+  const settings = useMemo(() => ({ ...def.defaults, ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, saved, local, entrada]);
   const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
+  /**
+   * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
+   * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
+   */
+  const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
+    guardarSettings({ ...def.defaults, ...p.settings });
+    if (p.params) mudar(p.params);
+  }, [def.defaults, guardarSettings, mudar]);
   const locale = useLocale();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
   /**
@@ -232,7 +248,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
           </div>
         </div>
-        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
           extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
           onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
@@ -283,7 +299,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
         </div>
       )}
 
-      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
           extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
         onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
@@ -377,12 +393,17 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
       <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
       <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
       {/* Os pedaços só aparecem onde o item os declarou — ver `SoundContent.partes`. Ficam abaixo
-          do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. */}
+          do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. O rótulo
+          em cima entrou com o pedido do Paulo de deixá-los mais visíveis: sem ele, botões soltos
+          embaixo do principal não dizem o que fazem. */}
       {partes && partes.length > 0 && onPlayParte && (
         <div className="listen-partes" role="group" aria-label={t('player.parts')}>
-          {partes.map(p => (
-            <button key={p.id} type="button" className="listen-parte" onClick={() => onPlayParte(p)}>{p.label}</button>
-          ))}
+          <span className="eyebrow">{t('player.parts')}</span>
+          <div className="partes-fila">
+            {partes.map(p => (
+              <button key={p.id} type="button" className="listen-parte" onClick={() => onPlayParte(p)}>{p.label}</button>
+            ))}
+          </div>
         </div>
       )}
     </>
@@ -441,7 +462,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; extra?: ReactNode; onReset: () => void }) {
+function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; extra?: ReactNode; onReset: () => void }) {
   const t = useT();
   return (
     <div className="settings">
@@ -452,7 +473,10 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
           <div className="row">
             {def.presets.map(p => {
               const igual = Object.entries(p.settings).every(([k, v]) => JSON.stringify(values[k]) === JSON.stringify(v));
-              return <Chip key={p.id} on={igual} onClick={() => onChange({ ...values, ...p.settings })}>{t(p.nome)}</Chip>;
+              // `igual` olha só os settings: um atalho que diferisse apenas na tonalidade não
+              // acenderia. Nenhum dos de hoje é assim, e acender pela tonalidade pediria comparar
+              // a camada resolvida, que o painel não tem.
+              return <Chip key={p.id} on={igual} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
             })}
           </div>
         </div>

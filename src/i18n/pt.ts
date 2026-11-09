@@ -219,6 +219,13 @@ const pt = {
     tetrades: 'Só tétrades',
     suspensos: 'Com suspensos',
     tudo: 'Todas as qualidades',
+    celulaUmaNota: 'Uma nota (escala maior)',
+    celulaTresNotas: 'Três notas (escala maior)',
+    celulaCincoNotas: 'Cinco notas (escala maior)',
+    celulaPentatonica: 'Cinco notas (pentatônica)',
+    celulaSobreOV: 'Três notas sobre o V',
+    celulaAcordeSorteado: 'Três notas, acorde sorteado',
+    celulaMenor: 'Uma nota (escala menor)',
   },
   grupos: {
     'o-teclado': 'O teclado',
@@ -258,7 +265,7 @@ const pt = {
     needTwo: 'Escolha pelo menos duas subdivisões para alternar.',
   },
   practice: {
-    sub: 'Valem só para este exercício. "Livre" é o padrão, e é uma escolha: quem não fixa tonalidade quer variedade.',
+    sub: 'Valem só para este exercício. "Livre" é uma escolha, não ausência de escolha: quem não fixa tonalidade quer variedade.',
     key: 'Tonalidade',
     keyFree: 'Livre',
     region: 'Região',

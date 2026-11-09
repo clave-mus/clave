@@ -219,6 +219,13 @@ const en: Shape<typeof pt> = {
     tetrades: 'Sevenths only',
     suspensos: 'With suspended',
     tudo: 'Every quality',
+    celulaUmaNota: 'One note (major scale)',
+    celulaTresNotas: 'Three notes (major scale)',
+    celulaCincoNotas: 'Five notes (major scale)',
+    celulaPentatonica: 'Five notes (pentatonic)',
+    celulaSobreOV: 'Three notes over the V',
+    celulaAcordeSorteado: 'Three notes, random chord',
+    celulaMenor: 'One note (minor scale)',
   },
   grupos: {
     'o-teclado': 'The keyboard',
@@ -258,7 +265,7 @@ const en: Shape<typeof pt> = {
     needTwo: 'Pick at least two subdivisions to alternate.',
   },
   practice: {
-    sub: 'These apply to this exercise only. "Free" is the default, and it is a choice: not fixing a key means you want variety.',
+    sub: 'These apply to this exercise only. "Free" is a choice, not the absence of one: not fixing a key means you want variety.',
     key: 'Key',
     keyFree: 'Free',
     region: 'Register',

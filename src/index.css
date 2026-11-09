@@ -554,13 +554,25 @@ select.sel {
 
 /* Os pedaços do som, sob o botão grande de ouvir. Menores e discretos de propósito: repetir tudo
    continua sendo o gesto principal, e isto é a lupa de quem quer destrinchar. */
-.listen-partes { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 10px; }
+/* Ouvir em pedaços. Nasceram como botões-fantasma (sem fundo, texto apagado, 12,5px) e o Paulo
+   pediu que ficassem mais visíveis — eram fáceis de não ver debaixo do botão grande. Agora têm
+   superfície, texto de leitura e um rótulo dizendo para que servem. Seguem menores e mais quietos
+   que o botão de ouvir tudo: repetir o trecho inteiro continua sendo o gesto principal. */
+.listen-partes { display: grid; justify-items: center; gap: 7px; margin-top: 14px; }
+.listen-partes > .eyebrow { color: var(--ink-faint); }
+.listen-partes .partes-fila { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .listen-parte {
-  background: none; border: 1px solid var(--rule); border-radius: var(--pill);
-  color: var(--ink-soft); font-size: 12.5px; padding: 5px 12px; min-height: 34px; cursor: pointer;
-  transition: border-color .12s, color .12s;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--raised); border: 1px solid var(--rule-strong); border-radius: var(--pill);
+  color: var(--ink); font-size: 14px; font-weight: 560; padding: 7px 15px; min-height: 40px;
+  cursor: pointer; transition: background .12s, border-color .12s, color .12s;
 }
-.listen-parte:hover { border-color: var(--rule-strong); color: var(--ink); }
+.listen-parte::before {
+  content: ''; width: 0; height: 0; flex: none;
+  border-left: 7px solid currentColor; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent;
+}
+.listen-parte:hover { background: var(--accent-quiet); border-color: var(--accent); color: var(--accent-strong); }
+.listen-parte:active { transform: translateY(1px); }
 .ritmo-warn { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--accent-quiet); border-radius: var(--r-sm); padding: 10px 13px; font-size: 14.5px; }
 .ritmo-actions { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
 .ritmo-play { display: grid; gap: 10px; padding: 16px; }

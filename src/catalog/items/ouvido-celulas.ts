@@ -4,6 +4,13 @@ import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
 
+/**
+ * Dó maior, pedido do Paulo como padrão deste exercício. Tonalidade é parâmetro de PRÁTICA, não
+ * configuração do item (decisão 87) — por isso vem no `params` do atalho, e não nos `settings`.
+ * Uma referência só, compartilhada: um objeto novo por preset quebraria o `useMemo` de `params`.
+ */
+const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
+
 export const ouvidoCelulas: CatalogItem = {
   id: 'ouvido-celulas',
   objetos: ['escalas', 'melodia'], tarefas: ['ouvir'],
@@ -32,6 +39,28 @@ export const ouvidoCelulas: CatalogItem = {
       { id: 'abaixo', label: ctx.t('settings.melodyBelow') },
     ] }],
   defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima' },
+  /**
+   * Os atalhos (09/11/2026). **O primeiro é a entrada do item** — quem abre sem nada salvo cai
+   * nele, e o Paulo pediu que fosse o mais simples de todos: uma nota, escala maior, dó maior.
+   *
+   * Os quatro primeiros são dele, com os nomes dele. Os três últimos são proposta minha, e o que
+   * cada um acrescenta de verdade:
+   *
+   * - **sobre o V** — ouvir graus contra a dominante é outra habilidade que ouvi-los contra a
+   *   tônica: é onde a função tonal aperta, e onde a terça da escala vira sétima do acorde;
+   * - **acorde sorteado** — o contexto muda a cada rodada, então a tônica precisa ser reencontrada
+   *   toda vez. É a versão difícil e a mais parecida com música de verdade;
+   * - **escala menor** — o campo menor é outro mundo, e uma nota é a porta de entrada dele.
+   */
+  presets: [
+    { id: 'uma-nota', nome: 'presets.celulaUmaNota', settings: { escala: 'maior', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'tres-notas', nome: 'presets.celulaTresNotas', settings: { escala: 'maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'cinco-notas', nome: 'presets.celulaCincoNotas', settings: { escala: 'maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'pentatonica', nome: 'presets.celulaPentatonica', settings: { escala: 'penta-maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'sobre-o-v', nome: 'presets.celulaSobreOV', settings: { escala: 'maior', tamanho: '3', graus: ['5'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'menor', nome: 'presets.celulaMenor', settings: { escala: 'menor', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+  ],
   presentation: { gap: 0.55},
   make(s, ctx) {
     const id = (ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId;

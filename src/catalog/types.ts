@@ -4,7 +4,7 @@ import type { ChordId, Clef, Convention, Naming, Note } from '../theory/core';
 import type { MessageKey, Translate } from '../i18n';
 import type { Presentation } from '../audio/presentation';
 import type { Classification } from './taxonomy';
-import type { GlobalParams, ParametroDePratica } from './params';
+import type { GlobalParams, ParametroDePratica, ParametrosDePratica } from './params';
 import type { Publicacao } from './publicacao';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
@@ -263,7 +263,15 @@ export interface CatalogItem extends Classification {
    *
    * O nome de cada preset é curadoria do dono do produto.
    */
-  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue> }[];
+  /**
+   * `params` leva a camada de PRÁTICA do atalho — tonalidade, região, material. Entrou em 09/11
+   * porque o Paulo quis que o atalho mais simples do `ouvido-celulas` começasse em dó maior, e
+   * tonalidade não é configuração do item: é parâmetro de prática (decisão 87).
+   *
+   * **O primeiro preset é a entrada do item**: quem abre sem nada salvo cai nele, settings e
+   * params. Ver `Player`.
+   */
+  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue>; params?: ParametrosDePratica }[];
   /**
    * Se as pessoas veem este item (decisão 91). **Omitir é o mesmo que `rascunho`**: um item novo nasce
    * escondido, e só o Paulo o publica.
