@@ -580,20 +580,34 @@ select.sel {
 /* No celular a grade de sete acordes e a fileira de até doze notas espremem ou quebram em duas
    linhas. Viram faixa que corre de lado, com encaixe (pedido do Paulo, 09/11).
    **Encaixa mas não centraliza uma só**: a graça da tela é comparar, então ficam três ou quatro
-   à vista de cada vez em vez de uma por vez. */
-@media (max-width: 760px) {
+   à vista de cada vez em vez de uma por vez.
+
+   ⚠️ **`pointer: coarse` junto com a largura, e não a largura sozinha.** Com a largura sozinha,
+   encolher a janela no computador virava armadilha: a faixa rolava, mas com mouse não havia como
+   rolá-la — a barra deste sistema é sobreposta e só aparece durante a rolagem, então não havia o
+   que agarrar, e metade das opções ficava inalcançável. Em tela estreita sem toque a grade comum
+   quebra em duas linhas e continua inteira, que é melhor que uma faixa que não se move. */
+@media (max-width: 760px) and (pointer: coarse) {
   .rmh-grade {
     display: flex; overflow-x: auto; scroll-snap-type: x proximity;
-    gap: 8px; padding-bottom: 6px; scrollbar-width: none;
+    gap: 8px; padding-bottom: 6px;
   }
-  .rmh-grade::-webkit-scrollbar { display: none; }
   .rmh-cel { flex: 0 0 29%; scroll-snap-align: start; }
   .rmh-notas {
     display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity;
-    scrollbar-width: none;
+    padding-bottom: 6px;
   }
-  .rmh-notas::-webkit-scrollbar { display: none; }
   .rmh-notas .chip { flex: 0 0 auto; scroll-snap-align: start; }
+
+  /* ⚠️ A barra fica VISÍVEL, e isso é o conserto de um bug real: escondê-la funciona no toque,
+     onde se arrasta com o dedo, e deixa a faixa inutilizável com mouse — numa janela estreita no
+     computador não havia como alcançar o que estava fora da tela. Fina e discreta, mas presente. */
+  .rmh-grade, .rmh-notas { scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent; }
+  .rmh-grade::-webkit-scrollbar, .rmh-notas::-webkit-scrollbar { height: 6px; }
+  .rmh-grade::-webkit-scrollbar-thumb, .rmh-notas::-webkit-scrollbar-thumb {
+    background: var(--rule-strong); border-radius: 3px;
+  }
+  .rmh-grade::-webkit-scrollbar-track, .rmh-notas::-webkit-scrollbar-track { background: transparent; }
 }
 /* A dica é conselho, não instrução: menor que o texto de apoio e marcada por um filete, para
    se ler como nota de margem em vez de competir com o enunciado. */
