@@ -562,7 +562,12 @@ select.sel {
 .ritmo-fig { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ---------- Relações entre melodia e harmonia: a mesma nota contra o campo inteiro ---------- */
-.rmh-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+/* Flex com quebra, e não grade, por causa da CENTRALIZAÇÃO (pedido do Paulo, 09/11). Grade com
+   `justify-content: center` centraliza o bloco inteiro, mas a última linha incompleta — três
+   células de sete — continua encostada à esquerda dentro dele. Com flex cada linha se centra
+   sozinha, que é o que se espera ao ver sete caixas quebrarem em 4 + 3. */
+.rmh-grade { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.rmh-grade > .rmh-cel { flex: 0 0 92px; }
 .rmh-cel {
   display: grid; gap: 3px; justify-items: center; padding: 11px 6px; cursor: pointer;
   background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);

@@ -71,6 +71,25 @@ export interface SoundContent {
   drums?: number[]; // ataques, em tempos (para ritmo)
   /** De que instrumento é o som, para usar o timbre escolhido para ele. Sem isso, piano. */
   instrument?: Instrument;
+  /**
+   * Pedaços que dá para **ouvir isolados**, além do botão que repete tudo (09/11/2026).
+   *
+   * Nasceu de "reconhecer melodia na harmonia": ouvir o acorde de contexto sozinho, e depois cada
+   * nota da melodia sozinha, é o que torna o exercício estudável em vez de um teste de memória.
+   *
+   * **É opt-in, e isso é de propósito.** Dava para deduzir os pedaços de `groups` — cada grupo um
+   * botão —, mas aí todo item de ouvido ganharia botões que ninguém pediu, e em vários deles
+   * (um intervalo melódico, por exemplo) ouvir as notas separadas **entrega a resposta**. Quem
+   * sabe se separar ajuda ou estraga é o item.
+   */
+  partes?: ParteDoSom[];
+}
+
+/** Um pedaço do som que a pessoa pode repetir sozinho. */
+export interface ParteDoSom {
+  id: string;
+  label: string;
+  groups: number[][];
 }
 
 export interface Question {
