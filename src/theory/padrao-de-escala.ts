@@ -76,7 +76,7 @@ export function acordeDoCampo(escala: ScaleId, grau: number, tetrade = false): n
  * travando a propriedade nas treze escalas.
  */
 export function posicoesDoPadrao(escala: ScaleId, padrao: Padrao): Posicao[] {
-  // `scaleDegreeLabels` fecha o desenho com a oitava ("1'"); aqui ela não serve, porque passar do
+  // `scaleDegreeLabels` fecha o desenho com a oitava (`8`); aqui ela não serve, porque passar do
   // topo é voltar à posição 0 uma oitava acima — a conta de `semis` cuida disso, e o grau é o mesmo.
   const graus = scaleDegreeLabels(escala).slice(0, -1);
   const semis = scaleDegs(escala).map(([, s]) => s);

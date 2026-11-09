@@ -223,10 +223,10 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   // qualquer escala.
   it('os graus mostrados são os da escala escolhida, com a alteração grafada', () => {
     const esperado: Record<string, string[]> = {
-      'penta-menor': ['1', '\u266d3', '4', '5', '\u266d7', "1'"],
-      maior: ['1', '2', '3', '4', '5', '6', '7', "1'"],
-      lidio: ['1', '2', '3', '\u266f4', '5', '6', '7', "1'"],
-      'menor-harmonica': ['1', '2', '\u266d3', '4', '5', '\u266d6', '7', "1'"],
+      'penta-menor': ['1', '\u266d3', '4', '5', '\u266d7', '8'],
+      maior: ['1', '2', '3', '4', '5', '6', '7', '8'],
+      lidio: ['1', '2', '3', '\u266f4', '5', '6', '7', '8'],
+      'menor-harmonica': ['1', '2', '\u266d3', '4', '5', '\u266d6', '7', '8'],
     };
     for (const [escala, permitidos] of Object.entries(esperado)) {
       for (let i = 0; i < 40; i++) {

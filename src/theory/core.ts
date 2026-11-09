@@ -181,9 +181,15 @@ export function degreeLabel(num: number, semis: number): string {
   return `${delta < 0 ? '♭'.repeat(-delta) : delta > 0 ? '♯'.repeat(delta) : ''}${num}`;
 }
 
-/** Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho. */
+/**
+ * Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho.
+ *
+ * A oitava se escreve `8`, e não `1'` como até 09/11/2026. O Paulo perguntou o que `1'` queria
+ * dizer, que é a prova de que não queria dizer nada: a linha é a mesma que já escreve 2, 3, 4 e
+ * ♭7, e naquela linha a oitava é 8.
+ */
 export function scaleDegreeLabels(id: ScaleId, dir: Direcao = 'sobe'): string[] {
-  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), "1'"];
+  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), '8'];
 }
 
 /**
