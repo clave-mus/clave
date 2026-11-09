@@ -103,11 +103,28 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', soando,
     { settings: { campo, cromatico, soarMelodia } });
 
-  /** Botão que soa enquanto pressionado. */
-  const segurar = (liga: () => void, desliga: () => void) => ({
-    onPointerDown: (e: React.PointerEvent) => { e.preventDefault(); liga(); },
-    onPointerUp: desliga, onPointerLeave: desliga, onPointerCancel: desliga,
-  });
+  /**
+   * Botão que soa **enquanto pressionado**.
+   *
+   * ⚠️ Não usa o `Btn` de `components/ui`, e isso não é preguiça: o `Btn` desestrutura só os props
+   * que conhece (`onClick`, `tone`, `small`…) e **descarta o resto em silêncio**. Passar
+   * `onPointerDown` para ele não dá erro de tipo — spread em JSX não reclama de propriedade
+   * sobrando — e o manipulador simplesmente nunca chega ao DOM. Foi exatamente o que aconteceu:
+   * os botões existiam, respondiam ao clique e não tocavam nada.
+   */
+  const Segurar = ({ liga, desliga, tone, children }: { liga: () => void; desliga: () => void; tone?: string; children: React.ReactNode }) => (
+    <button
+      type="button" className={`btn ${tone ?? ''}`}
+      onPointerDown={e => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); liga(); }}
+      onPointerUp={desliga} onPointerCancel={desliga}
+      // o teclado não tem "segurar": espaço e enter ligam, e o `blur` desliga
+      onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); liga(); } }}
+      onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') desliga(); }}
+      onBlur={desliga}
+    >
+      <span>{children}</span>
+    </button>
+  );
   const soltarAcorde = () => { pararAcorde.current?.(); pararAcorde.current = null; if (!pararNota.current) setSoando(false); };
   const soltarNota = () => { pararNota.current?.(); pararNota.current = null; if (!pararAcorde.current) setSoando(false); };
 
@@ -158,16 +175,16 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
       <p className="rmh-frase">{descreverRelacao(atual.r, { melodia: atual.v.melodia, simbolo: grau.symbol, ctx, reduzido })}</p>
 
       <div className="row">
-        <Btn {...segurar(() => { tocarAcorde(); if (soarMelodia) tocarNota(); }, () => { soltarAcorde(); soltarNota(); })}>
+        <Segurar liga={() => { tocarAcorde(); if (soarMelodia) tocarNota(); }} desliga={() => { soltarAcorde(); soltarNota(); }}>
           {t('melodyHarmony.playBoth')}
-        </Btn>
-        <Btn tone="ghost" {...segurar(tocarAcorde, soltarAcorde)}>{t('melodyHarmony.playChord')}</Btn>
+        </Segurar>
+        <Segurar tone="ghost" liga={tocarAcorde} desliga={soltarAcorde}>{t('melodyHarmony.playChord')}</Segurar>
         {travar ? (
           <Btn tone="ghost" onClick={() => (pararNota.current ? soltarNota() : tocarNota())}>
             {pararNota.current ? t('melodyHarmony.stopNote') : t('melodyHarmony.holdNote')}
           </Btn>
         ) : (
-          <Btn tone="ghost" {...segurar(tocarNota, soltarNota)}>{t('melodyHarmony.playNote')}</Btn>
+          <Segurar tone="ghost" liga={tocarNota} desliga={soltarNota}>{t('melodyHarmony.playNote')}</Segurar>
         )}
         {soando && <Btn tone="mu" onClick={silenciar}>{t('melodyHarmony.silence')}</Btn>}
       </div>
