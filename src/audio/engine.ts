@@ -234,10 +234,18 @@ export function drum(kind: Drum, t: number, vel = 1) {
  * como melodia** por cima do acorde: onda triangular, filtro aberto e ataque mais rápido, para
  * falar na frente em vez de somar à massa.
  */
-export type Carater = 'fundo' | 'destaque';
-const CARATER: Record<Carater, { tipo: OscillatorType; corte: number; ataque: number; ganho: number }> = {
-  fundo: { tipo: 'sawtooth', corte: 900, ataque: 1.2, ganho: 0.16 },
-  destaque: { tipo: 'triangle', corte: 2600, ataque: 0.25, ganho: 0.22 },
+export type Carater = 'fundo' | 'acorde' | 'destaque';
+interface PerfilDeDrone { tipo: OscillatorType; corte: number; ataque: number; ganho: number; det: number }
+const CARATER: Record<Carater, PerfilDeDrone> = {
+  // ⚠️ `fundo` é o drone de sempre (Ambiente, Audiar) e **não muda**: ataque longo e dois
+  // osciladores desafinados são o que dá corpo a uma nota pedal que fica minutos no ar.
+  fundo: { tipo: 'sawtooth', corte: 900, ataque: 1.2, ganho: 0.16, det: 6 },
+  // `acorde` e `destaque` nasceram para "Relações entre melodia e harmonia", onde se aperta e se
+  // quer ouvir AGORA — ataque longo ali é espera, não corpo (pedido do Paulo, 09/11).
+  acorde: { tipo: 'sawtooth', corte: 1100, ataque: 0.06, ganho: 0.17, det: 4 },
+  // `det: 0` de propósito: dois osciladores a 12 cents batem umas 3 vezes por segundo, e era
+  // isso que soava como tremor na melodia. Nota de melodia quer altura definida, não coro.
+  destaque: { tipo: 'triangle', corte: 2800, ataque: 0.04, ganho: 0.2, det: 0 },
 };
 
 /**
@@ -247,7 +255,7 @@ const CARATER: Record<Carater, { tipo: OscillatorType; corte: number; ataque: nu
  * `Ambiente`) não mudam uma linha nem um som.
  */
 export function drone(midis: number[], vel = 0.7, carater: Carater = 'fundo'): () => void {
-  const { tipo, corte, ataque, ganho } = CARATER[carater];
+  const { tipo, corte, ataque, ganho, det } = CARATER[carater];
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -256,9 +264,10 @@ export function drone(midis: number[], vel = 0.7, carater: Carater = 'fundo'): (
   const t = c.currentTime;
   out.gain.setValueAtTime(0.0001, t);
   out.gain.exponentialRampToValueAtTime(ganho * vel, t + ataque);
-  const oscs = midis.flatMap(m => [-6, 6].map(det => {
+  const vozes = det === 0 ? [0] : [-det, det];
+  const oscs = midis.flatMap(m => vozes.map(cents => {
     const o = c.createOscillator();
-    o.type = tipo; o.frequency.value = hz(m); o.detune.value = det;
+    o.type = tipo; o.frequency.value = hz(m); o.detune.value = cents;
     o.connect(f); o.start(t);
     return o;
   }));

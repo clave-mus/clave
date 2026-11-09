@@ -3,8 +3,8 @@
 // Os dois primeiros testes são os **exemplos que ele deu**, literais — se algum deles quebrar, o
 // motor deixou de dizer o que ele pediu que dissesse.
 import { describe, expect, it } from 'vitest';
-import { analisar, notasCromaticas, vozear } from './nota-sobre-acorde';
-import { buildScale, harmonicField, midi, mod, note, noteName, type ModoDoCampo } from './core';
+import { analisar, melodiaAcimaDe, notasCromaticas, vozear } from './nota-sobre-acorde';
+import { buildChord, buildScale, harmonicField, midi, mod, note, noteName, type ModoDoCampo } from './core';
 
 const C = note(0, 0, 4); // Dó4
 const campoDeDo = harmonicField(C, 'maior');
@@ -113,6 +113,37 @@ describe('vozear', () => {
     for (const d of campoDeDo) {
       const v = vozear(d.root, d.chord, C);
       expect(midi(v.acorde[0])).toBe(Math.min(...v.acorde.map(midi)));
+    }
+  });
+});
+
+describe('melodiaAcimaDe: a nota fica PARADA quando o acorde troca', () => {
+  const acordes = campoDeDo.map(d => buildChord(d.root, d.chord));
+
+  it('uma única oitava serve para todos os sete acordes do campo', () => {
+    for (const mel of buildScale(C, 'maior')) {
+      const m = melodiaAcimaDe(acordes, mel, C);
+      for (const ac of acordes) {
+        expect(midi(m), `${noteName(mel, 'pt')}`).toBeGreaterThan(Math.max(...ac.map(midi)));
+      }
+    }
+  });
+
+  it('e é a MESMA nota para qualquer acorde — era o que pulava com `vozear`', () => {
+    const mel = note(0, 0, 4);
+    const fixa = melodiaAcimaDe(acordes, mel, C);
+    const porAcorde = campoDeDo.map(d => midi(vozear(d.root, d.chord, mel).melodia));
+    expect(new Set(porAcorde).size, 'vozear dá oitavas diferentes conforme o acorde').toBeGreaterThan(1);
+    expect(new Set(campoDeDo.map(() => midi(fixa))).size, 'a fixa não muda').toBe(1);
+  });
+
+  it('vale nos quatro campos e nas doze notas', () => {
+    for (const modo of ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as ModoDoCampo[]) {
+      const acs = harmonicField(C, modo).map(d => buildChord(d.root, d.chord));
+      for (const g of notasCromaticas(C, modo)) {
+        const m = melodiaAcimaDe(acs, g.nota, C);
+        for (const ac of acs) expect(midi(m), `${modo} ${g.label}`).toBeGreaterThan(Math.max(...ac.map(midi)));
+      }
     }
   });
 });

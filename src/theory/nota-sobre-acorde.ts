@@ -116,6 +116,21 @@ export function vozear(root: Note, chord: ChordId, melodia: Note): { acorde: Not
 }
 
 /**
+ * A melodia numa oitava que fica acima de **todos** os acordes dados.
+ *
+ * `vozear` põe a nota acima de UM acorde, e com isso ela sobe e desce de oitava conforme o acorde
+ * muda. Numa tela em que *"a nota fica parada e o acorde troca por baixo"* (o desenho do Paulo),
+ * isso se ouve como a melodia pulando — o contrário do exercício. Aqui a oitava é escolhida uma
+ * vez, contra o campo inteiro, e a nota não se mexe mais.
+ */
+export function melodiaAcimaDe(acordes: readonly (readonly Note[])[], melodia: Note, base: Note): Note {
+  const topo = Math.max(...acordes.flat().map(midi));
+  let m: Note = { ...melodia, oct: base.oct };
+  while (midi(m) <= topo) m = { ...m, oct: m.oct + 1 };
+  return m;
+}
+
+/**
  * Os fatos da relação entre a melodia e o acorde, já vozeados.
  *
  * Pertencer ao acorde é conferido por **classe de altura**, não por grafia: é um exercício de

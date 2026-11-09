@@ -9,13 +9,13 @@
 //
 // O motor mora em `theory/nota-sobre-acorde.ts` e a frase em `catalog/relacao-texto.ts`; aqui é só
 // tela e som.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { drone } from '../audio/engine';
 import { useGlobalParams } from '../catalog/params';
 import { descreverRelacao } from '../catalog/relacao-texto';
-import { harmonicField, midi, note, noteName, type ModoDoCampo, type Note } from '../theory/core';
+import { buildChord, harmonicField, midi, note, noteName, type ModoDoCampo, type Note } from '../theory/core';
 import { intervalShort } from '../theory/names';
-import { analisar, notasCromaticas, reduzir, vozear } from '../theory/nota-sobre-acorde';
+import { analisar, melodiaAcimaDe, notasCromaticas, reduzir } from '../theory/nota-sobre-acorde';
 import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
 import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
@@ -34,7 +34,6 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   const [cromatico, setCromatico] = useState(settings?.cromatico === true);
   const [reduzido, setReduzido] = useState(settings?.intervaloSoante !== true);
   const [soarMelodia, setSoarMelodia] = useState(settings?.soarMelodia !== false);
-  const [travar, setTravar] = useState(settings?.travar === true);
   const [iNota, setINota] = useState(0);
   const [iAcorde, setIAcorde] = useState(0);
 
@@ -56,77 +55,47 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
 
   const ctx: Ctx = useMemo(() => ({ naming, conv, t, params }), [naming, conv, t, params]);
 
-  /** A relação da nota escolhida sobre um grau qualquer — alimenta a grade e a frase. */
-  const relacaoCom = useCallback((g: typeof grau) => {
-    const v = vozear(g.root, g.chord, melodia.nota);
-    return { v, r: analisar(v.acorde, v.melodia, g.chord) };
-  }, [melodia]);
+  // Os acordes do campo e a melodia numa oitava SÓ, acima de todos eles. É o que faz a nota ficar
+  // mesmo parada quando o acorde troca: posicioná-la acima de cada acorde a fazia pular de oitava.
+  const acordes = useMemo(() => campoAtual.map(g => buildChord(g.root, g.chord)), [campoAtual]);
+  const melodiaFixa = useMemo(() => melodiaAcimaDe(acordes, melodia.nota, raiz), [acordes, melodia, raiz]);
 
-  const atual = useMemo(() => relacaoCom(grau), [relacaoCom, grau]);
+  /** A relação da nota escolhida sobre um grau qualquer — alimenta a grade e a frase. */
+  const relacaoCom = useCallback((i: number) =>
+    analisar(acordes[i], melodiaFixa, campoAtual[i].chord), [acordes, melodiaFixa, campoAtual]);
+
+  const iGrau = Math.min(iAcorde, campoAtual.length - 1);
+  const atual = useMemo(() => relacaoCom(iGrau), [relacaoCom, iGrau]);
 
   // ---------------------------------------------------------------- som
-  const pararAcorde = useRef<(() => void) | null>(null);
-  const pararNota = useRef<(() => void) | null>(null);
-  const [soando, setSoando] = useState(false);
+  //
+  // **Modos que sustentam, e não botões de segurar** (09/11). Segurar tinha um defeito que só
+  // aparece usando: o ponteiro fica preso no botão, e aí **não dá para clicar na grade enquanto a
+  // nota soa** — justamente o gesto que a tela existe para permitir. Com modo, aperta-se uma vez,
+  // o som fica, e as duas mãos ficam livres para passear pelos acordes.
+  const [modo, setModo] = useState<'nada' | 'ambos' | 'acorde' | 'nota'>('nada');
 
-  const silenciar = useCallback(() => {
-    pararAcorde.current?.(); pararAcorde.current = null;
-    pararNota.current?.(); pararNota.current = null;
-    setSoando(false);
-  }, []);
-  useEffect(() => silenciar, [silenciar]);
-  useEffect(() => { onRunning?.(soando); }, [soando, onRunning]);
+  // Dois efeitos separados, de propósito: assim trocar de ACORDE não reinicia a melodia. Num só,
+  // qualquer mudança derrubaria os dois sons, e a nota "parada" daria um salto a cada clique.
+  useEffect(() => {
+    if (modo === 'nada' || modo === 'nota') return;
+    const parar = drone(acordes[iGrau].map(midi), 0.7, 'acorde');
+    return parar;
+  }, [modo, acordes, iGrau]);
 
-  const tocarAcorde = useCallback(() => {
-    pararAcorde.current?.();
-    pararAcorde.current = drone(atual.v.acorde.map(midi), 0.7, 'fundo');
-    setSoando(true);
-  }, [atual]);
+  useEffect(() => {
+    if (modo === 'nada' || modo === 'acorde') return;
+    const parar = drone([midi(melodiaFixa)], 0.75, 'destaque');
+    return parar;
+  }, [modo, melodiaFixa]);
 
-  const tocarNota = useCallback(() => {
-    pararNota.current?.();
-    pararNota.current = drone([midi(atual.v.melodia)], 0.75, 'destaque');
-    setSoando(true);
-  }, [atual]);
+  useEffect(() => { onRunning?.(modo !== 'nada'); }, [modo, onRunning]);
 
-  /** Trocar de acorde com a nota travada: o acorde é refeito embaixo, a nota não para. */
-  const escolherAcorde = (i: number) => {
-    setIAcorde(i);
-    if (pararAcorde.current) {
-      const g = campoAtual[i];
-      const v = vozear(g.root, g.chord, melodia.nota);
-      pararAcorde.current();
-      pararAcorde.current = drone(v.acorde.map(midi), 0.7, 'fundo');
-    }
-  };
+  /** Aperta o modo que já está ligado para silenciar. */
+  const alternar = (m: typeof modo) => setModo(atualModo => (atualModo === m ? 'nada' : m));
 
-  useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', soando,
+  useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', modo !== 'nada',
     { settings: { campo, cromatico, soarMelodia } });
-
-  /**
-   * Botão que soa **enquanto pressionado**.
-   *
-   * ⚠️ Não usa o `Btn` de `components/ui`, e isso não é preguiça: o `Btn` desestrutura só os props
-   * que conhece (`onClick`, `tone`, `small`…) e **descarta o resto em silêncio**. Passar
-   * `onPointerDown` para ele não dá erro de tipo — spread em JSX não reclama de propriedade
-   * sobrando — e o manipulador simplesmente nunca chega ao DOM. Foi exatamente o que aconteceu:
-   * os botões existiam, respondiam ao clique e não tocavam nada.
-   */
-  const Segurar = ({ liga, desliga, tone, children }: { liga: () => void; desliga: () => void; tone?: string; children: React.ReactNode }) => (
-    <button
-      type="button" className={`btn ${tone ?? ''}`}
-      onPointerDown={e => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); liga(); }}
-      onPointerUp={desliga} onPointerCancel={desliga}
-      // o teclado não tem "segurar": espaço e enter ligam, e o `blur` desliga
-      onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); liga(); } }}
-      onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') desliga(); }}
-      onBlur={desliga}
-    >
-      <span>{children}</span>
-    </button>
-  );
-  const soltarAcorde = () => { pararAcorde.current?.(); pararAcorde.current = null; if (!pararNota.current) setSoando(false); };
-  const soltarNota = () => { pararNota.current?.(); pararNota.current = null; if (!pararAcorde.current) setSoando(false); };
 
   return (
     <div className="rmh" style={{ display: 'grid', gap: 18 }}>
@@ -155,13 +124,13 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
       {/* A grade: a mesma nota contra os sete graus, de relance. É o ponto da tela. */}
       <div className="rmh-grade" role="group" aria-label={t('melodyHarmony.field')}>
         {campoAtual.map((g, i) => {
-          const { r } = relacaoCom(g);
+          const r = relacaoCom(i);
           const curto = r.grauDoAcorde !== null
             ? t(`melodyHarmony.short_${r.grauDoAcorde}` as MessageKey)
             : intervalShort(reduzido ? reduzir(r.intervalo) : r.intervalo, conv);
           return (
-            <button key={g.roman} type="button" className={`rmh-cel ${i === Math.min(iAcorde, campoAtual.length - 1) ? 'on' : ''}`}
-              onClick={() => escolherAcorde(i)} aria-pressed={i === iAcorde}>
+            <button key={g.roman} type="button" className={`rmh-cel ${i === iGrau ? 'on' : ''}`}
+              onClick={() => setIAcorde(i)} aria-pressed={i === iGrau}>
               <span className="rmh-roman">{g.roman}</span>
               <span className="rmh-cifra">{g.symbol}</span>
               <span className={`rmh-rel ${r.atritos.length ? 'atrito' : ''}`}>
@@ -172,27 +141,20 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
         })}
       </div>
 
-      <p className="rmh-frase">{descreverRelacao(atual.r, { melodia: atual.v.melodia, simbolo: grau.symbol, ctx, reduzido })}</p>
+      <p className="rmh-frase">{descreverRelacao(atual, { melodia: melodiaFixa, simbolo: grau.symbol, ctx, reduzido })}</p>
 
       <div className="row">
-        <Segurar liga={() => { tocarAcorde(); if (soarMelodia) tocarNota(); }} desliga={() => { soltarAcorde(); soltarNota(); }}>
+        <Btn tone={modo === 'ambos' ? undefined : 'ghost'} onClick={() => alternar(soarMelodia ? 'ambos' : 'acorde')}>
           {t('melodyHarmony.playBoth')}
-        </Segurar>
-        <Segurar tone="ghost" liga={tocarAcorde} desliga={soltarAcorde}>{t('melodyHarmony.playChord')}</Segurar>
-        {travar ? (
-          <Btn tone="ghost" onClick={() => (pararNota.current ? soltarNota() : tocarNota())}>
-            {pararNota.current ? t('melodyHarmony.stopNote') : t('melodyHarmony.holdNote')}
-          </Btn>
-        ) : (
-          <Segurar tone="ghost" liga={tocarNota} desliga={soltarNota}>{t('melodyHarmony.playNote')}</Segurar>
-        )}
-        {soando && <Btn tone="mu" onClick={silenciar}>{t('melodyHarmony.silence')}</Btn>}
+        </Btn>
+        <Btn tone={modo === 'acorde' ? undefined : 'ghost'} onClick={() => alternar('acorde')}>{t('melodyHarmony.playChord')}</Btn>
+        <Btn tone={modo === 'nota' ? undefined : 'ghost'} onClick={() => alternar('nota')}>{t('melodyHarmony.playNote')}</Btn>
+        {modo !== 'nada' && <Btn tone="mu" onClick={() => setModo('nada')}>{t('melodyHarmony.silence')}</Btn>}
       </div>
 
       <div className="row">
         <label className="switch"><input type="checkbox" checked={cromatico} onChange={e => { setCromatico(e.target.checked); setINota(0); }} />{t('melodyHarmony.chromatic')}</label>
         <label className="switch"><input type="checkbox" checked={soarMelodia} onChange={e => setSoarMelodia(e.target.checked)} />{t('melodyHarmony.soundMelody')}</label>
-        <label className="switch"><input type="checkbox" checked={travar} onChange={e => setTravar(e.target.checked)} />{t('melodyHarmony.hold')}</label>
         <label className="switch"><input type="checkbox" checked={!reduzido} onChange={e => setReduzido(!e.target.checked)} />{t('melodyHarmony.asSounds')}</label>
       </div>
 
