@@ -99,7 +99,11 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
 
   // BUG 1. Antes desta tarefa o gerador era `clamp(anterior + passo, 0, top)`, e nas bordas o
   // clamp devolvia o mesmo grau: saía `5 5 4`.
-  it('nenhuma célula repete nota — nem a certa, nem um distrator', () => {
+  // Cuidado com o nome que isto tinha. `semRepetir` olha só vizinhos, e portanto o que se garante
+  // é que nenhuma célula repete nota **em seguida** — que é tudo que a regra da célula dá. A
+  // repetição NÃO adjacente (`1 3 1`) é célula legítima e acontece em 35% das respostas certas; o
+  // que ela não pode fazer é diferir entre a certa e os distratores (ver a assinatura, abaixo).
+  it('nenhuma célula repete nota EM SEGUIDA — nem a certa, nem um distrator', () => {
     let opcoes = 0;
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
@@ -142,9 +146,19 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   });
 
   // BUG 2. Os distratores eram células sorteadas do zero e diferiam demais; a visão pede
-  // "distratores que diferem em apenas uma nota". Agora são ENUMERADOS, e a regra vale sempre.
-  it('todo distrator difere da resposta certa em exatamente uma nota', () => {
-    let pares = 0;
+  // "distratores que diferem em apenas uma nota".
+  //
+  // **Esta regra deixou de valer sempre em 09/11**, e de propósito. Casar a assinatura de
+  // repetição (bug 3) é incompatível com "exatamente uma nota" quando a resposta certa repete um
+  // grau: trocar uma posição de `1 3 1` quase sempre quebra a repetição, e nas bordas da escala
+  // sobrava um único candidato. Entre as duas, o Paulo escolheu a assinatura — e com razão, porque
+  // um distrator que difere em duas notas ainda exige ouvir, enquanto um que repete onde a certa
+  // não repete se descarta de olho.
+  //
+  // Medido em 3900 perguntas: 81% dos distratores seguem diferindo em uma nota, 16% em duas, 3%
+  // em três. O teste trava o patamar, não o ideal.
+  it('o distrator difere da certa em uma nota na grande maioria dos casos', () => {
+    let pares = 0, umaNota = 0;
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 60; i++) {
@@ -154,17 +168,42 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
           for (const o of q.surface.options) {
             if (o.id === q.expected.id) continue;
             const difs = certa.filter((g, k) => g !== graus(o.id)[k]).length;
-            expect(difs, `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBe(1);
+            expect(difs, `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBeGreaterThanOrEqual(1);
+            if (difs === 1) umaNota++;
             pares++;
           }
         }
       }
     }
-    // Invariante, não só cobertura: o fallback de "duas notas de diferença" existe no item para
-    // escalas curtas, e com as escalas de HOJE ele nunca dispara — a asserção acima prova isso em
-    // todos os pares. Se um dia falhar, alguém acrescentou uma escala curta demais, e o item
-    // degradou de propósito em vez de mostrar três opções.
     expect(pares).toBeGreaterThan(4000);
+    expect(umaNota / pares).toBeGreaterThan(0.7);
+  });
+
+  // BUG 3 (09/11/2026), visto pelo Paulo: "nunca ter alternativas com notas repetidas se a melodia
+  // não tem, e sempre ter onde há". A assinatura de repetição diz quais posições tocam o mesmo
+  // grau — `1 3 1` → `010`, `1 3 5` → `012` — e todas as quatro opções compartilham a dela.
+  it('todas as opções têm a mesma assinatura de repetição da resposta certa', () => {
+    const assinatura = (g: string[]) => {
+      const ordem = new Map<string, number>();
+      return g.map(x => ordem.get(x) ?? (ordem.set(x, ordem.size), ordem.size - 1)).join('');
+    };
+    let perguntas = 0, comRepeticao = 0;
+    for (const escala of escalas) {
+      for (const tamanho of ['2', '3', '4', '5']) {
+        for (let i = 0; i < 40; i++) {
+          const q = ex.make({ escala, tamanho }, ctx);
+          if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') continue;
+          const daCerta = assinatura(graus(q.expected.id));
+          perguntas++;
+          if (new Set(graus(q.expected.id)).size < Number(tamanho)) comRepeticao++;
+          for (const o of q.surface.options) {
+            expect(assinatura(graus(o.id)), `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBe(daCerta);
+          }
+        }
+      }
+    }
+    // Cobertura: se a certa nunca repetisse grau, o teste acima passaria sem medir nada.
+    expect(comRepeticao / perguntas).toBeGreaterThan(0.15);
   });
 
   it('sempre oferece quatro opções distintas, em toda escala e tamanho', () => {

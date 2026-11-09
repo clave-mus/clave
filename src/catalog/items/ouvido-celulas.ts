@@ -25,7 +25,7 @@ export const ouvidoCelulas: CatalogItem = {
       options: ['1', '2', '3', '4', '5', '6', '7'].map(n => ({ id: n, label: n })) },
     { id: 'tetrade', label: ctx.t('settings.tetrad'), type: 'toggle' },
     // O Paulo notou (09/11) que a melodia caía embaixo do acorde com frequência, e que isso
-    // atrapalha ouvir o grau. Quem se move é o ACORDE — ver `acordeForaDaMelodia`, que explica por
+    // atrapalha ouvir o grau. Quem se move é o ACORDE — ver `acomodarMelodiaEAcorde`, que explica por
     // quê e traz a medição. "Abaixo" existe porque ele quis manter a opção.
     { id: 'registro', label: ctx.t('settings.melodyRegister'), type: 'single', options: [
       { id: 'acima', label: ctx.t('settings.melodyAbove') },
@@ -39,53 +39,55 @@ export const ouvidoCelulas: CatalogItem = {
     const semis = [...scaleDegs(id).map(([, semi]) => semi), 12];
     const top = semis.length - 1;
     const size = Number(s.tamanho ?? 3);
-    // O que define uma célula: graus vizinhos distam 1 ou 2 posições, e **nunca se repetem**.
-    // Isto é uma só regra, e ela vale igual para a resposta certa e para os distratores — foi
-    // onde eu errei na primeira tentativa desta tarefa: consertei a certa e recriei o bug nos
-    // distratores, com 30% deles saindo `6 6 6`. Distrator que não é célula válida entrega a
-    // resposta.
-    const valida = (x: number[]) => x.every((v, k) => k === 0 || [1, 2].includes(Math.abs(v - x[k - 1])));
-
-    // BUG 1 (consertado): o gerador antigo era `clamp(anterior + pick([-2,-1,1,2]), 0, top)`, e
-    // nas bordas o clamp devolvia o MESMO grau — saía `5 5 4`. Agora o passo é sorteado DENTRO
-    // do que cabe, em vez de cortado depois. A função mora em helpers.ts (`celulaDeGraus`) —
-    // `audiar` (X3) usa a mesma regra para gerar a sequência de graus que a pessoa audia.
     const c = celulaDeGraus(top, size);
-    const key = (x: number[]) => x.map(i => degs[i]).join(' ');
 
     // BUG 2 (consertado): os distratores eram células sorteadas do zero e diferiam demais. A
     // visão pede o contrário — "distratores que diferem em apenas uma nota".
     //
-    // São ENUMERADOS, não sorteados: todas as células válidas que trocam uma posição da certa.
-    // Enumerar aqui é o certo porque o espaço é minúsculo (no máximo 8 posições × 4 notas), e
-    // sortear com tentativa e erro é o que produzia os casos inválidos.
-    const umaNotaDiferente = (base: number[]) => {
-      const out: number[][] = [];
-      for (let i = 0; i < base.length; i++) {
-        for (let v = 0; v <= top; v++) {
-          if (v === base[i]) continue;
-          const cand = base.slice(); cand[i] = v;
-          if (valida(cand)) out.push(cand);
-        }
-      }
-      return out;
+    // BUG 3 (09/11, visto pelo Paulo): o teste de antes só proibia repetição **adjacente**, que é
+    // tudo que a regra da célula garante — graus vizinhos distam 1 ou 2 posições, nunca 0.
+    // Repetição NÃO adjacente passava — `1 3 1` é célula válida — e
+    // aparecia nos distratores de forma independente da resposta certa. Com a certa sendo `1 3 5`
+    // e um distrator `1 3 1`, descartar sem ouvir é trivial; e com a certa sendo `1 3 1` e nenhum
+    // distrator repetindo, a resposta se entrega.
+    //
+    // A correção: todo distrator tem a **mesma assinatura de repetição** da resposta certa — quais
+    // posições tocam o mesmo grau. `1 3 1` → `0,1,0`; `1 3 5` → `0,1,2`.
+    const assinatura = (x: number[]) => {
+      const ordem = new Map<string, number>();
+      return x.map(i => degs[i]).map(g => ordem.get(g) ?? (ordem.set(g, ordem.size), ordem.size - 1)).join(',');
     };
+    const daCerta = assinatura(c);
+
+    // O pool são TODAS as células válidas deste tamanho, por busca em profundidade. Enumerar é o
+    // certo aqui porque o espaço é minúsculo (no máximo 8 inícios × 4 passos ^ 4), e porque foi
+    // sortear com tentativa e erro que produziu os casos inválidos do bug 1.
+    //
+    // Enumerar o conjunto inteiro, em vez de só "troque uma posição", é o que faz a assinatura
+    // caber: com a certa sendo `1 3 1`, trocar uma posição quase sempre quebra a repetição, e nas
+    // bordas da escala sobrava **um** candidato. A ordenação por distância preserva a intenção da
+    // visão — os que diferem em uma nota vêm primeiro, e dois só quando não há três de um.
+    const todas: number[][] = [];
+    const andar = (atual: number[]) => {
+      if (atual.length === size) { todas.push(atual); return; }
+      for (const passo of [-2, -1, 1, 2]) {
+        const v = atual[atual.length - 1] + passo;
+        if (v >= 0 && v <= top) andar([...atual, v]);
+      }
+    };
+    for (let v = 0; v <= top; v++) andar([v]);
+
+    const key = (x: number[]) => x.map(i => degs[i]).join(' ');
+    const distancia = (x: number[]) => x.reduce((n, v, k) => n + (v === c[k] ? 0 : 1), 0);
+    const candidatas = todas.filter(x => key(x) !== key(c) && assinatura(x) === daCerta);
     const others = new Set<string>();
-    for (const v of shuffle(umaNotaDiferente(c))) {
-      if (others.size >= 3) break;
-      if (key(v) !== key(c)) others.add(key(v));
-    }
-    // Célula encurralada (bordas estreitas): abre para duas notas de diferença, ainda válidas.
-    // Melhor um distrator a duas notas do que três opções em vez de quatro.
-    if (others.size < 3) {
-      for (const base of shuffle(umaNotaDiferente(c))) {
-        for (const v of shuffle(umaNotaDiferente(base))) {
-          if (others.size >= 3) break;
-          if (key(v) !== key(c)) others.add(key(v));
-        }
+    for (let d = 1; d <= size && others.size < 3; d++) {
+      for (const v of shuffle(candidatas.filter(x => distancia(x) === d))) {
         if (others.size >= 3) break;
+        others.add(key(v));
       }
     }
+
     const tonic = tonicaNaRegiao(ctx, { lo: 57, hi: 64 });
 
     // O acorde de contexto (09/11). Empilhar terças dentro da escala **só funciona com sete
