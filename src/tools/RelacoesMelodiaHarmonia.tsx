@@ -131,7 +131,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
 
       <div className="field">
         <span>{t('melodyHarmony.melodyNote')}</span>
-        <div className="row">
+        <div className="row rmh-notas">
           {notas.map((n, i) => (
             <Chip key={n.label} on={i === Math.min(iNota, notas.length - 1)} onClick={() => setINota(i)}>
               {n.label} · {noteName(n.nota, naming)}

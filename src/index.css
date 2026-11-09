@@ -576,6 +576,25 @@ select.sel {
 /* O atrito é marcado por COR e por "!" — cor sozinha não serve (daltonismo, e tela no sol). */
 .rmh-rel.atrito { color: var(--accent); font-weight: 600; }
 .rmh-frase { max-width: 62ch; font-size: 15px; }
+
+/* No celular a grade de sete acordes e a fileira de até doze notas espremem ou quebram em duas
+   linhas. Viram faixa que corre de lado, com encaixe (pedido do Paulo, 09/11).
+   **Encaixa mas não centraliza uma só**: a graça da tela é comparar, então ficam três ou quatro
+   à vista de cada vez em vez de uma por vez. */
+@media (max-width: 760px) {
+  .rmh-grade {
+    display: flex; overflow-x: auto; scroll-snap-type: x proximity;
+    gap: 8px; padding-bottom: 6px; scrollbar-width: none;
+  }
+  .rmh-grade::-webkit-scrollbar { display: none; }
+  .rmh-cel { flex: 0 0 29%; scroll-snap-align: start; }
+  .rmh-notas {
+    display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .rmh-notas::-webkit-scrollbar { display: none; }
+  .rmh-notas .chip { flex: 0 0 auto; scroll-snap-align: start; }
+}
 /* A dica é conselho, não instrução: menor que o texto de apoio e marcada por um filete, para
    se ler como nota de margem em vez de competir com o enunciado. */
 .rmh-dica {
