@@ -149,9 +149,31 @@ export function amostrasDeCorda(
   const N = Math.floor(L);
   const frac = L - N;
   const x = new Float32Array(total);
-  // o ataque: um estouro curto de ruído, do tamanho de uma volta da corda — é o "dedo"
-  const exc = Math.max(2, Math.round(sr / f));
-  for (let i = 0; i < exc; i++) x[i] = rnd() * (1 - i / exc);
+  /**
+   * O ataque: um estouro curto de ruído do tamanho de uma volta da corda — é o "dedo".
+   *
+   * **Filtrado**, e isto foi queixa do Paulo: *"tem um agudo percussivo meio nada a ver que faz
+   * parecer mais um pedaço de metal ressoando do que uma corda sendo tocada."* Ruído branco tem
+   * energia até 20 kHz, e a primeira volta sai inteira antes de o filtro do laço comer nada — um
+   * "tsc" metálico colado na frente da nota.
+   *
+   * Um dedo ou palheta real injeta muito menos agudo, e é o mesmo passa-baixa do laço que modela
+   * isso. Aplicado duas vezes, para a queda ser mais firme que a de uma volta só.
+   */
+  // O estouro dura uma volta da corda, **mas no máximo 6 ms**: o tempo de contato de um dedo não
+  // cresce porque a nota é grave. Sem o teto, no Si0 ele durava 32 ms, e filtrado virava uma rampa
+  // quase contínua que excitava mal o modo — a altura media 18 cents fora.
+  const exc = Math.max(2, Math.min(Math.round(sr / f), Math.round(sr * 0.006)));
+  let ataque = 0;
+  let pico = 0;
+  for (let i = 0; i < exc; i++) {
+    ataque += k * (rnd() * (1 - i / exc) - ataque);
+    x[i] = ataque;
+    pico = Math.max(pico, Math.abs(ataque));
+  }
+  // O filtro tira energia, e quanto ela cai depende da nota. Normalizar o pico devolve o volume
+  // sem número mágico — a primeira tentativa multiplicava por 2,2 e estourava amplitude 1.
+  if (pico > 0) for (let i = 0; i < exc; i++) x[i] = (x[i] / pico) * 0.9;
   // o laço: passa-baixa de um polo come os agudos a cada volta, que é o que uma corda real faz
   let estado = 0;
   for (let i = N + 1; i < total; i++) {

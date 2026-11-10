@@ -763,7 +763,7 @@ const en: Shape<typeof pt> = {
     'ritmo-ouvido': { title: 'Which rhythm is this?', desc: 'Hear one bar and pick the right notation. Feel free to tap along.' },
   },
   tools: {
-    'no-instrumento': { title: 'On your instrument', desc: 'Clave shows the note, you find it and play it on the real neck.' },
+    'no-instrumento': { title: 'Find the note on your instrument', desc: 'Clave shows the note, you find it and play it on the real neck.' },
     audiar: { title: 'Audiate', desc: 'The reference plays, it tells you what to audiate. You hear it in your head before checking.' },
     'relacoes-melodia-harmonia': { title: 'Melody against harmony', desc: 'Hear how each note sounds over each chord of a harmonic field.' },
     'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },

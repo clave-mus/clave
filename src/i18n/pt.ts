@@ -765,7 +765,7 @@ const pt = {
     'ritmo-ouvido': { title: 'Que ritmo é esse?', desc: 'Ouça um compasso e escolha a escrita certa. Dá para batucar junto.' },
   },
   tools: {
-    'no-instrumento': { title: 'No instrumento', desc: 'O Clave mostra a nota, você acha e toca no braço de verdade.' },
+    'no-instrumento': { title: 'Ache a nota no seu instrumento', desc: 'O Clave mostra a nota, você acha e toca no braço de verdade.' },
     audiar: { title: 'Audiar', desc: 'Toca a referência, diz o que audiar. Você ouve na cabeça antes de conferir.' },
     'relacoes-melodia-harmonia': { title: 'Relações entre melodia e harmonia', desc: 'Ouça como cada nota soa em cima de cada acorde de um campo harmônico.' },
     'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
