@@ -7,6 +7,8 @@
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
+import { ESCALAS_GRAUS } from './items/audiar';
+import { arr, scaleName } from './helpers';
 import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
 import type { MessageKey } from '../i18n';
@@ -102,9 +104,30 @@ export const AMBIENTES: CatalogItem[] = [
           { id: 'graus', label: ctx.t('audiar.stimulusDegrees') },
         ],
       },
+      // Quantos graus a célula tem. Era 4, escrito no código.
+      { id: 'tamanho', label: ctx.t('audiar.cellSize'), type: 'single', quando: s => arr(s.estimulos, []).includes('graus'),
+        options: ['2', '3', '4', '5', '6'].map(n => ({ id: n, label: n })) },
+      // De que escalas os graus saem. Eram duas, escritas no código.
+      { id: 'escalas', label: ctx.t('audiar.degreeScales'), type: 'multi', quando: s => arr(s.estimulos, []).includes('graus'),
+        options: ESCALAS_GRAUS.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+      /**
+       * O **pedal sempre o mesmo** (pedido do Paulo, 10/11/2026).
+       *
+       * Sem isto a tônica é sorteada a cada rodada, e o pedal muda de altura junto — o que faz
+       * sentido para treinar relatividade e atrapalha quem quer internalizar um centro só.
+       *
+       * `fixo` vale a rodada inteira da sessão: a tela sorteia uma vez e reusa.
+       */
+      { id: 'pedal', label: ctx.t('audiar.pedal'), type: 'single', options: [
+        { id: 'sorteado', label: ctx.t('audiar.pedalRandom') },
+        { id: 'fixo', label: ctx.t('audiar.pedalFixed') },
+      ] },
       { id: 'drone', label: ctx.t('audiar.drone'), type: 'toggle' },
     ],
-    defaults: { estimulos: ['referencia', 'graus'], drone: false },
+    defaults: {
+      estimulos: ['referencia', 'graus'], tamanho: '4',
+      escalas: ['maior', 'menor'], pedal: 'sorteado', drone: false,
+    },
     screen: () => import('../tools/Audiar'),
   },
   {
