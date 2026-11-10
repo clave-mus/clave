@@ -6,8 +6,8 @@
 // visível — que item novo quase sempre é **parâmetro ou modo** de um que já existe.
 //
 // **A ordem desta lista é a ordem em que os itens aparecem** onde não há agrupamento.
-import { queNotaEEssa } from './items/que-nota-e-essa';
-import { acheANota } from './items/ache-a-nota';
+import { notaNaPautaItem } from './items/nota-na-pauta';
+import { notaNoInstrumento } from './items/nota-no-instrumento';
 import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
 import { facaOIntervalo } from './items/faca-o-intervalo';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
@@ -23,8 +23,8 @@ import { ritmoOuvido } from './items/ritmo-ouvido';
 import type { CatalogItem } from './types';
 
 export const EXERCISES: CatalogItem[] = [
-  queNotaEEssa,
-  acheANota,
+  notaNaPautaItem,
+  notaNoInstrumento,
   queIntervaloEEsse,
   facaOIntervalo,
   queAcordeEEsse,

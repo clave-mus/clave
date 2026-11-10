@@ -55,7 +55,7 @@ describe('as decisões do Paulo sobre o conteúdo', () => {
   const itensDe = (id: string) => GRUPOS.find(g => g.id === id)!.itens.map(chave);
 
   it('escrever a nota na pauta entra em "Leitura na pauta", mesmo sendo escrever e não ler', () => {
-    expect(itensDe('leitura-pauta')).toContain(chave(inst('ache-a-nota', { superficie: 'pauta' })));
+    expect(itensDe('leitura-pauta')).toContain(chave(inst('nota-na-pauta', {})));
   });
 
   it('`ouvido-tecla` fica FORA de "Ouvido" — responde no teclado, e ali o propósito é outro', () => {
@@ -77,25 +77,33 @@ describe('a mesma instância em vários grupos', () => {
 
   // O ponto da mudança: o MESMO item em superfícies diferentes cai em grupos diferentes.
   it('"qual nota é essa?" na pauta e no braço caem em grupos diferentes', () => {
-    const naPauta = gruposDaInstancia(inst('que-nota-e-essa', { superficie: 'pauta' })).map(g => g.id);
-    const noBraco = gruposDaInstancia(inst('que-nota-e-essa', { superficie: 'braco' })).map(g => g.id);
+    // Depois da reorganização de 09/11/2026 a pauta e o instrumento são ITENS diferentes, não
+    // superfícies do mesmo item — então o que cai em grupos diferentes são os dois itens.
+    const naPauta = gruposDaInstancia(inst('nota-na-pauta', {})).map(g => g.id);
+    const noBraco = gruposDaInstancia(inst('nota-no-instrumento', {})).map(g => g.id);
     expect(naPauta).toEqual(['leitura-pauta']);
     expect(noBraco).toEqual(['o-braco']);
   });
 
-  // Sem a configuração, o membro casaria com qualquer superfície — e ofereceria pauta dentro do braço.
+  /**
+   * A guarda vale para quem AINDA é multissuperfície — `que-acorde-e-esse` e os de intervalo, até a
+   * reorganização chegar neles. Sem a configuração, o membro casaria com qualquer superfície e
+   * ofereceria pauta dentro do grupo do braço.
+   *
+   * Os itens de nota saíram desta regra em 09/11/2026 porque deixaram de ter superfície: a pauta e o
+   * instrumento são dois itens, e cada um cai no seu grupo sem precisar de configuração nenhuma.
+   */
   it('um item multissuperfície sem configuração não cai em grupo de superfície nenhum', () => {
-    expect(gruposDaInstancia(inst('que-nota-e-essa'))).toEqual([]);
+    expect(gruposDaInstancia(inst('que-acorde-e-esse'))).toEqual([]);
   });
 });
 
 describe('companheirosDe', () => {
   it('devolve os outros do grupo, sem incluir ele mesmo', () => {
-    const eu = inst('que-nota-e-essa', { superficie: 'pauta' });
+    const eu = inst('nota-na-pauta', {});
     const c = companheirosDe(eu, sempre);
     expect(c.map(chave)).not.toContain(chave(eu));
     expect(c.map(chave).sort()).toEqual([
-      chave(inst('ache-a-nota', { superficie: 'pauta' })),
       chave(inst('pauta-escala')),
       chave(inst('que-acorde-e-esse', { superficie: 'pauta' })),
       chave(inst('que-intervalo-e-esse', { superficie: 'pauta' })),
@@ -103,7 +111,8 @@ describe('companheirosDe', () => {
   });
 
   it('e os companheiros vêm com a superfície certa, nunca com a configuração do outro grupo', () => {
-    for (const m of companheirosDe(inst('que-nota-e-essa', { superficie: 'braco' }), sempre)) {
+    for (const m of companheirosDe(inst('nota-no-instrumento', {}), sempre)) {
+      if (m.itemId === 'nota-no-instrumento') continue; // ele mesmo, sem superfície a conferir
       expect(m.settings?.superficie, m.itemId).toBe('braco');
     }
   });

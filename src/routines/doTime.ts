@@ -133,12 +133,12 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // O que entra segue o critério do Paulo (decisão 109): **trabalha a posição das notas no braço.**
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
-        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '0-5' })] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '0-5' })] },
       { minutos: 8, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
         instancias: [
-          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-5' }),
-          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }),
-          i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-12' }),
+          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }),
+          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '5-9' }),
+          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-12' }),
         ] },
       // **Identificar e construir, em rodízio** — o Paulo pediu assim. São habilidades diferentes, e
       // alternar entre elas gasta metade do tempo que fazer as duas toda vez.
@@ -166,9 +166,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 5, porque: 'primeiro o som da tonalidade: três notas dela, para a tônica virar referência',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
       { minutos: 5, porque: 'as notas dela no braço, só as diatônicas, na região de casa',
-        instancias: [i('ache-a-nota', { superficie: 'braco', instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
       { minutos: 5, porque: 'a mesma tonalidade noutra região — é o que liga as partes do braço',
-        instancias: [i('que-nota-e-essa', { superficie: 'braco', instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
       { minutos: 5, porque: 'os acordes que nascem dela, de ouvido',
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'm7', '7M', '7'], arpejo: true, duracao: 2 })] },
       { minutos: 10, porque: 'fecha tocando dentro dela, com a harmonia rodando',
@@ -205,7 +205,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // Altura e ritmo SEPARADOS, que é como se aprende a ler: juntar os dois cedo demais trava os dois.
     etapas: [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',
-        instancias: [i('que-nota-e-essa', { superficie: 'pauta', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
+        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
       { minutos: 5, porque: 'ritmo só, no nível de entrada (semínima e colcheias)',
         instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
       { minutos: 5, porque: 'os dois juntos, no ambiente de leitura corrida',

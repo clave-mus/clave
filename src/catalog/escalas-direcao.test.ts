@@ -248,8 +248,8 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
 // estava errado era o NOME: o enunciado passava `both: false` a `pcName` e pedia "Ré♯"; o gabarito
 // não passava nada, e o padrão mostra as duas grafias, então respondia "Ré♯/Mi♭". O gabarito
 // nomeava uma nota que a pergunta não pediu.
-describe('ache-a-nota: o gabarito diz a mesma nota que o enunciado', () => {
-  const ex = item('ache-a-nota');
+describe('nota-no-instrumento: o gabarito diz a mesma nota que o enunciado', () => {
+  const ex = item('nota-no-instrumento');
   const ctx = ctxFor();
   /** O nome da nota dentro de uma frase como "Toque Ré♯ na corda Si". */
   const nomes = (texto: string) => texto.match(/[A-GL][a-záéó]*[♯♭]?/g) ?? [];
@@ -257,7 +257,7 @@ describe('ache-a-nota: o gabarito diz a mesma nota que o enunciado', () => {
   it('no braço, nenhuma grafia aparece só no gabarito', () => {
     for (const casas of ['0-5', '0-12']) {
       for (let i = 0; i < 120; i++) {
-        const q = ex.make({ superficie: 'braco', casas }, ctx);
+        const q = ex.make({ direcao: 'achar', instrumento: 'auto', casas }, ctx);
         // a forma com barra é o defeito: se voltar, este teste pega
         expect(q.reveal, `${q.prompt} → ${q.reveal}`).not.toContain('/');
         // e a nota do gabarito tem de estar no enunciado
@@ -272,7 +272,7 @@ describe('ache-a-nota: o gabarito diz a mesma nota que o enunciado', () => {
   it('as duas grafias aparecem ao longo das rodadas', () => {
     const vistas = new Set<string>();
     for (let i = 0; i < 400; i++) {
-      const q = ex.make({ superficie: 'braco', casas: '0-12' }, ctx);
+      const q = ex.make({ direcao: 'achar', instrumento: 'auto', casas: '0-12' }, ctx);
       for (const n of nomes(q.prompt)) if (/[♯♭]/.test(n)) vistas.add(/♯/.test(n) ? 'sustenido' : 'bemol');
     }
     expect([...vistas].sort()).toEqual(['bemol', 'sustenido']);

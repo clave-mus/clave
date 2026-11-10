@@ -39,10 +39,12 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     itens: [{ itemId: 'acento-deslocado' }, { itemId: 'subdivisao-alternada' }, { itemId: 'deslocamento-ritmico' }],
   },
   {
-    // `ache-a-nota` na pauta entra mesmo sendo escrever, não ler: serve ao mesmo propósito.
+    // Desde a reorganização de 09/11/2026 ler e escrever são o MESMO item (`nota-na-pauta`), e a
+    // justificativa que existia aqui — "entra mesmo sendo escrever, não ler" — deixou de ser
+    // necessária. Era remendo da estrutura antiga.
     id: 'leitura-pauta', nome: 'grupos.leitura-pauta',
-    itens: [na('que-nota-e-essa', 'pauta'), na('que-intervalo-e-esse', 'pauta'), na('que-acorde-e-esse', 'pauta'),
-      { itemId: 'pauta-escala' }, na('ache-a-nota', 'pauta')],
+    itens: [{ itemId: 'nota-na-pauta' }, na('que-intervalo-e-esse', 'pauta'), na('que-acorde-e-esse', 'pauta'),
+      { itemId: 'pauta-escala' }],
   },
   {
     // `ouvido-tecla` fica FORA: ele é de ouvido, mas responde no teclado, e o propósito ali é outro.
@@ -54,12 +56,12 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
   },
   {
     id: 'o-braco', nome: 'grupos.o-braco',
-    itens: [na('que-nota-e-essa', 'braco'), na('ache-a-nota', 'braco'), na('que-intervalo-e-esse', 'braco'),
+    itens: [{ itemId: 'nota-no-instrumento' }, na('que-intervalo-e-esse', 'braco'),
       na('que-acorde-e-esse', 'braco')],
   },
   {
     id: 'o-teclado', nome: 'grupos.o-teclado',
-    itens: [na('que-nota-e-essa', 'teclado'), na('ache-a-nota', 'teclado'), na('que-acorde-e-esse', 'teclado'),
+    itens: [{ itemId: 'nota-no-instrumento', settings: { instrumento: 'piano' } }, na('que-acorde-e-esse', 'teclado'),
       { itemId: 'ouvido-tecla' }],
   },
 ];

@@ -46,7 +46,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
+    itens: ['nota-no-instrumento', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',
@@ -68,7 +68,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['nota-na-pauta', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',
@@ -84,7 +84,7 @@ export const PORTAS: readonly Porta[] = [
     id: 'improviso',
     // "O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário". Não há exercício de
     // improvisar, e o rótulo da porta é "Improvisar e solar" de propósito (decisão 80).
-    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'ache-a-nota'],
+    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'nota-no-instrumento'],
   },
   { id: 'comecar', itens: [], diagnostico: true },
 ];
