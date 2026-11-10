@@ -80,8 +80,8 @@ const pt = {
       sobre: 'A pergunta toca, você pensa, a resposta vem. Celular no bolso, nenhuma etapa pede olhar nem responder.',
     },
     fone: {
-      nome: 'Treino de ouvido no fone',
-      sobre: 'Oito frentes de ouvido em que você responde — uma por assunto. Pede fone e uma mão livre; cabe inteira num ônibus.',
+      nome: 'Percepção melódica e harmônica no fone',
+      sobre: 'Oito frentes em que você responde, da nota solta ao grau dentro da harmonia, e a audiação no fim. Tudo em dó maior. Pede fone e uma mão livre; cabe inteira num ônibus.',
     },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',

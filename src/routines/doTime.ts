@@ -12,6 +12,7 @@
 // agora?". Uma é para quando não há instrumento à mão; uma é para morar numa tonalidade; uma é para
 // o braço; duas são as duas aberturas de sessão mais comuns (ouvido e leitura). Fora disso é
 // repetição.
+import { ALL_CHORDS, ALL_SCALES, TODOS_OS_INTERVALOS } from '../catalog/helpers';
 import type { Publicacao } from '../catalog/publicacao';
 import { RASCUNHO } from '../catalog/publicacao';
 
@@ -48,6 +49,16 @@ const i = (itemId: string, settings: Record<string, unknown> = {}, params?: Inst
 /** Só as notas da tonalidade. Depende de `respeita: ['material']` no item — conferido em teste. */
 const DIATONICO = { material: 'diatonico' } as const;
 
+/**
+ * Dó maior nas etapas de percepção (Paulo, 09/11/2026): fixar a tonalidade emula as condições
+ * reais de música melhor que sortear um centro a cada pergunta.
+ *
+ * Repetido aqui, e não herdado do atalho de entrada do item: etapa de rotina **manda** nos
+ * parâmetros de prática (decisão 87), e o `Player` só aplica a entrada do item quando a etapa não
+ * trouxe nada.
+ */
+const EM_DO = { key: { tonic: 0, mode: 'maior' } } as const;
+
 export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   // ---------------------------------------------------------------------------------------------
   // AS QUATRO DE "NÃO ESTOU COM O INSTRUMENTO"
@@ -77,28 +88,38 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   {
     id: 'ouvido-no-fone', nome: 'doTime.fone.nome', sobre: 'doTime.fone.sobre',
     modo: 'livre', publicacao: RASCUNHO,
-    // Os seis itens de ouvido **interativos** (a pessoa responde). Precisam de fone e de uma mão, e é
-    // por isso que não são "de bolso" — mas cabem inteiros num ônibus.
+    // Revisada com o Paulo em 09/11/2026, etapa por etapa. Três mudanças de fundo:
+    //
+    // 1. **tudo em dó maior.** Princípio dele: fixar tonalidade emula as condições reais de
+    //    música. Vem do `EM_DO_MAIOR` dos itens, aqui repetido na etapa porque etapa de rotina
+    //    manda nos parâmetros (decisão 87) e não herda o atalho de entrada do item;
+    // 2. **tudo ligado** em qualidades e escalas: eram duas etapas cada (tríades/tétrades,
+    //    escalas/modos) e ele pediu "só uma etapa completa pra isso ja basta";
+    // 3. **o ritmo saiu** — foi para a rotina de percepção rítmica.
     etapas: [
-      { porque: 'intervalos, subindo: a unidade de tudo',
-        instancias: [i('ouvido-intervalo', { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' })] },
-      // **Separadas, não em rodízio** (o Paulo decidiu). Em rodízio, uma execução pegava tríades e
-      // escalas (fácil) e a seguinte pegava tétrades e modos (difícil) — não era uma rotina que varia,
-      // eram duas que se alternavam, e a pessoa não escolhia qual pegava hoje. Separadas, ela escolhe.
-      { porque: 'as quatro tríades, incluindo as duas simétricas que confundem',
-        instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'dim', 'aum'], arpejo: true, duracao: 2 })] },
-      { porque: 'as tétrades, que são o vocabulário de harmonia de verdade',
-        instancias: [i('ouvido-acorde', { tipos: ['7M', '7', 'm7', 'm7b5'], arpejo: true, duracao: 2 })] },
-      { porque: 'escalas, subindo e descendo: a menor harmônica entra pela sensível',
-        instancias: [i('ouvido-escala', { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'ambos' })] },
-      { porque: 'os modos, à parte: eles pedem outro ouvido que as escalas',
-        instancias: [i('ouvido-escala', { tipos: ['dorico', 'frigio', 'lidio', 'mixolidio'], direcao: 'sobe' })] },
-      { porque: 'graus dentro da tonalidade: ouvir a tônica e situar a frase',
-        instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
-      { porque: 'nota pelo nome, com referência: o único de ouvido que responde no teclado',
-        instancias: [i('ouvido-tecla', { referencia: true, pretas: false })] },
-      { porque: 'ritmo de ouvido, nível de entrada',
-        instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
+      // Primeiro porque é a porta: uma nota, com dó de referência, respondida no teclado.
+      { porque: 'ouvir uma nota contra o dó e achá-la no teclado: a porta de entrada do ouvido',
+        instancias: [i('ouvido-tecla', { referencia: true, pretas: true }, EM_DO)] },
+      // Melódicos e harmônicos SEPARADOS, a pedido dele: são dois ouvidos. O harmônico não tem
+      // ordem no tempo para se apoiar, e por isso é bem mais difícil que o melódico.
+      { porque: 'intervalos melódicos, subindo: a unidade de tudo',
+        instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'sobe' }, EM_DO)] },
+      { porque: 'os mesmos intervalos tocados juntos: sem ordem no tempo, o ouvido tem de ouvir a fusão',
+        instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, EM_DO)] },
+      { porque: 'todas as qualidades de acorde, sobre a mesma fundamental: sobra a cor',
+        instancias: [i('ouvido-acorde', { tipos: ALL_CHORDS, arpejo: true, duracao: 2 }, EM_DO)] },
+      { porque: 'todas as escalas, subindo e descendo — é descendo que as duas melódicas se separam',
+        instancias: [i('ouvido-escala', { tipos: ALL_SCALES, direcao: 'ambos' }, EM_DO)] },
+      // Duas etapas do mesmo item, a pedido dele: uma nota e três notas. Sem alternativas nas
+      // duas — escolhendo entre todos os graus, que é o padrão novo do item.
+      { porque: 'uma nota sobre o acorde da tônica: que grau é, sem alternativas para descartar',
+        instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '1', graus: ['1'], resposta: 'todos' }, EM_DO)] },
+      { porque: 'três notas sobre o mesmo acorde: agora é o desenho inteiro, e ainda sem alternativas',
+        instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3', graus: ['1'], resposta: 'todos' }, EM_DO)] },
+      // No fim, por decisão dele. É a única etapa em que ninguém confere nada: a pessoa canta e
+      // ela mesma julga. Depois de sete etapas de resposta certa e errada, fechar cantando é bom.
+      { porque: 'audiar: ouvir por dentro antes de conferir — e aqui quem julga é você',
+        instancias: [i('audiar', {}, EM_DO)] },
     ],
   },
   {

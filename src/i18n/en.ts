@@ -80,8 +80,8 @@ const en: Shape<typeof pt> = {
       sobre: 'The question plays, you think, the answer comes. Phone in your pocket — no step asks you to look or to answer.',
     },
     fone: {
-      nome: 'Ear training with headphones',
-      sobre: 'Eight ear fronts where you answer — one per subject. Needs headphones and one free hand; fits a whole bus ride.',
+      nome: 'Melodic and harmonic perception on headphones',
+      sobre: 'Eight fronts where you answer, from a single note to a degree inside the harmony, with audiation at the end. All in C major. Needs headphones and one free hand; fits a whole bus ride.',
     },
     tonalidade: {
       nome: 'Settle into a key',

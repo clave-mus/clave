@@ -86,6 +86,10 @@ export const AMBIENTES: CatalogItem[] = [
     // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
     id: 'audiar', kind: 'tarefa',
     publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    // Faltava declarar (achado em 09/11 pelo teste de `doTime`, ao pôr a audiação na rotina em dó
+    // maior): `items/audiar.ts` chama `tonicaNaRegiao`, que lê tonalidade E região. O item sempre
+    // respeitou as duas; só não avisava — e por isso o painel de prática não as oferecia aqui.
+    respeita: ['key', 'range'],
     objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
     primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
     contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
