@@ -355,18 +355,32 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
     );
   }
   if (sf.kind === 'staff') {
-    const cols: Note[][] = [];
-    if (picked) cols.push([fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1]))]);
     const e = q.expected;
-    const answer: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
-    const shown = phase === 'wrong' && answer ? [[...(cols[0] ?? []), answer]] : cols;
+    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
+    const minha = picked ? fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1])) : null;
+    const mesmaNota = !!minha && !!certa && minha.letter === certa.letter && minha.acc === certa.acc && minha.oct === certa.oct;
+    /**
+     * Três defeitos que o Paulo relatou nesta tela, em 09/11/2026:
+     *
+     * 1. **"muda de tamanho quando clicamos"** — a pauta era desenhada com ZERO colunas antes da
+     *    resposta e uma depois, e a largura dela vem do número de colunas. Agora há sempre uma
+     *    coluna, vazia enquanto ninguém respondeu, e a largura não muda mais;
+     * 2. **"grande demais"** — a coluna media 90 de largura, contra 44 a 64 da pauta de leitura;
+     * 3. **"não diferencia a resposta que clicamos da resposta certa"** — as duas iam para a mesma
+     *    coluna sem cor nenhuma, e viravam duas cabeças de nota empilhadas, indistinguíveis.
+     *    `StaffNote.color` já existia e ninguém usava. Agora a errada sai na cor de erro e a certa
+     *    na de acerto; quando acerta, uma nota só, na cor de acerto.
+     */
+    const notas: { note: Note; color?: string }[] = [];
+    if (minha) notas.push({ note: minha, color: phase === 'ask' ? undefined : mesmaNota ? 'var(--ok)' : 'var(--err)' });
+    if (phase === 'wrong' && certa && !mesmaNota) notas.push({ note: certa, color: 'var(--ok)' });
     return (
       <div className="stage">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        <Staff clef={sf.clef} columns={shown.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={90} ghostAcc={acc}
+        <Staff clef={sf.clef} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
           onPick={phase === 'ask' ? s => onAnswer({ kind: 'spelled', letter: mod(s, 7), acc, oct: Math.floor(s / 7) }, `${s}:${acc}`) : undefined} />
-        <div className="hint">{t('player.tapStaff')}</div>
+        <div className="hint">{phase === 'wrong' && notas.length > 1 ? t('player.staffYoursAndRight') : t('player.tapStaff')}</div>
       </div>
     );
   }

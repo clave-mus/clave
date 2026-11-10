@@ -494,6 +494,7 @@ const en: Shape<typeof pt> = {
     customize: 'Customize',
     feedbackRight: 'Right',
     feedbackWrong: 'Close',
+    staffYoursAndRight: 'In red what you marked; in orange, where it was.',
     tapStaff: 'tap a line or a space',
     listen: 'Listen',
     listenAgain: 'Listen again',

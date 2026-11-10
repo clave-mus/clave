@@ -494,6 +494,7 @@ const pt = {
     customize: 'Personalizar',
     feedbackRight: 'Certo',
     feedbackWrong: 'Quase',
+    staffYoursAndRight: 'Em vermelho o que você marcou; em laranja, onde era.',
     tapStaff: 'toque na linha ou no espaço',
     listen: 'Ouvir',
     listenAgain: 'Ouvir de novo',
