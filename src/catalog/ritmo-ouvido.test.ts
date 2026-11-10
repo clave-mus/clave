@@ -7,7 +7,7 @@ import { celulasDe } from './items/ritmo-ouvido';
 import { isSeries, type Ctx, type SettingValue } from './types';
 import { resolveParams } from './params';
 import { translate, type MessageKey, type Vars } from '../i18n';
-import { RHYTHM_PRESETS } from '../theory/rhythm';
+import { CELLS, RHYTHM_PRESETS, type CellId } from '../theory/rhythm';
 import { NIVEL_PARA_FIGURAS, settingsFundidos } from '../state/migrate';
 
 const ctx: Ctx = {
@@ -104,5 +104,73 @@ describe('rotina salva com o nível antigo', () => {
 
   it('a tabela de migração cobre exatamente os níveis que existiam', () => {
     expect(Object.keys(NIVEL_PARA_FIGURAS).sort()).toEqual(RHYTHM_PRESETS.map(p => p.id).sort());
+  });
+});
+
+// Alternativas difíceis (09/11/2026). O Paulo: "faça com que alternativas com semibreve nao
+// apareçam em ritmos sem semibreve e coisas afins. deixe tudo mais parecido."
+//
+// Antes os quatro compassos eram sorteados **independentes**, e bastava um ter uma semibreve para
+// se descartar sem ouvir nada. Medido com todos os grupos ligados: só 26% das alternativas
+// compartilhavam a assinatura da certa — ou seja, **três de cada quatro eram descartáveis de
+// olho**. Depois: 99%.
+describe('as alternativas não se descartam de olho', () => {
+  const CONJUNTOS = [['basico'], ['basico', 'pausas'], ['basico', 'semis'], ['sincope'],
+    ['basico', 'tercinas'], ['basico', 'pausas', 'semis', 'tercinas', 'contratempo', 'sincope']];
+
+  /** O que se lê de relance numa alternativa: figuras usadas, ataques, e se tem pausa. */
+  const assinatura = (bar: CellId[]) => {
+    const figuras = new Set<string>();
+    let ataques = 0, pausa = false;
+    for (const c of bar) {
+      for (const ev of CELLS[c].events) {
+        figuras.add(String(ev.d) + (ev.dot ? '.' : ''));
+        if (ev.rest) pausa = true; else ataques++;
+      }
+    }
+    return `${[...figuras].sort().join(',')}|${ataques}|${pausa ? 'r' : '-'}`;
+  };
+  const barras = (q: ReturnType<typeof perguntar>) => {
+    if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') throw new Error('esperava escolhas');
+    return { certa: q.expected.id.split('|') as CellId[], opcoes: q.surface.options.map(o => o.id.split('|') as CellId[]) };
+  };
+
+  it.each(CONJUNTOS.map(g => [g.join('+'), g] as const))('%s: a grande maioria das alternativas tem a assinatura da certa', (_, grupos) => {
+    let total = 0, iguais = 0;
+    for (let i = 0; i < 200; i++) {
+      const { certa, opcoes } = barras(perguntar({ figuras: [...grupos] }));
+      const da = assinatura(certa);
+      for (const o of opcoes) { total++; if (assinatura(o) === da) iguais++; }
+    }
+    expect(total).toBeGreaterThan(700);
+    expect(iguais / total).toBeGreaterThan(0.8);
+  });
+
+  it.each(CONJUNTOS.map(g => [g.join('+'), g] as const))('%s: sempre quatro alternativas distintas, e a certa entre elas', (_, grupos) => {
+    for (let i = 0; i < 120; i++) {
+      const q = perguntar({ figuras: [...grupos] });
+      const { certa, opcoes } = barras(q);
+      expect(opcoes).toHaveLength(4);
+      expect(new Set(opcoes.map(o => o.join('|'))).size).toBe(4);
+      expect(opcoes.map(o => o.join('|'))).toContain(certa.join('|'));
+    }
+  });
+
+  // A regra que o `ouvido-celulas` ensinou: distrator que o gerador não poderia ter produzido
+  // entrega a resposta. Aqui o risco concreto é permutar `[h, q, q]` em `[q, h, q]` — uma mínima
+  // atravessando a divisão do compasso, que precisa de ligadura e que `randomBars` nunca faz.
+  it.each(CONJUNTOS.map(g => [g.join('+'), g] as const))('%s: toda alternativa é um compasso que o gerador poderia ter montado', (_, grupos) => {
+    for (let i = 0; i < 120; i++) {
+      for (const bar of barras(perguntar({ figuras: [...grupos] })).opcoes) {
+        let left = 4;
+        for (const c of bar) {
+          const beats = CELLS[c].beats;
+          expect(beats, `${bar.join('|')}: ${c} não cabe`).toBeLessThanOrEqual(left);
+          if (beats === 2) expect(left % 2, `${bar.join('|')}: mínima em tempo ímpar`).toBe(0);
+          left -= beats;
+        }
+        expect(left, `${bar.join('|')} não soma quatro tempos`).toBe(0);
+      }
+    }
   });
 });
