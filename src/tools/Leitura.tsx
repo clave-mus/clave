@@ -2,8 +2,8 @@
 // Modo notas: figura constante, poucas notas, para focar só na altura.
 // Modo ritmo: uma linha só, para focar só nas figuras.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { atTime, Clock, drum, tone } from '../audio/engine';
-import { applyKey, clefBottom, midi, noteName, type Clef, type Note } from '../theory/core';
+import { atTime, Clock, drum, playGroups, tone } from '../audio/engine';
+import { applyKey, clefBottom, majorTonic, midi, noteName, pc, type Clef, type Note } from '../theory/core';
 import { CELLS, RHYTHM_PRESETS, randomBars, type CellId } from '../theory/rhythm';
 import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
@@ -45,6 +45,8 @@ export default function Leitura() {
   const [bpm, setBpm] = useState(60);
   const [hear, setHear] = useState(false);
   const [names, setNames] = useState(false);
+  /** Nota ou tríade de contexto, para entrar no tom antes de audiar. Ver `ouvirContexto`. */
+  const [contexto, setContexto] = useState<'nota' | 'triade'>('nota');
   const [running, setRunning] = useState(false);
   const [pos, setPos] = useState<number | null>(null); // tempo atual (em tempos)
   const [startBar, setStartBar] = useState(0);
@@ -67,6 +69,33 @@ export default function Leitura() {
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
   useEffect(() => { stop(); }, [mode, preset, rPreset, seed]);
+
+  /**
+   * Audiar antes de ouvir (ideia do Paulo, 09/11/2026): *"tu vê a melodia, audia, e aí o som das
+   * notas vem como confirmação. Só penso que aí precisa poder ouvir um contexto — 1 nota — pra
+   * entrar no tom certo."*
+   *
+   * O modo já era quase isto: `hear` nasce desligado, então a pauta aparece em silêncio. Faltavam
+   * as duas pontas — a âncora de altura antes, e o gabarito depois.
+   *
+   * **Uma nota dá a altura mas não dá o modo**: dó serve a dó maior e a lá menor. Por isso a tríade
+   * é opção; a nota é o padrão porque é o mínimo, e foi o que ele pediu.
+   */
+  function ouvirContexto() {
+    if (!notes.length) return;
+    const tonica = majorTonic(preset.fifths);
+    const maisGrave = Math.min(...notes.map(midi));
+    // a tônica na oitava imediatamente abaixo da melodia: âncora, não concorrente
+    let m = maisGrave - ((maisGrave - pc(tonica)) % 12 + 12) % 12;
+    while (m > maisGrave - 2) m -= 12;
+    playGroups(contexto === 'triade' ? [[m, m + 4, m + 7]] : [[m]], { voice: 'piano', dur: 1.6, gap: 1.8 });
+  }
+
+  /** O gabarito: toca a melodia uma vez, sem metrônomo e sem cursor. Conferir não é ler junto. */
+  function conferir() {
+    if (!notes.length) return;
+    playGroups(notes.map(n => [midi(n)]), { voice: 'piano', dur: 0.5, gap: 0.55 });
+  }
 
   function stop() {
     clock.current?.stop();
@@ -131,6 +160,17 @@ export default function Leitura() {
         ))}
       </div>
 
+      {/* Audiar vem ANTES de ler junto, e por isso estes dois botões vêm antes do laço: a ordem na
+          tela é a ordem do exercício — âncora, audia por dentro, confere. */}
+      {mode === 'notas' && (
+        <div className="row">
+          <Btn tone="ghost" onClick={ouvirContexto}>{t('reading.hearContext')}</Btn>
+          <Btn tone="ghost" onClick={conferir}>{t('reading.checkIt')}</Btn>
+          <span className="eyebrow" style={{ marginLeft: 8 }}>{t('reading.context')}</span>
+          <Chip on={contexto === 'nota'} onClick={() => setContexto('nota')}>{t('reading.contextNote')}</Chip>
+          <Chip on={contexto === 'triade'} onClick={() => setContexto('triade')}>{t('reading.contextTriad')}</Chip>
+        </div>
+      )}
       <div className="row">
         <Btn onClick={() => (running ? stop() : play())} tone={running ? 'mu' : undefined}>{running ? t('common.stop') : t('reading.loop')}</Btn>
         <Btn tone="ghost" onClick={() => setSeed(s => s + 1)}>{t('reading.another')}</Btn>
