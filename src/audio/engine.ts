@@ -51,53 +51,140 @@ function env(g: GainNode, t: number, peak: number, attack: number, decay: number
 }
 
 /**
- * Corda pulsada (Karplus-Strong): ruído curto num atraso realimentado do tamanho do período.
+ * Atraso de fase do passa-baixa de um polo do laço, **na frequência pedida**, em amostras.
  *
- * É o que dá timbre de **corda** sem amostra nenhuma — o ruído do ataque vira o "dedo", e o filtro na
- * realimentação come os agudos a cada volta, que é o que uma corda real faz. Substitui a síntese por
- * osciladores em violão e baixo, que soava "tuc": oscilador dá forma de onda fixa, e corda tem espectro
- * que muda enquanto soa.
+ * Precisa ser na frequência pedida, não no DC: compensando pelo valor de DC, o violão saía 124
+ * cents alto no Mi5 e 230 no Sol♯5. Com o valor exato, zero cent em toda a extensão útil.
  */
-function cordaPulsada(m: number, t: number, dur: number, vel: number, brilho: number, decaimento: number) {
+function faseDoFiltro(k: number, f: number, sr: number): number {
+  const w = (2 * Math.PI * f) / sr;
+  const a = 1 - k;
+  return Math.atan2(a * Math.sin(w), 1 - a * Math.cos(w)) / w;
+}
+
+/** Magnitude do passa-baixa de um polo do laço na frequência pedida. */
+function magDoFiltro(k: number, f: number, sr: number): number {
+  const w = (2 * Math.PI * f) / sr;
+  const a = 1 - k;
+  return k / Math.hypot(1 - a * Math.cos(w), a * Math.sin(w));
+}
+
+/**
+ * O corte do filtro do laço acompanha a nota, no mínimo este múltiplo da fundamental.
+ *
+ * Sem isto a corda **morria nas agudas**. O ganho do laço é por volta, e a 1000 Hz são mil voltas
+ * por segundo: com o corte fixo em 3200, o filtro come 3,2% por volta e `0,968¹⁰⁰⁰` é zero — a nota
+ * sumia em 0,1 s. Medido: de MIDI 80 para cima não havia altura nenhuma para medir, e eu quase
+ * registrei isso como "desafina" quando o defeito era não soar.
+ */
+const CORTE_MINIMO_EM_FUNDAMENTAIS = 10;
+
+/** Timbre de cada corda: corte base do laço, tempo de queda de 60 dB, e volume relativo. */
+const CORDAS = {
+  violao: { corte: 3200, t60: 1.8, vel: 0.55 },
+  baixo: { corte: 1800, t60: 2.2, vel: 0.9 },
+} as const;
+
+/**
+ * Corda pulsada (Karplus-Strong), **calculada em JS e tocada como buffer**.
+ *
+ * ## O bug que isto conserta (09/11/2026)
+ *
+ * O Paulo: *"a nota tem o mesmo bug antigo — soa bizarra a primeira vez, depois não soa mais. Esse
+ * erro é inato aos sons de cordas."* Ele estava certo na localização e na causa.
+ *
+ * A versão anterior montava o laço com **nós vivos do WebAudio** — um `DelayNode` realimentado por
+ * um `BiquadFilter` e um ganho de perda. Medi o grafo num `OfflineAudioContext`:
+ *
+ * - **ele divergia.** O pico de amplitude chegava a 2,6 × 10²³ (deveria ser ≤ 1), e não era a
+ *   ressonância do filtro: com Q de Butterworth ainda ia a 6 × 10¹³;
+ * - **e produzia NaN.** No Lá4, 22.916 amostras não-finitas num render de 3 s;
+ * - a altura saía errada em **toda** nota: 440 Hz pedidos soavam 191.
+ *
+ * O NaN é o que explica a segunda metade do sintoma. `master` é compartilhado e permanente, e NaN
+ * que passa por um nó de ganho o envenena — **tudo que tocar depois fica em silêncio**. Daí "soa
+ * bizarra uma vez, depois não soa mais".
+ *
+ * (Um `DelayNode` dentro de um ciclo também não consegue atrasar menos de um bloco de render, 128
+ * amostras, o que já impediria qualquer altura acima de ~344 Hz de sair certa.)
+ *
+ * ## Por que calcular em JS resolve
+ *
+ * O laço vira uma conta de uma linha por amostra, com ganho `decaimento × |H|` sempre menor que 1 —
+ * **não pode divergir**. O resultado é um `AudioBuffer`: se algum dia produzir lixo, o lixo morre
+ * com aquela nota, porque não há nó permanente no caminho. E um `BufferSource` **para**, o que
+ * conserta de passagem o segundo defeito: `registrar(out, [], …)` recebia lista vazia, então
+ * `pararTudo()` não tinha o que parar e a corda anterior seguia soando por cima da seguinte.
+ *
+ * A parte fracionária do atraso é por interpolação linear. Testei allpass de Jaffe-Smith também, e
+ * **linear mediu melhor** (0 cents contra 16 no Mi1).
+ */
+/**
+ * As amostras de uma corda pulsada. **Pura**: nenhum nó de áudio, nada do navegador.
+ *
+ * Separada de `cordaPulsada` de propósito — é o que torna a conta testável sem AudioContext, e
+ * testá-la é o ponto: foi exatamente a falta de teste que deixou o bug de divergência passar.
+ * `audio/corda.test.ts` chama esta função, não uma cópia dela.
+ */
+export function amostrasDeCorda(
+  m: number, sr: number, corteBase: number, t60: number, total: number,
+  /** Ruído do ataque. Injetável só para o teste poder ser determinístico. */
+  rnd: () => number = () => Math.random() * 2 - 1,
+): Float32Array {
+  const f = hz(m);
+  const corte = Math.max(corteBase, f * CORTE_MINIMO_EM_FUNDAMENTAIS);
+  const k = 1 - Math.exp((-2 * Math.PI * corte) / sr);
+  /**
+   * A perda por volta sai do **tempo** de queda, não de um número fixo.
+   *
+   * Com perda fixa, o decaimento dependia da altura: a mesma perda por volta some muito mais rápido
+   * numa nota aguda, que dá mais voltas por segundo. Aqui o alvo é cair 60 dB em `t60` segundos em
+   * qualquer altura, e desconta-se o que o filtro do laço já come. O teto de 0,9995 é a trava de
+   * estabilidade — ganho de laço igual ou acima de 1 é o que fazia a versão anterior divergir.
+   */
+  const alvo = Math.exp(-Math.log(1000) / (t60 * f));
+  const decaimento = Math.min(0.9995, alvo / magDoFiltro(k, f, sr));
+  // comprimento do laço em amostras, descontada a fase do filtro: é isto que afina a corda
+  const L = Math.max(3, sr / f - faseDoFiltro(k, f, sr));
+  const N = Math.floor(L);
+  const frac = L - N;
+  const x = new Float32Array(total);
+  // o ataque: um estouro curto de ruído, do tamanho de uma volta da corda — é o "dedo"
+  const exc = Math.max(2, Math.round(sr / f));
+  for (let i = 0; i < exc; i++) x[i] = rnd() * (1 - i / exc);
+  // o laço: passa-baixa de um polo come os agudos a cada volta, que é o que uma corda real faz
+  let estado = 0;
+  for (let i = N + 1; i < total; i++) {
+    const lido = (1 - frac) * x[i - N] + frac * x[i - N - 1];
+    estado += k * (lido - estado);
+    x[i] = decaimento * estado;
+  }
+  return x;
+}
+
+function cordaPulsada(m: number, t: number, dur: number, vel: number, corda: typeof CORDAS[keyof typeof CORDAS]) {
   const c = audio();
-  const periodo = 1 / hz(m);
-  const amostras = Math.max(2, Math.round(c.sampleRate * periodo));
+  const sr = c.sampleRate;
+  const total = Math.ceil(sr * (Math.max(dur, 0.35) + 0.5));
+  const buf = c.createBuffer(1, total, sr);
+  buf.getChannelData(0).set(amostrasDeCorda(m, sr, corda.corte, corda.t60, total));
 
-  // o ataque: um estouro curto de ruído, do tamanho de uma volta da corda
-  const exc = c.createBuffer(1, amostras, c.sampleRate);
-  const d = exc.getChannelData(0);
-  for (let i = 0; i < amostras; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / amostras);
   const fonte = c.createBufferSource();
-  fonte.buffer = exc;
-
-  // o laço: atraso de um período, com perda e passa-baixa — é ele que faz a corda decair
-  const atraso = c.createDelay(0.2);
-  atraso.delayTime.value = periodo;
-  const perda = c.createGain();
-  perda.gain.value = decaimento;
-  const abafa = c.createBiquadFilter();
-  abafa.type = 'lowpass';
-  abafa.frequency.value = brilho;
-
+  fonte.buffer = buf;
   const out = c.createGain();
   out.gain.value = vel;
-  fonte.connect(atraso);
-  atraso.connect(abafa).connect(perda).connect(atraso);  // realimentação
-  atraso.connect(out).connect(master);
-
-  const fim = t + Math.max(dur, 0.4) + 0.6;
+  fonte.connect(out).connect(master);
   out.gain.setValueAtTime(vel, t);
   out.gain.setTargetAtTime(0.0001, t + Math.max(dur, 0.35), 0.18);
   fonte.start(t);
-  fonte.stop(t + periodo * 2);
-  registrar(out, [], fim);
+  registrar(out, [fonte], t + total / sr);
 }
 
 /** Toca uma altura MIDI. `t` é o tempo absoluto do contexto (use now() + atraso). */
 export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel = 0.7) {
   // violão e baixo são cordas: a síntese por osciladores não dá o timbre delas
-  if (voice === 'baixo') return cordaPulsada(m, t, dur, 0.9 * vel, 1800, 0.993);
-  if (voice === 'violao') return cordaPulsada(m, t, dur, 0.55 * vel, 3200, 0.986);
+  if (voice === 'baixo') return cordaPulsada(m, t, dur, CORDAS.baixo.vel * vel, CORDAS.baixo);
+  if (voice === 'violao') return cordaPulsada(m, t, dur, CORDAS.violao.vel * vel, CORDAS.violao);
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -150,9 +237,11 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
  * O que ainda pode soar. Sem isto, tocar de novo enquanto o acorde anterior decai **sobrepõe os dois**
  * — e quem está identificando um acorde de ouvido escuta a soma de dois acordes, que é outra coisa.
  */
-const soando = new Set<{ out: GainNode; oscs: OscillatorNode[] }>();
+/** Qualquer fonte que se possa parar: oscilador ou buffer (a corda pulsada é buffer). */
+type Paravel = { stop(when: number): void };
+const soando = new Set<{ out: GainNode; oscs: Paravel[] }>();
 
-function registrar(out: GainNode, oscs: OscillatorNode[], stop: number) {
+function registrar(out: GainNode, oscs: Paravel[], stop: number) {
   const nó = { out, oscs };
   soando.add(nó);
   // limpa sozinho quando a nota termina, para o conjunto não crescer para sempre
