@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, CLEFS, ROOTS, SUP, alturaDoPc, arr, buildChord, chordName, chordOptions, chordTypes, guitarChordQuestion, midi, mod, pcPermitido, pick, pickClef, randInt } from '../helpers';
+import { ALL_CHORDS, CHORDS, CLEFS, FRETS, ROOTS, SUP, alturaDoPc, arr, buildChord, chordName, chordOptions, chordTypes, guitarChordQuestion, midi, mod, pcPermitido, pick, pickClef, randInt } from '../helpers';
 import type { ChordId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -14,16 +14,22 @@ export const queAcordeEEsse: CatalogItem = {
   settings: ctx => [
     SUP(ctx, ['pauta', 'teclado', 'braco'], v => (v === 'braco' ? { arp: 0.04 } : v === 'pauta' ? { arp: 0.08 } : {})),
     { ...CLEFS(ctx), quando: s => s.superficie === 'pauta' },
-    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', quando: s => s.superficie !== 'braco', justify: true,
+    // As qualidades passam a valer no braço também — o gerador monta qualquer uma.
+    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true,
       options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.superficie === 'pauta' },
-    // No braço as formas são posições reais, e não acordes montados: por isso a lista é de formas.
-    { id: 'formas', label: ctx.t('settings.shapes'), type: 'single', quando: s => s.superficie === 'braco',
-      options: [{ id: 'abertos', label: ctx.t('settings.openChords') }, { id: 'pestana', label: ctx.t('settings.barreChords') }, { id: 'todos', label: ctx.t('settings.all') }] },
+    // No braço as formas vêm do gerador (`theory/digitacoes.ts`), não de tabela: qualquer voicing,
+    // com extensão e inversão. O que se configura é o que se pergunta e onde a mão cabe.
+    { id: 'pergunta', label: ctx.t('settings.whatToAsk'), type: 'single', quando: s => s.superficie === 'braco',
+      options: [{ id: 'acorde', label: ctx.t('settings.askChord') }, { id: 'baixo', label: ctx.t('settings.askBass') }] },
+    // Formas MÓVEIS por padrão: um gavetão aberto é uma forma numa posição fixa; sem cordas soltas
+    // a forma é relativa e move pelo braço, que é a que transfere (decisão do Paulo).
+    { id: 'soltas', label: ctx.t('settings.openStrings'), type: 'toggle', quando: s => s.superficie === 'braco' },
+    { ...FRETS(ctx), quando: s => s.superficie === 'braco' },
   ],
-  defaults: { superficie: 'pauta', claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false, formas: 'abertos' },
+  defaults: { superficie: 'pauta', claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false, pergunta: 'acorde', soltas: false, casas: '0-12' },
   make(s, ctx) {
-    if (s.superficie === 'braco') return guitarChordQuestion(String(s.formas ?? 'abertos'), ctx);
+    if (s.superficie === 'braco') return guitarChordQuestion(s, ctx);
     const types = arr(s.tipos, ['maior']) as ChordId[];
     const type = pick(types);
     if (s.superficie === 'teclado') {

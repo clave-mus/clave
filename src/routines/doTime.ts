@@ -147,8 +147,11 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
           i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' }),
           i('faca-o-intervalo', { superficie: 'braco', instrumento: 'auto' }),
         ] },
-      { minutos: 5, porque: 'desenho de acorde no braço, formas abertas',
-        instancias: [i('que-acorde-e-esse', { superficie: 'braco', formas: 'abertos' })] },
+      // Formas móveis, nas cinco primeiras casas: é a forma relativa que transfere, e não o
+      // gavetão numa posição fixa. As tabelas à mão saíram em 09/11/2026 — o desenho vem do
+      // gerador de `theory/digitacoes.ts`.
+      { minutos: 5, porque: 'desenho de acorde no braço, formas móveis',
+        instancias: [i('que-acorde-e-esse', { superficie: 'braco', soltas: false, casas: '0-5' })] },
       // A única que pede o instrumento de verdade. Quem está na rua pula; quem está em casa tem aqui
       // a parte que a tela não faz.
       { minutos: 6, porque: 'achar a nota no braço de verdade: a única etapa que a tela não consegue fazer por você',
