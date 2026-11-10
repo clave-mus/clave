@@ -144,8 +144,8 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       // alternar entre elas gasta metade do tempo que fazer as duas toda vez.
       { minutos: 6, politica: 'ordem', porque: 'o intervalo nas duas direções: reconhecer o desenho numa vez, construí-lo na outra',
         instancias: [
-          i('que-intervalo-e-esse', { superficie: 'braco', instrumento: 'auto' }),
-          i('faca-o-intervalo', { superficie: 'braco', instrumento: 'auto' }),
+          i('intervalo-no-instrumento', { direcao: 'identificar', instrumento: 'auto' }),
+          i('intervalo-no-instrumento', { direcao: 'construir', instrumento: 'auto' }),
         ] },
       // Formas móveis, nas cinco primeiras casas: é a forma relativa que transfere, e não o
       // gavetão numa posição fixa. As tabelas à mão saíram em 09/11/2026 — o desenho vem do

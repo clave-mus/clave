@@ -101,7 +101,7 @@ describe('catálogo de exercícios', () => {
       ['nota-na-pauta', {}, { ...base }],
       ['nota-no-instrumento', {}, { ...base, voice: 'violao' }],
       ['nota-no-instrumento', { instrumento: 'piano' }, { ...base }],
-      ['que-intervalo-e-esse', {}, { ...base }],
+      ['intervalo-na-pauta', {}, { ...base }],
       // o arpejo acompanha a SUPERFÍCIE: na pauta quase em bloco, no violão dedilhado, no teclado em bloco
       ['que-acorde-e-esse', { superficie: 'pauta' }, { ...base, arp: 0.08 }],
       ['que-acorde-e-esse', { superficie: 'teclado' }, { ...base }],
@@ -118,16 +118,13 @@ describe('catálogo de exercícios', () => {
       expect(final(id, over)).toMatchObject(expected);
     });
     it('no braço, o timbre vem do instrumento da pessoa (violão ou baixo)', () => {
-      // Os que ainda têm superfície. `que-acorde-e-esse` fica fora: as formas de acorde no braço
-      // são de VIOLÃO, posições reais, e não existem num baixo de quatro cordas.
-      for (const id of ['que-intervalo-e-esse']) {
-        expect(final(id, { superficie: 'braco' }, 'violao').voice).toBe('violao');
-        expect(final(id, { superficie: 'braco' }, 'baixo').voice).toBe('baixo');
+      // `que-acorde-e-esse` fica fora: as formas de acorde no braço são de VIOLÃO, posições
+      // reais, e não existem num baixo de quatro cordas.
+      // Os de instrumento já nascem no braço: o instrumento é configuração, e `auto` é o do perfil.
+      for (const id of ['nota-no-instrumento', 'intervalo-no-instrumento']) {
+        expect(final(id, {}, 'violao').voice, id).toBe('violao');
+        expect(final(id, {}, 'baixo').voice, id).toBe('baixo');
       }
-      // E `nota-no-instrumento`, que já nasce no braço — o instrumento é configuração, e `auto` é
-      // o do perfil (decisão do Paulo, 09/11/2026).
-      expect(final('nota-no-instrumento', {}, 'violao').voice).toBe('violao');
-      expect(final('nota-no-instrumento', {}, 'baixo').voice).toBe('baixo');
     });
   });
 

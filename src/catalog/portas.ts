@@ -46,7 +46,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['nota-no-instrumento', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
+    itens: ['nota-no-instrumento', 'intervalo-no-instrumento', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',
@@ -63,12 +63,12 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'teoria', abaixoDoMinimoPorOra: true,
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['teoria-intervalos', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
+    itens: ['teoria-intervalos', 'intervalo-na-pauta', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['nota-na-pauta', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['nota-na-pauta', 'intervalo-na-pauta', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',

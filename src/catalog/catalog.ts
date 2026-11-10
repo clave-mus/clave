@@ -8,8 +8,8 @@
 // **A ordem desta lista é a ordem em que os itens aparecem** onde não há agrupamento.
 import { notaNaPautaItem } from './items/nota-na-pauta';
 import { notaNoInstrumento } from './items/nota-no-instrumento';
-import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
-import { facaOIntervalo } from './items/faca-o-intervalo';
+import { intervaloNaPauta } from './items/intervalo-na-pauta';
+import { intervaloNoInstrumento } from './items/intervalo-no-instrumento';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
@@ -25,8 +25,8 @@ import type { CatalogItem } from './types';
 export const EXERCISES: CatalogItem[] = [
   notaNaPautaItem,
   notaNoInstrumento,
-  queIntervaloEEsse,
-  facaOIntervalo,
+  intervaloNaPauta,
+  intervaloNoInstrumento,
   queAcordeEEsse,
   pautaArmadura,
   pautaEscala,

@@ -9,10 +9,10 @@ const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
   params: resolveParams('baixo', {}),
 };
-const item = EXERCISES.filter(isSeries).find(e => e.id === 'que-intervalo-e-esse')!;
+const item = EXERCISES.filter(isSeries).find(e => e.id === 'intervalo-na-pauta')!;
 /** Quantas colunas tem a pauta: duas notas em sequência (melódico) ou as duas juntas (harmônico). */
 const colunas = (forma: string) => {
-  const q = item.make({ ...item.defaults, superficie: 'pauta', forma } as Record<string, SettingValue> as never, ctx);
+  const q = item.make({ ...item.defaults, direcao: 'ler', forma } as Record<string, SettingValue> as never, ctx);
   if (q.visual.kind !== 'staff') throw new Error('esperava pauta');
   return q.visual.columns.length;
 };
@@ -37,7 +37,7 @@ describe('forma do intervalo', () => {
 
   it('o som acompanha o desenho: harmônico toca junto, melódico em sequência', () => {
     for (let i = 0; i < 60; i++) {
-      const q = item.make({ ...item.defaults, superficie: 'pauta', forma: 'ambas' } as never, ctx);
+      const q = item.make({ ...item.defaults, direcao: 'ler', forma: 'ambas' } as never, ctx);
       if (q.visual.kind !== 'staff' || !q.sound) throw new Error('esperava pauta com som');
       const grupos = q.sound.groups;
       expect(grupos.length, 'cada coluna do desenho é um grupo de som').toBe(q.visual.columns.length);

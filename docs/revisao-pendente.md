@@ -112,7 +112,7 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | O que só você confere |
 |---|---|
-| `faca-o-intervalo` | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
+| `intervalo-na-pauta` e `intervalo-no-instrumento` (era `faca-o-intervalo`) | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 

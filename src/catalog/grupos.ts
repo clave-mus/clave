@@ -43,7 +43,7 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     // justificativa que existia aqui — "entra mesmo sendo escrever, não ler" — deixou de ser
     // necessária. Era remendo da estrutura antiga.
     id: 'leitura-pauta', nome: 'grupos.leitura-pauta',
-    itens: [{ itemId: 'nota-na-pauta' }, na('que-intervalo-e-esse', 'pauta'), na('que-acorde-e-esse', 'pauta'),
+    itens: [{ itemId: 'nota-na-pauta' }, { itemId: 'intervalo-na-pauta' }, na('que-acorde-e-esse', 'pauta'),
       { itemId: 'pauta-escala' }],
   },
   {
@@ -56,7 +56,7 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
   },
   {
     id: 'o-braco', nome: 'grupos.o-braco',
-    itens: [{ itemId: 'nota-no-instrumento' }, na('que-intervalo-e-esse', 'braco'),
+    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'intervalo-no-instrumento' },
       na('que-acorde-e-esse', 'braco')],
   },
   {

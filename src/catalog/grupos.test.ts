@@ -106,13 +106,15 @@ describe('companheirosDe', () => {
     expect(c.map(chave).sort()).toEqual([
       chave(inst('pauta-escala')),
       chave(inst('que-acorde-e-esse', { superficie: 'pauta' })),
-      chave(inst('que-intervalo-e-esse', { superficie: 'pauta' })),
+      chave(inst('intervalo-na-pauta', {})),
     ].sort());
   });
 
   it('e os companheiros vêm com a superfície certa, nunca com a configuração do outro grupo', () => {
-    for (const m of companheirosDe(inst('nota-no-instrumento', {}), sempre)) {
-      if (m.itemId === 'nota-no-instrumento') continue; // ele mesmo, sem superfície a conferir
+    // Só os que AINDA têm superfície precisam vir com ela. Os itens já reorganizados — nota e
+    // intervalo — não têm superfície nenhuma: a superfície virou o item.
+    for (const m of companheirosDe(inst('que-acorde-e-esse', { superficie: 'braco' }), sempre)) {
+      if (m.itemId.endsWith('-no-instrumento') || m.itemId.endsWith('-na-pauta')) continue;
       expect(m.settings?.superficie, m.itemId).toBe('braco');
     }
   });
