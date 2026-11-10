@@ -174,3 +174,24 @@ describe('as alternativas não se descartam de olho', () => {
     }
   });
 });
+
+// O vazamento de 09/11: `Leitura.tsx` imprimia `RHYTHM_PRESETS[].name` cru, e em inglês os chips
+// diziam "Duas figuras: semínima e colcheias". O campo saiu do dado — guardar texto ali é o que
+// permitia imprimi-lo —, e a tela passou a traduzir pelo ID.
+//
+// A garantia de que todo id tem tradução já existia, mas **espalhada em dois arquivos**: o
+// `presets.test.ts` confere que todo atalho de `ritmo-ouvido` tem nome traduzido nos dois idiomas,
+// e o teste acima confere que os ids dos atalhos são os mesmos de `RHYTHM_PRESETS`. Compondo as
+// duas, segue. Aqui ela fica dita de uma vez, porque garantia que depende de composição é garantia
+// que alguém desfaz sem perceber.
+describe('os presets de ritmo são traduzíveis pelo id', () => {
+  it('todo id tem texto nos dois idiomas, e nenhum texto mora no dado', () => {
+    for (const p of RHYTHM_PRESETS) {
+      expect(Object.keys(p).sort(), `${p.id} guarda texto`).toEqual(['cells', 'id']);
+      for (const locale of ['pt', 'en'] as const) {
+        const chave = `theory.rhythmPresets.${p.id}` as MessageKey;
+        expect(translate(locale, chave), `${p.id}/${locale}`).not.toBe(chave);
+      }
+    }
+  });
+});

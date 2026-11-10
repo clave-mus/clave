@@ -106,9 +106,13 @@ export default function Leitura() {
         <Chip on={mode === 'notas'} onClick={() => setMode('notas')}>{t('reading.notes')}</Chip>
         <Chip on={mode === 'ritmo'} onClick={() => setMode('ritmo')}>{t('reading.rhythm')}</Chip>
       </div>
+      {/* Os dois presets traduzem pelo que o dado guarda: o de notas por chave (`p.name` é
+          `MessageKey`), o de ritmo pelo ID — que é como `ritmo-ouvido` já fazia, e por isso nenhuma
+          chave nova foi preciso. O de ritmo imprimia `{p.name}` cru, e em inglês os chips diziam
+          "Duas figuras: semínima e colcheias". */}
       {mode === 'notas'
         ? <div className="row">{NOTE_PRESETS.map(p => <Chip key={p.id} on={p.id === preset.id} onClick={() => setPreset(p)}>{t(p.name)}</Chip>)}</div>
-        : <div className="row">{RHYTHM_PRESETS.map(p => <Chip key={p.id} on={p.id === rPreset.id} onClick={() => setRPreset(p)}>{p.name}</Chip>)}</div>}
+        : <div className="row">{RHYTHM_PRESETS.map(p => <Chip key={p.id} on={p.id === rPreset.id} onClick={() => setRPreset(p)}>{t(`theory.rhythmPresets.${p.id}` as MessageKey)}</Chip>)}</div>}
 
       <div style={{ background: 'var(--co)', padding: '20px 16px', display: 'grid', gap: 8 }}>
         {[0, 1].map(row => (
