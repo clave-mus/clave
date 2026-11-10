@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitida, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 

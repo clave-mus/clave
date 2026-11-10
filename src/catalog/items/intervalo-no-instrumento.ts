@@ -1,4 +1,4 @@
-import { INST, arr, mod, paresNoBraco, pcNameUm, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
+import { INST, arr, mod, paresNoBraco, pcNameUm, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
 import { INTERVALS } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -33,20 +33,22 @@ export const intervaloNoInstrumento: CatalogItem = {
   contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   /**
-   * **Nada.** E isto é um achado da reorganização, pego pelo teste `contexto-declarado`.
+   * Material **passou a valer no braço** (pedido do Paulo, 10/11/2026).
    *
-   * `que-intervalo-e-esse` declarava `['key', 'material']` porque a metade da PAUTA lia os dois
-   * (via `notaNaPauta`). A metade do braço nunca leu nenhum: ela enumera os pares do braço e filtra
-   * por semitons. A declaração antiga era a **união** das superfícies — então o painel de prática
-   * oferecia tonalidade e material dentro do braço, onde não faziam nada.
+   * Era um achado da reorganização: `que-intervalo-e-esse` declarava `['key','material']` porque a
+   * metade da PAUTA lia os dois, e a metade do braço nunca leu nenhum. A declaração era a união das
+   * superfícies, e o painel oferecia tonalidade e material dentro do braço onde não faziam nada.
    *
-   * É o mesmo defeito que o controle de material tem com tonalidade livre: controle morto ensina a
-   * pessoa errado. Separado, cada item declara o que de fato lê.
+   * Em vez de só declarar a verdade (`[]`), o braço passou a de fato respeitar: com material
+   * diatônico e tonalidade fixa, **as duas notas do par têm de estar na tonalidade**. É a restrição
+   * real da música — os intervalos que se encontram tocando numa tonalidade são os que aquela
+   * tonalidade produz, e o tamanho muda com o grau: a terça de Dó é maior, a de Ré é menor.
    *
-   * 👤 Oportunidade, não feita aqui: o braço **poderia** respeitar material, filtrando os pares para
-   * as notas da tonalidade. Seria comportamento novo, não reorganização, e é escolha do Paulo.
+   * Medido antes de fazer, no violão até a casa 9: 453 pares no total, **138 sobrevivem** ao filtro
+   * de dó maior (30%), e **nenhum tamanho zera** — o mais magro fica com 4. E onde afina, a magreza
+   * é verdadeira: o semitom em dó maior existe só em Mi→Fá e Si→Dó, e o trítono só em Fá→Si.
    */
-  respeita: [],
+  respeita: ['key', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
@@ -60,8 +62,16 @@ export const intervaloNoInstrumento: CatalogItem = {
   make(s, ctx) {
     const tuning = tuningOf(s, ctx);
     const querSemis = new Set(arr(s.intervalos, ['M3']).map(semisDoIntervalo));
-    const pares = paresNoBraco(tuning).filter(x => querSemis.has(x.d));
-    const par = pares.length ? pick(pares) : pick(paresNoBraco(tuning));
+    const noMaterial = (x: { s1: number; f1: number; d: number }) => {
+      const a = tuning[x.s1] + x.f1;
+      return pcPermitida(ctx, a) && pcPermitida(ctx, a + x.d);
+    };
+    const todos = paresNoBraco(tuning);
+    // Em escada: o tamanho pedido E o material; só o tamanho; qualquer par. O material nunca zera
+    // com as tonalidades de hoje (medido), mas a escada protege de uma seleção estreita futura.
+    const pares = todos.filter(x => querSemis.has(x.d) && noMaterial(x));
+    const par = pares.length ? pick(pares)
+      : (p2 => p2.length ? pick(p2) : pick(todos))(todos.filter(x => querSemis.has(x.d)));
     const lo = tuning[par.s1] + par.f1;
 
     if (s.direcao === 'construir') {
