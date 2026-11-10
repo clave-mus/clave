@@ -663,6 +663,7 @@ const en: Shape<typeof pt> = {
     restoreLevel: 'Back to the preset',
     notInMeter: 'Does not exist in this time signature',
     generateError: 'Couldn’t generate the exercise.',
+    errorCellsNotInMeter: 'The chosen cells do not fit {meter} — they take one beat, and the pulse here is different. Change the time signature or pick other cells.',
     errorNoFigures: 'No note values are left with these choices. Turn on at least one.',
     errorCantFill: 'These note values can’t fill a bar of {meter}. Turn on the quarter note, or pick another preset.',
     errorCantFillCompound: 'These note values can’t fill a bar of {meter}. Turn on the quarter and eighth notes, or pick another preset.',
@@ -685,6 +686,7 @@ const en: Shape<typeof pt> = {
       ligaduras: 'Ties',
       pontuadas: 'Dotted notes',
       esparsas: 'Sparse notes',
+      essenciais: 'Essential cells',
     },
     presetHints: {
       minimas: 'Half notes and rests only. As simple as it gets.',
@@ -694,6 +696,7 @@ const en: Shape<typeof pt> = {
       ligaduras: 'Half and quarter notes, and the tie is the subject.',
       pontuadas: 'Half, quarter and eighth notes, with dotted rhythm.',
       esparsas: 'A bar almost all silence, with two loose sixteenths.',
+      essenciais: 'The nine sixteenth-note cells that show up most in music, plus the quarter-and-eighth triplet.',
     },
     restAmount: 'How much rest',
     advancedNote: 'The presets above already set everything up. From here down is fine-tuning.',

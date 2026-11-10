@@ -218,7 +218,8 @@ export default function Ritmo() {
   const noMeter = (has: boolean) => (has ? undefined : t('rhythm.notInMeter'));
   // Problemas de configuração vêm do gerador como código; qualquer outro erro é um defeito.
   const errorText = (code: string) =>
-    code === 'noFigures' ? t('rhythm.errorNoFigures')
+    code === 'cellsNotInMeter' ? t('rhythm.errorCellsNotInMeter', { meter: settings.meter })
+      : code === 'noFigures' ? t('rhythm.errorNoFigures')
       : code === 'cantFill' ? t(METERS[settings.meter].compound ? 'rhythm.errorCantFillCompound' : 'rhythm.errorCantFill', { meter: settings.meter })
         : t('rhythm.generateError');
 

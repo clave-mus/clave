@@ -36,6 +36,19 @@ export interface RhythmSettings {
    */
   chanceDeLigadura: number;
   /**
+   * **Focar em células específicas**, pelo id do catálogo (pedido do Paulo, 09/11/2026: "poder
+   * escolher focar em células rítmicas essenciais", com uma lista de nove).
+   *
+   * Quando tem algo aqui, o pool é **exatamente** estas células — `figuras`, `pausas` e `recursos`
+   * deixam de filtrar. É de propósito: quem nomeia as células quer aquelas, e manter os filtros
+   * por cima tiraria metade da lista (duas das nove do Paulo têm pausa de semicolcheia, e as
+   * pontuadas cairiam com o recurso "pontuada" desligado).
+   *
+   * Se a lista não der para preencher o compasso — em 6/8 nenhuma célula de um tempo serve —,
+   * `checkSettings` devolve `cantFill` e a tela já explica. Não precisou de guarda nova.
+   */
+  celulas?: readonly string[];
+  /**
    * Como o compasso é montado. `celulas` é o de sempre: sorteia do catálogo de `rhythm-cells.ts`.
    * `esparso` é posicional — sorteia N casas numa grade de semicolcheias e o resto vira pausa
    * (pedido do Paulo: *"pra cada compasso, você sorteia 2 números entre 1 e 8"*).
@@ -77,6 +90,28 @@ export interface Preset {
 
 const SEM_ENFEITE = { pontuada: false, sincope: true, ligadura: false, quialtera: false };
 const POUCAS_PAUSAS = 0.45;
+
+/**
+ * As nove células essenciais que o Paulo listou em 09/11/2026, na ordem dele.
+ *
+ * **Todas as nove já existiam** em `CELL_DEFS` — eu quase disse a ele que quatro faltavam, porque
+ * estava olhando o catálogo antigo de `theory/rhythm.ts`, que tem doze. O que faltava era poder
+ * pedir *estas*, e não uma classe de figuras.
+ *
+ * Todas ocupam um tempo, inclusive a tercina (`3:2(q 8)` soma 24 ticks), então um compasso 4/4 são
+ * quatro delas. Em 2/4 e 3/4 também serve; em 6/8 o pulso é semínima pontuada e nenhuma cabe.
+ */
+export const CELULAS_ESSENCIAIS = [
+  '16x4',           // 4 semicolcheias
+  '8-16-16',        // 1 colcheia + 2 semicolcheias
+  '16-16-8',        // 2 semicolcheias + 1 colcheia
+  '16-8-16',        // 1 semicolcheia + 1 colcheia + 1 semicolcheia
+  '8d-16',          // colcheia pontuada + semicolcheia
+  '16-8d',          // semicolcheia + colcheia pontuada
+  'r16-16-16-16',   // pausa de semicolcheia + 3 semicolcheias
+  '8-r16-16',       // colcheia + pausa de semicolcheia + semicolcheia
+  'tq-8',           // semínima + colcheia, em tercina
+] as const;
 
 export const PRESETS: Preset[] = [
   {
@@ -136,6 +171,17 @@ export const PRESETS: Preset[] = [
       modo: 'esparso', notasPorCompasso: 2,
     },
   },
+  {
+    id: 'essenciais',
+    settings: {
+      celulas: CELULAS_ESSENCIAIS,
+      // Com `celulas` preenchido estes três não filtram mais nada; ficam coerentes para o caso de
+      // alguém desmarcar a lista depois e cair de volta no modo por figuras.
+      figures: { w: false, h: false, q: true, '8': true, '16': true },
+      rests: true, traits: { pontuada: true, sincope: true, ligadura: false, quialtera: true },
+      pausas: 1, modo: 'celulas',
+    },
+  },
 ];
 
 export const presetById = Object.fromEntries(PRESETS.map(p => [p.id, p]));
@@ -191,7 +237,13 @@ export function rng(seed: number): () => number {
  * diz tudo que o nível dizia, e com granularidade melhor. A escada saiu da tela junto.
  */
 export function poolFor(s: RhythmSettings): Cell[] {
-  return cellsFor(METERS[s.meter]).filter(c =>
+  const doCompasso = cellsFor(METERS[s.meter]);
+  // Células nomeadas mandam: viram o pool inteiro, sem os filtros por cima (ver `celulas`).
+  if (s.celulas?.length) {
+    const pedidas = new Set(s.celulas);
+    return doCompasso.filter(c => pedidas.has(c.id));
+  }
+  return doCompasso.filter(c =>
     c.figures.every(f => s.figures[f]) &&
     (c.rests.length === 0 || (s.rests && c.rests.every(r => s.restKinds[r]))) &&
     c.traits.every(t => s.traits[t]));
@@ -224,11 +276,15 @@ function completable(pool: Cell[], m: Meter): boolean[] {
 }
 
 /** Problema que impede gerar compassos com essas configurações; a tela explica cada um no idioma. */
-export type SettingsProblem = 'noFigures' | 'cantFill';
+export type SettingsProblem = 'noFigures' | 'cantFill' | 'cellsNotInMeter';
 /** Devolve o problema, ou null se as configurações geram compassos. */
 export function checkSettings(s: RhythmSettings): SettingsProblem | null {
   const m = METERS[s.meter];
   const pool = poolFor(s);
+  // Antes de `noFigures`: quando há células NOMEADAS e nenhuma serve para esta fórmula, dizer
+  // "nenhuma figura escolhida" mentiria — a pessoa escolheu nove, e o problema é o compasso. Em
+  // 6/8 o pulso é semínima pontuada e nenhuma célula de um tempo cabe.
+  if (s.celulas?.length && pool.length === 0) return 'cellsNotInMeter';
   if (!pool.some(c => c.events.some(e => !e.rest))) return 'noFigures';
   if (!completable(pool, m)[0]) return 'cantFill';
   return null;

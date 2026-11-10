@@ -663,6 +663,7 @@ const pt = {
     restoreLevel: 'Voltar ao preset',
     notInMeter: 'Não existe nesta fórmula de compasso',
     generateError: 'Não deu para gerar o exercício.',
+    errorCellsNotInMeter: 'As células escolhidas não cabem em {meter} — elas ocupam um tempo, e aqui o pulso é outro. Troque a fórmula de compasso ou escolha outras células.',
     errorNoFigures: 'Nenhuma figura sobrou com essas escolhas. Ative pelo menos uma.',
     errorCantFill: 'Com essas figuras não dá para completar um compasso de {meter}. Ative a semínima, ou escolha outro preset.',
     errorCantFillCompound: 'Com essas figuras não dá para completar um compasso de {meter}. Ative a semínima e a colcheia, ou escolha outro preset.',
@@ -685,6 +686,7 @@ const pt = {
       ligaduras: 'Ligaduras',
       pontuadas: 'Notas pontuadas',
       esparsas: 'Notas esparsas',
+      essenciais: 'Células essenciais',
     },
     presetHints: {
       minimas: 'Só mínimas e pausas. O mais simples que existe.',
@@ -694,6 +696,7 @@ const pt = {
       ligaduras: 'Mínimas e semínimas, e a ligadura é o assunto.',
       pontuadas: 'Mínimas, semínimas e colcheias, com o ritmo pontuado.',
       esparsas: 'Compasso quase todo em silêncio, com duas semicolcheias soltas.',
+      essenciais: 'As nove células de semicolcheia que mais aparecem na música, e a tercina de semínima e colcheia.',
     },
     restAmount: 'Quantidade de pausa',
     advancedNote: 'Os presets acima já deixam tudo pronto. Daqui para baixo é ajuste fino.',

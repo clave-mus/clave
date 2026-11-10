@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CELLS, METER_IDS, METERS, parsePattern } from './rhythm-cells';
+import { CELLS, cellsFor, METER_IDS, METERS, parsePattern, TPQ } from './rhythm-cells';
 import {
-  aplicarPreset, BAR_COUNTS, barSignature, checkSettings, DEFAULT_SETTINGS, generateExercise, poolFor,
-  PRESETS, timeline, validateExercise, type RhythmSettings,
+  aplicarPreset, BAR_COUNTS, barSignature, CELULAS_ESSENCIAIS, checkSettings, DEFAULT_SETTINGS,
+  generateExercise, poolFor, PRESETS, timeline, validateExercise, type RhythmSettings,
 } from './rhythm-gen';
 
 const settings = (over: Partial<RhythmSettings> = {}): RhythmSettings => ({ ...DEFAULT_SETTINGS, ...over });
@@ -379,5 +379,56 @@ describe('linha do tempo', () => {
         if (all[i].rest) expect(t.attack).toBe(false);
       });
     }
+  });
+});
+
+// Focar em células específicas (09/11/2026). O Paulo listou nove "células essenciais" e pediu para
+// poder focar nelas. Todas as nove JÁ existiam no catálogo; o que faltava era poder pedir *estas*,
+// em vez de uma classe de figuras.
+describe('células essenciais', () => {
+  const base = aplicarPreset(DEFAULT_SETTINGS, 'essenciais');
+
+  it('o preset existe e traz as nove da lista dele', () => {
+    expect(CELULAS_ESSENCIAIS).toHaveLength(9);
+    expect(base.celulas).toEqual(CELULAS_ESSENCIAIS);
+  });
+
+  it('todas as nove existem no catálogo — nenhum id inventado', () => {
+    const doCatalogo = new Set(cellsFor(METERS['4/4']).map(c => c.id));
+    for (const id of CELULAS_ESSENCIAIS) expect(doCatalogo.has(id), id).toBe(true);
+  });
+
+  it('todas ocupam um tempo, então quatro delas fecham um 4/4', () => {
+    const porId = new Map(cellsFor(METERS['4/4']).map(c => [c.id, c]));
+    for (const id of CELULAS_ESSENCIAIS) expect(porId.get(id)!.span, id).toBe(TPQ);
+  });
+
+  it('o pool passa a ser exatamente as nove, ignorando os filtros por figura', () => {
+    const ids = poolFor(base).map(c => c.id).sort();
+    expect(ids).toEqual([...CELULAS_ESSENCIAIS].sort());
+    // e o filtro por figura de fato não manda mais: desligar a semicolcheia não tira nada
+    const semSemi = { ...base, figures: { ...base.figures, '16': false } };
+    expect(poolFor(semSemi).map(c => c.id).sort()).toEqual(ids);
+  });
+
+  it('gera exercício válido, e só com estas células', () => {
+    const permitidas = new Set<string>(CELULAS_ESSENCIAIS);
+    for (const meter of ['2/4', '3/4', '4/4'] as const) {
+      const s = { ...base, meter };
+      expect(checkSettings(s), meter).toBeNull();
+      for (let i = 0; i < 30; i++) {
+        const ex = generateExercise({ ...s, bars: 4 });
+        expect(validateExercise(ex), meter).toEqual([]);
+        for (const bar of ex.bars) for (const c of bar.cells) expect(permitidas.has(c), `${meter}: ${c}`).toBe(true);
+      }
+    }
+  });
+
+  // Em 6/8 o pulso é semínima pontuada e nenhuma das nove cabe. Aqui o eixo novo criou um modo de
+  // falha que as mensagens antigas não descreviam: o pool fica vazio, e `checkSettings` dizia
+  // `noFigures` — "nenhuma figura escolhida". Isso MENTIRIA: a pessoa escolheu nove células, e o
+  // problema é a fórmula de compasso. Daí o terceiro código.
+  it('em 6/8 avisa que as células não cabem, e não que faltam figuras', () => {
+    expect(checkSettings({ ...base, meter: '6/8' })).toBe('cellsNotInMeter');
   });
 });
