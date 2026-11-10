@@ -18,9 +18,12 @@ export function catalogByModule(opts: { mobileOnly?: boolean; revisao?: boolean;
   // `portao` é opção para o teste exercitar o comportamento do beta (portão ligado) mesmo com o
   // padrão de hoje desligado — ver `publicacao.ts`.
   const aparece = (i: { publicacao?: Parameters<typeof visivel>[0] }) => visivel(i.publicacao, !!opts.revisao, opts.portao);
+  // Um item aparece na sua área e nas que ele declarar em `tambemEm` — ver taxonomy.ts.
+  const naArea = (i: { primaryModule: string; tambemEm?: string[] }, m: string) =>
+    i.primaryModule === m || !!i.tambemEm?.includes(m);
   return MODULE_LIST.map(m => ({
     module: m.id,
-    exercises: EXERCISES.filter(e => e.primaryModule === m.id && aparece(e) && (!opts.mobileOnly || e.mobile)).map(e => e.id),
-    tools: AMBIENTES.filter(t => t.primaryModule === m.id && aparece(t) && (!opts.mobileOnly || t.mobile)).map(t => t.id),
+    exercises: EXERCISES.filter(e => naArea(e, m.id) && aparece(e) && (!opts.mobileOnly || e.mobile)).map(e => e.id),
+    tools: AMBIENTES.filter(t => naArea(t, m.id) && aparece(t) && (!opts.mobileOnly || t.mobile)).map(t => t.id),
   }));
 }

@@ -1,4 +1,4 @@
-import { SEMI_TIER, alturaNaRegiao, arr, pick, semiOptions, semitoneName } from '../helpers';
+import { EM_DO_MAIOR, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaNaRegiao, arr, pick, semiOptions, semitoneName } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
 
@@ -13,6 +13,19 @@ export const ouvidoIntervalo: CatalogItem = {
   settings: ctx => [{ id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx).map(o => ({ ...o, tier: SEMI_TIER[Number(o.id)] })) },
     { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] }],
   defaults: { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' },
+  /**
+   * O Paulo quis os doze intervalos e dó maior como entrada, e **melódicos e harmônicos como
+   * etapas distintas** na rotina dele — daí os dois primeiros atalhos serem o mesmo conteúdo em
+   * direções diferentes, e não um atalho com "misto".
+   *
+   * O terceiro existe para dar o caminho de volta: ver `TONALIDADE_LIVRE` em `helpers`.
+   */
+  presets: [
+    { id: 'melodicos', nome: 'presets.intervalosMelodicos', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'sobe' }, params: EM_DO_MAIOR },
+    { id: 'harmonicos', nome: 'presets.intervalosHarmonicos', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, params: EM_DO_MAIOR },
+    { id: 'descendo', nome: 'presets.intervalosDescendo', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'desce' }, params: EM_DO_MAIOR },
+    { id: 'livre', nome: 'presets.intervalosLivre', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'misto' }, params: TONALIDADE_LIVRE },
+  ],
   make(s, ctx) {
     const ids = arr(s.intervalos, ['4', '7']);
     const d = Number(pick(ids));

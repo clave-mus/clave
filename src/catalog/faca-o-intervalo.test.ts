@@ -16,14 +16,23 @@ const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
   params: resolveParams('baixo', {}),
 };
-const item = EXERCISES.filter(isSeries).find(e => e.id === 'faca-o-intervalo')!;
-const perguntar = (s: Record<string, SettingValue>) => item.make({ ...item.defaults, ...s } as never, ctx);
+/**
+ * Desde a reorganização de 09/11/2026 as duas metades são ITENS diferentes: `escrever` mora na
+ * pauta e `construir` mora no instrumento. O teste segue valendo e passou a buscar o item pela
+ * direção — que é justamente o que a troca de eixo fez.
+ */
+const porDirecao = (direcao: string) =>
+  EXERCISES.filter(isSeries).find(e => e.id === (direcao === 'escrever' ? 'intervalo-na-pauta' : 'intervalo-no-instrumento'))!;
+const perguntar = (s: Record<string, SettingValue>) => {
+  const item = porDirecao(String(s.direcao ?? 'construir'));
+  return item.make({ ...item.defaults, ...s } as never, ctx);
+};
 
-describe('a pergunta pede o intervalo, nas duas superfícies', () => {
-  it.each(['pauta', 'braco'])('%s dá um enunciado não vazio', superficie => {
+describe('a pergunta pede o intervalo, nos dois itens', () => {
+  it.each(['escrever', 'construir'])('%s dá um enunciado não vazio', direcao => {
     for (let i = 0; i < 30; i++) {
-      const q = perguntar({ superficie });
-      expect(q.prompt.length, superficie).toBeGreaterThan(0);
+      const q = perguntar({ direcao });
+      expect(q.prompt.length, direcao).toBeGreaterThan(0);
     }
   });
 });
@@ -32,7 +41,7 @@ describe('a resposta esperada é de fato aquele intervalo acima da nota de parti
   // Na PAUTA a nota de partida aparece no visual, então dá para medir as duas e conferir a distância.
   it('na pauta, a distância entre a nota mostrada e a esperada é um intervalo válido — e enarmônicos contam', () => {
     for (let i = 0; i < 120; i++) {
-      const q = perguntar({ superficie: 'pauta' });
+      const q = perguntar({ direcao: 'escrever' });
       if (q.visual.kind !== 'staff' || !q.visual.columns[0]?.[0]) continue;
       const partida = q.visual.columns[0][0];
       expect(q.expected.kind).toBe('spelled');
@@ -51,7 +60,7 @@ describe('a resposta esperada é de fato aquele intervalo acima da nota de parti
   // Aqui só a classe de altura importa — enarmônicos NÃO contam (o braço não sabe grafia).
   it('no braço, o som toca a partida e o alvo, à distância pedida', () => {
     for (let i = 0; i < 80; i++) {
-      const q = perguntar({ superficie: 'braco' });
+      const q = perguntar({ direcao: 'construir' });
       const grupos = q.sound?.groups ?? [];
       expect(grupos).toHaveLength(1); // só a partida soa de cara; o alvo só na revelação
       if (q.expected.kind === 'pitchClass') {
@@ -64,8 +73,24 @@ describe('a resposta esperada é de fato aquele intervalo acima da nota de parti
   });
 });
 
-describe('sem seletor de intervalos (personalização tem limite)', () => {
-  it('o item não declara nenhuma configuração chamada "intervalos"', () => {
-    expect(item.settings(ctx).some(s => s.id === 'intervalos')).toBe(false);
+/**
+ * **Esta decisão caiu com a reorganização de 09/11/2026, e é consequência dela.**
+ *
+ * `faca-o-intervalo` não tinha seletor de intervalos de propósito — "personalização tem limite"
+ * (revisão de 04/11, §1.3): escolher entre os dois pares de um exercício tão direto não mudava o que
+ * se pratica, só acrescentava um controle pouco usado.
+ *
+ * Mas o par que identifica **tinha** seletor, e agora os dois são o mesmo item. Não dá para um item
+ * ter e não ter a mesma configuração conforme a direção — e esconder com `Setting.quando` seria
+ * recriar exatamente o remendo que a troca de eixo veio desfazer.
+ *
+ * Então construir ganhou o seletor. É um controle a mais num exercício direto, que é o que a decisão
+ * de 04/11 queria evitar — o Paulo foi avisado.
+ */
+describe('o seletor de intervalos passou a existir nas duas direções', () => {
+  it('o item declara a configuração "intervalos"', () => {
+    for (const direcao of ['escrever', 'construir']) {
+      expect(porDirecao(direcao).settings(ctx).some(s => s.id === 'intervalos'), direcao).toBe(true);
+    }
   });
 });

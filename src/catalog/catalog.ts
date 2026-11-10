@@ -6,10 +6,10 @@
 // visível — que item novo quase sempre é **parâmetro ou modo** de um que já existe.
 //
 // **A ordem desta lista é a ordem em que os itens aparecem** onde não há agrupamento.
-import { queNotaEEssa } from './items/que-nota-e-essa';
-import { acheANota } from './items/ache-a-nota';
-import { queIntervaloEEsse } from './items/que-intervalo-e-esse';
-import { facaOIntervalo } from './items/faca-o-intervalo';
+import { notaNaPautaItem } from './items/nota-na-pauta';
+import { notaNoInstrumento } from './items/nota-no-instrumento';
+import { intervaloNaPauta } from './items/intervalo-na-pauta';
+import { intervaloNoInstrumento } from './items/intervalo-no-instrumento';
 import { queAcordeEEsse } from './items/que-acorde-e-esse';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
@@ -19,14 +19,15 @@ import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
 import { ouvidoEscala } from './items/ouvido-escala';
 import { ouvidoCelulas } from './items/ouvido-celulas';
+import { reconhecerPadroesEscala } from './items/reconhecer-padroes-escala';
 import { ritmoOuvido } from './items/ritmo-ouvido';
 import type { CatalogItem } from './types';
 
 export const EXERCISES: CatalogItem[] = [
-  queNotaEEssa,
-  acheANota,
-  queIntervaloEEsse,
-  facaOIntervalo,
+  notaNaPautaItem,
+  notaNoInstrumento,
+  intervaloNaPauta,
+  intervaloNoInstrumento,
   queAcordeEEsse,
   pautaArmadura,
   pautaEscala,
@@ -36,6 +37,7 @@ export const EXERCISES: CatalogItem[] = [
   ouvidoAcorde,
   ouvidoEscala,
   ouvidoCelulas,
+  reconhecerPadroesEscala,
   ritmoOuvido,
 ];
 

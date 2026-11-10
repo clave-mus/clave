@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { CELLS, METER_IDS, METERS, parsePattern, type Level } from './rhythm-cells';
+import { CELLS, cellsFor, METER_IDS, METERS, parsePattern, TPQ } from './rhythm-cells';
 import {
-  BAR_COUNTS, barSignature, checkSettings, DEFAULT_SETTINGS, generateExercise, poolFor, PRESET_POUCAS_NOTAS, timeline, validateExercise,
-  type RhythmSettings,
+  aplicarPreset, BAR_COUNTS, barSignature, CELULAS_ESSENCIAIS, checkSettings, DEFAULT_SETTINGS,
+  generateExercise, poolFor, PRESETS, timeline, validateExercise, type RhythmSettings,
 } from './rhythm-gen';
 
-const LEVELS: Level[] = [1, 2, 3, 4, 5];
 const settings = (over: Partial<RhythmSettings> = {}): RhythmSettings => ({ ...DEFAULT_SETTINGS, ...over });
+
+/** Conjuntos de figuras no lugar da escada de níveis que saiu (06/11/2026). */
+const FIGS = {
+  minimas: { w: false, h: true, q: false, '8': false, '16': false },
+  seminimas: { w: true, h: true, q: true, '8': false, '16': false },
+  colcheias: { w: true, h: true, q: true, '8': true, '16': false },
+  tudo: DEFAULT_SETTINGS.figures,
+} as const;
+const SEM_RECURSO = { pontuada: false, sincope: false, ligadura: false, quialtera: false };
 
 describe('padrões', () => {
   it('lê figuras, pausas, pontos, ligaduras e quiálteras', () => {
@@ -34,14 +42,21 @@ describe('padrões', () => {
     expect(by['hd'].traits).toEqual([]);
     expect(by['8-8'].traits).toEqual([]);
   });
+  it('as semínimas ligadas novas carregam o recurso `ligadura`', () => {
+    const by = Object.fromEntries(CELLS.map(c => [c.id, c]));
+    expect(by['q-qt-q-q'].traits).toContain('ligadura');
+    expect(by['q-qt-q-q'].figures).toEqual(['q']);
+    expect(by['q-qt-q'].traits).toContain('ligadura');
+  });
 });
 
 describe('gerador', () => {
-  it('cada compasso soma exatamente a fórmula de compasso, em todos os níveis e compassos', () => {
+  it('cada compasso soma exatamente a fórmula de compasso, em todo conjunto de figuras', () => {
     for (const meter of METER_IDS) {
-      for (const level of LEVELS) {
-        for (let seed = 1; seed <= 60; seed++) {
-          const s = settings({ meter, level, bars: 8 });
+      for (const figures of Object.values(FIGS)) {
+        for (let seed = 1; seed <= 30; seed++) {
+          const s = settings({ meter, figures, bars: 8 });
+          if (checkSettings(s)) continue; // conjunto que não fecha o compasso é recusado, não gerado
           const ex = generateExercise(s, { seed });
           expect(ex.bars).toHaveLength(8);
           for (const bar of ex.bars) expect(bar.events.reduce((t, e) => t + e.dur, 0)).toBe(METERS[meter].barTicks);
@@ -57,44 +72,35 @@ describe('gerador', () => {
     expect(a).toEqual(b);
   });
 
-  it('nível 1 só usa semínimas, mínimas e semibreves', () => {
+  it('só mínimas e semínimas: nada de colcheia, quiáltera nem ligadura', () => {
+    const s = settings({ figures: FIGS.seminimas, traits: SEM_RECURSO });
     for (let seed = 1; seed <= 100; seed++) {
-      const ex = generateExercise(settings({ level: 1 }), { seed });
-      for (const e of ex.bars.flatMap(b => b.events)) {
+      for (const e of generateExercise(s, { seed }).bars.flatMap(b => b.events)) {
         expect(['w', 'h', 'q']).toContain(e.value);
         expect(e.tuplet).toBeUndefined();
         expect(e.tie).toBe(false);
       }
     }
+    // A mínima pontuada do 3/4 e do 4/4 TEM ponto e mesmo assim passa, porque o ponto cai no
+    // pulso — é o próprio compasso, não ritmo pontuado. É o que `hd` documenta em rhythm-cells.
+    expect(poolFor(s).some(c => c.id === 'hd')).toBe(true);
   });
 
-  it('a complexidade cresce com o nível', () => {
-    const density = (level: Level) => {
+  it('a densidade cresce conforme se acrescenta figura', () => {
+    const density = (figures: RhythmSettings['figures']) => {
       let notes = 0;
-      for (let seed = 1; seed <= 80; seed++) notes += generateExercise(settings({ level }), { seed }).bars.flatMap(b => b.events).length;
+      for (let seed = 1; seed <= 80; seed++) notes += generateExercise(settings({ figures }), { seed }).bars.flatMap(b => b.events).length;
       return notes;
     };
-    const d = LEVELS.map(density);
-    expect(d[0]).toBeLessThan(d[1]);
-    expect(d[1]).toBeLessThan(d[2]);
-  });
-
-  it('o nível escolhido aparece no exercício', () => {
-    for (const level of [2, 3, 4, 5] as Level[]) {
-      for (let seed = 1; seed <= 40; seed++) {
-        const ex = generateExercise(settings({ level }), { seed });
-        const levels = ex.bars.flatMap(b => b.cells).map(id => CELLS.find(c => c.id === id)!.level);
-        expect(levels, `nível ${level}, semente ${seed}`).toContain(level);
-      }
-    }
+    expect(density(FIGS.seminimas)).toBeLessThan(density(FIGS.colcheias));
+    expect(density(FIGS.colcheias)).toBeLessThan(density(FIGS.tudo));
   });
 
   it('respeita figuras, pausas e recursos desligados', () => {
     const s = settings({
-      level: 5,
       figures: { w: false, h: false, q: true, '8': true, '16': false },
       rests: false,
-      traits: { pontuada: false, sincope: false, ligadura: false, quialtera: false },
+      traits: SEM_RECURSO,
     });
     for (let seed = 1; seed <= 80; seed++) {
       for (const e of generateExercise(s, { seed }).bars.flatMap(b => b.events)) {
@@ -108,7 +114,7 @@ describe('gerador', () => {
   });
 
   it('controla os tipos de pausa', () => {
-    const s = settings({ level: 3, restKinds: { h: false, q: false, '8': true, '16': false } });
+    const s = settings({ restKinds: { h: false, q: false, '8': true, '16': false } });
     for (let seed = 1; seed <= 80; seed++) {
       for (const e of generateExercise(s, { seed }).bars.flatMap(b => b.events)) if (e.rest) expect(e.value).toBe('8');
     }
@@ -117,7 +123,7 @@ describe('gerador', () => {
   it('nunca gera compasso só de pausas nem com mais pausa do que som', () => {
     for (const meter of METER_IDS) {
       for (let seed = 1; seed <= 80; seed++) {
-        const ex = generateExercise(settings({ meter, level: 3 }), { seed });
+        const ex = generateExercise(settings({ meter }), { seed });
         for (const bar of ex.bars) {
           const rest = bar.events.filter(e => e.rest).reduce((t, e) => t + e.dur, 0);
           expect(rest).toBeLessThanOrEqual(METERS[meter].barTicks / 2);
@@ -127,8 +133,9 @@ describe('gerador', () => {
   });
 
   it('mínimas começam em tempo forte no 4/4', () => {
+    const s = settings({ figures: FIGS.seminimas, traits: SEM_RECURSO });
     for (let seed = 1; seed <= 100; seed++) {
-      for (const bar of generateExercise(settings({ level: 1 }), { seed }).bars) {
+      for (const bar of generateExercise(s, { seed }).bars) {
         for (const e of bar.events) if (e.value === 'h' && !e.dots) expect([0, 48]).toContain(e.at);
       }
     }
@@ -136,7 +143,7 @@ describe('gerador', () => {
 
   it('quiálteras ficam dentro de meio pulso, um pulso ou dois pulsos', () => {
     for (let seed = 1; seed <= 80; seed++) {
-      for (const bar of generateExercise(settings({ level: 5 }), { seed }).bars) {
+      for (const bar of generateExercise(settings(), { seed }).bars) {
         const groups = new Map<number, number[]>();
         bar.events.forEach(e => e.tuplet && groups.set(e.tuplet.id, [...(groups.get(e.tuplet.id) ?? []), e.at, e.at + e.dur]));
         groups.forEach(pts => {
@@ -153,10 +160,10 @@ describe('gerador', () => {
   it('evita repetir os compassos do exercício anterior', () => {
     let repeated = 0;
     let total = 0;
-    let prev = generateExercise(settings({ level: 3 }), { seed: 1 });
+    let prev = generateExercise(settings(), { seed: 1 });
     for (let seed = 2; seed <= 60; seed++) {
       const avoid = new Set(prev.bars.map(barSignature));
-      const ex = generateExercise(settings({ level: 3 }), { seed, avoid });
+      const ex = generateExercise(settings(), { seed, avoid });
       repeated += ex.bars.filter(b => avoid.has(barSignature(b))).length;
       total += ex.bars.length;
       prev = ex;
@@ -172,15 +179,34 @@ describe('gerador', () => {
 
   it('ligaduras sempre levam a uma nota', () => {
     for (let seed = 1; seed <= 120; seed++) {
-      const all = generateExercise(settings({ level: 4, bars: 8 }), { seed }).bars.flatMap(b => b.events);
+      const all = generateExercise(settings({ bars: 8 }), { seed }).bars.flatMap(b => b.events);
       all.forEach((e, i) => { if (e.tie) { expect(e.rest).toBe(false); expect(all[i + 1].rest).toBe(false); } });
     }
   });
 });
 
+describe('a frequência de pausa é um botão, não um liga/desliga', () => {
+  const pausaMedia = (pausas: number) => {
+    let r = 0;
+    for (let seed = 1; seed <= 60; seed++) {
+      const ex = generateExercise(settings({ pausas }), { seed });
+      r += ex.bars.reduce((s, b) => s + b.events.filter(e => e.rest).length, 0);
+    }
+    return r / 60;
+  };
+
+  it('menos peso de pausa gera menos pausa', () => {
+    expect(pausaMedia(0.2)).toBeLessThan(pausaMedia(1));
+  });
+
+  it('peso zero tira a pausa de vez', () => {
+    expect(pausaMedia(0)).toBe(0);
+  });
+});
+
 describe('configurações', () => {
-  it('o padrão funciona em todas as fórmulas e níveis', () => {
-    for (const meter of METER_IDS) for (const level of LEVELS) expect(checkSettings(settings({ meter, level }))).toBeNull();
+  it('o padrão funciona em todas as fórmulas', () => {
+    for (const meter of METER_IDS) expect(checkSettings(settings({ meter }))).toBeNull();
   });
   it('avisa quando não sobra figura nenhuma', () => {
     const s = settings({ figures: { w: false, h: false, q: false, '8': false, '16': false } });
@@ -193,9 +219,9 @@ describe('configurações', () => {
     const restOpts = [{ rests: false }, { rests: true }, { rests: true, restKinds: { h: false, q: false, '8': true, '16': false } }];
     let ok = 0;
     let refused = 0;
-    for (const meter of METER_IDS) for (const level of LEVELS) for (let fm = 0; fm < 32; fm++) for (let tm = 0; tm < 16; tm += 5) for (const ro of restOpts) {
+    for (const meter of METER_IDS) for (let fm = 0; fm < 32; fm++) for (let tm = 0; tm < 16; tm += 5) for (const ro of restOpts) {
       const s = settings({
-        meter, level, bars: 2, ...ro,
+        meter, bars: 2, ...ro,
         figures: Object.fromEntries(figs.map((f, i) => [f, !!(fm & (1 << i))])) as RhythmSettings['figures'],
         traits: Object.fromEntries(traits.map((t, i) => [t, !!(tm & (1 << i))])) as RhythmSettings['traits'],
       });
@@ -207,86 +233,144 @@ describe('configurações', () => {
     expect(ok).toBeGreaterThan(refused);
   });
   it('restringir figuras só tira células do conjunto', () => {
-    const full = poolFor(settings({ level: 3 })).map(c => c.id);
-    const less = poolFor(settings({ level: 3, figures: { ...DEFAULT_SETTINGS.figures, '16': false } })).map(c => c.id);
+    const full = poolFor(settings()).map(c => c.id);
+    const less = poolFor(settings({ figures: { ...DEFAULT_SETTINGS.figures, '16': false } })).map(c => c.id);
     expect(less.every(id => full.includes(id))).toBe(true);
     expect(less.length).toBeLessThan(full.length);
   });
 });
 
-describe('família aditiva (X1)', () => {
-  const FAMILIAS = ['binaria', 'ternaria', 'quaternaria', 'pontuada'] as const;
-  const soFamilia = (fam: (typeof FAMILIAS)[number]) => settings({
-    level: 5,
-    familias: Object.fromEntries(FAMILIAS.map(f => [f, f === fam])) as RhythmSettings['familias'],
-  });
-
-  it('cada família sozinha gera compasso válido, em toda fórmula e todo tamanho — ligada ou no nível 5', () => {
-    for (const fam of FAMILIAS) {
-      for (const meter of METER_IDS) for (const bars of BAR_COUNTS) {
-        const s = { ...soFamilia(fam), meter, bars };
-        const why = checkSettings(s);
-        // Algumas famílias não têm célula na fórmula composta (6/8) — e aí o motivo é ESTE, não um defeito.
-        if (why) { expect(why).toBe('noFigures'); continue; }
-        expect(validateExercise(generateExercise(s, { seed: 7 }), s)).toEqual([]);
+describe('presets (X1) — a porta de entrada no lugar dos níveis', () => {
+  it('todo preset gera exercício válido, em todo tamanho', () => {
+    for (const p of PRESETS) {
+      for (const bars of BAR_COUNTS) {
+        const s = { ...aplicarPreset(DEFAULT_SETTINGS, p.id), bars };
+        expect(checkSettings(s), p.id).toBeNull();
+        for (let seed = 1; seed <= 12; seed++) {
+          expect(validateExercise(generateExercise(s, { seed }), s), `${p.id} semente ${seed}`).toEqual([]);
+        }
       }
     }
   });
 
-  it('é OU, não E: ligar uma família não exige as outras', () => {
-    const full = poolFor(settings({ level: 5 })).length;
-    const soBinaria = poolFor(soFamilia('binaria')).length;
-    expect(soBinaria).toBeGreaterThan(0);
-    expect(soBinaria).toBeLessThan(full);
+  it('são cumulativos: cada um acrescenta uma figura ao anterior', () => {
+    // Em ordem de duração, não de iteração: chave numérica (`8`, `16`) vem antes em objeto JS.
+    const ORDEM = ['w', 'h', 'q', '8', '16'];
+    const figurasDe = (id: string) => {
+      const s = aplicarPreset(DEFAULT_SETTINGS, id);
+      return ORDEM.filter(f => s.figures[f as keyof typeof s.figures]);
+    };
+    expect(figurasDe('minimas')).toEqual(['h']);
+    expect(figurasDe('seminimas')).toEqual(['h', 'q']);
+    expect(figurasDe('colcheias')).toEqual(['h', 'q', '8']);
+    expect(figurasDe('semicolcheias')).toEqual(['h', 'q', '8', '16']);
   });
 
-  it('célula sem família (nota simples, pausa) passa mesmo com todas as famílias desligadas', () => {
-    const s = settings({ level: 1, familias: { binaria: false, ternaria: false, quaternaria: false, pontuada: false } });
-    const ids = poolFor(s).map(c => c.id);
-    expect(ids).toContain('q'); // semínima simples: sem família, não devia ser filtrada
-    expect(ids).toContain('rq'); // pausa de semínima: idem
+  it('os quatro cumulativos vêm sem ligadura e sem pontuada, como o Paulo pediu', () => {
+    for (const id of ['minimas', 'seminimas', 'colcheias', 'semicolcheias']) {
+      const s = aplicarPreset(DEFAULT_SETTINGS, id);
+      expect(s.traits.ligadura, id).toBe(false);
+      expect(s.traits.pontuada, id).toBe(false);
+      expect(s.traits.quialtera, id).toBe(false);
+      expect(s.pausas, id).toBeLessThan(DEFAULT_SETTINGS.pausas);
+    }
   });
 
-  it('desligar todas as famílias não impede gerar (sobra o material sem família)', () => {
-    const s = settings({ level: 1, familias: { binaria: false, ternaria: false, quaternaria: false, pontuada: false } });
-    expect(checkSettings(s)).toBeNull();
-    expect(validateExercise(generateExercise(s, { seed: 3 }), s)).toEqual([]);
+  it('trocar de preset não arrasta configuração do anterior', () => {
+    const comQuialtera = settings({ traits: { ...DEFAULT_SETTINGS.traits, quialtera: true } });
+    expect(aplicarPreset(comQuialtera, 'minimas').traits.quialtera).toBe(false);
+  });
+
+  it('o preset guarda o número de compassos, que é escolha de tela e não dele', () => {
+    expect(aplicarPreset(settings({ bars: 8 }), 'colcheias').bars).toBe(8);
   });
 });
 
-describe('preset "8 posições, 2 notas" (X1)', () => {
-  it('gera compasso válido', () => {
-    for (let seed = 1; seed <= 30; seed++) {
-      expect(validateExercise(generateExercise(PRESET_POUCAS_NOTAS, { seed }), PRESET_POUCAS_NOTAS)).toEqual([]);
-    }
-  });
+describe('preset "Ligaduras" — o que estava quebrado', () => {
+  const s = aplicarPreset(DEFAULT_SETTINGS, 'ligaduras');
 
-  it('fica mesmo perto de duas notas, bem mais pausado que o padrão', () => {
-    let soantes = 0;
+  it('gera ligadura de verdade, e na grande maioria dos exercícios', () => {
+    let comLigadura = 0;
     const N = 40;
     for (let seed = 1; seed <= N; seed++) {
-      const ex = generateExercise(PRESET_POUCAS_NOTAS, { seed });
-      soantes += ex.bars.reduce((s, b) => s + b.events.filter(e => !e.rest).length, 0) / ex.bars.length;
+      const ex = generateExercise(s, { seed });
+      if (ex.bars.some(b => b.events.some(e => e.tie))) comLigadura++;
     }
-    // Compare com o padrão: ao nível 2 normal, uma figura por tempo já dá 2+ notas por tempo em média.
-    expect(soantes / N).toBeLessThan(3);
+    // Antes desta rodada o número era ZERO: as duas células com ligadura exigiam colcheia, e a
+    // antecipação entre compassos também. É esta a garantia que faltava.
+    expect(comLigadura / N).toBeGreaterThan(0.8);
   });
 
-  it('metaNotas desliga a regra de "no máximo meio compasso de pausa" — aqui pausa maioria é o alvo', () => {
-    const m = METERS[PRESET_POUCAS_NOTAS.meter];
-    let algumaBemPausada = false;
-    for (let seed = 1; seed <= 30 && !algumaBemPausada; seed++) {
-      const ex = generateExercise(PRESET_POUCAS_NOTAS, { seed });
-      algumaBemPausada = ex.bars.some(b => b.events.filter(e => e.rest).reduce((s, e) => s + e.dur, 0) > m.barTicks / 2);
+  it('e continua sem colcheia — o preset é sobre ligadura, não sobre subdividir', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      for (const e of generateExercise(s, { seed }).bars.flatMap(b => b.events)) {
+        expect(['w', 'h', 'q']).toContain(e.value);
+      }
     }
-    expect(algumaBemPausada).toBe(true);
+  });
+});
+
+describe('preset "Notas esparsas" — o sorteio posicional', () => {
+  const s = aplicarPreset(DEFAULT_SETTINGS, 'esparsas');
+
+  it('soam exatamente duas notas por compasso', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const bar of generateExercise(s, { seed }).bars) {
+        expect(bar.events.filter(e => !e.rest)).toHaveLength(2);
+      }
+    }
+  });
+
+  it('as duas notas são semicolcheias, e o resto é pausa', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      for (const e of generateExercise(s, { seed }).bars.flatMap(b => b.events)) {
+        if (!e.rest) expect(e.value).toBe('16');
+        expect(e.dots).toBe(0);
+        expect(e.tie).toBe(false);
+      }
+    }
+  });
+
+  it('o compasso fecha certo e passa na validação de escrita', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const ex = generateExercise(s, { seed });
+      expect(validateExercise(ex, s)).toEqual([]);
+      for (const bar of ex.bars) expect(bar.events.reduce((t, e) => t + e.dur, 0)).toBe(METERS[s.meter].barTicks);
+    }
+  });
+
+  it('agrupa as pausas em vez de enfileirar semicolcheias soltas', () => {
+    // Um tempo inteiro vazio precisa virar UMA pausa de semínima, não quatro de semicolcheia.
+    let viuPausaDeSeminima = false;
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const bar of generateExercise(s, { seed }).bars) {
+        if (bar.events.some(e => e.rest && e.value === 'q')) viuPausaDeSeminima = true;
+        // e nunca quatro pausas de semicolcheia seguidas dentro do mesmo tempo
+        const r16 = bar.events.filter(e => e.rest && e.value === '16');
+        for (const a of r16) {
+          const mesmoTempo = r16.filter(b => Math.floor(b.at / 24) === Math.floor(a.at / 24));
+          expect(mesmoTempo.length).toBeLessThan(4);
+        }
+      }
+    }
+    expect(viuPausaDeSeminima).toBe(true);
+  });
+
+  it('o compasso é majoritariamente pausa — é o ponto do preset', () => {
+    const m = METERS[s.meter];
+    for (let seed = 1; seed <= 20; seed++) {
+      for (const bar of generateExercise(s, { seed }).bars) {
+        const pausa = bar.events.filter(e => e.rest).reduce((t, e) => t + e.dur, 0);
+        expect(pausa).toBeGreaterThan(m.barTicks / 2);
+      }
+    }
   });
 });
 
 describe('linha do tempo', () => {
   it('não reataca notas ligadas e cobre o exercício inteiro', () => {
     for (let seed = 1; seed <= 60; seed++) {
-      const ex = generateExercise(settings({ level: 4 }), { seed });
+      const ex = generateExercise(settings(), { seed });
       const { entries, total } = timeline(ex);
       expect(total).toBe(ex.bars.length * METERS[ex.meter].barTicks);
       const all = ex.bars.flatMap(b => b.events);
@@ -295,5 +379,56 @@ describe('linha do tempo', () => {
         if (all[i].rest) expect(t.attack).toBe(false);
       });
     }
+  });
+});
+
+// Focar em células específicas (09/11/2026). O Paulo listou nove "células essenciais" e pediu para
+// poder focar nelas. Todas as nove JÁ existiam no catálogo; o que faltava era poder pedir *estas*,
+// em vez de uma classe de figuras.
+describe('células essenciais', () => {
+  const base = aplicarPreset(DEFAULT_SETTINGS, 'essenciais');
+
+  it('o preset existe e traz as nove da lista dele', () => {
+    expect(CELULAS_ESSENCIAIS).toHaveLength(9);
+    expect(base.celulas).toEqual(CELULAS_ESSENCIAIS);
+  });
+
+  it('todas as nove existem no catálogo — nenhum id inventado', () => {
+    const doCatalogo = new Set(cellsFor(METERS['4/4']).map(c => c.id));
+    for (const id of CELULAS_ESSENCIAIS) expect(doCatalogo.has(id), id).toBe(true);
+  });
+
+  it('todas ocupam um tempo, então quatro delas fecham um 4/4', () => {
+    const porId = new Map(cellsFor(METERS['4/4']).map(c => [c.id, c]));
+    for (const id of CELULAS_ESSENCIAIS) expect(porId.get(id)!.span, id).toBe(TPQ);
+  });
+
+  it('o pool passa a ser exatamente as nove, ignorando os filtros por figura', () => {
+    const ids = poolFor(base).map(c => c.id).sort();
+    expect(ids).toEqual([...CELULAS_ESSENCIAIS].sort());
+    // e o filtro por figura de fato não manda mais: desligar a semicolcheia não tira nada
+    const semSemi = { ...base, figures: { ...base.figures, '16': false } };
+    expect(poolFor(semSemi).map(c => c.id).sort()).toEqual(ids);
+  });
+
+  it('gera exercício válido, e só com estas células', () => {
+    const permitidas = new Set<string>(CELULAS_ESSENCIAIS);
+    for (const meter of ['2/4', '3/4', '4/4'] as const) {
+      const s = { ...base, meter };
+      expect(checkSettings(s), meter).toBeNull();
+      for (let i = 0; i < 30; i++) {
+        const ex = generateExercise({ ...s, bars: 4 });
+        expect(validateExercise(ex), meter).toEqual([]);
+        for (const bar of ex.bars) for (const c of bar.cells) expect(permitidas.has(c), `${meter}: ${c}`).toBe(true);
+      }
+    }
+  });
+
+  // Em 6/8 o pulso é semínima pontuada e nenhuma das nove cabe. Aqui o eixo novo criou um modo de
+  // falha que as mensagens antigas não descreviam: o pool fica vazio, e `checkSettings` dizia
+  // `noFigures` — "nenhuma figura escolhida". Isso MENTIRIA: a pessoa escolheu nove células, e o
+  // problema é a fórmula de compasso. Daí o terceiro código.
+  it('em 6/8 avisa que as células não cabem, e não que faltam figuras', () => {
+    expect(checkSettings({ ...base, meter: '6/8' })).toBe('cellsNotInMeter');
   });
 });

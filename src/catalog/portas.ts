@@ -46,27 +46,29 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
+    itens: ['nota-no-instrumento', 'intervalo-no-instrumento', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',
     // Tudo o que tem etiqueta `ear.*`, mais o ambiente de cantar/tocar com referência.
-    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'audiar', 'maos-livres', 'ambiente'],
+    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'audiar', 'maos-livres', 'relacoes-melodia-harmonia', 'ambiente'],
   },
   {
-    id: 'harmonia', abaixoDoMinimoPorOra: true,
+    id: 'harmonia',
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
-    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse'],
+    // Deixou de estar abaixo do mínimo em 07/11, quando "Relações entre melodia e harmonia" entrou:
+    // são quatro, e a exceção da decisão 20 não é mais necessária aqui.
+    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'relacoes-melodia-harmonia'],
   },
   {
     id: 'teoria', abaixoDoMinimoPorOra: true,
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['teoria-intervalos', 'que-intervalo-e-esse', 'que-acorde-e-esse'],
+    itens: ['teoria-intervalos', 'intervalo-na-pauta', 'que-acorde-e-esse'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['nota-na-pauta', 'intervalo-na-pauta', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',
@@ -82,7 +84,7 @@ export const PORTAS: readonly Porta[] = [
     id: 'improviso',
     // "O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário". Não há exercício de
     // improvisar, e o rótulo da porta é "Improvisar e solar" de propósito (decisão 80).
-    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'ache-a-nota'],
+    itens: ['ouvido-celulas', 'reconhecer-padroes-escala', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'nota-no-instrumento'],
   },
   { id: 'comecar', itens: [], diagnostico: true },
 ];

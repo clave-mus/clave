@@ -7,6 +7,7 @@
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
+import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
 import type { MessageKey } from '../i18n';
 import type { CatalogItem } from './types';
@@ -86,6 +87,10 @@ export const AMBIENTES: CatalogItem[] = [
     // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
     id: 'audiar', kind: 'tarefa',
     publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    // Faltava declarar (achado em 09/11 pelo teste de `doTime`, ao pôr a audiação na rotina em dó
+    // maior): `items/audiar.ts` chama `tonicaNaRegiao`, que lê tonalidade E região. O item sempre
+    // respeitou as duas; só não avisava — e por isso o painel de prática não as oferecia aqui.
+    respeita: ['key', 'range'],
     objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
     primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
     contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
@@ -101,6 +106,36 @@ export const AMBIENTES: CatalogItem[] = [
     ],
     defaults: { estimulos: ['referencia', 'graus'], drone: false },
     screen: () => import('../tools/Audiar'),
+  },
+  {
+    // MH (07/11/2026). **Tarefa**, não série: não há resposta a conferir — a pessoa explora como
+    // uma nota soa sobre cada acorde do campo, e com o som da melodia desligado ela CANTA, que o
+    // app também não ouve. Nos dois casos quem sabe como foi é ela (decisão 5).
+    //
+    // O motor é `theory/nota-sobre-acorde.ts` e a frase é `catalog/relacao-texto.ts`.
+    id: 'relacoes-melodia-harmonia', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['harmonia', 'melodia'], tarefas: ['ouvir'],
+    // Nas DUAS percepções, a pedido do Paulo: a nota é melódica, o acorde embaixo é harmônico, e
+    // o exercício é exatamente o encontro dos dois. `primaryModule` segue sendo a harmônica, que é
+    // a que conta no histórico.
+    primaryModule: 'perception.harmonic', tambemEm: ['perception.melodic'],
+    skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
+    contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor'],
+    settings: ctx => [
+      { id: 'campo', label: ctx.t('melodyHarmony.field'), type: 'single', options: [
+        { id: 'maior', label: ctx.t('melodyHarmony.field_maior') },
+        { id: 'menor', label: ctx.t('melodyHarmony.field_menor') },
+        { id: 'menor-harmonica', label: ctx.t('melodyHarmony.field_menor-harmonica') },
+        { id: 'menor-melodica', label: ctx.t('melodyHarmony.field_menor-melodica') },
+      ] },
+      // Padrão restrito à escala; abrir para as doze é escolha de quem usa (decisão do Paulo).
+      { id: 'cromatico', label: ctx.t('melodyHarmony.chromatic'), type: 'toggle' },
+      { id: 'soarMelodia', label: ctx.t('melodyHarmony.soundMelody'), type: 'toggle' },
+      { id: 'tetrade', label: ctx.t('melodyHarmony.tetrad'), type: 'toggle' },
+    ],
+    defaults: { campo: 'maior', cromatico: false, soarMelodia: true, tetrade: false },
+    screen: () => import('../tools/RelacoesMelodiaHarmonia'),
   },
   {
     id: 'ambiente', kind: 'ambiente',
@@ -131,7 +166,21 @@ export const AMBIENTES: CatalogItem[] = [
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
     primaryModule: 'perception.rhythmic', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
-    settings: noSettings, defaults: {},
+    /**
+     * **O atalho é o que a rotina consegue pedir.** Até 10/11/2026 este item declarava
+     * `noSettings`, e toda a configuração dele morava dentro da tela. Isso tornava impossível a
+     * rotina do Paulo de quatro etapas de leitura rítmica variando os recursos: as quatro etapas
+     * abririam a mesma tela no mesmo estado, e ele teria de trocar à mão em cada uma — o que
+     * desmancha a rotina.
+     *
+     * Só o atalho é declarado, não as dezenas de chaves de `RhythmSettings`: a rotina escolhe um
+     * recorte nomeado, e o ajuste fino segue sendo da tela.
+     */
+    settings: ctx => [{
+      id: 'preset', label: ctx.t('rhythm.presets'), type: 'single',
+      options: PRESETS.map(p => ({ id: p.id, label: ctx.t(`rhythm.presetNames.${p.id}` as MessageKey) })),
+    }],
+    defaults: { preset: 'seminimas' },
     // traz a VexFlow junto; só baixa quando a tela abre
     screen: () => import('../tools/Ritmo'),
   },

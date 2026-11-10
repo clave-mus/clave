@@ -34,7 +34,7 @@ describe('o que é declarado e o que é deduzido', () => {
     expect(deOuvido.olhos).toBe(false);  // o visual é só som
     expect(deOuvido.audio).toBe(true);
 
-    const naPauta = requisitosDe(itemById['que-nota-e-essa']!);
+    const naPauta = requisitosDe(itemById['nota-na-pauta']!);
     expect(naPauta.olhos).toBe(true);    // tem pauta na tela
   });
 
@@ -94,7 +94,7 @@ describe('o motivo de não caber', () => {
   it('explica em vez de só esconder', () => {
     expect(porQueNaoCabe(itemById['backing']!, 'onibus')).toBe('instrumento');
     expect(porQueNaoCabe(itemById['ouvido-intervalo']!, 'silencio')).toBe('audio');
-    expect(porQueNaoCabe(itemById['que-nota-e-essa']!, 'bolso')).toBe('maos');
+    expect(porQueNaoCabe(itemById['nota-na-pauta']!, 'bolso')).toBe('maos');
   });
 
   it('não dá motivo para o que cabe', () => {
@@ -116,6 +116,9 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
     'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', audiar: 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    // MH: explora como uma nota soa sobre cada acorde — e com o som da melodia desligado, canta.
+    // Nos dois casos o app não ouve, então termina na autoavaliação.
+    'relacoes-melodia-harmonia': 'tarefa',
     // a "tarefa com metrônomo": três famílias, todas `tarefa` — terminam na autoavaliação
     'acento-deslocado': 'tarefa', 'subdivisao-alternada': 'tarefa', 'deslocamento-ritmico': 'tarefa',
   };

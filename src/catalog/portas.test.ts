@@ -43,10 +43,11 @@ describe('a regra da decisão 20: pelo menos 4 itens por porta', () => {
     }
   });
 
-  // P7 (04/11) tirou os itens de teoria e esvaziou estas duas. O Paulo decidiu deixar assim por
-  // ora — se a lista crescer, é porque alguém decidiu o destino de propósito, não por acidente.
-  it('as únicas portas abaixo do mínimo são harmonia e teoria, e por ora', () => {
-    expect(porObjetivo.filter(p => p.abaixoDoMinimoPorOra).map(p => p.id).sort()).toEqual(['harmonia', 'teoria']);
+  // P7 (04/11) tirou os itens de teoria e esvaziou duas portas. `harmonia` saiu da exceção em
+  // 07/11, quando "Relações entre melodia e harmonia" a levou de volta a quatro itens; `teoria`
+  // continua lá. Se a lista crescer, é porque alguém decidiu o destino de propósito.
+  it('a única porta abaixo do mínimo é teoria, e por ora', () => {
+    expect(porObjetivo.filter(p => p.abaixoDoMinimoPorOra).map(p => p.id)).toEqual(['teoria']);
   });
 
   it('a entrada do nivelamento é a única sem itens, e é a única marcada como diagnóstico', () => {

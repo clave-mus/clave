@@ -1,9 +1,13 @@
 name: CI
 
+# `pull_request` é o que mais importa: é onde o CI barra antes de entrar. O push na `dev` cobre o
+# caso de alguém empurrar direto na branch padrão, e passou de `main` para `dev` em 10/11/2026 — a
+# `main` estava abandonada havia duas semanas, 124 commits atrás, e o fluxo vigiava uma branch onde
+# nada acontecia.
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [dev]
 
 permissions:
   contents: read

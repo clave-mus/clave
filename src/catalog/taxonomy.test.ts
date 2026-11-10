@@ -15,10 +15,10 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 // (06/11), que moveu o modo "intervalo" de `ache-a-nota` para `faca-o-intervalo` — também sem
 // migração: o modo estava QUEBRADO (B4), então não havia resposta válida salva para preservar.
 const STABLE_IDS = [
-  'que-nota-e-essa', 'ache-a-nota', 'que-intervalo-e-esse', 'faca-o-intervalo', 'que-acorde-e-esse',
+  'nota-na-pauta', 'nota-no-instrumento', 'intervalo-na-pauta', 'intervalo-no-instrumento', 'que-acorde-e-esse',
   'pauta-armadura', 'pauta-escala',
   'teoria-intervalos',
-  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
+  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'reconhecer-padroes-escala', 'ritmo-ouvido',
 ];
 
 const assuntos: [string, Assunto][] = [

@@ -96,15 +96,23 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   const escalas = ALL_SCALE_IDS as ScaleId[];
   const graus = (id: string) => id.split(' ');
   const semRepetir = (g: string[]) => g.every((x, k) => k === 0 || x !== g[k - 1]);
+  // Estes testes são **sobre os distratores**, e distrator só existe no modo de quatro
+  // alternativas. Desde 09/11 o padrão do item é escolher entre todos os graus, que não tem
+  // distrator nenhum — então eles pedem o modo explicitamente. Sem isso passavam a medir zero
+  // pares e continuavam verdes, que é o pior jeito de um teste morrer.
 
   // BUG 1. Antes desta tarefa o gerador era `clamp(anterior + passo, 0, top)`, e nas bordas o
   // clamp devolvia o mesmo grau: saía `5 5 4`.
-  it('nenhuma célula repete nota — nem a certa, nem um distrator', () => {
+  // Cuidado com o nome que isto tinha. `semRepetir` olha só vizinhos, e portanto o que se garante
+  // é que nenhuma célula repete nota **em seguida** — que é tudo que a regra da célula dá. A
+  // repetição NÃO adjacente (`1 3 1`) é célula legítima e acontece em 35% das respostas certas; o
+  // que ela não pode fazer é diferir entre a certa e os distratores (ver a assinatura, abaixo).
+  it('nenhuma célula repete nota EM SEGUIDA — nem a certa, nem um distrator', () => {
     let opcoes = 0;
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 120; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           for (const o of q.surface.options) {
             const g = graus(o.id);
@@ -126,7 +134,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
       const rotulos = scaleDegreeLabels(escala);
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 60; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           for (const o of q.surface.options) {
             const pos = graus(o.id).map(g => rotulos.indexOf(g));
@@ -142,36 +150,71 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   });
 
   // BUG 2. Os distratores eram células sorteadas do zero e diferiam demais; a visão pede
-  // "distratores que diferem em apenas uma nota". Agora são ENUMERADOS, e a regra vale sempre.
-  it('todo distrator difere da resposta certa em exatamente uma nota', () => {
-    let pares = 0;
+  // "distratores que diferem em apenas uma nota".
+  //
+  // **Esta regra deixou de valer sempre em 09/11**, e de propósito. Casar a assinatura de
+  // repetição (bug 3) é incompatível com "exatamente uma nota" quando a resposta certa repete um
+  // grau: trocar uma posição de `1 3 1` quase sempre quebra a repetição, e nas bordas da escala
+  // sobrava um único candidato. Entre as duas, o Paulo escolheu a assinatura — e com razão, porque
+  // um distrator que difere em duas notas ainda exige ouvir, enquanto um que repete onde a certa
+  // não repete se descarta de olho.
+  //
+  // Medido em 3900 perguntas: 81% dos distratores seguem diferindo em uma nota, 16% em duas, 3%
+  // em três. O teste trava o patamar, não o ideal.
+  it('o distrator difere da certa em uma nota na grande maioria dos casos', () => {
+    let pares = 0, umaNota = 0;
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 60; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') continue;
           const certa = graus(q.expected.id);
           for (const o of q.surface.options) {
             if (o.id === q.expected.id) continue;
             const difs = certa.filter((g, k) => g !== graus(o.id)[k]).length;
-            expect(difs, `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBe(1);
+            expect(difs, `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBeGreaterThanOrEqual(1);
+            if (difs === 1) umaNota++;
             pares++;
           }
         }
       }
     }
-    // Invariante, não só cobertura: o fallback de "duas notas de diferença" existe no item para
-    // escalas curtas, e com as escalas de HOJE ele nunca dispara — a asserção acima prova isso em
-    // todos os pares. Se um dia falhar, alguém acrescentou uma escala curta demais, e o item
-    // degradou de propósito em vez de mostrar três opções.
     expect(pares).toBeGreaterThan(4000);
+    expect(umaNota / pares).toBeGreaterThan(0.7);
+  });
+
+  // BUG 3 (09/11/2026), visto pelo Paulo: "nunca ter alternativas com notas repetidas se a melodia
+  // não tem, e sempre ter onde há". A assinatura de repetição diz quais posições tocam o mesmo
+  // grau — `1 3 1` → `010`, `1 3 5` → `012` — e todas as quatro opções compartilham a dela.
+  it('todas as opções têm a mesma assinatura de repetição da resposta certa', () => {
+    const assinatura = (g: string[]) => {
+      const ordem = new Map<string, number>();
+      return g.map(x => ordem.get(x) ?? (ordem.set(x, ordem.size), ordem.size - 1)).join('');
+    };
+    let perguntas = 0, comRepeticao = 0;
+    for (const escala of escalas) {
+      for (const tamanho of ['2', '3', '4', '5']) {
+        for (let i = 0; i < 40; i++) {
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
+          if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') continue;
+          const daCerta = assinatura(graus(q.expected.id));
+          perguntas++;
+          if (new Set(graus(q.expected.id)).size < Number(tamanho)) comRepeticao++;
+          for (const o of q.surface.options) {
+            expect(assinatura(graus(o.id)), `${escala}/${tamanho}: ${q.expected.id} vs ${o.id}`).toBe(daCerta);
+          }
+        }
+      }
+    }
+    // Cobertura: se a certa nunca repetisse grau, o teste acima passaria sem medir nada.
+    expect(comRepeticao / perguntas).toBeGreaterThan(0.15);
   });
 
   it('sempre oferece quatro opções distintas, em toda escala e tamanho', () => {
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 40; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           const ids = q.surface.options.map(o => o.id);
           expect(new Set(ids).size, `${escala}/${tamanho}`).toBe(4);
@@ -184,10 +227,10 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   // qualquer escala.
   it('os graus mostrados são os da escala escolhida, com a alteração grafada', () => {
     const esperado: Record<string, string[]> = {
-      'penta-menor': ['1', '\u266d3', '4', '5', '\u266d7', "1'"],
-      maior: ['1', '2', '3', '4', '5', '6', '7', "1'"],
-      lidio: ['1', '2', '3', '\u266f4', '5', '6', '7', "1'"],
-      'menor-harmonica': ['1', '2', '\u266d3', '4', '5', '\u266d6', '7', "1'"],
+      'penta-menor': ['1', '\u266d3', '4', '5', '\u266d7', '8'],
+      maior: ['1', '2', '3', '4', '5', '6', '7', '8'],
+      lidio: ['1', '2', '3', '\u266f4', '5', '6', '7', '8'],
+      'menor-harmonica': ['1', '2', '\u266d3', '4', '5', '\u266d6', '7', '8'],
     };
     for (const [escala, permitidos] of Object.entries(esperado)) {
       for (let i = 0; i < 40; i++) {
@@ -196,5 +239,42 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
         for (const o of q.surface.options) for (const g of graus(o.id)) expect(permitidos, escala).toContain(g);
       }
     }
+  });
+});
+
+// "O find the note diz as notas erradas como gabarito" (Paulo, 09/11/2026).
+//
+// A aritmética estava certa nas três superfícies — conferi corda por corda, casa por casa. O que
+// estava errado era o NOME: o enunciado passava `both: false` a `pcName` e pedia "Ré♯"; o gabarito
+// não passava nada, e o padrão mostra as duas grafias, então respondia "Ré♯/Mi♭". O gabarito
+// nomeava uma nota que a pergunta não pediu.
+describe('nota-no-instrumento: o gabarito diz a mesma nota que o enunciado', () => {
+  const ex = item('nota-no-instrumento');
+  const ctx = ctxFor();
+  /** O nome da nota dentro de uma frase como "Toque Ré♯ na corda Si". */
+  const nomes = (texto: string) => texto.match(/[A-GL][a-záéó]*[♯♭]?/g) ?? [];
+
+  it('no braço, nenhuma grafia aparece só no gabarito', () => {
+    for (const casas of ['0-5', '0-12']) {
+      for (let i = 0; i < 120; i++) {
+        const q = ex.make({ direcao: 'achar', instrumento: 'auto', casas }, ctx);
+        // a forma com barra é o defeito: se voltar, este teste pega
+        expect(q.reveal, `${q.prompt} → ${q.reveal}`).not.toContain('/');
+        // e a nota do gabarito tem de estar no enunciado
+        const doGabarito = nomes(q.reveal).find(x => /[♯♭]/.test(x) || x.length <= 3);
+        if (doGabarito) expect(q.prompt, `${q.prompt} → ${q.reveal}`).toContain(doGabarito);
+      }
+    }
+  });
+
+  // O sorteio da grafia é pedido do Paulo: "ora Lá♯, ora Si♭". Se ficasse fixo no sustenido,
+  // metade das grafias que existem na música nunca apareceria.
+  it('as duas grafias aparecem ao longo das rodadas', () => {
+    const vistas = new Set<string>();
+    for (let i = 0; i < 400; i++) {
+      const q = ex.make({ direcao: 'achar', instrumento: 'auto', casas: '0-12' }, ctx);
+      for (const n of nomes(q.prompt)) if (/[♯♭]/.test(n)) vistas.add(/♯/.test(n) ? 'sustenido' : 'bemol');
+    }
+    expect([...vistas].sort()).toEqual(['bemol', 'sustenido']);
   });
 });

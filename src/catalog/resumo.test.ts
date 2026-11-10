@@ -43,7 +43,8 @@ describe('resumoDaConfiguracao', () => {
   });
 
   it('toggle ligado mostra só o rótulo', () => {
-    const ex = item('que-nota-e-essa');
+    // `acidentes` mora em `nota-na-pauta` desde a reorganização: é configuração de PAUTA.
+    const ex = item('nota-na-pauta');
     const rotulo = ex.settings(ctx('pt')).find(s => s.id === 'acidentes')!.label;
     expect(resumoDaConfiguracao(ex, { ...ex.defaults, acidentes: true }, ctx('pt'))).toBe(rotulo);
   });

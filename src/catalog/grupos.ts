@@ -39,24 +39,29 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     itens: [{ itemId: 'acento-deslocado' }, { itemId: 'subdivisao-alternada' }, { itemId: 'deslocamento-ritmico' }],
   },
   {
-    // `ache-a-nota` na pauta entra mesmo sendo escrever, não ler: serve ao mesmo propósito.
+    // Desde a reorganização de 09/11/2026 ler e escrever são o MESMO item (`nota-na-pauta`), e a
+    // justificativa que existia aqui — "entra mesmo sendo escrever, não ler" — deixou de ser
+    // necessária. Era remendo da estrutura antiga.
     id: 'leitura-pauta', nome: 'grupos.leitura-pauta',
-    itens: [na('que-nota-e-essa', 'pauta'), na('que-intervalo-e-esse', 'pauta'), na('que-acorde-e-esse', 'pauta'),
-      { itemId: 'pauta-escala' }, na('ache-a-nota', 'pauta')],
+    itens: [{ itemId: 'nota-na-pauta' }, { itemId: 'intervalo-na-pauta' }, na('que-acorde-e-esse', 'pauta'),
+      { itemId: 'pauta-escala' }],
   },
   {
     // `ouvido-tecla` fica FORA: ele é de ouvido, mas responde no teclado, e o propósito ali é outro.
     id: 'ouvido', nome: 'grupos.ouvido',
-    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' }],
+    // `relacoes-melodia-harmonia` entrou em 09/11, aprovado pelo Paulo: combina na mesma etapa que
+    // os outros de ouvido, que é o critério do grupo (e não "treina a mesma habilidade").
+    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' },
+      { itemId: 'relacoes-melodia-harmonia' }],
   },
   {
     id: 'o-braco', nome: 'grupos.o-braco',
-    itens: [na('que-nota-e-essa', 'braco'), na('ache-a-nota', 'braco'), na('que-intervalo-e-esse', 'braco'),
+    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'intervalo-no-instrumento' },
       na('que-acorde-e-esse', 'braco')],
   },
   {
     id: 'o-teclado', nome: 'grupos.o-teclado',
-    itens: [na('que-nota-e-essa', 'teclado'), na('ache-a-nota', 'teclado'), na('que-acorde-e-esse', 'teclado'),
+    itens: [{ itemId: 'nota-no-instrumento', settings: { instrumento: 'piano' } }, na('que-acorde-e-esse', 'teclado'),
       { itemId: 'ouvido-tecla' }],
   },
 ];

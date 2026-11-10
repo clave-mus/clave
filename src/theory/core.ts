@@ -39,6 +39,21 @@ export function noteNameOct(n: Note, naming: Naming = 'pt') {
   return noteName(n, naming) + n.oct;
 }
 /** Nome de classe de altura (para teclado e braço), preferindo sustenido e mostrando o enarmônico. */
+/**
+ * **Uma** grafia de uma classe de altura: Lá♯ ou Si♭, nunca "Lá♯/Si♭".
+ *
+ * Existe porque a forma com barra, boa para rotular uma tecla, é ruim para *dizer* uma nota: em
+ * `ache-a-nota` o enunciado pedia "Ré♯" e o gabarito respondia "Ré♯/Mi♭", nomeando uma nota que a
+ * pergunta não pediu. E o Paulo quer o contrário da barra — "ora Lá♯, ora Si♭", separadas.
+ */
+export function pcNameUm(p: number, naming: Naming = 'pt', bemol = false) {
+  const tabela = bemol
+    ? [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]]
+    : [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]];
+  const [letra, acc] = tabela[mod(p, 12)];
+  return letterName(letra, naming) + accSymbol(acc);
+}
+
 export function pcName(p: number, naming: Naming = 'pt', both = true) {
   const sharp = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]][mod(p, 12)];
   const flat = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]][mod(p, 12)];
@@ -181,9 +196,15 @@ export function degreeLabel(num: number, semis: number): string {
   return `${delta < 0 ? '♭'.repeat(-delta) : delta > 0 ? '♯'.repeat(delta) : ''}${num}`;
 }
 
-/** Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho. */
+/**
+ * Os rótulos dos graus da escala, **mais a tônica uma oitava acima** — é o que fecha o desenho.
+ *
+ * A oitava se escreve `8`, e não `1'` como até 09/11/2026. O Paulo perguntou o que `1'` queria
+ * dizer, que é a prova de que não queria dizer nada: a linha é a mesma que já escreve 2, 3, 4 e
+ * ♭7, e naquela linha a oitava é 8.
+ */
 export function scaleDegreeLabels(id: ScaleId, dir: Direcao = 'sobe'): string[] {
-  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), "1'"];
+  return [...scaleDegs(id, dir).map(([num, semis]) => degreeLabel(num, semis)), '8'];
 }
 
 /**

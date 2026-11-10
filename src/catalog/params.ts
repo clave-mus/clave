@@ -206,13 +206,15 @@ export function herdado(r: ResolvedParams, key: keyof GlobalParams): boolean {
  * que vale; ao mexer, a mudança fica local e **nem a prática guardada do item nem a da etapa é
  * tocada** — a mesma regra das configurações.
  */
-export function useParamsDoItem(itemId: string, daEtapa?: ParametrosDePratica | null) {
+export function useParamsDoItem(itemId: string, daEtapa?: ParametrosDePratica | null, doItem?: ParametrosDePratica) {
   const instrument = useStore(s => s.profile.instrument);
   const perfil = useStore(s => s.params);
   const guardada = useStore(s => s.pratica[itemId]);
   const [local, setLocal] = useState<ParametrosDePratica | null>(daEtapa ?? null);
 
-  const pratica: ParametrosDePratica = local ?? guardada ?? SEM_PRATICA;
+  // `doItem` é a entrada do item (o primeiro preset), e fica **embaixo** de tudo que a pessoa
+  // escolheu: etapa de rotina primeiro, depois o que ela guardou neste item, e só então o atalho.
+  const pratica: ParametrosDePratica = local ?? guardada ?? doItem ?? SEM_PRATICA;
   const params = useMemo(() => valoresDe(resolveCamadas([
     camadaDoPerfil(instrument, perfil),
     { origin: local ? 'etapa' : 'agora', values: pratica },

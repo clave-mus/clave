@@ -7,7 +7,9 @@
 //
 // Os textos vêm de ctx.t (src/i18n): os fixos por chave e os de teoria montados com a gramática de
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
-import { buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
+import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
+import { digitacoesDaReceita } from '../theory/digitacoes';
+import { pcPermitido } from './contexto-musical';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
@@ -18,7 +20,7 @@ import { clave, pcsPermitidas } from './contexto-musical';
 // linhas de import de quatro módulos, e a declaração — que é o que se lê — ficaria enterrada.
 export {
   buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, SHARP_ORDER,
-  scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor,
+  scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pcNameUm, pick, randInt, relativeMinor,
   SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
 } from '../theory/core';
 export type { ChordId, Clef, Direcao, Note, Quality, ScaleId } from '../theory/core';
@@ -26,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitida, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -204,7 +206,15 @@ export function celulaDeGraus(top: number, size: number): number[] {
 export const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
 export const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 export const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));
-export const ALL_CHORDS = Object.keys(CHORDS) as ChordId[];
+/**
+ * Todas as qualidades de acorde, em **ordem de complexidade** (U7, 06/11/2026): tríades comuns
+ * primeiro, tétrades depois, as duas mais raras por último. Aprovada pelo Paulo — não é mais a
+ * ordem de declaração de `CHORDS` em `core.ts`, que é de quando cada uma foi acrescentada.
+ * `helpers.test.ts` confere que o conjunto continua batendo com `CHORDS` se uma nova entrar lá.
+ */
+export const ALL_CHORDS: ChordId[] = ['maior', 'menor', 'dim', 'aum', 'sus2', 'sus4', '7', '7M', 'm7', 'm7b5', 'dim7', '7M#5', 'm7M'];
+/** Reordena qualquer lista de qualidades (ex.: a seleção da pessoa) pela ordem de complexidade acima. */
+export const porComplexidade = (ids: ChordId[]) => [...ids].sort((a, b) => ALL_CHORDS.indexOf(a) - ALL_CHORDS.indexOf(b));
 export const ALL_SCALES = ALL_SCALE_IDS;
 
 // O `tier` é dica de dificuldade relativa, só para a variação automática pré-marcar (F2-2).
@@ -221,6 +231,25 @@ export const INTERVALS: { id: string; num: number; q: Quality; tier: 1 | 2 | 3 }
 export const ivLabel = (id: string, ctx: Ctx) => { const iv = INTERVALS.find(i => i.id === id)!; return intervalName({ num: iv.num, semis: semisFor(iv.num, iv.q) }, ctx.conv); };
 export const semiOptions = (ctx: Ctx): ChoiceOption[] => Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), label: semitoneName(i + 1, ctx.conv) }));
 /** A mesma ordem de dificuldade dos intervalos escritos, em semitons (F2-2). */
+/**
+ * Dó maior, e tonalidade livre, para os atalhos de percepção.
+ *
+ * Princípio do Paulo (09/11/2026): *"é mais valioso fixar uma tonalidade em todos exercícios de
+ * percepção melódica ou harmônica, pois isso emula com mais verossimilhança as condições reais de
+ * música"*. Por isso os atalhos de entrada desses itens trazem dó maior.
+ *
+ * **Uma referência só, compartilhada**, e não um objeto por atalho: `useParamsDoItem` memoiza por
+ * identidade, e um literal novo a cada render recalcularia os parâmetros sem nada ter mudado.
+ *
+ * `TONALIDADE_LIVRE` é explícito de propósito. Um atalho **sem** `params` não limpa o que outro
+ * atalho pôs — ele só não mexe. Para voltar ao sorteio é preciso dizer `key: null`.
+ */
+export const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
+export const TONALIDADE_LIVRE = { key: null } as const;
+
+/** Os doze intervalos, do uníssono à oitava, como os ids que `semiOptions` usa. */
+export const TODOS_OS_INTERVALOS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+
 export const SEMI_TIER: Record<number, 1 | 2 | 3> = { 12: 1, 7: 1, 5: 1, 4: 1, 3: 1, 9: 2, 8: 2, 2: 2, 1: 2, 10: 3, 11: 3, 6: 3 };
 export const ROOTS: Note[] = [note(0), note(1, -1), note(1), note(2, -1), note(2), note(3), note(3, 1), note(4), note(5, -1), note(5), note(6, -1), note(6)];
 export const spellPc = (p: number, oct = 4): Note => ({ ...ROOTS[mod(p, 12)], oct });
@@ -557,25 +586,11 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
 }
 
 // ---------------- acordes desenhados ----------------
-export type Shape = (number | null)[];
-export const OPEN: { root: Note; type: ChordId; frets: Shape }[] = [
-  { root: note(0), type: 'maior', frets: [null, 3, 2, 0, 1, 0] }, { root: note(4), type: 'maior', frets: [3, 2, 0, 0, 0, 3] },
-  { root: note(1), type: 'maior', frets: [null, null, 0, 2, 3, 2] }, { root: note(5), type: 'maior', frets: [null, 0, 2, 2, 2, 0] },
-  { root: note(2), type: 'maior', frets: [0, 2, 2, 1, 0, 0] }, { root: note(5), type: 'menor', frets: [null, 0, 2, 2, 1, 0] },
-  { root: note(2), type: 'menor', frets: [0, 2, 2, 0, 0, 0] }, { root: note(1), type: 'menor', frets: [null, null, 0, 2, 3, 1] },
-  { root: note(2), type: '7', frets: [0, 2, 0, 1, 0, 0] }, { root: note(5), type: '7', frets: [null, 0, 2, 0, 2, 0] },
-  { root: note(1), type: '7', frets: [null, null, 0, 2, 1, 2] }, { root: note(5), type: 'm7', frets: [null, 0, 2, 0, 1, 0] },
-  { root: note(2), type: 'm7', frets: [0, 2, 0, 0, 0, 0] }, { root: note(0), type: '7M', frets: [null, 3, 2, 0, 0, 0] },
-  { root: note(0), type: '7', frets: [null, 3, 2, 3, 1, 0] }, { root: note(1), type: '7M', frets: [null, null, 0, 2, 2, 2] },
-];
-export const E_FORM: Partial<Record<ChordId, (r: number) => Shape>> = {
-  maior: r => [r, r + 2, r + 2, r + 1, r, r], menor: r => [r, r + 2, r + 2, r, r, r], '7': r => [r, r + 2, r, r + 1, r, r],
-  m7: r => [r, r + 2, r, r, r, r], '7M': r => [r, null, r + 1, r + 1, r, null],
-};
-export const A_FORM: Partial<Record<ChordId, (r: number) => Shape>> = {
-  maior: r => [null, r, r + 2, r + 2, r + 2, r], menor: r => [null, r, r + 2, r + 2, r + 1, r], '7': r => [null, r, r + 2, r, r + 2, r],
-  m7: r => [null, r, r + 2, r, r + 1, r], '7M': r => [null, r, r + 2, r + 1, r + 2, r],
-};
+//
+// As tabelas de formas escritas à mão (`OPEN`, `E_FORM`, `A_FORM`) saíram em 09/11/2026: o gerador
+// de `theory/digitacoes.ts` produz qualquer voicing, com extensão e inversão, e manter as duas
+// coisas era o motor duplicado que o projeto proíbe. Ver `guitarChordQuestion`.
+
 /**
  * As alternativas de uma pergunta de acorde: a cifra certa, as outras qualidades em jogo sobre a mesma
  * fundamental, e a mesma qualidade sobre outras fundamentais.
@@ -589,25 +604,82 @@ export function chordOptions(root: Note, type: ChordId, conv: Ctx['conv'], emJog
   const pool = [...types.map(t => chordSymbol(root, t, conv)), ...shuffle(ROOTS).slice(0, 5).map(r => chordSymbol(r, type, conv))];
   return { sym, options: optionsWith(sym, [...new Set(pool)], 6).map(chordOption), expected: chordExpected(root, type) };
 }
-export function guitarChordQuestion(forms: string, ctx: Ctx): Question {
+/**
+ * Um acorde desenhado no braço — a forma vem do **gerador**, não de tabela escrita à mão.
+ *
+ * ## O que mudou em 09/11/2026
+ *
+ * Antes havia 16 formas abertas e 10 fórmulas de pestana, todas escritas à mão: nenhuma extensão,
+ * nenhuma inversão, nenhum voicing. O Paulo pediu *"voicings diversos, extensões, inversões, que
+ * não seja só os gavetões"* — e o motor que faz isso **já estava no repositório e ninguém usava**:
+ * `theory/digitacoes.ts`, o algoritmo que ele mesmo doou (`M5`), com 22 testes.
+ *
+ * Ligar os dois também cumpre a regra do projeto: havia **dois** jeitos de achar um acorde no
+ * braço, e motor duplicado é proibido. As tabelas à mão saíram.
+ *
+ * ## Formas móveis por padrão
+ *
+ * `soltas: false` proíbe corda solta, e é o padrão a pedido dele. Um gavetão aberto é uma forma
+ * memorizada numa posição fixa; uma forma sem cordas soltas é **relativa**, e move pelo braço — é a
+ * que transfere.
+ *
+ * ## Duas perguntas, não uma
+ *
+ * Fixar o acorde para "focar nos desenhos relativos" (pedido dele) **muda a pergunta**: se é sempre
+ * Dó maior, "que acorde é esse" tem uma resposta e o exercício morre. Então com a fundamental fixa
+ * a pergunta vira **qual nota está no baixo** — que é reconhecer o desenho, e é o que ele quer. O
+ * `role` de cada `Encaixe` já é o grau, então a resposta sai do motor sem conta nenhuma.
+ *
+ * A fundamental fixa é a **da tonalidade em vigor** (dó quando livre), seguindo o princípio dele de
+ * que fixar tonalidade emula as condições reais de música.
+ */
+export function guitarChordQuestion(s: S, ctx: Ctx): Question {
   const tuning = TUNINGS.violao;
-  let root: Note, type: ChordId, frets: Shape;
-  if (forms === 'abertos' || (forms === 'todos' && Math.random() < 0.4)) {
-    ({ root, type, frets } = pick(OPEN));
-  } else {
-    type = pick(['maior', 'menor', '7', 'm7', '7M'] as ChordId[]);
-    const useE = Math.random() < 0.5;
-    const r = randInt(1, 8);
-    frets = (useE ? E_FORM : A_FORM)[type]!(r);
-    root = spellPc(tuning[useE ? 0 : 1] + r);
+  const [, maxCasa] = fretRange(s);
+  const types = arr(s.tipos, ['maior', 'menor', '7', 'm7', '7M']) as ChordId[];
+  const type = pick(types);
+  const peloBaixo = s.pergunta === 'baixo';
+  const pcRaiz = peloBaixo ? (ctx.params.key?.tonic ?? 0) : pcPermitido(ctx);
+  const root = { ...spellPc(pcRaiz), oct: 3 };
+
+  // `limite` existe porque o gerador é infinito em potencial; 300 é mais que suficiente para
+  // sortear com variedade sem varrer o braço inteiro a cada pergunta.
+  const todas = [...digitacoesDaReceita(root, type, {
+    tuning, maxCasa: Math.max(4, maxCasa), maxVaoCasas: 4, limite: 300,
+  })];
+  const cabem = todas.filter(f => (s.soltas ? true : f.every(e => e.casa > 0)));
+  const forma = (cabem.length ? pick(cabem) : todas.length ? pick(todas) : []);
+  if (!forma.length) {
+    // Sem forma possível (faixa de casas estreita demais para a qualidade pedida): o item explica
+    // em vez de gerar pergunta sem resposta. Ver `problema` no item.
+    return guitarChordQuestion({ ...s, casas: '0-12', soltas: true }, ctx);
   }
-  const played = frets.map((f, s) => (f === null ? null : tuning[s] + f)).filter((m): m is number => m !== null);
-  const used = frets.filter((f): f is number => f !== null && f > 0);
-  const from = used.length && Math.min(...used) > 3 ? Math.min(...used) - 1 : 0;
-  const { sym, options, expected } = chordOptions(root, type, ctx.conv);
+
+  const usadas = forma.map(e => e.casa).filter(f => f > 0);
+  const from = usadas.length && Math.min(...usadas) > 3 ? Math.min(...usadas) - 1 : 0;
+  const played = [...forma].sort((a, b) => a.midi - b.midi).map(e => e.midi);
+  const noBaixo = [...forma].sort((a, b) => a.midi - b.midi)[0];
+  const visual: Question['visual'] = {
+    kind: 'fretboard', tuning, from, to: from + 5,
+    marks: forma.map(e => ({ s: e.corda, f: e.casa, color: e.casa === 0 ? 'var(--cream)' : undefined })),
+    muted: tuning.map((_, i) => i).filter(i => !forma.some(e => e.corda === i)),
+  };
+
+  if (peloBaixo) {
+    // As alternativas são os graus que ESTE acorde tem — nem mais, nem menos.
+    const graus = [...new Set(forma.map(e => e.role))];
+    return {
+      prompt: ctx.t('quiz.whichBass', { chord: chordSymbol(root, type, ctx.conv) }), visual,
+      surface: { kind: 'choices', options: graus.map(g => ({ id: g, label: ctx.t('quiz.degreeInBass', { degree: g }) })) },
+      expected: { kind: 'option', id: noBaixo.role },
+      sound: { groups: [played], instrument: 'violao' },
+      reveal: ctx.t('quiz.degreeInBass', { degree: noBaixo.role }),
+    };
+  }
+  const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
   return {
-    prompt: ctx.t('quiz.whatChord'),
-    visual: { kind: 'fretboard', tuning, from, to: from + 5, marks: frets.flatMap((f, s) => (f === null ? [] : [{ s, f, color: f === 0 ? 'var(--cream)' : undefined }])), muted: frets.flatMap((f, s) => (f === null ? [s] : [])) },
-    surface: { kind: 'choices', options }, expected, sound: { groups: [played], instrument: 'violao' }, reveal: sym,
+    prompt: ctx.t('quiz.whatChord'), visual,
+    surface: { kind: 'choices', options }, expected,
+    sound: { groups: [played], instrument: 'violao' }, reveal: sym,
   };
 }

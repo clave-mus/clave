@@ -156,6 +156,17 @@ export interface Assunto {
   objetos: ObjetoId[];
   /** Mantido para a análise e para o registro de tentativas; é `objetos[0]` traduzido. */
   primaryModule: ModuleId;
+  /**
+   * Outras áreas em que o item aparece **no catálogo** (09/11/2026).
+   *
+   * Vale só para onde a pessoa procura: histórico, estatística e cor continuam saindo de
+   * `primaryModule`, porque "em que área isto conta" precisa de uma resposta só. Nasceu de
+   * "Relações entre melodia e harmonia", que é honestamente das duas percepções — a melódica
+   * (a nota) e a harmônica (o acorde embaixo dela) — e some de uma se tiver de escolher.
+   *
+   * **Use com parcimônia:** um item em todas as áreas é um item sem casa.
+   */
+  tambemEm?: ModuleId[];
   /** Habilidades que a tarefa exige, da principal para as secundárias. */
   skillTags: SkillTag[];
   /** Material que o exercício PODE cobrir em alguma configuração. O que cada tentativa usou de

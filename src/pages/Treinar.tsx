@@ -8,7 +8,7 @@ import ItemScreen from '../catalog/ItemScreen';
 import Player from '../catalog/Player';
 import { isSeries } from '../catalog/types';
 import { useRevisao, useStore } from '../state/store';
-import { estadoDe, visivel } from '../catalog/publicacao';
+import { visivel } from '../catalog/publicacao';
 import { Chip, Field, PageHead, Tag } from '../components/ui';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { lerAbertura } from '../routines/edicao';
@@ -108,7 +108,6 @@ function GradeDeItens({ exercicios, ferramentas, color, stats }: {
     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
       {exercicios.map(id => {
         const st = stats[id];
-        const rascunho = estadoDe(itemById[id]?.publicacao) === 'rascunho';
         return (
           <div key={id} style={{ position: 'relative' }}>
             <Link to={`/catalogo/${id}`} className="ex-card">
@@ -116,10 +115,9 @@ function GradeDeItens({ exercicios, ferramentas, color, stats }: {
               <div style={{ minWidth: 0 }}>
                 <h3>{itemText(t, id, 'title')}</h3>
                 <p>{itemText(t, id, 'desc')}</p>
-                {(st || rascunho) && (
+                {st && (
                   <div className="meta">
                     {st && <span className="mini-tag">{t('train.done', { count: st.attempts })}</span>}
-                    {rascunho && <span className="mini-tag">{t('review.draft')}</span>}
                   </div>
                 )}
               </div>
@@ -139,7 +137,6 @@ function GradeDeItens({ exercicios, ferramentas, color, stats }: {
               <div className="meta">
                 <span className="mini-tag">{t('train.toolTag')}</span>
                 <span className="mini-tag">{t(tool.mobile ? 'common.mobile' : 'common.withInstrument')}</span>
-                {estadoDe(tool.publicacao) === 'rascunho' && <span className="mini-tag">{t('review.draft')}</span>}
               </div>
             </div>
           </Link>

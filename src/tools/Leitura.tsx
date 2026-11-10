@@ -2,8 +2,8 @@
 // Modo notas: figura constante, poucas notas, para focar só na altura.
 // Modo ritmo: uma linha só, para focar só nas figuras.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { atTime, Clock, drum, tone } from '../audio/engine';
-import { applyKey, clefBottom, midi, noteName, type Clef, type Note } from '../theory/core';
+import { atTime, Clock, drum, playGroups, tone } from '../audio/engine';
+import { applyKey, clefBottom, majorTonic, midi, noteName, pc, type Clef, type Note } from '../theory/core';
 import { CELLS, RHYTHM_PRESETS, randomBars, type CellId } from '../theory/rhythm';
 import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
@@ -45,6 +45,8 @@ export default function Leitura() {
   const [bpm, setBpm] = useState(60);
   const [hear, setHear] = useState(false);
   const [names, setNames] = useState(false);
+  /** Nota ou tríade de contexto, para entrar no tom antes de audiar. Ver `ouvirContexto`. */
+  const [contexto, setContexto] = useState<'nota' | 'triade'>('nota');
   const [running, setRunning] = useState(false);
   const [pos, setPos] = useState<number | null>(null); // tempo atual (em tempos)
   const [startBar, setStartBar] = useState(0);
@@ -67,6 +69,33 @@ export default function Leitura() {
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
   useEffect(() => { stop(); }, [mode, preset, rPreset, seed]);
+
+  /**
+   * Audiar antes de ouvir (ideia do Paulo, 09/11/2026): *"tu vê a melodia, audia, e aí o som das
+   * notas vem como confirmação. Só penso que aí precisa poder ouvir um contexto — 1 nota — pra
+   * entrar no tom certo."*
+   *
+   * O modo já era quase isto: `hear` nasce desligado, então a pauta aparece em silêncio. Faltavam
+   * as duas pontas — a âncora de altura antes, e o gabarito depois.
+   *
+   * **Uma nota dá a altura mas não dá o modo**: dó serve a dó maior e a lá menor. Por isso a tríade
+   * é opção; a nota é o padrão porque é o mínimo, e foi o que ele pediu.
+   */
+  function ouvirContexto() {
+    if (!notes.length) return;
+    const tonica = majorTonic(preset.fifths);
+    const maisGrave = Math.min(...notes.map(midi));
+    // a tônica na oitava imediatamente abaixo da melodia: âncora, não concorrente
+    let m = maisGrave - ((maisGrave - pc(tonica)) % 12 + 12) % 12;
+    while (m > maisGrave - 2) m -= 12;
+    playGroups(contexto === 'triade' ? [[m, m + 4, m + 7]] : [[m]], { voice: 'piano', dur: 1.6, gap: 1.8 });
+  }
+
+  /** O gabarito: toca a melodia uma vez, sem metrônomo e sem cursor. Conferir não é ler junto. */
+  function conferir() {
+    if (!notes.length) return;
+    playGroups(notes.map(n => [midi(n)]), { voice: 'piano', dur: 0.5, gap: 0.55 });
+  }
 
   function stop() {
     clock.current?.stop();
@@ -99,22 +128,20 @@ export default function Leitura() {
   const cursorNote = pos === null ? null : Math.floor(pos);
   return (
     <div style={{ display: 'grid', gap: 18 }}>
+      {/* U9: a pauta é a primeira coisa a aparecer na tela, não o fim de uma rolagem — o que vem
+          antes dela fica compacto (modo + preset), e o resto do ajuste vai DEPOIS do palco, como
+          já é em Ritmo.tsx (o painel de andamento lá também vem depois, não antes). */}
       <div className="row">
         <Chip on={mode === 'notas'} onClick={() => setMode('notas')}>{t('reading.notes')}</Chip>
         <Chip on={mode === 'ritmo'} onClick={() => setMode('ritmo')}>{t('reading.rhythm')}</Chip>
       </div>
-      <div className="panel" style={{ display: 'grid', gap: 12 }}>
-        {mode === 'notas'
-          ? <div className="row"><span className="eyebrow">{t('reading.notes')}</span>{NOTE_PRESETS.map(p => <Chip key={p.id} on={p.id === preset.id} onClick={() => setPreset(p)}>{t(p.name)}</Chip>)}</div>
-          : <div className="row"><span className="eyebrow">{t('reading.figures')}</span>{RHYTHM_PRESETS.map(p => <Chip key={p.id} on={p.id === rPreset.id} onClick={() => setRPreset(p)}>{p.name}</Chip>)}</div>}
-        <div className="row">
-          <span className="eyebrow">{t('common.tempo')}</span>
-          <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 26 }}>♩ = {bpm}</span>
-          <input className="range" style={{ maxWidth: 220 }} type="range" min={40} max={160} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="lt-bpm" />
-          <label className="switch"><input type="checkbox" id="lt-hear" checked={hear} onChange={e => setHear(e.target.checked)} />{t(mode === 'notas' ? 'reading.playMelody' : 'reading.playRhythm')}</label>
-          {mode === 'notas' && <label className="switch"><input type="checkbox" id="lt-names" checked={names} onChange={e => setNames(e.target.checked)} />{t('reading.showNames')}</label>}
-        </div>
-      </div>
+      {/* Os dois presets traduzem pelo que o dado guarda: o de notas por chave (`p.name` é
+          `MessageKey`), o de ritmo pelo ID — que é como `ritmo-ouvido` já fazia, e por isso nenhuma
+          chave nova foi preciso. O de ritmo imprimia `{p.name}` cru, e em inglês os chips diziam
+          "Duas figuras: semínima e colcheias". */}
+      {mode === 'notas'
+        ? <div className="row">{NOTE_PRESETS.map(p => <Chip key={p.id} on={p.id === preset.id} onClick={() => setPreset(p)}>{t(p.name)}</Chip>)}</div>
+        : <div className="row">{RHYTHM_PRESETS.map(p => <Chip key={p.id} on={p.id === rPreset.id} onClick={() => setRPreset(p)}>{t(`theory.rhythmPresets.${p.id}` as MessageKey)}</Chip>)}</div>}
 
       <div style={{ background: 'var(--co)', padding: '20px 16px', display: 'grid', gap: 8 }}>
         {[0, 1].map(row => (
@@ -133,12 +160,35 @@ export default function Leitura() {
         ))}
       </div>
 
+      {/* Audiar vem ANTES de ler junto, e por isso estes dois botões vêm antes do laço: a ordem na
+          tela é a ordem do exercício — âncora, audia por dentro, confere. */}
+      {mode === 'notas' && (
+        <div className="row">
+          <Btn tone="ghost" onClick={ouvirContexto}>{t('reading.hearContext')}</Btn>
+          <Btn tone="ghost" onClick={conferir}>{t('reading.checkIt')}</Btn>
+          <span className="eyebrow" style={{ marginLeft: 8 }}>{t('reading.context')}</span>
+          <Chip on={contexto === 'nota'} onClick={() => setContexto('nota')}>{t('reading.contextNote')}</Chip>
+          <Chip on={contexto === 'triade'} onClick={() => setContexto('triade')}>{t('reading.contextTriad')}</Chip>
+        </div>
+      )}
       <div className="row">
         <Btn onClick={() => (running ? stop() : play())} tone={running ? 'mu' : undefined}>{running ? t('common.stop') : t('reading.loop')}</Btn>
         <Btn tone="ghost" onClick={() => setSeed(s => s + 1)}>{t('reading.another')}</Btn>
         <span className="eyebrow" style={{ marginLeft: 8 }}>{t('reading.startBar')}</span>
         {[0, 1, 2, 3].map(b => <Chip key={b} on={startBar === b} onClick={() => play(b)}>{b + 1}</Chip>)}
       </div>
+
+      <div className="panel" style={{ display: 'grid', gap: 12 }}>
+        <div className="row">
+          <span className="eyebrow">{t('common.tempo')}</span>
+          {/* U9: "cronômetro discreto" — era 26px/900 de peso, do tamanho de um placar. */}
+          <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 620, fontSize: 17 }}>♩ = {bpm}</span>
+          <input className="range" style={{ maxWidth: 220 }} type="range" min={40} max={160} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="lt-bpm" />
+          <label className="switch"><input type="checkbox" id="lt-hear" checked={hear} onChange={e => setHear(e.target.checked)} />{t(mode === 'notas' ? 'reading.playMelody' : 'reading.playRhythm')}</label>
+          {mode === 'notas' && <label className="switch"><input type="checkbox" id="lt-names" checked={names} onChange={e => setNames(e.target.checked)} />{t('reading.showNames')}</label>}
+        </div>
+      </div>
+
       <p className="muted" style={{ maxWidth: '62ch' }}>
         {t(mode === 'notas' ? 'reading.hintNotes' : 'reading.hintRhythm')}
       </p>

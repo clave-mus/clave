@@ -55,7 +55,7 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
  * uma faixa em MIDI. Já `que-nota-e-essa`, `ache-a-nota` e `que-acorde-e-esse` **têm** a superfície do
  * teclado, onde a região faz sentido de verdade — e por isso declaram `range`.
  */
-const REGIAO_NAO_SE_OFERECE = ['pauta-escala', 'que-intervalo-e-esse'];
+const REGIAO_NAO_SE_OFERECE = ['pauta-escala', 'intervalo-na-pauta'];
 
 /**
  * `ctx.params` espionado: acusa quem lê `key`, `range` ou `material` **direto**, sem passar pelas

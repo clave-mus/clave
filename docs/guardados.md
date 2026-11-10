@@ -37,6 +37,44 @@ como compromisso, mas também não foi descartado.
 **Parado para conversa do grupo:** pesquisa de estilo. Acompanhamento de música erudita é candidato
 natural do Bernardo Garcia, se ele quiser.
 
+### Bateria de acompanhamento, e o exercício de estimar o BPM
+
+*Anotado em 06/11/2026, a pedido do Paulo. **Não entrou em tarefa nenhuma** — está aqui para
+decidir depois.*
+
+Duas coisas, e elas se separam melhor do que parecem:
+
+1. **O exercício:** toca um groove de bateria num andamento e pede a **estimativa do BPM**.
+2. **O uso maior:** bateria de acompanhamento **em outros exercícios**, não só neste.
+
+**O (1) não depende de material gravado, e por isso não está guardado — está buildável hoje.**
+`audio/engine.ts` já sintetiza `bumbo`, `caixa` e `chimbal`, e o `Clock` já agenda com
+antecedência.
+
+**A pergunta do Paulo — "dá para mudar o BPM sem distorcer o áudio?" — tem uma resposta que decide
+o desenho:** sim, **desde que não se guarde um loop pronto.** Quem sequencia **golpes** (sintetizados
+ou amostras de um golpe só) muda o andamento mudando um número: cada ataque é disparado no instante
+certo e nada precisa ser esticado. Quem guarda **um arquivo de loop de dois compassos** cai no
+problema — `playbackRate` muda a altura junto (a bateria fica aguda e "de desenho animado"), e
+esticar mantendo a altura pede *time-stretch*, que é caro, artefatado e some com a definição do
+ataque, justo o que importa num estudo de ritmo.
+
+> **A regra, então: sequenciar golpes, nunca esticar loop.** Ela vale igual para síntese e para
+> amostras — e é o que mantém o andamento livre de graça.
+
+**O (2) é que esbarra em material gravado:** groove com levada de verdade — notas fantasma,
+dinâmica, variação de ataque — não sai da síntese atual. Aí voltam as perguntas de origem e de
+licença, e a porta mais fácil continua fechada: **música de IA está fora**, em qualquer forma
+(visão, e a decisão 59 no topo desta seção).
+
+**👤 Como buscar e aprovar o material — decisão do Paulo, não de uma tarefa:**
+
+| | |
+|---|---|
+| **Origem** | amostras de licença livre (CC0) · pacote comercial **com direito de redistribuição** (a licença precisa cobrir distribuir dentro de um app, não só "uso em música") · gravação autoral do time |
+| **Formato** | **one-shots** (um golpe por arquivo), pelo motivo acima — e não loops renderizados |
+| **Aprovação** | ouvido humano de quem toca. É o mesmo princípio que `padroes-ritmicos.md` já exige para o vocabulário rítmico: revisor de tradição, não ouvido de IA |
+
 ---
 
 ## O objeto "Som, timbre e dinâmica"
@@ -95,6 +133,7 @@ Continuam existindo como **assunto**; o que saiu foi a porta, por não ter catá
 | **Progressão por habilidade** (em vez de por exercício) | depois do beta | é a ideia mais forte da variação automática, mas **afirmar transferência de habilidade sem dado é irresponsável** (decisão 9) |
 | **Regras de escrita no voice leading** (quintas paralelas, dobramento, resolução da sensível) | Fase 2 | cada regra precisa de uma decisão sobre **em que tradição ela vale** — no jazz, quintas paralelas são vocabulário. Entram como aviso, nunca como erro |
 | **Microfone nos exercícios além de voz e ritmo relativo** | depois | ritmo alinhado ao clique exige calibração de latência, e é de onde vem a fama de "glitchy" (decisão 43) |
+| **"Quer dificultar? acrescente colcheias"** — o preset sugerindo o próximo passo | depois | ideia do Paulo em 06/11/2026, no preset *Ligaduras* da leitura rítmica. Adiada **por ele**, como questão de experiência de uso. O que ela pede embaixo não é pequeno: saber *há quanto tempo a pessoa usa aquele preset* é guardar histórico de uso por exercício, e aí a sugestão encosta na fronteira do que nunca entra — medir a pessoa. **O que traria de volta:** decidir se o aviso é estático (o preset diz qual é o próximo, para todo mundo, sem olhar ninguém) ou se o app passa a acompanhar uso por exercício. São desenhos diferentes, não graus do mesmo |
 
 ---
 

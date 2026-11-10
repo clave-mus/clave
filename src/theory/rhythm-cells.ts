@@ -19,15 +19,14 @@ export const VALUE_TICKS: Record<NoteValue, number> = { w: 96, h: 48, q: 24, '8'
 export type Figure = NoteValue;
 export type RestKind = 'h' | 'q' | '8' | '16';
 export type Trait = 'pontuada' | 'sincope' | 'ligadura' | 'quialtera';
-export type Level = 1 | 2 | 3 | 4 | 5;
 
 /**
- * Família aditiva da célula (X1, 06/11/2026): como ela agrupa o pulso — em 2, em 3, em 4, ou com
- * ponto —, não em que nível ela mora. **Derivada do padrão**, como os outros recursos acima: o
- * Paulo topou "uma maneira de gerar de forma equilibrada", não uma tabela fechada por célula.
+ * Dificuldade relativa da célula. **Não é mais filtro de configuração** (06/11/2026): o nível saiu
+ * da tela e foi substituído por presets, porque escolher "nível 3" é uma escada — e o que a pessoa
+ * quer dizer é *quais figuras podem aparecer*. Aqui ele sobrevive só como **peso**: célula simples
+ * aparece mais que célula rebuscada dentro do mesmo conjunto.
  */
-export type Familia = 'binaria' | 'ternaria' | 'quaternaria' | 'pontuada';
-export const FAMILIAS: Familia[] = ['binaria', 'ternaria', 'quaternaria', 'pontuada'];
+export type Level = 1 | 2 | 3 | 4 | 5;
 
 // Nomes de figuras, pausas, recursos e níveis ficam nos textos de cada idioma (rhythm.* em src/i18n).
 
@@ -123,7 +122,6 @@ export interface Cell extends Required<Omit<CellDef, 'meters'>> {
   figures: Figure[];
   rests: RestKind[];
   traits: Trait[];
-  familia: Familia[];
 }
 
 export const CELL_DEFS: CellDef[] = [
@@ -156,6 +154,12 @@ export const CELL_DEFS: CellDef[] = [
   { id: '8-8t-8-8', name: 'Colcheias ligadas entre tempos', pattern: '8 8~ 8 8', kind: 'simples', level: 4, weight: 1 },
   { id: '8-8t-q', name: 'Ligadura para o tempo', pattern: '8 8~ q', kind: 'simples', level: 4, weight: 0.7 },
   { id: 'q-h-q', name: 'Síncope de semínimas', pattern: 'q h q', kind: 'simples', level: 4, align: 'bar', meters: ['4/4'], weight: 0.5 },
+  // Ligadura de semínimas cruzando o MEIO do compasso (06/11/2026, X1). A gravação profissional
+  // escreveria `q h q` — a célula logo acima, que soa idêntica. O método de leitura liga as duas
+  // semínimas justamente para **mostrar o pulso**, e aqui o exercício é de leitura: decisão do
+  // Paulo. As duas convivem; esta só aparece quando `ligadura` está ligado.
+  { id: 'q-qt-q-q', name: 'Semínimas ligadas sobre o meio', pattern: 'q q~ q q', kind: 'simples', level: 4, align: 'bar', meters: ['4/4'], weight: 1.2 },
+  { id: 'q-qt-q', name: 'Semínimas ligadas no 3/4', pattern: 'q q~ q', kind: 'simples', level: 4, align: 'bar', meters: ['3/4'], weight: 1.2 },
   { id: 'r8-q-8', name: 'Pausa e síncope', pattern: 'r8 q 8', kind: 'simples', level: 4, align: 'strong', weight: 0.5 },
   { id: '16-r8-16', name: 'Semis nas pontas', pattern: '16 r8 16', kind: 'simples', level: 4, weight: 0.6 },
   { id: 'r16-8-16', name: 'Pausa e síncope de semis', pattern: 'r16 8 16', kind: 'simples', level: 4, weight: 0.6 },
@@ -228,27 +232,6 @@ function hasSyncopation(events: PatternEvent[], kind: Cell['kind']): boolean {
   return false;
 }
 
-/**
- * Família aditiva: em que grupo a célula divide o pulso.
- *
- * `binária` inclui tudo que `quaternária` também marca — dividir em 4 é dividir em 2 duas vezes —
- * e a duína (2:3) importada do composto, que é literalmente "a divisão em 2" dentro de um pulso
- * de 3. `ternária` é a tercina de colcheias (simples) ou a divisão natural do pulso composto em
- * três colcheias, **sem quiáltera** — senão a duína contaria como ternária também.
- */
-function deriveFamilia(events: PatternEvent[], kind: CellDef['kind'], traits: Trait[]): Familia[] {
-  const out: Familia[] = [];
-  if (traits.includes('pontuada')) out.push('pontuada');
-  const soa = (v: NoteValue) => events.some(e => !e.rest && e.value === v);
-  const temQuialtera = events.some(e => e.tuplet);
-  const temTercina = events.some(e => e.tuplet?.num === 3);
-  const temDuina = events.some(e => e.tuplet?.num === 2);
-  if (soa('16')) out.push('quaternaria');
-  if (soa('16') || temDuina || (kind === 'simples' && soa('8') && !temQuialtera)) out.push('binaria');
-  if (temTercina || (kind === 'composto' && soa('8') && !temQuialtera)) out.push('ternaria');
-  return out;
-}
-
 function buildCell(def: CellDef): Cell {
   const events = parsePattern(def.pattern);
   const span = events.reduce((s, e) => s + e.dur, 0);
@@ -262,8 +245,7 @@ function buildCell(def: CellDef): Cell {
   if (hasSyncopation(events, def.kind)) traits.push('sincope');
   if (events.some(e => e.tie)) traits.push('ligadura');
   if (events.some(e => e.tuplet)) traits.push('quialtera');
-  const familia = deriveFamilia(events, def.kind, traits);
-  return { align: 'beat', weight: 1, ...def, events, span, figures, rests, traits, familia };
+  return { align: 'beat', weight: 1, ...def, events, span, figures, rests, traits };
 }
 
 export const CELLS: Cell[] = CELL_DEFS.map(buildCell);

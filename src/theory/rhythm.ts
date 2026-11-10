@@ -31,14 +31,21 @@ export const CELLS: Record<CellId, Cell> = {
   '3x8': { id: '3x8', name: 'Tercina', beats: 1, events: [e(1 / 3), e(1 / 3), e(1 / 3)], triplet: true },
 };
 
-/** Grupos de figuras para os presets, do mais simples ao mais difícil. */
-export const RHYTHM_PRESETS: { id: string; name: string; cells: CellId[] }[] = [
-  { id: 'duas', name: 'Duas figuras: semínima e colcheias', cells: ['q', '8-8'] },
-  { id: 'pausas', name: 'Com pausas e mínimas', cells: ['q', '8-8', 'qr', 'h'] },
-  { id: 'contratempo', name: 'Contratempo', cells: ['q', '8-8', '8r-8'] },
-  { id: 'semis', name: 'Semicolcheias', cells: ['q', '8-8', '16x4', '8-16-16', '16-16-8'] },
-  { id: 'sincope', name: 'Síncope e pontuadas', cells: ['8-8', '8.-16', '16-8-16', '8r-8'] },
-  { id: 'tercinas', name: 'Tercinas', cells: ['q', '8-8', '3x8'] },
+/**
+ * Grupos de figuras para os presets, do mais simples ao mais difícil.
+ *
+ * **Sem `name`**: o texto mora em `theory.rhythmPresets.<id>` nos dois idiomas, e quem mostra
+ * traduz pelo id. Tinha um `name` em português cru aqui, e `Leitura.tsx` o imprimia direto — em
+ * inglês os chips diziam "Duas figuras: semínima e colcheias". Guardar o texto no dado é o que
+ * permitiu isso acontecer; agora não há onde.
+ */
+export const RHYTHM_PRESETS: { id: string; cells: CellId[] }[] = [
+  { id: 'duas', cells: ['q', '8-8'] },
+  { id: 'pausas', cells: ['q', '8-8', 'qr', 'h'] },
+  { id: 'contratempo', cells: ['q', '8-8', '8r-8'] },
+  { id: 'semis', cells: ['q', '8-8', '16x4', '8-16-16', '16-16-8'] },
+  { id: 'sincope', cells: ['8-8', '8.-16', '16-8-16', '8r-8'] },
+  { id: 'tercinas', cells: ['q', '8-8', '3x8'] },
 ];
 
 /** Monta `bars` compassos de 4 tempos a partir das células permitidas. */

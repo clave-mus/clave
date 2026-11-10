@@ -30,6 +30,19 @@ export function intervalName(iv: Interval, conv: Convention) {
   return `${EN_QUALITY[q]} ${ordinal(iv.num, 'en')}`;
 }
 
+/**
+ * Nome curto, para caber numa célula de grade: `6ªm`, `4ª`, `4ª+`, `7ªM` / `6m`, `4`, `4+`, `7M`.
+ *
+ * A justa não leva marca — "4ª" já é a justa, e escrever "4ªJ" só ocuparia espaço. As outras levam
+ * símbolo em vez de palavra, porque aqui a comparação entre sete células é o que importa, e
+ * palavra inteira faria a grade quebrar.
+ */
+export function intervalShort(iv: Interval, conv: Convention) {
+  const q = quality(iv);
+  const marca = q === 'J' ? '' : q === 'M' ? 'M' : q === 'm' ? 'm' : q === 'A' ? '+' : q === 'd' ? '°' : '?';
+  return `${conv === 'pt' ? `${iv.num}ª` : String(iv.num)}${marca}`;
+}
+
 /** Nome do intervalo só pela distância em semitons (0 a 12), como se ouve: o trítono não tem grafia. */
 export function semitoneName(semis: number, conv: Convention) {
   const pt = ['uníssono', '2ª menor', '2ª maior', '3ª menor', '3ª maior', '4ª justa', 'trítono', '5ª justa', '6ª menor', '6ª maior', '7ª menor', '7ª maior', 'oitava'];

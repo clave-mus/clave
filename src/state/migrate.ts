@@ -59,11 +59,26 @@ const DIVIDIDOS: Record<string, string> = { 'quiz-teoria': 'teoria-graus' };
  */
 const AUTOAVALIACAO: Record<string, string> = { consegui: 'facil', 'com-ajuda': 'esforco', repetir: 'nao' };
 
+/**
+ * `ritmo-ouvido` trocou os seis níveis exclusivos (`nivel`) por grupos de figuras que se somam
+ * (`figuras`, P5). Cada nível antigo vira os grupos que reproduzem exatamente as suas células —
+ * `ritmo-ouvido.test.ts` confere isso contra os atalhos do item.
+ */
+export const NIVEL_PARA_FIGURAS: Record<string, string[]> = {
+  duas: ['basico'], pausas: ['basico', 'pausas'], contratempo: ['basico', 'contratempo'],
+  semis: ['basico', 'semis'], sincope: ['sincope'], tercinas: ['basico', 'tercinas'],
+};
+
 /** O id novo de um item, se ele foi fundido. */
 export const idFundido = (id: string) => FUNDIDOS[id]?.id ?? DIVIDIDOS[id] ?? id;
 
 /** A configuração de uma instância migrada: a superfície entra, e `onde` sai. */
 export function settingsFundidos(id: string, settings: Obj): { id: string; settings: Obj } {
+  if (id === 'ritmo-ouvido' && 'nivel' in settings) {
+    const { nivel, ...resto } = settings;
+    const grupos = typeof nivel === 'string' ? NIVEL_PARA_FIGURAS[nivel] : undefined;
+    return { id, settings: grupos ? { ...resto, figuras: grupos } : resto };
+  }
   const f = FUNDIDOS[id];
   if (!f) {
     // Item dividido: o id troca e a lista de tópicos é **descartada** — ela falava de seis tópicos, e

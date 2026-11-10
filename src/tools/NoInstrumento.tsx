@@ -22,7 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Fretboard, { TUNINGS, type FretMark } from '../components/music/Fretboard';
 import { useGlobalParams } from '../catalog/params';
 import { pcsPermitidas } from '../catalog/contexto-musical';
-import { mod, pcName } from '../theory/core';
+import { mod, pcNameUm } from '../theory/core';
 import { playGroups } from '../audio/engine';
 import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
@@ -49,6 +49,8 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
   const [mostrarBraco, setMostrarBraco] = useState(settings?.mostrarBraco !== false);
   const [fase, setFase] = useState<Fase>('parado');
   const [pc, setPc] = useState<number | null>(null);
+  /** Qual grafia da nota mostrar: Lá♯ ou Si♭. Sorteada junto com a nota — ver `sortear`. */
+  const [bemol, setBemol] = useState(false);
   const [feitas, setFeitas] = useState(0);
 
   useToolLog('no-instrumento', 'No instrumento', 'theory', fase !== 'parado', { settings: { esperar, mostrar, ouvirAntes, mostrarBraco } });
@@ -76,6 +78,10 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
     if (!permitidas.length) return;
     const p = permitidas[Math.floor(Math.random() * permitidas.length)];
     setPc(p);
+    // A grafia é sorteada junto com a nota, e guardada: "ora Lá♯, ora Si♭" (pedido do Paulo). Tem de
+    // ficar em estado, e não ser sorteada na renderização — senão mudaria entre a fase de procurar e
+    // a de revelar, e a pessoa veria dois nomes para a mesma nota.
+    setBemol(Math.random() < 0.5);
     setFase('procurando');
     limpar();
     if (ouvirAntes) {
@@ -126,11 +132,11 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
       {pc !== null && fase !== 'parado' && (
         <>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <b style={{ fontSize: 'clamp(32px, 8vw, 56px)' }}>{pcName(pc, naming)}</b>
+            <b style={{ fontSize: 'clamp(32px, 8vw, 56px)' }}>{pcNameUm(pc, naming, bemol)}</b>
             <span className="eyebrow">{t('onInstrument.count', { n: feitas })}</span>
           </div>
           <p className="muted">
-            {fase === 'procurando' ? t('onInstrument.findIt') : mostrarBraco ? t('onInstrument.hereItIs') : t('onInstrument.hereItIsName', { note: pcName(pc, naming) })}
+            {fase === 'procurando' ? t('onInstrument.findIt') : mostrarBraco ? t('onInstrument.hereItIs') : t('onInstrument.hereItIsName', { note: pcNameUm(pc, naming, bemol) })}
           </p>
 
           {/* O braço só aparece na revelação (e só se a pessoa não desligou): mostrá-lo antes

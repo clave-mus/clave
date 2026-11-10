@@ -17,7 +17,7 @@ import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
 import { optionResponse, validate } from './validate';
-import type { Ctx, SeriesItem, Question, Response, SettingValue } from './types';
+import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { paramsRegistraveis } from './registro';
 import PracticePanel from '../components/PracticePanel';
@@ -43,8 +43,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const soundOn = useStore(s => s.sound);
   const t = useT();
   const { moduleById } = useContent();
+  /**
+   * **O primeiro preset é a entrada do item** (pedido do Paulo, 09/11): quem abre sem nada salvo
+   * cai no atalho mais simples, settings e tonalidade.
+   *
+   * Não vale quando o item foi aberto por uma rotina ou por um link compartilhado — ali a
+   * configuração já veio decidida, e sobrepor a entrada apagaria a escolha de quem montou.
+   */
+  const entrada = initialSettings || initialParams ? undefined : def.presets?.[0];
   // O perfil por baixo, e por cima o que a pessoa escolheu NESTE exercício (decisão 87).
-  const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams);
+  const { params, pratica, mudar, limpar } = useParamsDoItem(def.id, initialParams, entrada?.params);
   // Dentro de uma rotina em execução, "salvar numa rotina" é ruído: a pessoa já está numa.
   const emRotina = !!target;
   const saved = useStore(s => s.settings[def.id]);
@@ -54,8 +62,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // tocada. (A primeira versão do link compartilhado deixava `initialSettings` mandar em tudo, e o
   // painel de configurações virava decoração: gravava num lugar que ninguém lia.)
   const [local, setLocal] = useState<Record<string, SettingValue> | null>(initialSettings ?? null);
-  const settings = useMemo(() => ({ ...def.defaults, ...(local ?? saved ?? {}) }), [def, saved, local]);
+  const settings = useMemo(() => ({ ...def.defaults, ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, saved, local, entrada]);
   const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
+  /**
+   * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
+   * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
+   */
+  const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
+    guardarSettings({ ...def.defaults, ...p.settings });
+    if (p.params) mudar(p.params);
+  }, [def.defaults, guardarSettings, mudar]);
   const locale = useLocale();
   const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
   /**
@@ -133,6 +149,20 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     }
     setPlaying(true);
     setHeard(true);
+    atTime(now() + dur, () => setPlaying(false));
+  }, [presentationFor]);
+
+  /**
+   * Toca um pedaço declarado do som (o acorde de contexto, uma nota da melodia).
+   *
+   * **Não conta como escuta** e não mexe em `earReadyAt`: ouvir o acorde sozinho é estudar, não
+   * responder, e somá-lo ao tempo de resposta falsearia a medida.
+   */
+  const playParte = useCallback((question: Question, parte: ParteDoSom) => {
+    if (!getState().sound) return;
+    pararTudo();
+    const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
+    setPlaying(true);
     atTime(now() + dur, () => setPlaying(false));
   }, [presentationFor]);
 
@@ -218,7 +248,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
           </div>
         </div>
-        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+        {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
           extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
           onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
@@ -239,7 +269,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} />
 
@@ -269,7 +299,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
         </div>
       )}
 
-      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings}
+      {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
           extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
         onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
@@ -277,8 +307,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 }
 
 // ---------------- palco: o que é perguntado ----------------
-function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer }: {
-  q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void; naming: 'pt' | 'en';
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer }: {
+  q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
+  onPlayParte: (p: ParteDoSom) => void; naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
 }) {
   const t = useT();
@@ -297,7 +328,7 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} />}
+        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
           <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && onAnswer({ kind: 'pitch', midi: m }, String(m))} labels="do" />
         </div>
@@ -324,18 +355,32 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
     );
   }
   if (sf.kind === 'staff') {
-    const cols: Note[][] = [];
-    if (picked) cols.push([fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1]))]);
     const e = q.expected;
-    const answer: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
-    const shown = phase === 'wrong' && answer ? [[...(cols[0] ?? []), answer]] : cols;
+    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
+    const minha = picked ? fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1])) : null;
+    const mesmaNota = !!minha && !!certa && minha.letter === certa.letter && minha.acc === certa.acc && minha.oct === certa.oct;
+    /**
+     * Três defeitos que o Paulo relatou nesta tela, em 09/11/2026:
+     *
+     * 1. **"muda de tamanho quando clicamos"** — a pauta era desenhada com ZERO colunas antes da
+     *    resposta e uma depois, e a largura dela vem do número de colunas. Agora há sempre uma
+     *    coluna, vazia enquanto ninguém respondeu, e a largura não muda mais;
+     * 2. **"grande demais"** — a coluna media 90 de largura, contra 44 a 64 da pauta de leitura;
+     * 3. **"não diferencia a resposta que clicamos da resposta certa"** — as duas iam para a mesma
+     *    coluna sem cor nenhuma, e viravam duas cabeças de nota empilhadas, indistinguíveis.
+     *    `StaffNote.color` já existia e ninguém usava. Agora a errada sai na cor de erro e a certa
+     *    na de acerto; quando acerta, uma nota só, na cor de acerto.
+     */
+    const notas: { note: Note; color?: string }[] = [];
+    if (minha) notas.push({ note: minha, color: phase === 'ask' ? undefined : mesmaNota ? 'var(--ok)' : 'var(--err)' });
+    if (phase === 'wrong' && certa && !mesmaNota) notas.push({ note: certa, color: 'var(--ok)' });
     return (
       <div className="stage">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        <Staff clef={sf.clef} columns={shown.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={90} ghostAcc={acc}
+        <Staff clef={sf.clef} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
           onPick={phase === 'ask' ? s => onAnswer({ kind: 'spelled', letter: mod(s, 7), acc, oct: Math.floor(s / 7) }, `${s}:${acc}`) : undefined} />
-        <div className="hint">{t('player.tapStaff')}</div>
+        <div className="hint">{phase === 'wrong' && notas.length > 1 ? t('player.staffYoursAndRight') : t('player.tapStaff')}</div>
       </div>
     );
   }
@@ -347,17 +392,34 @@ function Stage({ q, phase, playing, heard, onPlay, naming, picked, acc, onAnswer
       {v.kind === 'staff' && <Staff clef={v.clef} fifths={v.fifths} columns={v.columns.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={v.columns.length > 4 ? 44 : 64} />}
       {v.kind === 'keyboard' && <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />}
       {v.kind === 'fretboard' && <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />}
-      {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} />{v.hint && <div className="hint">{v.hint}</div>}</>}
+      {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
     </div>
   );
 }
 
-function Listen({ playing, heard, onPlay }: { playing: boolean; heard: boolean; onPlay: () => void }) {
+function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
+  playing: boolean; heard: boolean; onPlay: () => void;
+  partes?: ParteDoSom[]; onPlayParte?: (p: ParteDoSom) => void;
+}) {
   const t = useT();
   return (
     <>
       <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
       <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      {/* Os pedaços só aparecem onde o item os declarou — ver `SoundContent.partes`. Ficam abaixo
+          do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. O rótulo
+          em cima entrou com o pedido do Paulo de deixá-los mais visíveis: sem ele, botões soltos
+          embaixo do principal não dizem o que fazem. */}
+      {partes && partes.length > 0 && onPlayParte && (
+        <div className="listen-partes" role="group" aria-label={t('player.parts')}>
+          <span className="eyebrow">{t('player.parts')}</span>
+          <div className="partes-fila">
+            {partes.map(p => (
+              <button key={p.id} type="button" className="listen-parte" onClick={() => onPlayParte(p)}>{p.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -374,15 +436,18 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
   if (sf.kind === 'choices') {
     const rhythm = sf.options.some(o => o.rhythm);
     return (
-      <div className={`answers ${sf.wide ? 'wide' : ''} ${rhythm ? 'rhythm' : ''}`}>
+      <div className={`answers ${sf.wide ? 'wide' : ''} ${sf.compact ? 'compact' : ''} ${rhythm ? 'rhythm' : ''}`}>
         {sf.options.map((o, i) => (
-          <button key={o.id} type="button" className={`ans ${rhythm ? 'rhythm' : ''} ${state(o.id, ok(optionResponse(o)))}`} disabled={phase !== 'ask'} onClick={() => onAnswer(optionResponse(o), o.id)}>
+          <button key={o.id} type="button" className={`ans ${sf.compact ? 'compact' : ''} ${rhythm ? 'rhythm' : ''} ${state(o.id, ok(optionResponse(o)))}`} disabled={phase !== 'ask'} onClick={() => onAnswer(optionResponse(o), o.id)}>
             {i < 9 && <span className="k">{i + 1}</span>}
             {o.rhythm ? <RhythmLine bars={o.rhythm} label={t('player.option', { n: i + 1 })} /> : o.label}
           </button>
         ))}
       </div>
     );
+  }
+  if (sf.kind === 'sequence') {
+    return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;
   }
   const accRow = (allowed: boolean) => allowed && (
     <div className="accrow" role="group" aria-label={t('player.accidental')}>
@@ -414,7 +479,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; extra?: ReactNode; onReset: () => void }) {
+function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; extra?: ReactNode; onReset: () => void }) {
   const t = useT();
   return (
     <div className="settings">
@@ -425,7 +490,10 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
           <div className="row">
             {def.presets.map(p => {
               const igual = Object.entries(p.settings).every(([k, v]) => JSON.stringify(values[k]) === JSON.stringify(v));
-              return <Chip key={p.id} on={igual} onClick={() => onChange({ ...values, ...p.settings })}>{t(p.nome)}</Chip>;
+              // `igual` olha só os settings: um atalho que diferisse apenas na tonalidade não
+              // acenderia. Nenhum dos de hoje é assim, e acender pela tonalidade pediria comparar
+              // a camada resolvida, que o painel não tem.
+              return <Chip key={p.id} on={igual} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
             })}
           </div>
         </div>
@@ -440,7 +508,7 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
             <div className="row">{s.options!.map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
           )}
           {s.type === 'multi' && (
-            <div className="row">{s.options!.map(o => {
+            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{s.options!.map(o => {
               const cur = (values[s.id] as string[]) ?? [];
               const on = cur.includes(o.id);
               return <Chip key={o.id} on={on} onClick={() => {
@@ -464,6 +532,58 @@ function SettingsPanel({ def, ctx, values, onChange, extra, onReset }: { def: Se
       {extra}
       {/* UM botão só: antes o painel de prática trazia o seu, e apareciam dois lado a lado. */}
       <div className="row"><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>
+    </div>
+  );
+}
+
+/**
+ * Montar a resposta escolhendo entre **todas** as opções, em ordem.
+ *
+ * O estado parcial mora aqui, e a chave do componente é a pergunta: trocar de pergunta desmonta o
+ * componente e zera a montagem, sem efeito nenhum para limpar. Nada é enviado antes de a sequência
+ * estar cheia — meia resposta não é resposta, e enviar sozinho ao completar tiraria da pessoa a
+ * chance de corrigir o último toque.
+ */
+function SequenceArea({ sf, q, phase, picked, onAnswer }: {
+  sf: Extract<Surface, { kind: 'sequence' }>; q: Question; phase: Phase; picked: string | null; onAnswer: Submit;
+}) {
+  const t = useT();
+  const [escolhidos, setEscolhidos] = useState<string[]>([]);
+  const sep = sf.separador ?? ' ';
+  const cheia = escolhidos.length >= sf.comprimento;
+  const porId = new Map(sf.options.map(o => [o.id, o]));
+  const rotulo = (id: string) => porId.get(id)?.label ?? id;
+  const certa = q.expected.kind === 'option' ? q.expected.id : '';
+
+  return (
+    <div className="sequencia">
+      {/* As casas: o que já foi escolhido e o que falta. Mostrar as vazias é o que diz quantas
+          notas a pessoa tem de informar sem precisar de texto explicando. */}
+      <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
+        {Array.from({ length: sf.comprimento }, (_, i) => (
+          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''}`}>{escolhidos[i] ? rotulo(escolhidos[i]) : ''}</span>
+        ))}
+      </div>
+
+      {phase === 'ask' ? (
+        <>
+          <div className="answers compact seq-paleta">
+            {sf.options.map(o => (
+              <button key={o.id} type="button" className="ans compact" disabled={cheia}
+                onClick={() => setEscolhidos(v => (v.length >= sf.comprimento ? v : [...v, o.id]))}>{o.label}</button>
+            ))}
+          </div>
+          <div className="row seq-acoes">
+            <Btn small tone="ghost" disabled={!escolhidos.length} onClick={() => setEscolhidos(v => v.slice(0, -1))}>{t('player.undoLast')}</Btn>
+            <Btn disabled={!cheia} onClick={() => onAnswer({ kind: 'option', id: escolhidos.join(sep) }, escolhidos.join(sep))}>{t('player.submitAnswer')}</Btn>
+          </div>
+        </>
+      ) : (
+        <div className="seq-conferido">
+          <span className={picked === certa ? 'right' : 'wrong'}>{picked?.split(sep).map(rotulo).join(sep) || '—'}</span>
+          {picked !== certa && <span className="right">{certa.split(sep).map(rotulo).join(sep)}</span>}
+        </div>
+      )}
     </div>
   );
 }

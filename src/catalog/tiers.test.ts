@@ -76,7 +76,7 @@ describe('dica de dificuldade', () => {
   it('a ordem declarada das opções não é a ordem do tier — a lista não se reordena sozinha', () => {
     // vigia o "nunca ordena": se alguém passar a ordenar por tier na declaração, isto acusa, e a
     // pessoa perde a ordem musical (oitava, quinta, quarta…) que é a que ela reconhece
-    const ivs = todasAsConfigs().find(c => c.s.id === 'intervalos' && c.ex === 'que-intervalo-e-esse');
+    const ivs = todasAsConfigs().find(c => c.s.id === 'intervalos' && c.ex === 'intervalo-na-pauta');
     expect(ivs).toBeDefined();
     const ids = (ivs!.s.options ?? []).map(o => o.id);
     expect(ids[0]).toBe('J8'); // oitava primeiro, por ser a mais reconhecível

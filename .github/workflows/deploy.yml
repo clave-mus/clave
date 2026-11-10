@@ -1,4 +1,9 @@
-# Publicar no Cloudflare Pages.
+# Publicar o Clave no Cloudflare **Workers** (site estático por `static assets`).
+#
+# ⚠️ Este arquivo dizia "Cloudflare Pages" e pedia um token com permissão de **Pages**. Estava
+# errado desde que o projeto foi recriado como Workers — `wrangler.jsonc` publica em Workers, e
+# `npx wrangler deploy` é o comando de Workers. Um token com permissão de Pages **falha aqui**.
+# Corrigido em 10/11/2026.
 #
 # **Por que o deploy mora aqui e não no painel do Cloudflare.** A integração com git do Pages é
 # configurada no painel, e ela **quebrou quando o repositório mudou de dono** — o projeto do Pages
@@ -13,16 +18,25 @@
 #
 # Dois segredos no repositório (Settings → Secrets and variables → Actions):
 #
-#   CLOUDFLARE_API_TOKEN    token com a permissão **Account · Cloudflare Pages · Edit**
+#   CLOUDFLARE_API_TOKEN    token com **Account · Workers Scripts · Edit**. O modelo pronto
+#                           "Edit Cloudflare Workers" do painel já traz essa permissão e serve.
 #   CLOUDFLARE_ACCOUNT_ID   o id da conta, que aparece na barra lateral do painel
 #
 # **Sem eles, este fluxo não falha: ele avisa e passa.** Fluxo vermelho a cada push por falta de
 # credencial ensina a equipe a ignorar fluxo vermelho.
 name: Publicar
 
+# **A produção sai da `dev`**, decidido em 10/11/2026 com os fatos na mão: a `main` estava 124
+# commits atrás da `dev` e **zero à frente** — ancestral puro, último commit em 26/10. A `dev` é a
+# branch padrão no GitHub e é onde os PRs caem. Os dois fluxos apontavam para a `main` porque ninguém
+# os atualizou quando o time mudou de linha, e por isso este deploy **nunca executou**.
+#
+# Não há branch de release separada de propósito: ela só compraria algo se alguém decidisse *quando*
+# publicar — e `workflow_dispatch` já dá isso, em qualquer branch, sem um segundo ramo para manter
+# sincronizado.
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
@@ -34,7 +48,7 @@ concurrency:
 
 jobs:
   publicar:
-    name: Build e deploy no Pages
+    name: Build e deploy no Workers
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

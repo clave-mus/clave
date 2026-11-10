@@ -57,6 +57,14 @@ export function Field({ seed, color = 'var(--accent)', className, style, label }
 export function Tag({ children, tone }: { children: ReactNode; tone?: 'co' | 've' | 'dark' }) {
   return <span className={`tag ${tone ?? ''}`}><span>{children}</span></span>;
 }
+/**
+ * ⚠️ **Só repassa os props listados abaixo.** Qualquer outro — `onPointerDown`, `onKeyUp`,
+ * `onBlur` — é **descartado em silêncio**, e o TypeScript não acusa, porque spread em JSX não
+ * reclama de propriedade sobrando. Já custou um bug: os botões de "segurar para soar" de
+ * `RelacoesMelodiaHarmonia` existiam, respondiam ao clique e não tocavam nada (09/11/2026).
+ *
+ * Precisa de outro evento? Use um `<button className="btn">` próprio, como aquela tela faz.
+ */
 export function Btn({ children, to, onClick, tone, small, disabled, type = 'button', id, label }: {
   children: ReactNode; to?: string; onClick?: () => void; tone?: 'ghost' | 'mu' | 'co'; small?: boolean; disabled?: boolean; type?: 'button' | 'submit'; id?: string; label?: string;
 }) {

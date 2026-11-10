@@ -4,7 +4,7 @@ import type { ChordId, Clef, Convention, Naming, Note } from '../theory/core';
 import type { MessageKey, Translate } from '../i18n';
 import type { Presentation } from '../audio/presentation';
 import type { Classification } from './taxonomy';
-import type { GlobalParams, ParametroDePratica } from './params';
+import type { GlobalParams, ParametroDePratica, ParametrosDePratica } from './params';
 import type { Publicacao } from './publicacao';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
@@ -58,7 +58,21 @@ export interface ChoiceOption {
 
 /** Onde a pessoa responde. */
 export type Surface =
-  | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean }
+  /** `compact`: botões menores, para lista longa de qualidade (U7) — cifra em si já é curta. */
+  | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean; compact?: boolean }
+  /**
+   * Montar a resposta escolhendo **entre todas as opções possíveis**, em ordem, em vez de entre
+   * quatro alternativas (pedido do Paulo, 09/11/2026: "a gente tenha que escolher entre todas
+   * opções possiveis — todos graus da escala ou do campo").
+   *
+   * A resposta que sai daqui é `{ kind: 'option', id }` com os escolhidos unidos por `separador` —
+   * **exatamente** o que `choices` entrega. Por isso o validador não mudou uma linha: o item
+   * declara o mesmo `expected` nos dois modos, e quem troca é só a tela.
+   *
+   * Com `comprimento: 1` isto é só uma lista maior de botões, e nem precisaria de superfície
+   * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
+   */
+  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
   | { kind: 'letters'; accidentals: boolean }
   | { kind: 'keyboard'; lo: number; hi: number }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
@@ -70,6 +84,25 @@ export interface SoundContent {
   drums?: number[]; // ataques, em tempos (para ritmo)
   /** De que instrumento é o som, para usar o timbre escolhido para ele. Sem isso, piano. */
   instrument?: Instrument;
+  /**
+   * Pedaços que dá para **ouvir isolados**, além do botão que repete tudo (09/11/2026).
+   *
+   * Nasceu de "reconhecer melodia na harmonia": ouvir o acorde de contexto sozinho, e depois cada
+   * nota da melodia sozinha, é o que torna o exercício estudável em vez de um teste de memória.
+   *
+   * **É opt-in, e isso é de propósito.** Dava para deduzir os pedaços de `groups` — cada grupo um
+   * botão —, mas aí todo item de ouvido ganharia botões que ninguém pediu, e em vários deles
+   * (um intervalo melódico, por exemplo) ouvir as notas separadas **entrega a resposta**. Quem
+   * sabe se separar ajuda ou estraga é o item.
+   */
+  partes?: ParteDoSom[];
+}
+
+/** Um pedaço do som que a pessoa pode repetir sozinho. */
+export interface ParteDoSom {
+  id: string;
+  label: string;
+  groups: number[][];
 }
 
 export interface Question {
@@ -134,6 +167,14 @@ export interface Setting {
    * criaria ordem de avaliação e re-render em cascata; aqui a tela só filtra.
    */
   quando?: (s: Record<string, SettingValue>) => boolean;
+  /**
+   * Para `'multi'`: estica os chips para preencher a linha, em vez de ficarem alinhados à
+   * esquerda com o seu tamanho natural (U8). Existe porque uma lista longa (as treze qualidades
+   * de acorde) deixa o último chip sozinho e pequeno na última linha — e aqui isso parece
+   * esquecido, não intencional. Opt-in: a maioria das listas é curta, e esticar chip de rótulo
+   * longo também pode ficar pior.
+   */
+  justify?: true;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {
@@ -235,7 +276,15 @@ export interface CatalogItem extends Classification {
    *
    * O nome de cada preset é curadoria do dono do produto.
    */
-  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue> }[];
+  /**
+   * `params` leva a camada de PRÁTICA do atalho — tonalidade, região, material. Entrou em 09/11
+   * porque o Paulo quis que o atalho mais simples do `ouvido-celulas` começasse em dó maior, e
+   * tonalidade não é configuração do item: é parâmetro de prática (decisão 87).
+   *
+   * **O primeiro preset é a entrada do item**: quem abre sem nada salvo cai nele, settings e
+   * params. Ver `Player`.
+   */
+  presets?: readonly { id: string; nome: MessageKey; settings: Record<string, SettingValue>; params?: ParametrosDePratica }[];
   /**
    * Se as pessoas veem este item (decisão 91). **Omitir é o mesmo que `rascunho`**: um item novo nasce
    * escondido, e só o Paulo o publica.

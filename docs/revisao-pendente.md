@@ -66,6 +66,8 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
+| `reconhecer-padroes-escala` | a metade de adivinhar do par de padrões de escala (`PE-padroes-de-escala.md`). O motor é `theory/padrao-de-escala.ts`, escrito antes com 25 testes. As alternativas são TODAS as posições do padrão, não quatro — não há distrator a inventar nem como descartar por eliminação. A exploração com a escada clicável **não existe ainda**, e é com ela que vem o link do vídeo do ChicagoBassBuddy clicável; aqui o crédito está na descrição, em texto |
+| `percepcao-ritmica` | rotina nova, com o desenho do Paulo: ouvir o ritmo escrito e depois quatro etapas de leitura variando os recursos — pontuadas, quiálteras, as três juntas, e as nove células essenciais. O `ritmo-ouvido` veio da rotina do fone, onde era a única etapa não melódica |
 | `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
 | `ouvido-no-fone` | livre | 8 | uma etapa por assunto, sem rodízio — confira se oito cartões é demais numa tela de celular |
 | `mapear-braco` | guiada, 30 min | 5 | a fusão das duas antigas. Confira o **rodízio entre identificar e construir** intervalo (etapa 3), e se a última etapa (a que pede o instrumento) atrapalha quem está na rua |
@@ -102,11 +104,17 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 |---|---|
 | `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
 
+### Relações entre melodia e harmonia (`MH`, 07/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `relacoes-melodia-harmonia` | **Se a frase está musicalmente certa, combinação por combinação.** Ela é gerada, não escrita à mão: o motor apura o grau, o intervalo e o semitom, e a única palavra avaliativa é *"pode gerar tensão"*, só onde há atrito — foi o critério que você deu. Há teste varrendo as 196 combinações atrás de adjetivo que ninguém autorizou, mas **nenhum teste sabe se a frase é boa de ler**. Confira também: o trítono sai como **♭5** e não ♯4 (escolha, para os cinco alterados ficarem todos em bemol); o **timbre novo do drone** (`destaque`, triangular) soa mesmo como melodia por cima do acorde; e se o rótulo curto da grade (`6ªm`, `4ª+`) comunica ou se atrapalha |
+
 ### Faça o intervalo (`X9`+`B4`, revisão de 04/11/2026)
 
 | Id | O que só você confere |
 |---|---|
-| `faca-o-intervalo` | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
+| `intervalo-na-pauta` e `intervalo-no-instrumento` (era `faca-o-intervalo`) | o par de `que-intervalo-e-esse`. Veio do modo "intervalo" de `ache-a-nota`, que estava quebrado no braço (B4) — aqui o braço só pede a classe de altura (igual ao par: o desenho não distingue quinta aumentada de sexta menor), e a pauta pede a grafia certa (`transpose()`, igual já fazia antes). **Não tem a opção "ver nome, posição, ou os dois"** que a tarefa original pedia — implementá-la direito mexeria na revelação genérica do Player, compartilhada por todo item de braço, e não quis arriscar isso sob pressa; hoje a revelação é a mesma de todo item de braço (nome + posições que batem) |
 
 ### Tarefa com metrônomo — itens de catálogo (decisão 90)
 
