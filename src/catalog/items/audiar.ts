@@ -36,10 +36,11 @@ export interface Estimulo {
 const INTERVALOS = [3, 4, 5, 7, 8, 9, 10, 12];
 const ESCALAS: ScaleId[] = ['maior', 'menor', 'dorico', 'mixolidio', 'menor-harmonica'];
 const ACORDES: ChordId[] = ['maior', 'menor', '7M', '7', 'm7'];
-const ESCALAS_GRAUS: ScaleId[] = ['maior', 'menor'];
+/** As escalas de que os graus podem sair. Eram duas, fixas; agora é a lista do que se pode pedir. */
+export const ESCALAS_GRAUS: ScaleId[] = ['maior', 'menor', 'dorico', 'mixolidio', 'menor-harmonica', 'penta-maior', 'penta-menor'];
 
-function estimuloReferencia(ctx: Ctx): Estimulo {
-  const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
+function estimuloReferencia(ctx: Ctx, opcoes: OpcoesDoEstimulo = {}): Estimulo {
+  const tonic = opcoes.tonica ?? tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
   const familia = pick(['intervalo', 'escala', 'arpejo'] as const);
   if (familia === 'intervalo') {
     const d = pick(INTERVALOS);
@@ -67,13 +68,14 @@ function estimuloReferencia(ctx: Ctx): Estimulo {
   };
 }
 
-function estimuloGraus(ctx: Ctx): Estimulo {
-  const id = pick(ESCALAS_GRAUS);
-  const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
+function estimuloGraus(ctx: Ctx, opcoes: OpcoesDoEstimulo = {}): Estimulo {
+  const permitidas = (opcoes.escalas ?? []).filter((x): x is ScaleId => ESCALAS_GRAUS.includes(x as ScaleId));
+  const id = pick(permitidas.length ? permitidas : ESCALAS_GRAUS);
+  const tonic = opcoes.tonica ?? tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
   const degs = scaleDegreeLabels(id);
   const semis = [...scaleDegs(id).map(([, semi]) => semi), 12];
   const top = semis.length - 1;
-  const c = celulaDeGraus(top, 4);
+  const c = celulaDeGraus(top, Math.min(6, Math.max(2, opcoes.tamanho ?? 4)));
   const key = c.map(i => degs[i]).join(' ');
   return {
     tipo: 'graus', enunciado: ctx.t('audiar.askDegrees', { degrees: key }),
@@ -81,10 +83,27 @@ function estimuloGraus(ctx: Ctx): Estimulo {
   };
 }
 
+/**
+ * O que a rodada pode variar. Antes era tudo fixo no código, com o comentário *"personalização tem
+ * limite"* — e o Paulo revisou isso em 10/11/2026: *"tudo precisa ser mais customizavel"*.
+ */
+export interface OpcoesDoEstimulo {
+  /** Quantos graus a célula tem. Era 4, fixo. */
+  tamanho?: number;
+  /** Escalas de que os graus saem. Era `['maior', 'menor']`, fixo. */
+  escalas?: readonly string[];
+  /**
+   * A tônica, quando quem chama quer que ela **não** mude entre rodadas — é o "pedal sempre o
+   * mesmo" que o Paulo pediu. Sem isto, `tonicaNaRegiao` sorteia a cada rodada (ou devolve a da
+   * tonalidade, quando há uma fixa).
+   */
+  tonica?: number;
+}
+
 /** Sorteia uma rodada, dentre os estímulos escolhidos. Usado pela tela (clique revela) e pelo
  *  mãos-livres (revela por tempo) — é a mesma geração, só muda quem decide quando revelar. */
-export function gerarEstimulo(estimulos: readonly string[], ctx: Ctx): Estimulo {
+export function gerarEstimulo(estimulos: readonly string[], ctx: Ctx, opcoes: OpcoesDoEstimulo = {}): Estimulo {
   const validos = estimulos.filter((e): e is EstimuloId => e === 'referencia' || e === 'graus');
   const tipo = pick(validos.length ? validos : (['referencia'] as EstimuloId[]));
-  return tipo === 'graus' ? estimuloGraus(ctx) : estimuloReferencia(ctx);
+  return tipo === 'graus' ? estimuloGraus(ctx, opcoes) : estimuloReferencia(ctx, opcoes);
 }

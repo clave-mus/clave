@@ -33,6 +33,15 @@ export default function Audiar({ onRunning, settings }: { onRunning?: (r: boolea
     return Array.isArray(v) && v.length ? v.map(String) : ['referencia', 'graus'];
   });
   const [comDrone, setComDrone] = useState(() => settings?.drone === true);
+  const tamanho = Math.min(6, Math.max(2, Number(settings?.tamanho ?? 4)));
+  const escalas = Array.isArray(settings?.escalas) ? settings.escalas.map(String) : undefined;
+  /**
+   * **O pedal sempre o mesmo** (pedido do Paulo, 10/11/2026).
+   *
+   * Sorteado uma vez e guardado: as rodadas seguintes reusam. Com `pedal: 'sorteado'` fica `null` e
+   * cada rodada sorteia a sua, que é o comportamento de antes.
+   */
+  const tonicaFixa = useRef<number | null>(null);
   const [fase, setFase] = useState<Fase>('parado');
   const [rodada, setRodada] = useState<Estimulo | null>(null);
   const [feitas, setFeitas] = useState(0);
@@ -45,25 +54,42 @@ export default function Audiar({ onRunning, settings }: { onRunning?: (r: boolea
   useEffect(() => { onRunning?.(fase !== 'parado'); }, [fase, onRunning]);
   useEffect(() => pararDrone, []);
 
+  /**
+   * O drone segue o botão **e** a referência da rodada, e é por isso que ele mora num efeito e não
+   * no sorteio: ligar e desligar passa a valer na hora.
+   *
+   * Uma oitava abaixo da referência — pedal é fundação, não concorrente da nota que se audia.
+   */
+  useEffect(() => {
+    pararDrone();
+    if (!comDrone || fase === 'parado' || !rodada?.referencia.length) return;
+    stopDrone.current = drone(rodada.referencia.map(m => m - 12));
+    return pararDrone;
+  }, [comDrone, fase, rodada]);
+
   useRegistroDePratica(() => {
     if (feitas === 0) return null;
     return {
       id: 'audiar', title: itemText(t, 'audiar', 'title'), module: 'perception.melodic',
       seconds: Math.round((Date.now() - started.current) / 1000),
       autoavaliadas: audiarAutoavaliar ? { sim, total: feitas } : undefined,
-      snapshot: { settings: { estimulos, drone: comDrone } },
+      snapshot: { settings: { estimulos, drone: comDrone, tamanho, pedal: String(settings?.pedal ?? 'sorteado') } },
     };
   });
 
   const sortear = useCallback(() => {
-    pararDrone();
-    const e = gerarEstimulo(estimulos.length ? estimulos : ESTIMULOS, ctx);
+    const e = gerarEstimulo(estimulos.length ? estimulos : ESTIMULOS, ctx, {
+      tamanho, escalas, ...(tonicaFixa.current !== null ? { tonica: tonicaFixa.current } : {}),
+    });
+    if (settings?.pedal === 'fixo' && tonicaFixa.current === null) tonicaFixa.current = e.referencia[0];
     setRodada(e);
     setFase('audiando');
     playGroups(e.referencia.map(m => [m]));
-    if (comDrone) stopDrone.current = drone(e.referencia.map(m => m - 12));
+    // O drone NÃO é ligado aqui: quem cuida dele é o efeito abaixo. Era ligado no sorteio, e por
+    // isso o botão só valia na rodada seguinte — o Paulo pediu "que dê pra ligar e desligá-lo de
+    // dentro do exercício", e ligar é agora.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estimulos, comDrone, naming, locale, params]);
+  }, [estimulos, tamanho, escalas, settings?.pedal, naming, locale, params]);
 
   const revelar = useCallback(() => {
     if (!rodada) return;
@@ -78,7 +104,7 @@ export default function Audiar({ onRunning, settings }: { onRunning?: (r: boolea
     sortear();
   };
 
-  const parar = () => { pararDrone(); setFase('parado'); setRodada(null); };
+  const parar = () => { pararDrone(); setFase('parado'); setRodada(null); tonicaFixa.current = null; };
 
   const alternarEstimulo = (id: string) => setEstimulos(v => (v.includes(id) ? v.filter(x => x !== id) : [...v, id]));
 
