@@ -49,9 +49,29 @@ uma justificativa que existia só para remendar a estrutura antiga. Saiu.
 | | frente | estado |
 |---|---|---|
 | 1 | acorde no braço pelo gerador | ✅ feito |
-| 2 | audiação na leitura | ⬅️ **próxima** |
-| 3 | reorganização de intervalo e acorde, e absorver o `no-instrumento` | a fazer |
-| 4 | as duas rotinas do Paulo | depende de 2 e 3 |
+| 2 | audiação na leitura | ✅ feito |
+| 3 | reorganização: nota ✅ · intervalo ✅ · **acorde a fazer** · absorver o `no-instrumento` a fazer | ⬅️ **próxima** |
+| 4 | as duas rotinas do Paulo | depende de 3 |
+| 5 | **explorar padrões pela escala** — a tela com a escada | a fazer |
+
+### O par de padrões de escala, em 10/11/2026
+
+A metade de **adivinhar** está pronta e no catálogo: `reconhecer-padroes-escala`, `serie`, roda no
+Player, cabe no ônibus. As alternativas são **todas** as posições do padrão (5 na pentatônica, 7 nas
+de sete notas), não quatro — não há distrator a inventar nem como descartar por eliminação, e elas
+explicam o exercício sozinhas.
+
+A metade de **explorar** não existe. É a tela com a escada clicável, as posições à vista, o drone
+sustentado e o link do vídeo — e é com ela que vem o link clicável do ChicagoBassBuddy. No item de
+adivinhar o crédito está na descrição, em texto.
+
+Duas coisas que a construção ensinou:
+
+- o padrão **desce** abaixo da tônica (decisão do Paulo), e aí a nota mais grave saía da região. O
+  desenho sobe **inteiro**, por oitavas, até caber: um deslocamento só para todas as notas, porque
+  mover notas soltas quebraria o contorno — mesma lição de `acomodarMelodiaEAcorde`;
+- eu nomeei um atalho de "(mais difícil)" e o teste reprovou: a decisão 100 proíbe nome por nível. O
+  teste estava certo.
 
 ### Frente 2 — audiação na leitura
 

@@ -84,7 +84,7 @@ export const PORTAS: readonly Porta[] = [
     id: 'improviso',
     // "O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário". Não há exercício de
     // improvisar, e o rótulo da porta é "Improvisar e solar" de propósito (decisão 80).
-    itens: ['ouvido-celulas', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'nota-no-instrumento'],
+    itens: ['ouvido-celulas', 'reconhecer-padroes-escala', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'nota-no-instrumento'],
   },
   { id: 'comecar', itens: [], diagnostico: true },
 ];

@@ -66,6 +66,7 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
+| `reconhecer-padroes-escala` | a metade de adivinhar do par de padrões de escala (`PE-padroes-de-escala.md`). O motor é `theory/padrao-de-escala.ts`, escrito antes com 25 testes. As alternativas são TODAS as posições do padrão, não quatro — não há distrator a inventar nem como descartar por eliminação. A exploração com a escada clicável **não existe ainda**, e é com ela que vem o link do vídeo do ChicagoBassBuddy clicável; aqui o crédito está na descrição, em texto |
 | `percepcao-ritmica` | rotina nova, com o desenho do Paulo: ouvir o ritmo escrito e depois quatro etapas de leitura variando os recursos — pontuadas, quiálteras, as três juntas, e as nove células essenciais. O `ritmo-ouvido` veio da rotina do fone, onde era a única etapa não melódica |
 | `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
 | `ouvido-no-fone` | livre | 8 | uma etapa por assunto, sem rodízio — confira se oito cartões é demais numa tela de celular |

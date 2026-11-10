@@ -18,7 +18,7 @@ const STABLE_IDS = [
   'nota-na-pauta', 'nota-no-instrumento', 'intervalo-na-pauta', 'intervalo-no-instrumento', 'que-acorde-e-esse',
   'pauta-armadura', 'pauta-escala',
   'teoria-intervalos',
-  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ritmo-ouvido',
+  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'reconhecer-padroes-escala', 'ritmo-ouvido',
 ];
 
 const assuntos: [string, Assunto][] = [
