@@ -39,6 +39,21 @@ export function noteNameOct(n: Note, naming: Naming = 'pt') {
   return noteName(n, naming) + n.oct;
 }
 /** Nome de classe de altura (para teclado e braço), preferindo sustenido e mostrando o enarmônico. */
+/**
+ * **Uma** grafia de uma classe de altura: Lá♯ ou Si♭, nunca "Lá♯/Si♭".
+ *
+ * Existe porque a forma com barra, boa para rotular uma tecla, é ruim para *dizer* uma nota: em
+ * `ache-a-nota` o enunciado pedia "Ré♯" e o gabarito respondia "Ré♯/Mi♭", nomeando uma nota que a
+ * pergunta não pediu. E o Paulo quer o contrário da barra — "ora Lá♯, ora Si♭", separadas.
+ */
+export function pcNameUm(p: number, naming: Naming = 'pt', bemol = false) {
+  const tabela = bemol
+    ? [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]]
+    : [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]];
+  const [letra, acc] = tabela[mod(p, 12)];
+  return letterName(letra, naming) + accSymbol(acc);
+}
+
 export function pcName(p: number, naming: Naming = 'pt', both = true) {
   const sharp = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]][mod(p, 12)];
   const flat = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]][mod(p, 12)];

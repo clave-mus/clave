@@ -241,3 +241,40 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
     }
   });
 });
+
+// "O find the note diz as notas erradas como gabarito" (Paulo, 09/11/2026).
+//
+// A aritmética estava certa nas três superfícies — conferi corda por corda, casa por casa. O que
+// estava errado era o NOME: o enunciado passava `both: false` a `pcName` e pedia "Ré♯"; o gabarito
+// não passava nada, e o padrão mostra as duas grafias, então respondia "Ré♯/Mi♭". O gabarito
+// nomeava uma nota que a pergunta não pediu.
+describe('ache-a-nota: o gabarito diz a mesma nota que o enunciado', () => {
+  const ex = item('ache-a-nota');
+  const ctx = ctxFor();
+  /** O nome da nota dentro de uma frase como "Toque Ré♯ na corda Si". */
+  const nomes = (texto: string) => texto.match(/[A-GL][a-záéó]*[♯♭]?/g) ?? [];
+
+  it('no braço, nenhuma grafia aparece só no gabarito', () => {
+    for (const casas of ['0-5', '0-12']) {
+      for (let i = 0; i < 120; i++) {
+        const q = ex.make({ superficie: 'braco', casas }, ctx);
+        // a forma com barra é o defeito: se voltar, este teste pega
+        expect(q.reveal, `${q.prompt} → ${q.reveal}`).not.toContain('/');
+        // e a nota do gabarito tem de estar no enunciado
+        const doGabarito = nomes(q.reveal).find(x => /[♯♭]/.test(x) || x.length <= 3);
+        if (doGabarito) expect(q.prompt, `${q.prompt} → ${q.reveal}`).toContain(doGabarito);
+      }
+    }
+  });
+
+  // O sorteio da grafia é pedido do Paulo: "ora Lá♯, ora Si♭". Se ficasse fixo no sustenido,
+  // metade das grafias que existem na música nunca apareceria.
+  it('as duas grafias aparecem ao longo das rodadas', () => {
+    const vistas = new Set<string>();
+    for (let i = 0; i < 400; i++) {
+      const q = ex.make({ superficie: 'braco', casas: '0-12' }, ctx);
+      for (const n of nomes(q.prompt)) if (/[♯♭]/.test(n)) vistas.add(/♯/.test(n) ? 'sustenido' : 'bemol');
+    }
+    expect([...vistas].sort()).toEqual(['bemol', 'sustenido']);
+  });
+});

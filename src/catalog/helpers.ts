@@ -18,7 +18,7 @@ import { clave, pcsPermitidas } from './contexto-musical';
 // linhas de import de quatro módulos, e a declaração — que é o que se lê — ficaria enterrada.
 export {
   buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, SHARP_ORDER,
-  scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor,
+  scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pcNameUm, pick, randInt, relativeMinor,
   SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
 } from '../theory/core';
 export type { ChordId, Clef, Direcao, Note, Quality, ScaleId } from '../theory/core';

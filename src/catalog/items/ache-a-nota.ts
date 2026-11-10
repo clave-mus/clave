@@ -1,6 +1,6 @@
 import {
   PRETAS, SUP, alturaDoPc, casaPermitida, fretRange, midi, mod, nomeDaCorda,
-  notaNaPauta, noteName, pcName, pcsPermitidas, pick, pickClef, porSuperficie, randAcc, spellPc,
+  notaNaPauta, noteName, pcNameUm, pcsPermitidas, pick, pickClef, porSuperficie, randAcc, spellPc,
   stepRange, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
@@ -43,10 +43,23 @@ export const acheANota: CatalogItem = {
       const tuning = tuningOf(s, ctx);
       const [from, to] = fretRange(s);
       const { str, f, m } = casaPermitida(tuning, from, to, ctx);
+      /**
+       * Uma grafia só, sorteada, e **a mesma no enunciado e no gabarito**.
+       *
+       * Era o bug que o Paulo chamou de "diz as notas erradas como gabarito": o enunciado pedia
+       * "Ré♯" (porque passava `both: false`, que sempre dá o sustenido) e o gabarito respondia
+       * "Ré♯/Mi♭" (porque não passava nada, e o padrão é mostrar as duas). O gabarito nomeava uma
+       * nota que a pergunta não tinha pedido.
+       *
+       * Sortear qual das duas também é pedido dele — "ora Lá♯, ora Si♭" —, e é mais honesto que
+       * fixar o sustenido: as duas grafias existem, e quem toca precisa reconhecer as duas.
+       */
+      const bemol = Math.random() < 0.5;
+      const nome = pcNameUm(mod(m, 12), ctx.naming, bemol);
       return {
-        prompt: ctx.t('quiz.tapOnString', { note: pcName(m, ctx.naming, false), string: nomeDaCorda(tuning, str, ctx) }), visual: { kind: 'text', text: '' },
+        prompt: ctx.t('quiz.tapOnString', { note: nome, string: nomeDaCorda(tuning, str, ctx) }), visual: { kind: 'text', text: '' },
         surface: { kind: 'fretboard', tuning, from, to, onlyString: str }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
-        sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: ctx.t('quiz.atFret', { note: pcName(m, ctx.naming), fret: f }),
+        sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: ctx.t('quiz.atFret', { note: nome, fret: f }),
       };
     }
 
