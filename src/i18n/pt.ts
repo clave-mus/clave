@@ -506,6 +506,7 @@ const pt = {
     confidence: { guess: 'Foi chute', unsure: 'Tive dúvida', sure: 'Tive certeza' },
     confidenceSkip: 'Pular',
     cantAsk: 'Com estas configurações não há pergunta possível.',
+    susAmbiguo: 'Com inversões ligadas, sus2 e sus4 viram o mesmo acorde: Dósus2 invertido é Solsus4, nota por nota. Desligue uma das duas qualidades, ou desligue as inversões.',
     sameAscending: 'Menor melódica (clássica) e menor melódica (jazz) são idênticas subindo — só diferem descendo. Escolha "desce" ou "ambos", ou deixe só uma das duas marcada.',
   },
   metronome: {

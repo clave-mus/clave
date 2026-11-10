@@ -506,6 +506,7 @@ const en: Shape<typeof pt> = {
     confidence: { guess: 'I guessed', unsure: 'I was unsure', sure: 'I was sure' },
     confidenceSkip: 'Skip',
     cantAsk: 'These settings leave no question to ask.',
+    susAmbiguo: 'With inversions on, sus2 and sus4 become the same chord: an inverted Csus2 is Gsus4, note for note. Turn off one of the two qualities, or turn off inversions.',
     sameAscending: 'Melodic minor (classical) and melodic minor (jazz) are identical going up — they only differ coming down. Pick "down" or "both", or leave only one of them selected.',
   },
   metronome: {
