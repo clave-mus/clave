@@ -226,3 +226,102 @@ a mesma distinção de `referencia` no `ouvido-tecla`.
 8. modo sem alternativas no `ouvido-celulas` — superfície nova;
 9. ver o acorde no piano/braço — superfície nova;
 10. leitura de partitura, depois da lista dele.
+
+---
+
+# Segunda rodada — 09/11/2026
+
+## 9. Inversões: a conta do Paulo está certa
+
+> "ela pode restringir à apenas um grau do campo harmonico e ativar as inversões - aí só vai ter 3
+> alternativas, uma pra cada inversão, correto?"
+
+**Correto para tríade: três posições, três alternativas.** Para tétrade são **quatro** — fundamental,
+terça, quinta e sétima no baixo.
+
+E restringir a um grau é o que torna a pergunta bem-posta: as três inversões de um acorde têm **as
+mesmas três notas**, então a única pista é qual delas está no baixo. Não sobra atalho, e é
+exatamente a habilidade.
+
+👤 **Sugestão de rótulo:** chamar as alternativas de **"fundamental no baixo" · "terça no baixo" ·
+"quinta no baixo"** em vez de "1ª/2ª inversão". É literalmente o que a pessoa tem de ouvir, e ensina
+o nome junto. Decisão dele.
+
+Com vários graus marcados **e** inversões ligadas, a resposta passa a ser grau × inversão (21 para
+tríades) — o que a superfície `sequence` já suporta, porque é escolher entre todas as opções. Fica
+como o modo difícil, não como padrão.
+
+## 10. Empréstimos modais ✅ aprovados
+
+O grupo do **menor paralelo** sobre a tônica maior — em dó: **Fm (iv) · A♭ (♭VI) · B♭ (♭VII) ·
+E♭ (♭III) · Dø (iiø)** — mais o **♭II napolitano** como sabor à parte.
+
+Dominantes secundários **não** entram aqui: são outra ideia e merecem exercício próprio.
+
+## 11. Geração de partitura: a lista do Paulo, e um achado
+
+### A lista completa
+
+Desta rodada:
+
+- nota mais grave · nota mais aguda;
+- tom;
+- restringir à escala **pentatônica**;
+- **gerar padrões de escala** (terças etc.) — e aqui há código novo esperando:
+  `theory/padrao-de-escala.ts`, que já faz exatamente isto (um desenho de graus que anda pela
+  escala, em treze escalas). Ligar os dois é barato;
+- focar em **células rítmicas essenciais**, com as nove que ele listou.
+
+Da rodada anterior, que seguem valendo:
+
+- **maior salto de nota**;
+- **contexto harmônico para audiar** — 👤 recomendo as duas opções, nota e escala, porque são
+  propósitos diferentes: a nota dá a referência de altura, a escala dá a tonalidade.
+
+### 🔍 As nove células **já existem** — no vocabulário que o gerador de partitura não usa
+
+Eu quase afirmei que quatro delas faltavam. Estava olhando o arquivo errado. **Há dois vocabulários
+de células rítmicas no projeto:**
+
+| | células | quem usa |
+|---|---|---|
+| `theory/rhythm.ts` → `CELLS` | 12 | `Leitura.tsx` (partitura), `ritmo-ouvido`, `RhythmLine` |
+| `theory/rhythm-cells.ts` → `CELL_DEFS` | ~35, como padrão de texto | `rhythm-gen.ts` (leitura rítmica, `X1`) |
+
+As nove do Paulo, no vocabulário novo:
+
+| ele pediu | id |
+|---|---|
+| 4 semicolcheias | `16x4` |
+| colcheia + 2 semis | `8-16-16` |
+| 2 semis + colcheia | `16-16-8` |
+| semi + colcheia + semi | `16-8-16` ("Síncope no tempo") |
+| colcheia pontuada + semi | `8d-16` |
+| semi + colcheia pontuada | `16-8d` |
+| pausa de semi + 3 semis | `r16-16-16-16` |
+| colcheia + pausa de semi + semi | `8-r16-16` |
+| semínima + colcheia em tercina | `tq-8` |
+
+**Nove de nove.** O trabalho não é escrever células: é o gerador de partitura passar a usar o
+vocabulário rico, em vez do de 12.
+
+E isso é mais que conveniência — `CLAUDE.md` diz **"motor duplicado é proibido"**, e a decisão 18 diz
+que há **um** gerador de partituras. Dois catálogos de células para a mesma coisa musical é
+exatamente o que essas duas regras proíbem.
+
+> ⚠️ Cuidado na consolidação: `ritmo-ouvido` e `RhythmLine` leem o vocabulário antigo. Trocar é
+> mexer em quem desenha o ritmo na tela e em quem gera os distratores de "qual ritmo tocou" — que é
+> também onde entra o pedido de alternativas mais difíceis (seção 4). As duas tarefas se tocam, e
+> fazer junto é mais barato que fazer em sequência.
+
+## 12. Ordem revista
+
+1. atalhos de entrada em dó maior, com tudo ligado, nos itens de percepção;
+2. a rotina: renomear, tirar o ritmo, audiação no fim, reordenar;
+3. inversões em `ouvido-acorde` (a dificuldade) — `buildChord` já aceita inversão;
+4. **consolidar os dois vocabulários de células** + alternativas difíceis em `ritmo-ouvido`
+   + as nove células chegando à partitura. Um lote, porque é o mesmo código;
+5. exercício do campo harmônico, com empréstimos modais e inversões como atalho;
+6. "Reconhecer harmonia sob melodia" — o espelho, sobre o mesmo motor;
+7. o resto da customização da partitura (saltos, extremos, pentatônica, padrões de escala,
+   contexto para audiar).
