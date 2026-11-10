@@ -33,6 +33,7 @@ describe('catálogo de exercícios', () => {
           }
           // a superfície consegue produzir uma resposta que a conferência entende
           if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(['pitch', 'pitchClass']).toContain(e.kind);
+          if (sf.kind === 'sequence') expect(e.kind).toBe('option');
           if (sf.kind === 'letters' || sf.kind === 'staff') expect(['spelled', 'pitchClass']).toContain(e.kind);
           if (e.kind === 'spelled') expect(Math.abs(e.acc)).toBeLessThanOrEqual(1);
         }
@@ -46,6 +47,16 @@ describe('catálogo de exercícios', () => {
         const sf = q.surface, e = q.expected;
         let can = false;
         if (sf.kind === 'choices') can = sf.options.some(o => validate(e, optionResponse(o)));
+        // `sequence` monta a resposta com `comprimento` escolhas em ordem, entre as opções. Dá
+        // para dar a certa se, e só se, cada pedaço dela estiver na paleta — e se o tamanho
+        // combinar. Sem isto, uma paleta incompleta deixaria a pergunta sem resposta possível e
+        // ninguém veria: a tela desenharia as casas e nenhuma combinação acertaria.
+        else if (sf.kind === 'sequence') {
+          const sep = sf.separador ?? ' ';
+          const pedacos = e.kind === 'option' ? e.id.split(sep) : [];
+          const paleta = new Set(sf.options.map(o => o.id));
+          can = pedacos.length === sf.comprimento && pedacos.every(x => paleta.has(x));
+        }
         else if (sf.kind === 'keyboard') can = Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => sf.lo + k).some(m => validate(e, { kind: 'pitch', midi: m }));
         else if (sf.kind === 'fretboard') {
           const strings = sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, k) => k);
@@ -63,7 +74,8 @@ describe('catálogo de exercícios', () => {
       ex.settings(ctx).forEach(s => texts.push(s.label, ...(s.options ?? []).map(o => o.label)));
       for (let i = 0; i < 100; i++) {
         const q = ex.make(ex.defaults, ctx);
-        texts.push(q.prompt, q.reveal, ...(q.surface.kind === 'choices' ? q.surface.options.map(o => o.label) : []));
+        const comRotulo = q.surface.kind === 'choices' || q.surface.kind === 'sequence' ? q.surface.options.map(o => o.label) : [];
+        texts.push(q.prompt, q.reveal, ...comRotulo);
         if (q.visual.kind === 'ear' && q.visual.hint) texts.push(q.visual.hint);
       }
       expect(texts.filter(x => PT_CHARS.test(x))).toEqual([]);

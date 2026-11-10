@@ -17,7 +17,7 @@ import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
 import { optionResponse, validate } from './validate';
-import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue } from './types';
+import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { paramsRegistraveis } from './registro';
 import PracticePanel from '../components/PracticePanel';
@@ -432,6 +432,9 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
       </div>
     );
   }
+  if (sf.kind === 'sequence') {
+    return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;
+  }
   const accRow = (allowed: boolean) => allowed && (
     <div className="accrow" role="group" aria-label={t('player.accidental')}>
       {[[-1, '♭'], [0, '♮'], [1, '♯']].map(([v, l]) => <Chip key={v} on={acc === v} onClick={() => setAcc(Number(v))}>{l}</Chip>)}
@@ -515,6 +518,58 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
       {extra}
       {/* UM botão só: antes o painel de prática trazia o seu, e apareciam dois lado a lado. */}
       <div className="row"><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>
+    </div>
+  );
+}
+
+/**
+ * Montar a resposta escolhendo entre **todas** as opções, em ordem.
+ *
+ * O estado parcial mora aqui, e a chave do componente é a pergunta: trocar de pergunta desmonta o
+ * componente e zera a montagem, sem efeito nenhum para limpar. Nada é enviado antes de a sequência
+ * estar cheia — meia resposta não é resposta, e enviar sozinho ao completar tiraria da pessoa a
+ * chance de corrigir o último toque.
+ */
+function SequenceArea({ sf, q, phase, picked, onAnswer }: {
+  sf: Extract<Surface, { kind: 'sequence' }>; q: Question; phase: Phase; picked: string | null; onAnswer: Submit;
+}) {
+  const t = useT();
+  const [escolhidos, setEscolhidos] = useState<string[]>([]);
+  const sep = sf.separador ?? ' ';
+  const cheia = escolhidos.length >= sf.comprimento;
+  const porId = new Map(sf.options.map(o => [o.id, o]));
+  const rotulo = (id: string) => porId.get(id)?.label ?? id;
+  const certa = q.expected.kind === 'option' ? q.expected.id : '';
+
+  return (
+    <div className="sequencia">
+      {/* As casas: o que já foi escolhido e o que falta. Mostrar as vazias é o que diz quantas
+          notas a pessoa tem de informar sem precisar de texto explicando. */}
+      <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
+        {Array.from({ length: sf.comprimento }, (_, i) => (
+          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''}`}>{escolhidos[i] ? rotulo(escolhidos[i]) : ''}</span>
+        ))}
+      </div>
+
+      {phase === 'ask' ? (
+        <>
+          <div className="answers compact seq-paleta">
+            {sf.options.map(o => (
+              <button key={o.id} type="button" className="ans compact" disabled={cheia}
+                onClick={() => setEscolhidos(v => (v.length >= sf.comprimento ? v : [...v, o.id]))}>{o.label}</button>
+            ))}
+          </div>
+          <div className="row seq-acoes">
+            <Btn small tone="ghost" disabled={!escolhidos.length} onClick={() => setEscolhidos(v => v.slice(0, -1))}>{t('player.undoLast')}</Btn>
+            <Btn disabled={!cheia} onClick={() => onAnswer({ kind: 'option', id: escolhidos.join(sep) }, escolhidos.join(sep))}>{t('player.submitAnswer')}</Btn>
+          </div>
+        </>
+      ) : (
+        <div className="seq-conferido">
+          <span className={picked === certa ? 'right' : 'wrong'}>{picked?.split(sep).map(rotulo).join(sep) || '—'}</span>
+          {picked !== certa && <span className="right">{certa.split(sep).map(rotulo).join(sep)}</span>}
+        </div>
+      )}
     </div>
   );
 }

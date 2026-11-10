@@ -82,7 +82,7 @@ describe('o tamanho vai de 1 a 5', () => {
 
   it('com uma nota só ainda há quatro alternativas distintas', () => {
     for (let i = 0; i < 40; i++) {
-      const q = perguntar({ escala: 'maior', tamanho: '1' });
+      const q = perguntar({ escala: 'maior', tamanho: '1', resposta: 'alternativas' });
       if (q.surface.kind !== 'choices') throw new Error('esperava escolhas');
       expect(q.surface.options).toHaveLength(4);
       expect(new Set(q.surface.options.map(o => o.id)).size).toBe(4);

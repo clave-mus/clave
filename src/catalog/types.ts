@@ -60,6 +60,19 @@ export interface ChoiceOption {
 export type Surface =
   /** `compact`: botões menores, para lista longa de qualidade (U7) — cifra em si já é curta. */
   | { kind: 'choices'; options: ChoiceOption[]; wide?: boolean; compact?: boolean }
+  /**
+   * Montar a resposta escolhendo **entre todas as opções possíveis**, em ordem, em vez de entre
+   * quatro alternativas (pedido do Paulo, 09/11/2026: "a gente tenha que escolher entre todas
+   * opções possiveis — todos graus da escala ou do campo").
+   *
+   * A resposta que sai daqui é `{ kind: 'option', id }` com os escolhidos unidos por `separador` —
+   * **exatamente** o que `choices` entrega. Por isso o validador não mudou uma linha: o item
+   * declara o mesmo `expected` nos dois modos, e quem troca é só a tela.
+   *
+   * Com `comprimento: 1` isto é só uma lista maior de botões, e nem precisaria de superfície
+   * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
+   */
+  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
   | { kind: 'letters'; accidentals: boolean }
   | { kind: 'keyboard'; lo: number; hi: number }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }

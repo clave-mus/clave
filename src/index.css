@@ -720,3 +720,20 @@ select.sel {
   color: var(--ink); text-align: center; padding: 0 10px;
 }
 .field-square { aspect-ratio: 1; }
+
+/* ---------- Responder escolhendo entre TODAS as opções (09/11/2026) ---------- */
+/* As casas vazias dizem quantas notas faltam sem precisar de frase explicando. */
+.sequencia { display: grid; gap: 14px; justify-items: center; }
+.seq-casas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.seq-casa {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 52px; min-height: 52px; padding: 0 10px;
+  border: 1px dashed var(--rule-strong); border-radius: var(--r-sm);
+  font-family: var(--display); font-weight: 680; font-size: 21px; color: var(--ink-faint);
+}
+.seq-casa.cheia { border-style: solid; border-color: var(--accent); background: var(--accent-quiet); color: var(--accent-strong); }
+.seq-paleta { margin: 0; }
+.seq-acoes { gap: 10px; }
+.seq-conferido { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-family: var(--display); font-weight: 680; font-size: 21px; }
+.seq-conferido .right { color: var(--ok-strong); }
+.seq-conferido .wrong { color: var(--err-strong); text-decoration: line-through; }

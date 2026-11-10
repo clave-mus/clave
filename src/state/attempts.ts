@@ -168,7 +168,11 @@ export function buildAttempt(i: AttemptInput): Attempt {
     question: {
       surface: q.surface.kind,
       expected: q.expected,
-      ...(q.surface.kind === 'choices' ? { options: q.surface.options.map(o => o.id) } : {}),
+      // `sequence` também guarda a paleta: é o que foi oferecido, e sem isso uma tentativa de
+      // sequência ficaria sem registro de entre quantas opções a pessoa escolheu — que é
+      // justamente a diferença entre os dois modos de resposta.
+      ...(q.surface.kind === 'choices' || q.surface.kind === 'sequence'
+        ? { options: q.surface.options.map(o => o.id) } : {}),
       ...(q.sound?.groups.length ? { notes: q.sound.groups } : {}),
       ...(q.sound?.drums ? { drums: q.sound.drums } : {}),
     },

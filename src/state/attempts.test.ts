@@ -47,6 +47,15 @@ function answer(q: Question, wantCorrect: boolean): Response {
       : sf.kind === 'keyboard' ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.lo + k }) as Response)
       : sf.kind === 'fretboard' ? Array.from({ length: sf.to - sf.from + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.tuning[sf.onlyString ?? 0] + sf.from + k }) as Response)
       : sf.kind === 'letters' ? [0, 1, 2, 3, 4, 5, 6].flatMap(l => [-1, 0, 1].map(acc => ({ kind: 'spelled', letter: l, acc }) as Response))
+      // `sequence`: a resposta é a sequência montada, unida pelo separador. A certa, e algumas
+      // erradas deslocando a paleta — mais de uma porque um deslocamento pode cair na certa.
+      : sf.kind === 'sequence' ? (() => {
+        const sep = sf.separador ?? ' ';
+        const certa = q.expected.kind === 'option' ? q.expected.id : '';
+        const erradas = [1, 2, 3].map(d => Array.from({ length: sf.comprimento },
+          (_, k) => sf.options[(k + d) % sf.options.length].id).join(sep));
+        return [certa, ...erradas].map(id => ({ kind: 'option', id }) as Response);
+      })()
       : q.expected.kind === 'spelled' ? [{ ...q.expected, kind: 'spelled' } as Response, { kind: 'spelled', letter: q.expected.letter + 1, acc: 0, oct: q.expected.oct } as Response]
       : [];
   return candidates.find(ok)!;

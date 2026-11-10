@@ -37,8 +37,15 @@ export const ouvidoCelulas: CatalogItem = {
     { id: 'registro', label: ctx.t('settings.melodyRegister'), type: 'single', options: [
       { id: 'acima', label: ctx.t('settings.melodyAbove') },
       { id: 'abaixo', label: ctx.t('settings.melodyBelow') },
+    ] },
+    // Pedido do Paulo (09/11): "ao inves de termos só 4 alternativas, a gente tenha que escolher
+    // entre todas opções possiveis". Quatro alternativas dão pista — descartar duas já deixa
+    // cinquenta por cento. Escolher entre todos os graus não dá pista nenhuma.
+    { id: 'resposta', label: ctx.t('settings.answerMode'), type: 'single', options: [
+      { id: 'todos', label: ctx.t('settings.answerAll') },
+      { id: 'alternativas', label: ctx.t('settings.answerFour') },
     ] }],
-  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima' },
+  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' },
   /**
    * Os atalhos (09/11/2026). **O primeiro é a entrada do item** — quem abre sem nada salvo cai
    * nele, e o Paulo pediu que fosse o mais simples de todos: uma nota, escala maior, dó maior.
@@ -53,13 +60,13 @@ export const ouvidoCelulas: CatalogItem = {
    * - **escala menor** — o campo menor é outro mundo, e uma nota é a porta de entrada dele.
    */
   presets: [
-    { id: 'uma-nota', nome: 'presets.celulaUmaNota', settings: { escala: 'maior', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'tres-notas', nome: 'presets.celulaTresNotas', settings: { escala: 'maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'cinco-notas', nome: 'presets.celulaCincoNotas', settings: { escala: 'maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'pentatonica', nome: 'presets.celulaPentatonica', settings: { escala: 'penta-maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'sobre-o-v', nome: 'presets.celulaSobreOV', settings: { escala: 'maior', tamanho: '3', graus: ['5'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
-    { id: 'menor', nome: 'presets.celulaMenor', settings: { escala: 'menor', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima' }, params: EM_DO_MAIOR },
+    { id: 'uma-nota', nome: 'presets.celulaUmaNota', settings: { escala: 'maior', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'tres-notas', nome: 'presets.celulaTresNotas', settings: { escala: 'maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'cinco-notas', nome: 'presets.celulaCincoNotas', settings: { escala: 'maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'pentatonica', nome: 'presets.celulaPentatonica', settings: { escala: 'penta-maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'sobre-o-v', nome: 'presets.celulaSobreOV', settings: { escala: 'maior', tamanho: '3', graus: ['5'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'menor', nome: 'presets.celulaMenor', settings: { escala: 'menor', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.55},
   make(s, ctx) {
@@ -144,7 +151,12 @@ export const ouvidoCelulas: CatalogItem = {
     return {
       prompt: ctx.t('quiz.cells'),
       visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
-      surface: { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }, expected: { kind: 'option', id: key(c) },
+      // Os dois modos entregam **o mesmo `expected`** — `{ kind: 'option', id: '1 3 5' }`. Por
+      // isso trocar de modo não mexe em validação, histórico nem distrator: muda só a tela.
+      surface: s.resposta === 'alternativas'
+        ? { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }
+        : { kind: 'sequence', comprimento: size, options: degs.slice(0, top + 1).map(plain) },
+      expected: { kind: 'option', id: key(c) },
       sound: {
         groups: [acorde, ...melodia.map(n => [n])],
         // Ouvir o acorde sozinho e cada nota sozinha (pedido do Paulo). Aqui separar AJUDA: a

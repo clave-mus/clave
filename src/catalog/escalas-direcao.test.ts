@@ -96,6 +96,10 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
   const escalas = ALL_SCALE_IDS as ScaleId[];
   const graus = (id: string) => id.split(' ');
   const semRepetir = (g: string[]) => g.every((x, k) => k === 0 || x !== g[k - 1]);
+  // Estes testes são **sobre os distratores**, e distrator só existe no modo de quatro
+  // alternativas. Desde 09/11 o padrão do item é escolher entre todos os graus, que não tem
+  // distrator nenhum — então eles pedem o modo explicitamente. Sem isso passavam a medir zero
+  // pares e continuavam verdes, que é o pior jeito de um teste morrer.
 
   // BUG 1. Antes desta tarefa o gerador era `clamp(anterior + passo, 0, top)`, e nas bordas o
   // clamp devolvia o mesmo grau: saía `5 5 4`.
@@ -108,7 +112,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 120; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           for (const o of q.surface.options) {
             const g = graus(o.id);
@@ -130,7 +134,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
       const rotulos = scaleDegreeLabels(escala);
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 60; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           for (const o of q.surface.options) {
             const pos = graus(o.id).map(g => rotulos.indexOf(g));
@@ -162,7 +166,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 60; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') continue;
           const certa = graus(q.expected.id);
           for (const o of q.surface.options) {
@@ -191,7 +195,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
     for (const escala of escalas) {
       for (const tamanho of ['2', '3', '4', '5']) {
         for (let i = 0; i < 40; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices' || q.expected.kind !== 'option') continue;
           const daCerta = assinatura(graus(q.expected.id));
           perguntas++;
@@ -210,7 +214,7 @@ describe('ouvido-celulas: os dois bugs (F6-10)', () => {
     for (const escala of escalas) {
       for (const tamanho of ['3', '4']) {
         for (let i = 0; i < 40; i++) {
-          const q = ex.make({ escala, tamanho }, ctx);
+          const q = ex.make({ escala, tamanho, resposta: 'alternativas' }, ctx);
           if (q.surface.kind !== 'choices') continue;
           const ids = q.surface.options.map(o => o.id);
           expect(new Set(ids).size, `${escala}/${tamanho}`).toBe(4);
