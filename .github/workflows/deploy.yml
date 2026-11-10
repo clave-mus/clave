@@ -26,14 +26,17 @@
 # credencial ensina a equipe a ignorar fluxo vermelho.
 name: Publicar
 
-# ⚠️ **A branch aqui é `main`, e a branch padrão do repositório é `dev`.** Então empurrar na padrão
-# NÃO publica. Era assim antes desta correção e fica assim até o Paulo dizer de onde sai a produção —
-# trocar a branch de publicação é decisão dele, não conserto de comentário.
+# **A produção sai da `dev`**, decidido em 10/11/2026 com os fatos na mão: a `main` estava 124
+# commits atrás da `dev` e **zero à frente** — ancestral puro, último commit em 26/10. A `dev` é a
+# branch padrão no GitHub e é onde os PRs caem. Os dois fluxos apontavam para a `main` porque ninguém
+# os atualizou quando o time mudou de linha, e por isso este deploy **nunca executou**.
 #
-# Enquanto isso, `workflow_dispatch` publica qualquer branch à mão, e é o caminho que funciona hoje.
+# Não há branch de release separada de propósito: ela só compraria algo se alguém decidisse *quando*
+# publicar — e `workflow_dispatch` já dá isso, em qualquer branch, sem um segundo ramo para manter
+# sincronizado.
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
