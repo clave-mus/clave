@@ -1,4 +1,4 @@
-import { alturaDoPc, note, noteName, pcName, pcsPermitidas, pick } from '../helpers';
+import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, note, noteName, pcName, pcsPermitidas, pick } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -22,6 +22,20 @@ export const ouvidoTecla: CatalogItem = {
   publicacao: LEGADO,
   settings: ctx => [{ id: 'referencia', label: ctx.t('settings.reference', { note: noteName(note(0), ctx.naming) }), type: 'toggle' }, { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' }],
   defaults: { referencia: true, pretas: false },
+  /**
+   * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
+   * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
+   * os intervalos:
+   *
+   * - com referência e dó maior, a pergunta é "que grau é", respondida no teclado;
+   * - sem referência e sem tonalidade, é nomear a altura sem âncora nenhuma — e **nenhum outro
+   *   item do catálogo treina isso**.
+   */
+  presets: [
+    { id: 'grau', nome: 'presets.teclaGrau', settings: { referencia: true, pretas: true }, params: EM_DO_MAIOR },
+    { id: 'brancas', nome: 'presets.teclaBrancas', settings: { referencia: true, pretas: false }, params: EM_DO_MAIOR },
+    { id: 'sem-ancora', nome: 'presets.teclaSemAncora', settings: { referencia: false, pretas: true }, params: TONALIDADE_LIVRE },
+  ],
   presentation: { gap: 0.9 },
   make(s, ctx): Question {
     const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));

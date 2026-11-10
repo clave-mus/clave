@@ -229,6 +229,25 @@ export const INTERVALS: { id: string; num: number; q: Quality; tier: 1 | 2 | 3 }
 export const ivLabel = (id: string, ctx: Ctx) => { const iv = INTERVALS.find(i => i.id === id)!; return intervalName({ num: iv.num, semis: semisFor(iv.num, iv.q) }, ctx.conv); };
 export const semiOptions = (ctx: Ctx): ChoiceOption[] => Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), label: semitoneName(i + 1, ctx.conv) }));
 /** A mesma ordem de dificuldade dos intervalos escritos, em semitons (F2-2). */
+/**
+ * Dó maior, e tonalidade livre, para os atalhos de percepção.
+ *
+ * Princípio do Paulo (09/11/2026): *"é mais valioso fixar uma tonalidade em todos exercícios de
+ * percepção melódica ou harmônica, pois isso emula com mais verossimilhança as condições reais de
+ * música"*. Por isso os atalhos de entrada desses itens trazem dó maior.
+ *
+ * **Uma referência só, compartilhada**, e não um objeto por atalho: `useParamsDoItem` memoiza por
+ * identidade, e um literal novo a cada render recalcularia os parâmetros sem nada ter mudado.
+ *
+ * `TONALIDADE_LIVRE` é explícito de propósito. Um atalho **sem** `params` não limpa o que outro
+ * atalho pôs — ele só não mexe. Para voltar ao sorteio é preciso dizer `key: null`.
+ */
+export const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
+export const TONALIDADE_LIVRE = { key: null } as const;
+
+/** Os doze intervalos, do uníssono à oitava, como os ids que `semiOptions` usa. */
+export const TODOS_OS_INTERVALOS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+
 export const SEMI_TIER: Record<number, 1 | 2 | 3> = { 12: 1, 7: 1, 5: 1, 4: 1, 3: 1, 9: 2, 8: 2, 2: 2, 1: 2, 10: 3, 11: 3, 6: 3 };
 export const ROOTS: Note[] = [note(0), note(1, -1), note(1), note(2, -1), note(2), note(3), note(3, 1), note(4), note(5, -1), note(5), note(6, -1), note(6)];
 export const spellPc = (p: number, oct = 4): Note => ({ ...ROOTS[mod(p, 12)], oct });

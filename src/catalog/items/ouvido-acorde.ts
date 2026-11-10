@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, arr, chordName, chordTypes, pick, porComplexidade, tonicaNaRegiao } from '../helpers';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, pick, porComplexidade, tonicaNaRegiao } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -15,12 +15,21 @@ export const ouvidoAcorde: CatalogItem = {
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true, present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1, format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) }],
   defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2 },
+  /**
+   * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
+   * primeiro atalho é a entrada do item.
+   *
+   * Com dó maior fixo, toda qualidade soa sobre dó. Isso é de propósito e ele concordou: o item
+   * pergunta **qualidade**, e prender a fundamental tira a variação de altura e deixa só a cor.
+   * Reconhecer o GRAU dentro de um campo é outro exercício, e é o novo.
+   */
   presets: [
-    { id: 'maior-menor', nome: 'presets.maiorMenor', settings: { tipos: ['maior', 'menor'] } },
-    { id: 'triades', nome: 'presets.triades', settings: { tipos: ['maior', 'menor', 'aum', 'dim'] } },
-    { id: 'tetrades', nome: 'presets.tetrades', settings: { tipos: ['7M', '7', 'm7', 'm7b5', 'dim7'] } },
-    { id: 'suspensos', nome: 'presets.suspensos', settings: { tipos: ['maior', 'menor', 'sus2', 'sus4'] } },
-    { id: 'tudo', nome: 'presets.tudo', settings: { tipos: ALL_CHORDS } },
+    { id: 'tudo', nome: 'presets.tudo', settings: { tipos: ALL_CHORDS }, params: EM_DO_MAIOR },
+    { id: 'maior-menor', nome: 'presets.maiorMenor', settings: { tipos: ['maior', 'menor'] }, params: EM_DO_MAIOR },
+    { id: 'triades', nome: 'presets.triades', settings: { tipos: ['maior', 'menor', 'aum', 'dim'] }, params: EM_DO_MAIOR },
+    { id: 'tetrades', nome: 'presets.tetrades', settings: { tipos: ['7M', '7', 'm7', 'm7b5', 'dim7'] }, params: EM_DO_MAIOR },
+    { id: 'suspensos', nome: 'presets.suspensos', settings: { tipos: ['maior', 'menor', 'sus2', 'sus4'] }, params: EM_DO_MAIOR },
+    { id: 'livre', nome: 'presets.acordesLivre', settings: { tipos: ALL_CHORDS }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.45 },
   make(s, ctx): Question {

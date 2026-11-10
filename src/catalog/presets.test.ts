@@ -62,6 +62,25 @@ describe('todo atalho é aplicável', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  /**
+   * `problema` é o guarda do próprio item: ele recusa uma configuração ambígua em vez de deixar o
+   * exercício gerar "erro do usuário" (decisão 13). Um atalho que cai nele é um atalho que não
+   * roda — e **nenhum outro teste pegava isso**, porque `make` continua devolvendo uma pergunta;
+   * quem checa `problema` é o Player.
+   *
+   * O caso real que motivou: "todas as escalas" em `ouvido-escala` com direção só ascendente. As
+   * duas menores melódicas são o MESMO áudio subindo (decisão 70), e o item recusa — então o
+   * atalho precisa de `ambos`. Não é gosto, é a única direção em que a pergunta se responde.
+   */
+  it.each(comPresets.map(e => e.id))('%s: nenhum atalho cai no guarda `problema` do item', id => {
+    const item = EXERCISES.filter(isSeries).find(e => e.id === id) as SeriesItem;
+    if (!item.problema) return;
+    for (const p of item.presets!) {
+      const s = { ...item.defaults, ...p.settings };
+      expect(item.problema(s as never, ctx), `${id}/${p.id}`).toBeNull();
+    }
+  });
+
   // O primeiro atalho é a ENTRADA do item (`Player`): quem abre sem nada salvo cai nele. Um
   // atalho aplicado sozinho tem de gerar pergunta válida, senão o item abre quebrado.
   it.each(comPresets.map(e => e.id))('%s: o primeiro atalho sozinho gera pergunta válida', id => {
