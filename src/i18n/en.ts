@@ -83,6 +83,10 @@ const en: Shape<typeof pt> = {
       nome: 'Melodic and harmonic perception on headphones',
       sobre: 'Eight fronts where you answer, from a single note to a degree inside the harmony, with audiation at the end. All in C major. Needs headphones and one free hand; fits a whole bus ride.',
     },
+    ritmica: {
+      nome: 'Rhythmic perception',
+      sobre: 'Hear a rhythm and recognise it written, then read — dotted notes, tuplets, syncopation and ties, one per step. Fits a bus ride.',
+    },
     tonalidade: {
       nome: 'Settle into a key',
       sobre: 'One key a week, crossed five different ways. You move to the next one when you want to.',
@@ -694,6 +698,7 @@ const en: Shape<typeof pt> = {
       colcheias: 'Eighth notes',
       semicolcheias: 'Sixteenth notes',
       ligaduras: 'Ties',
+      quialteras: 'Tuplets',
       pontuadas: 'Dotted notes',
       esparsas: 'Sparse notes',
       essenciais: 'Essential cells',
@@ -704,6 +709,7 @@ const en: Shape<typeof pt> = {
       colcheias: 'Adds the eighth notes.',
       semicolcheias: 'Adds the sixteenth notes.',
       ligaduras: 'Half and quarter notes, and the tie is the subject.',
+      quialteras: 'Half, quarter and eighth notes, with triplets — and only those.',
       pontuadas: 'Half, quarter and eighth notes, with dotted rhythm.',
       esparsas: 'A bar almost all silence, with two loose sixteenths.',
       essenciais: 'The nine sixteenth-note cells that show up most in music, plus the quarter-and-eighth triplet.',

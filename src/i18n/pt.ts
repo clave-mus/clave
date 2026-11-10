@@ -83,6 +83,10 @@ const pt = {
       nome: 'Percepção melódica e harmônica no fone',
       sobre: 'Oito frentes em que você responde, da nota solta ao grau dentro da harmonia, e a audiação no fim. Tudo em dó maior. Pede fone e uma mão livre; cabe inteira num ônibus.',
     },
+    ritmica: {
+      nome: 'Percepção rítmica',
+      sobre: 'Ouvir um ritmo e reconhecê-lo escrito, e depois ler — pontuadas, quiálteras, síncopes e ligaduras, cada uma na sua etapa. Cabe num ônibus.',
+    },
     tonalidade: {
       nome: 'Internalizar uma tonalidade',
       sobre: 'Uma tonalidade por semana, atravessada de cinco jeitos. Você passa para a próxima quando quiser.',
@@ -694,6 +698,7 @@ const pt = {
       colcheias: 'Colcheias',
       semicolcheias: 'Semicolcheias',
       ligaduras: 'Ligaduras',
+      quialteras: 'Quiálteras',
       pontuadas: 'Notas pontuadas',
       esparsas: 'Notas esparsas',
       essenciais: 'Células essenciais',
@@ -704,6 +709,7 @@ const pt = {
       colcheias: 'Acrescenta as colcheias.',
       semicolcheias: 'Acrescenta as semicolcheias.',
       ligaduras: 'Mínimas e semínimas, e a ligadura é o assunto.',
+      quialteras: 'Mínimas, semínimas e colcheias, com tercinas — e só elas.',
       pontuadas: 'Mínimas, semínimas e colcheias, com o ritmo pontuado.',
       esparsas: 'Compasso quase todo em silêncio, com duas semicolcheias soltas.',
       essenciais: 'As nove células de semicolcheia que mais aparecem na música, e a tercina de semínima e colcheia.',

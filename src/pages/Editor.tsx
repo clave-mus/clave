@@ -15,7 +15,7 @@ import { itemById, ITEMS } from '../catalog';
 import { companheirosDe } from '../catalog/grupos';
 import { cabeNoLink, linkDaRotina } from '../routines/share';
 import { useGlobalParams } from '../catalog/params';
-import { estadoDe, visivel } from '../catalog/publicacao';
+import { visivel } from '../catalog/publicacao';
 import { REGIOES } from '../catalog/regioes';
 import { resumoDaConfiguracao, resumoDaPratica } from '../catalog/resumo';
 import type { Ctx } from '../catalog/types';
@@ -190,7 +190,7 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
                           <span style={{ minWidth: 0 }}>
                             {e.instancias.length > 1 && <span className="muted">{i + 1}. </span>}
                             {nome}{detalhes && <span className="muted"> · {detalhes}</span>}
-                            {item && estadoDe(item.publicacao) === 'rascunho' && <span className="mini-tag" style={{ marginLeft: 6 }}>{t('review.draft')}</span>}
+                            
                           </span>
                           <button type="button" className="card-x" aria-label={t('editor.removeVariant')} disabled={e.instancias.length <= 1}
                             title={e.instancias.length <= 1 ? t('editor.lastVariant') : undefined}
@@ -307,7 +307,7 @@ function Corpo({ rotina, rotinas }: { rotina: Rotina; rotinas: Rotina[] }) {
                   if (!alvo) setAberta(null);
                 }}>
                   {itemText(t, i.id, 'title')}
-                  {estadoDe(i.publicacao) === 'rascunho' ? ` · ${t('review.draft')}` : ''}
+                  
                 </Chip>
                   ))}
                 </div>

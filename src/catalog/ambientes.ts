@@ -7,6 +7,7 @@
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
+import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
 import type { MessageKey } from '../i18n';
 import type { CatalogItem } from './types';
@@ -165,7 +166,21 @@ export const AMBIENTES: CatalogItem[] = [
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
     primaryModule: 'perception.rhythmic', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
-    settings: noSettings, defaults: {},
+    /**
+     * **O atalho é o que a rotina consegue pedir.** Até 10/11/2026 este item declarava
+     * `noSettings`, e toda a configuração dele morava dentro da tela. Isso tornava impossível a
+     * rotina do Paulo de quatro etapas de leitura rítmica variando os recursos: as quatro etapas
+     * abririam a mesma tela no mesmo estado, e ele teria de trocar à mão em cada uma — o que
+     * desmancha a rotina.
+     *
+     * Só o atalho é declarado, não as dezenas de chaves de `RhythmSettings`: a rotina escolhe um
+     * recorte nomeado, e o ajuste fino segue sendo da tela.
+     */
+    settings: ctx => [{
+      id: 'preset', label: ctx.t('rhythm.presets'), type: 'single',
+      options: PRESETS.map(p => ({ id: p.id, label: ctx.t(`rhythm.presetNames.${p.id}` as MessageKey) })),
+    }],
+    defaults: { preset: 'seminimas' },
     // traz a VexFlow junto; só baixa quando a tela abre
     screen: () => import('../tools/Ritmo'),
   },

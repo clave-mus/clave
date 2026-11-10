@@ -153,6 +153,22 @@ export const PRESETS: Preset[] = [
     },
   },
   {
+    /**
+     * Quiálteras, e **só** elas entre os recursos. Entrou em 10/11/2026 porque a rotina de
+     * percepção rítmica do Paulo pede uma etapa de "apenas quiálteras", e não havia preset que a
+     * desse: `pontuadas` tem `quialtera: false`, e nenhum outro liga só esse recurso.
+     *
+     * Sem semicolcheia: a tercina já divide o tempo em três, e somar a divisão em quatro faria a
+     * etapa ser sobre duas coisas.
+     */
+    id: 'quialteras',
+    settings: {
+      figures: { w: false, h: true, q: true, '8': true, '16': false },
+      traits: { pontuada: false, sincope: true, ligadura: false, quialtera: true },
+      pausas: POUCAS_PAUSAS, modo: 'celulas',
+    },
+  },
+  {
     id: 'pontuadas',
     settings: {
       figures: { w: false, h: true, q: true, '8': true, '16': false },

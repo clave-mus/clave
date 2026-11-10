@@ -66,6 +66,7 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
+| `percepcao-ritmica` | rotina nova, com o desenho do Paulo: ouvir o ritmo escrito e depois quatro etapas de leitura variando os recursos — pontuadas, quiálteras, as três juntas, e as nove células essenciais. O `ritmo-ouvido` veio da rotina do fone, onde era a única etapa não melódica |
 | `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
 | `ouvido-no-fone` | livre | 8 | uma etapa por assunto, sem rodízio — confira se oito cartões é demais numa tela de celular |
 | `mapear-braco` | guiada, 30 min | 5 | a fusão das duas antigas. Confira o **rodízio entre identificar e construir** intervalo (etapa 3), e se a última etapa (a que pede o instrumento) atrapalha quem está na rua |

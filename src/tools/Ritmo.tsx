@@ -17,6 +17,7 @@ import {
   timeline, type Exercise, type RhythmSettings,
 } from '../theory/rhythm-gen';
 import { tempoName, useToolLog } from './common';
+import type { ScreenProps } from '../catalog/types';
 import { useT, type MessageKey } from '../i18n';
 
 const STORE = 'clave:ritmo';
@@ -83,9 +84,17 @@ const FIGURES: Figure[] = ['w', 'h', 'q', '8', '16'];
 const RESTS: RestKind[] = ['h', 'q', '8', '16'];
 const TRAITS: Trait[] = ['pontuada', 'sincope', 'ligadura', 'quialtera'];
 
-export default function Ritmo() {
+/**
+ * `settings.preset` vem da ETAPA de rotina, e manda no estado inicial.
+ *
+ * Sem isto a rotina de quatro etapas de leitura rítmica do Paulo não existia: as quatro abririam a
+ * tela no mesmo estado guardado no navegador, e ele trocaria à mão em cada uma. O que a pessoa
+ * escolhe na tela segue sendo guardado; a etapa só decide por onde ela começa.
+ */
+export default function Ritmo({ settings: daEtapa }: ScreenProps = {}) {
   const t = useT();
-  const [settings, setSettings] = useState(loadSettings);
+  const presetDaEtapa = typeof daEtapa?.preset === 'string' ? daEtapa.preset : null;
+  const [settings, setSettings] = useState(() => (presetDaEtapa ? aplicarPreset(loadSettings(), presetDaEtapa) : loadSettings()));
   const [preset, setPreset] = useState<string | null>(loadPreset);
   const [history, setHistory] = useState<Exercise[]>(() => {
     const first = make(settings);

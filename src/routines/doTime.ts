@@ -161,6 +161,32 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
 
   // ---------------------------------------------------------------------------------------------
   {
+    id: 'percepcao-ritmica', nome: 'doTime.ritmica.nome', sobre: 'doTime.ritmica.sobre',
+    // Nasce rascunho como as outras cinco. O Paulo pediu para não VER a distinção, e o selo saiu da
+    // tela em 10/11/2026 — a declaração continua como registro de que a revisão musical dele não
+    // passou por aqui ainda.
+    modo: 'livre', publicacao: RASCUNHO,
+    // Rotina nova (10/11/2026), com o desenho do Paulo. O "qual ritmo tocou" saiu da rotina do fone
+    // e veio para cá — lá ele era a única etapa que não era melódica nem harmônica.
+    //
+    // As quatro etapas de leitura são as que ele pediu, variando os RECURSOS: "1 - apenas
+    // pontuadas, 2 - apenas quialteras, 3 - pontuadas, sincopes e ligaduras, 4 - tudo". Elas só
+    // existem porque o item `ritmo` passou a declarar o atalho — antes a configuração morava toda
+    // dentro da tela, e as quatro etapas abririam no mesmo estado.
+    etapas: [
+      { porque: 'ouvir o ritmo e reconhecê-lo escrito: entra antes de ler, porque ouvir é mais fácil',
+        instancias: [i('ritmo-ouvido', { figuras: ['basico', 'semis'] })] },
+      { porque: 'ler só pontuadas: a figura que mais engana quem conta de cabeça',
+        instancias: [i('ritmo', { preset: 'pontuadas' })] },
+      { porque: 'ler só quiálteras: a divisão que não cabe na conta binária',
+        instancias: [i('ritmo', { preset: 'quialteras' })] },
+      { porque: 'pontuadas, síncopes e ligaduras juntas — é onde elas se confundem',
+        instancias: [i('ritmo', { preset: 'ligaduras' })] },
+      { porque: 'tudo junto, com as nove células essenciais: o estado final',
+        instancias: [i('ritmo', { preset: 'essenciais' })] },
+    ],
+  },
+  {
     id: 'internalizar-tonalidade', nome: 'doTime.tonalidade.nome', sobre: 'doTime.tonalidade.sobre',
     modo: 'guiado', rotacaoDeTonalidade: true, publicacao: RASCUNHO,
     // A rotina que melhor mostra o que o Clave é: morar numa tonalidade e atravessá-la em várias
@@ -176,28 +202,6 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'm7', '7M', '7'], arpejo: true, duracao: 2 })] },
       { minutos: 10, porque: 'fecha tocando dentro dela, com a harmonia rodando',
         instancias: [i('backing')] },
-    ],
-  },
-
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'aquecimento-ouvido', nome: 'doTime.ouvido.nome', sobre: 'doTime.ouvido.sobre',
-    modo: 'guiado', publicacao: RASCUNHO,
-    // **Oito minutos**, quatro frentes, dois minutos cada — o Paulo cortou de 15 para 8. E ele está
-    // certo pelo nome: quinze minutos com quatro assuntos já era meia sessão, e aquecimento que ocupa
-    // meia sessão compete com a sessão em vez de abrir ela.
-    //
-    // Dois minutos por frente é pouco de propósito: a pessoa pula o que não servir hoje e deixa o
-    // resto para o fim, que é o que os dois botões do executor existem para permitir.
-    etapas: [
-      { minutos: 2, porque: 'intervalo é a unidade; vem primeiro',
-        instancias: [i('ouvido-intervalo', { intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' })] },
-      { minutos: 2, porque: 'as quatro tríades, incluindo as duas simétricas que confundem',
-        instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'dim', 'aum'], arpejo: true, duracao: 2 })] },
-      { minutos: 2, porque: 'escala inteira, subindo e descendo: a menor harmônica entra por causa da sensível',
-        instancias: [i('ouvido-escala', { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'ambos' })] },
-      { minutos: 2, porque: 'os modos, dois minutos: dose de aquecimento, não de estudo',
-        instancias: [i('ouvido-escala', { tipos: ['dorico', 'frigio', 'lidio', 'mixolidio'], direcao: 'sobe' })] },
     ],
   },
 
