@@ -116,8 +116,15 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '1', graus: ['1'], resposta: 'todos' }, EM_DO)] },
       { porque: 'três notas sobre o mesmo acorde: agora é o desenho inteiro, e ainda sem alternativas',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3', graus: ['1'], resposta: 'todos' }, EM_DO)] },
+      // Entrou em 10/11/2026, a pedido dele. Vem depois das duas de melodia na harmonia porque é
+      // vizinha delas — ali o desenho é uma célula contra um acorde, aqui é o MESMO desenho andando
+      // pela escala, e a pergunta deixa de ser que graus são e passa a ser onde começaram.
+      //
+      // Pentatônica de quatro notas: o padrão do item, e o recorte que ele escolheu.
+      { porque: 'o mesmo desenho começando em cada grau: onde ele começou desta vez?',
+        instancias: [i('reconhecer-padroes-escala', { escala: 'penta-maior', tamanho: '4', contexto: 'triade' }, EM_DO)] },
       // No fim, por decisão dele. É a única etapa em que ninguém confere nada: a pessoa canta e
-      // ela mesma julga. Depois de sete etapas de resposta certa e errada, fechar cantando é bom.
+      // ela mesma julga. Depois de oito etapas de resposta certa e errada, fechar cantando é bom.
       { porque: 'audiar: ouvir por dentro antes de conferir — e aqui quem julga é você',
         instancias: [i('audiar', {}, EM_DO)] },
     ],

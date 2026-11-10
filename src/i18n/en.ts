@@ -81,7 +81,7 @@ const en: Shape<typeof pt> = {
     },
     fone: {
       nome: 'Melodic and harmonic perception on headphones',
-      sobre: 'Eight fronts where you answer, from a single note to a degree inside the harmony, with audiation at the end. All in C major. Needs headphones and one free hand; fits a whole bus ride.',
+      sobre: 'Nine fronts where you answer, from a single note to a degree inside the harmony, with audiation at the end. All in C major. Needs headphones and one free hand; fits a whole bus ride.',
     },
     ritmica: {
       nome: 'Rhythmic perception',

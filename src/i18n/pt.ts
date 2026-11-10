@@ -81,7 +81,7 @@ const pt = {
     },
     fone: {
       nome: 'Percepção melódica e harmônica no fone',
-      sobre: 'Oito frentes em que você responde, da nota solta ao grau dentro da harmonia, e a audiação no fim. Tudo em dó maior. Pede fone e uma mão livre; cabe inteira num ônibus.',
+      sobre: 'Nove frentes em que você responde, da nota solta ao grau dentro da harmonia, e a audiação no fim. Tudo em dó maior. Pede fone e uma mão livre; cabe inteira num ônibus.',
     },
     ritmica: {
       nome: 'Percepção rítmica',
