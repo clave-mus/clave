@@ -158,7 +158,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       // gavetão numa posição fixa. As tabelas à mão saíram em 09/11/2026 — o desenho vem do
       // gerador de `theory/digitacoes.ts`.
       { minutos: 5, porque: 'desenho de acorde no braço, formas móveis',
-        instancias: [i('que-acorde-e-esse', { superficie: 'braco', soltas: false, casas: '0-5' })] },
+        instancias: [i('acorde-no-instrumento', { instrumento: 'violao', soltas: false, casas: '0-5' })] },
       // A única que pede o instrumento de verdade. Quem está na rua pula; quem está em casa tem aqui
       // a parte que a tela não faz.
       { minutos: 6, porque: 'achar a nota no braço de verdade: a única etapa que a tela não consegue fazer por você',

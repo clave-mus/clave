@@ -48,7 +48,7 @@ export const intervaloNoInstrumento: CatalogItem = {
    * de dó maior (30%), e **nenhum tamanho zera** — o mais magro fica com 4. E onde afina, a magreza
    * é verdadeira: o semitom em dó maior existe só em Mi→Fá e Si→Dó, e o trítono só em Fá→Si.
    */
-  respeita: ['key', 'material'],
+  respeita: ['key', 'material', 'range'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [

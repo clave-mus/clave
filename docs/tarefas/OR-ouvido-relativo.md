@@ -229,10 +229,10 @@ provavelmente não abre.
 | motivos pela escala — desafio | ✅ |
 | relação melodia-harmonia — exploração 1 | ✅ |
 | empréstimos modais | 🟡 aprovados, não implementados |
-| reorganização do par de **acorde** | ❌ |
+| reorganização do par de **acorde** | ✅ feita em 10/11 |
 | conferência por **contorno** | ❌ |
 | **cadências** como contexto | ❌ |
-| direção `audiar` em nota e intervalo | ✅ feito em 10/11 · falta no acorde, que ainda não foi reorganizado |
+| direção `audiar` em nota, intervalo e acorde | ✅ feita em 10/11, nos seis itens |
 | **campo harmônico** (grau do campo) | ❌ |
 | sorteio **anti-repetição** | ❌ |
 | **oitava exata** em "Nota" | ✅ feito em 10/11 |
@@ -291,7 +291,11 @@ Por valor sobre custo, não por posição na matriz:
 3. ~~**direção `audiar`** nos itens de nota e intervalo~~ — ✅ feita em 10/11, nos quatro. Entrou com
    a superfície `autoavaliacao` no Player e com o `validation_type` da tentativa passando a ser
    **deduzido** da forma da pergunta. Falta no par de acorde, e vai junto com a reorganização dele;
-4. **reorganização do par de acorde** — mecânica, o molde está escrito;
+4. ~~**reorganização do par de acorde**~~ — ✅ feita em 10/11, com a direção `audiar`. **O eixo saiu
+   do catálogo inteiro**: nenhum item tem mais a configuração `superficie`, e `SUP`/`porSuperficie`
+   foram removidos sem chamador. Falta o **desenhar o acorde** — o oposto que o Paulo notou que
+   faltava —, que precisa de superfície que acumula notas, resposta que as carrega e conferência que
+   diga se formam o acorde: peça própria, do tamanho da superfície `sequence`;
 5. **cadências como contexto** — gerador novo, pequeno;
 6. **campo harmônico** com os empréstimos;
 7. **sorteio anti-repetição**, genérico;

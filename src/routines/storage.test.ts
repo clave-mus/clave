@@ -27,7 +27,7 @@ beforeEach(() => {
 
 const comEtapas = (nome = 'Mapear o braço'): Rotina => {
   const r = novaRotina(nome);
-  r.etapas = [novaEtapa('que-nota-e-essa', { superficie: 'braco', casas: '0-5' }), novaEtapa('ouvido-intervalo')];
+  r.etapas = [novaEtapa('nota-no-instrumento', { direcao: 'achar', casas: '0-5' }), novaEtapa('ouvido-intervalo')];
   r.etapas[0].segundosSugeridos = 300;
   r.etapas[1].segundosSugeridos = 600;
   return r;
@@ -138,7 +138,7 @@ describe('adotar uma rotina cria uma cópia', () => {
 describe('ciclagem e tempo', () => {
   it('a última instância usada sobrevive ao disco — senão a ciclagem não existe', () => {
     const r = comEtapas();
-    r.etapas[0].instancias.push({ itemId: 'ache-a-nota', settings: {} });
+    r.etapas[0].instancias.push({ itemId: 'nota-no-instrumento', settings: {} });
     r.etapas[0].ultimaUsada = 1;
     salvarRotina(r);
     expect(lerRotinas()[0].etapas[0].ultimaUsada).toBe(1);
@@ -146,7 +146,7 @@ describe('ciclagem e tempo', () => {
 
   it('o tempo sugerido é da etapa, não da instância', () => {
     const r = comEtapas();
-    r.etapas[0].instancias.push({ itemId: 'ache-a-nota', settings: {} });
+    r.etapas[0].instancias.push({ itemId: 'nota-no-instrumento', settings: {} });
     // trocar de instância não pode mudar a duração da rotina
     expect(tempoTotal(r)).toBe(900);
   });
@@ -274,7 +274,7 @@ describe('Etapa.params saiu do modelo (decisão 97)', () => {
     etapas: [{
       id: 'e1', politica: 'ordem', segundosSugeridos: 300,
       params: { key: { tonic: 5, mode: 'maior' } },
-      instancias: [{ itemId: 'ache-a-nota', settings: {} }],
+      instancias: [{ itemId: 'nota-no-instrumento', settings: {} }],
     }],
   };
 
@@ -290,13 +290,13 @@ describe('Etapa.params saiu do modelo (decisão 97)', () => {
   it('o que a etapa de fato guarda sobrevive', () => {
     const r = migrarRotina(antiga)!;
     expect(r.etapas[0].segundosSugeridos).toBe(300);
-    expect(r.etapas[0].instancias[0].itemId).toBe('ache-a-nota');
+    expect(r.etapas[0].instancias[0].itemId).toBe('nota-no-instrumento');
   });
 
   it('a instância mantém os seus params — é lá que a tonalidade mora agora', () => {
     const comInstancia = {
       ...antiga,
-      etapas: [{ ...antiga.etapas[0], instancias: [{ itemId: 'ache-a-nota', settings: {}, params: { key: { tonic: 7, mode: 'maior' } } }] }],
+      etapas: [{ ...antiga.etapas[0], instancias: [{ itemId: 'nota-no-instrumento', settings: {}, params: { key: { tonic: 7, mode: 'maior' } } }] }],
     };
     expect(migrarRotina(comInstancia)!.etapas[0].instancias[0].params).toEqual({ key: { tonic: 7, mode: 'maior' } });
   });
@@ -318,15 +318,19 @@ describe('as fusões por superfície na leitura (decisão 16)', () => {
   const lida = (itemId: string, settings?: Record<string, unknown>) =>
     migrarRotina(comAntigos(itemId, settings))!.etapas[0].instancias[0];
 
-  it('o id antigo vira o novo, com a superfície que ele era', () => {
-    expect(lida('braco-ache', { casas: '0-5' })).toEqual({ itemId: 'ache-a-nota', settings: { casas: '0-5', superficie: 'braco' } });
-    expect(lida('pauta-nota', { claves: ['fa'] })).toEqual({ itemId: 'que-nota-e-essa', settings: { claves: ['fa'], superficie: 'pauta' } });
-    expect(lida('teclado-tecla', { pretas: false })).toEqual({ itemId: 'ache-a-nota', settings: { pretas: false, superficie: 'teclado' } });
+  // A superfície virou o ITEM em 10/11/2026, então o id antigo vira o item novo e a superfície que
+  // ele era vira a DIREÇÃO: quem identificava vai para ler/identificar, quem produzia vai para
+  // escrever/achar. A tabela está em `state/migrate.ts`, e ela foi reescrita porque apontava para
+  // itens que deixaram de existir — rotina salva migraria para item inexistente.
+  it('o id antigo vira o item novo, com a direção que a superfície era', () => {
+    expect(lida('braco-ache', { casas: '0-5' })).toEqual({ itemId: 'nota-no-instrumento', settings: { casas: '0-5', direcao: 'achar' } });
+    expect(lida('pauta-nota', { claves: ['fa'] })).toEqual({ itemId: 'nota-na-pauta', settings: { claves: ['fa'], direcao: 'ler' } });
+    expect(lida('teclado-tecla', { pretas: false })).toEqual({ itemId: 'nota-no-instrumento', settings: { pretas: false, direcao: 'achar', instrumento: 'piano' } });
   });
 
   it('`acorde-visual` guardava a superfície na configuração `onde`, e ela sai', () => {
-    expect(lida('acorde-visual', { onde: 'piano' })).toEqual({ itemId: 'que-acorde-e-esse', settings: { superficie: 'teclado' } });
-    expect(lida('acorde-visual', { onde: 'violao', formas: 'todos' })).toEqual({ itemId: 'que-acorde-e-esse', settings: { formas: 'todos', superficie: 'braco' } });
+    expect(lida('acorde-visual', { onde: 'piano' })).toEqual({ itemId: 'acorde-no-instrumento', settings: { direcao: 'identificar', instrumento: 'piano' } });
+    expect(lida('acorde-visual', { onde: 'violao', formas: 'todos' })).toEqual({ itemId: 'acorde-no-instrumento', settings: { formas: 'todos', direcao: 'identificar' } });
   });
 
   it('a rotina antiga continua válida, e a etapa não some', () => {

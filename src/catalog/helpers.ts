@@ -9,7 +9,7 @@
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
 import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
 import { digitacoesDaReceita } from '../theory/digitacoes';
-import { pcPermitido } from './contexto-musical';
+import { pcPermitido, regiao } from './contexto-musical';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
@@ -59,43 +59,19 @@ export const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('set
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 /** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */
-/**
- * O seletor de superfície (decisão 16). **A superfície é parâmetro, não exercício** — e o que muda
- * com ela não é só o desenho: é o que a pergunta consegue cobrar.
- *
- * `present` existe porque o arpejo depende da superfície: um acorde de violão soa dedilhado, um de
- * pauta quase em bloco, e um de teclado em bloco.
- */
-export const SUPERFICIES = { pauta: 'settings.surfaceStaff', teclado: 'settings.surfaceKeyboard', braco: 'settings.surfaceFretboard' } as const;
-export type SuperficieId = keyof typeof SUPERFICIES;
-export const SUP = ({ t }: Ctx, quais: SuperficieId[], present?: Setting['present']): Setting => ({
-  id: 'superficie', label: t('settings.surface'), type: 'single',
-  options: quais.map(id => ({ id, label: t(SUPERFICIES[id]) })),
-  ...(present ? { present } : {}),
-});
-
-/**
- * As configurações de cada superfície, cada uma visível só quando a sua está ativa.
- *
- * **A extensão não se unifica, de propósito.** `pauta / suplementares`, `1 / 2 oitavas` e faixas de
- * casa são três unidades incomparáveis: um parâmetro só precisaria de três listas de opções, o que é
- * três parâmetros com um nome em comum.
- */
-export function porSuperficie(ctx: Ctx, opts: { semOitavas?: boolean } = {}): Setting[] {
-  const naPauta = (s: S) => s.superficie === 'pauta' || s.superficie === undefined;
-  return [
-    { ...CLEFS(ctx), quando: naPauta },
-    { ...EXT(ctx), quando: naPauta },
-    { ...ACC(ctx), quando: naPauta },
-    { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.superficie === 'teclado' },
-    ...(opts.semOitavas ? [] : [{
-      id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single' as const, quando: (s: S) => s.superficie === 'teclado',
-      options: [{ id: '1', label: '1' }, { id: '2', label: '2' }],
-    }]),
-    { ...INST(ctx), quando: s => s.superficie === 'braco' },
-    { ...FRETS(ctx), quando: s => s.superficie === 'braco' },
-  ];
-}
+// ---------------- a fusão por superfície, e por que ela não existe mais ----------------
+//
+// `SUP` e `porSuperficie` moravam aqui: montavam o seletor de superfície e as configurações que
+// apareciam e desapareciam com ele. Saíram em 10/11/2026, **sem chamador nenhum**, quando a
+// reorganização terminou de trocar o eixo do catálogo.
+//
+// O que elas resolviam era um problema que deixou de existir: doze itens eram quatro perguntas
+// repetidas em três superfícies, e a fusão de 2026 as juntou com a superfície como parâmetro. O
+// Paulo viu que estava invertido — a validação, a extensão e as habilidades mudam com a
+// SUPERFÍCIE, e não com a direção —, e agora são seis itens, um por superfície, com a direção
+// como parâmetro. Ninguém mais precisa esconder configuração de ninguém com `Setting.quando`.
+//
+// Ver `docs/tarefas/OR-ouvido-relativo.md` e os comentários em `items/nota-na-pauta.ts`.
 
 /** As teclas pretas, por classe de altura. */
 export const PRETAS = [1, 3, 6, 8, 10];
@@ -261,6 +237,16 @@ export function tonicaDeContexto(ctx: Ctx, abaixoDe: number): number {
   const pcTonica = ctx.params.key?.tonic ?? 0;
   let m = abaixoDe - mod(abaixoDe - pcTonica, 12);
   while (m > abaixoDe - 2) m -= 12;
+  /**
+   * **E não sai da região.** O teste `contexto-musical` pegou: numa faixa estreita não há oitava
+   * livre abaixo do material, e o contexto saía por baixo do piso que a pessoa configurou.
+   *
+   * Quando não cabe, ele sobe e **aceita ficar junto** do que se audia. É a mesma troca de
+   * `acomodarMelodiaEAcorde`: âncora dentro da região serve ao exercício, âncora fora da região
+   * quebra a promessa da região.
+   */
+  const { lo } = regiao(ctx);
+  while (m < lo) m += 12;
   return m;
 }
 export const TONALIDADE_LIVRE = { key: null } as const;

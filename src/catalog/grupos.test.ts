@@ -86,15 +86,18 @@ describe('a mesma instância em vários grupos', () => {
   });
 
   /**
-   * A guarda vale para quem AINDA é multissuperfície — `que-acorde-e-esse` e os de intervalo, até a
-   * reorganização chegar neles. Sem a configuração, o membro casaria com qualquer superfície e
-   * ofereceria pauta dentro do grupo do braço.
+   * **Não há mais item multissuperfície.** A reorganização terminou em 10/11/2026: nenhum item do
+   * catálogo tem a configuração `superficie`, porque a superfície virou o item.
    *
-   * Os itens de nota saíram desta regra em 09/11/2026 porque deixaram de ter superfície: a pauta e o
-   * instrumento são dois itens, e cada um cai no seu grupo sem precisar de configuração nenhuma.
+   * A guarda que existia aqui — "sem a configuração, o membro casaria com qualquer superfície e
+   * ofereceria pauta dentro do grupo do braço" — perdeu o assunto. O que este teste passa a afirmar
+   * é o fato que a substituiu, e que é mais forte: o eixo saiu do catálogo.
    */
-  it('um item multissuperfície sem configuração não cai em grupo de superfície nenhum', () => {
-    expect(gruposDaInstancia(inst('que-acorde-e-esse'))).toEqual([]);
+  it('nenhum item declara a configuração `superficie` — a superfície virou o item', () => {
+    for (const item of ITEMS) {
+      const ids = (item.settings?.({ t: (k: string) => k } as never) ?? []).map(st => st.id);
+      expect(ids, `${item.id} ainda tem seletor de superfície`).not.toContain('superficie');
+    }
   });
 });
 
@@ -105,7 +108,7 @@ describe('companheirosDe', () => {
     expect(c.map(chave)).not.toContain(chave(eu));
     expect(c.map(chave).sort()).toEqual([
       chave(inst('pauta-escala')),
-      chave(inst('que-acorde-e-esse', { superficie: 'pauta' })),
+      chave(inst('acorde-na-pauta', {})),
       chave(inst('intervalo-na-pauta', {})),
     ].sort());
   });
@@ -113,9 +116,11 @@ describe('companheirosDe', () => {
   it('e os companheiros vêm com a superfície certa, nunca com a configuração do outro grupo', () => {
     // Só os que AINDA têm superfície precisam vir com ela. Os itens já reorganizados — nota e
     // intervalo — não têm superfície nenhuma: a superfície virou o item.
-    for (const m of companheirosDe(inst('que-acorde-e-esse', { superficie: 'braco' }), sempre)) {
-      if (m.itemId.endsWith('-no-instrumento') || m.itemId.endsWith('-na-pauta')) continue;
-      expect(m.settings?.superficie, m.itemId).toBe('braco');
+    // Sobrou um caso de configuração em membro de grupo: o piano, que é INSTRUMENTO e não
+    // superfície. É o que distingue "acorde no piano" de "acorde no braço" dentro do mesmo item.
+    for (const m of companheirosDe(inst('nota-no-instrumento', {}), sempre)) {
+      if (m.settings?.instrumento === undefined) continue;
+      expect(['piano', 'violao', 'baixo', 'auto'], m.itemId).toContain(String(m.settings.instrumento));
     }
   });
 

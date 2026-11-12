@@ -46,7 +46,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'notas-no-instrumento', destaque: true,
     // "Saber onde cada nota está, sem procurar": o braço e o teclado, nomear e achar.
-    itens: ['nota-no-instrumento', 'intervalo-no-instrumento', 'que-acorde-e-esse', 'no-instrumento', 'ouvido-tecla'],
+    itens: ['nota-no-instrumento', 'intervalo-no-instrumento', 'acorde-no-instrumento', 'no-instrumento', 'ouvido-tecla'],
   },
   {
     id: 'ouvido',
@@ -58,17 +58,17 @@ export const PORTAS: readonly Porta[] = [
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
     // Deixou de estar abaixo do mínimo em 07/11, quando "Relações entre melodia e harmonia" entrou:
     // são quatro, e a exceção da decisão 20 não é mais necessária aqui.
-    itens: ['backing', 'ouvido-acorde', 'que-acorde-e-esse', 'relacoes-melodia-harmonia'],
+    itens: ['backing', 'ouvido-acorde', 'acorde-no-instrumento', 'relacoes-melodia-harmonia'],
   },
   {
     id: 'teoria', abaixoDoMinimoPorOra: true,
     // "Os nomes e as razões": o que tem etiqueta `theory.*` — nomear, não executar.
-    itens: ['teoria-intervalos', 'intervalo-na-pauta', 'que-acorde-e-esse'],
+    itens: ['teoria-intervalos', 'intervalo-na-pauta', 'acorde-na-pauta'],
   },
   {
     id: 'leitura',
     // "Da nota escrita ao som": tudo com etiqueta `notation.*`, altura e ritmo.
-    itens: ['nota-na-pauta', 'intervalo-na-pauta', 'que-acorde-e-esse', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
+    itens: ['nota-na-pauta', 'intervalo-na-pauta', 'acorde-na-pauta', 'pauta-escala', 'pauta-armadura', 'leitura', 'ritmo'],
   },
   {
     id: 'ritmo',

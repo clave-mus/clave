@@ -80,14 +80,15 @@ function faixaNatural(rotulo: string): { lo: number; hi: number } {
 // certo: a mesma pergunta respeita a região no teclado e não no braço, porque as unidades são outras.
 const REGIAO_NAO_SE_APLICA = [
   // Pauta: a oitava é ditada pela CLAVE, para a nota caber nas linhas.
-  'nota-na-pauta', 'nota-na-pauta', 'intervalo-na-pauta', 'intervalo-na-pauta', 'que-acorde-e-esse/pauta', 'pauta-escala',
+  'nota-na-pauta', 'intervalo-na-pauta', 'acorde-na-pauta', 'pauta-escala',
   // Braço: a região é a FAIXA DE CASAS, que a pessoa escolhe, e não a faixa em MIDI. Sobrepor as duas
   // mede a mesma coisa com unidades diferentes — e era um bug: num baixo com casas 0–5 e a região
   // padrão (48–72), sobrava UMA casa no braço inteiro, e o exercício repetia a mesma pergunta para
   // sempre (1 posição distinta em 200 sorteios).
   'nota-no-instrumento', 'nota-no-instrumento', 'intervalo-no-instrumento', 'intervalo-no-instrumento',
   // Acordes desenhados no braço: são posições reais — um Dó aberto é onde ele é.
-  'que-acorde-e-esse/braco',
+  // O braço: a região é a FAIXA DE CASAS, não MIDI (ver o comentário acima).
+  'acorde-no-instrumento',
 ];
 
 describe('F2-3 · a região é lida', () => {

@@ -32,7 +32,9 @@ export const intervaloNaPauta: CatalogItem = {
   skillTags: ['theory.interval_naming', 'notation.pitch_reading', 'notation.pitch_writing'],
   contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-  respeita: ['key', 'material'],
+  // `range` entra porque `tonicaDeContexto` (direção `audiar`) lê o piso da região para não botar
+  // o contexto fora dela. O teste `contexto-declarado` pegou a omissão.
+  respeita: ['key', 'material', 'range'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [

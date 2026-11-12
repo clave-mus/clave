@@ -24,8 +24,8 @@ describe('estado salvo por versões anteriores', () => {
     // "jazz" era um dos sete objetivos de antes da decisão 20 e **não vira porta**: mapeá-lo
     // registraria como escolha da pessoa algo que ela não escolheu. Ver `migrate.ts`.
     expect(s.profile).toEqual({ name: 'Ana', instrument: 'baixo', goals: [], onboarded: true });
-    // `pauta-nota` virou `que-nota-e-essa` na fusão por superfície (decisão 16)
-    expect(s.stats['que-nota-e-essa']).toEqual({ attempts: 10, correct: 7, last: 1 });
+    // `pauta-nota` vira `nota-na-pauta` no eixo novo (a superfície virou o item)
+    expect(s.stats['nota-na-pauta']).toEqual({ attempts: 10, correct: 7, last: 1 });
   });
 
   it('mantém os objetivos que ainda existem, e descarta só os que saíram', () => {
@@ -35,7 +35,8 @@ describe('estado salvo por versões anteriores', () => {
 
   it('troca a área do histórico pelo módulo, sem perder o resto', () => {
     const h = (migrate(old)).history;
-    expect(h[0]).toEqual({ at: 5, id: 'que-nota-e-essa', title: 'Nota no braço', module: 'theory', seconds: 60, correct: 4, total: 5 });
+    // `braco-nota` era a pergunta no braço, e no eixo novo isso é `nota-no-instrumento`.
+    expect(h[0]).toEqual({ at: 5, id: 'nota-no-instrumento', title: 'Nota no braço', module: 'theory', seconds: 60, correct: 4, total: 5 });
     expect(h[1].module).toBe('perception.rhythmic');
     expect(h[0].area).toBeUndefined();
   });
@@ -54,18 +55,25 @@ describe('as fusões por superfície (decisão 16)', () => {
     // O título gravado é o que a pessoa viu naquele dia. Reescrevê-lo seria falsear o histórico — a
     // tela já prefere o título atual quando o item existe (ver Progresso).
     const s = migrate({ history: [{ at: 1, id: 'teclado-acorde', title: 'Acorde no teclado', module: 'theory', seconds: 30 }] });
-    expect(s.history[0].id).toBe('que-acorde-e-esse');
+    expect(s.history[0].id).toBe('acorde-no-instrumento');
     expect(s.history[0].title).toBe('Acorde no teclado');
   });
 
-  it('as estatísticas de dois itens que viraram um são SOMADAS', () => {
-    // Eram a mesma pergunta em superfícies diferentes; separá-las agora perderia a prática de uma.
+  /**
+   * ⚠️ **Reescrito em 10/11/2026.** Antes os três ids viravam **um só** e as estatísticas se somavam
+   * — era a fusão por superfície. Com o eixo trocado eles viram **dois**: a pauta num item, o
+   * instrumento no outro. Somar tudo num só agora juntaria prática de notação com prática de
+   * instrumento, que é justamente a distinção que a reorganização existe para preservar.
+   */
+  it('as estatísticas se dividem entre pauta e instrumento, somando dentro de cada um', () => {
     const s = migrate({ stats: {
       'pauta-nota': { attempts: 10, correct: 6, last: 100 },
       'braco-nota': { attempts: 4, correct: 3, last: 200 },
       'teclado-nota': { attempts: 1, correct: 1, last: 50 },
     } });
-    expect(s.stats['que-nota-e-essa']).toEqual({ attempts: 15, correct: 10, last: 200 });
+    expect(s.stats['nota-na-pauta']).toEqual({ attempts: 10, correct: 6, last: 100 });
+    // braço e teclado são o mesmo item novo: aí sim se somam
+    expect(s.stats['nota-no-instrumento']).toEqual({ attempts: 5, correct: 4, last: 200 });
     expect(s.stats['pauta-nota']).toBeUndefined();
   });
 
@@ -76,11 +84,11 @@ describe('as fusões por superfície (decisão 16)', () => {
 
   it('`settingsFundidos` troca o id e põe a superfície, tirando o `onde` que saiu', () => {
     expect(settingsFundidos('braco-ache', { instrumento: 'auto', casas: '0-5' }))
-      .toEqual({ id: 'ache-a-nota', settings: { instrumento: 'auto', casas: '0-5', superficie: 'braco' } });
+      .toEqual({ id: 'nota-no-instrumento', settings: { instrumento: 'auto', casas: '0-5', direcao: 'achar' } });
     // `acorde-visual` guardava a superfície na configuração `onde`, não no id
-    expect(settingsFundidos('acorde-visual', { onde: 'piano' })).toEqual({ id: 'que-acorde-e-esse', settings: { superficie: 'teclado' } });
+    expect(settingsFundidos('acorde-visual', { onde: 'piano' })).toEqual({ id: 'acorde-no-instrumento', settings: { direcao: 'identificar', instrumento: 'piano' } });
     expect(settingsFundidos('acorde-visual', { onde: 'violao', formas: 'pestana' }))
-      .toEqual({ id: 'que-acorde-e-esse', settings: { formas: 'pestana', superficie: 'braco' } });
+      .toEqual({ id: 'acorde-no-instrumento', settings: { formas: 'pestana', direcao: 'identificar' } });
   });
 
   it('e não mexe em quem não foi fundido', () => {

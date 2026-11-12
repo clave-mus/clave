@@ -42,6 +42,9 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   notaNaPauta: ['range', 'key', 'material'],
   alturaDoPc: ['range'],
   notaGrafada: ['key'],
+  // Entrou em 10/11/2026 com a direção `audiar`: lê a tonalidade para saber qual tônica tocar como
+  // contexto, e o piso da região para não botar o contexto fora dela.
+  tonicaDeContexto: ['key', 'range'],
 };
 
 /**
@@ -51,11 +54,14 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
  * CASAS, que é outra unidade. Oferecer "região" nesses é prometer o que nenhuma das duas superfícies
  * aceita (ver contexto-musical.test.ts).
  *
- * `que-intervalo-e-esse` é o caso puro: as suas duas superfícies são pauta e braço, e nenhuma honra
- * uma faixa em MIDI. Já `que-nota-e-essa`, `ache-a-nota` e `que-acorde-e-esse` **têm** a superfície do
- * teclado, onde a região faz sentido de verdade — e por isso declaram `range`.
+ * `intervalo-na-pauta` **saiu desta lista em 10/11/2026**, e por um motivo que vale escrever: a
+ * direção `audiar` toca uma tônica de contexto, e `tonicaDeContexto` lê o piso da região para não
+ * botá-la fora dela. Então a região passou a fazer diferença ali — antes não fazia, porque pauta e
+ * braço não honram faixa em MIDI.
+ *
+ * Fica `pauta-escala`, que segue sendo o caso puro.
  */
-const REGIAO_NAO_SE_OFERECE = ['pauta-escala', 'intervalo-na-pauta'];
+const REGIAO_NAO_SE_OFERECE = ['pauta-escala'];
 
 /**
  * `ctx.params` espionado: acusa quem lê `key`, `range` ou `material` **direto**, sem passar pelas

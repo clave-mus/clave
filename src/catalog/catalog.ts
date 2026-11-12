@@ -10,7 +10,8 @@ import { notaNaPautaItem } from './items/nota-na-pauta';
 import { notaNoInstrumento } from './items/nota-no-instrumento';
 import { intervaloNaPauta } from './items/intervalo-na-pauta';
 import { intervaloNoInstrumento } from './items/intervalo-no-instrumento';
-import { queAcordeEEsse } from './items/que-acorde-e-esse';
+import { acordeNaPauta } from './items/acorde-na-pauta';
+import { acordeNoInstrumento } from './items/acorde-no-instrumento';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
 import { teoriaIntervalos } from './items/teoria-intervalos';
@@ -28,7 +29,8 @@ export const EXERCISES: CatalogItem[] = [
   notaNoInstrumento,
   intervaloNaPauta,
   intervaloNoInstrumento,
-  queAcordeEEsse,
+  acordeNaPauta,
+  acordeNoInstrumento,
   pautaArmadura,
   pautaEscala,
   teoriaIntervalos,

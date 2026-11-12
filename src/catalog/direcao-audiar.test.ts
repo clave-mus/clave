@@ -131,13 +131,25 @@ describe('o contexto é a TÔNICA, e dois dos quatro erraram isso sozinhos', () 
     }
   });
 
-  it.each(COM_AUDIAR)('%s põe o contexto abaixo do que se audia: âncora, não concorrente', id => {
+  /**
+   * Abaixo do que se audia — **ou no piso da região**, quando não há oitava livre embaixo.
+   *
+   * A primeira versão deste teste exigia "abaixo" sempre, e reprovou nos dois itens de instrumento:
+   * num baixo a nota pode soar em MIDI 31 e o piso da região é 48, então não há onde pôr a âncora.
+   * Aceitar a sobreposição é a mesma troca de `acomodarMelodiaEAcorde` — âncora dentro da região
+   * serve ao exercício, âncora fora dela quebra a promessa da região.
+   */
+  it.each(COM_AUDIAR)('%s põe o contexto abaixo do que se audia, ou no piso da região', id => {
     const ex = item(id);
+    const piso = ctx.params.range.lo;
     for (let i = 0; i < 20; i++) {
       const q = ex.make({ ...ex.defaults, direcao: 'audiar' } as never, ctx);
       const contexto = q.sound!.groups[0][0];
       const resposta = (q.sound!.partes ?? []).find(p => p.id === 'resposta')!.groups.flat();
-      expect(contexto, id).toBeLessThan(Math.min(...resposta));
+      const abaixo = contexto < Math.min(...resposta);
+      const noPiso = contexto - 12 < piso;
+      expect(abaixo || noPiso, `${id}: contexto ${contexto}, resposta ${Math.min(...resposta)}, piso ${piso}`).toBe(true);
+      expect(contexto, `${id} saiu da região`).toBeGreaterThanOrEqual(piso);
     }
   });
 });

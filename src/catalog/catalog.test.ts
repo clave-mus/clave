@@ -107,9 +107,10 @@ describe('catálogo de exercícios', () => {
       ['nota-no-instrumento', { instrumento: 'piano' }, { ...base }],
       ['intervalo-na-pauta', {}, { ...base }],
       // o arpejo acompanha a SUPERFÍCIE: na pauta quase em bloco, no violão dedilhado, no teclado em bloco
-      ['que-acorde-e-esse', { superficie: 'pauta' }, { ...base, arp: 0.08 }],
-      ['que-acorde-e-esse', { superficie: 'teclado' }, { ...base }],
-      ['que-acorde-e-esse', { superficie: 'braco' }, { ...base, voice: 'violao', arp: 0.04 }],
+      // Depois da reorganização, o arpejo acompanha o ITEM: a pauta arpeja quase em bloco e vem do
+      // `presentation` do item; o braço dedilha e vem do gerador; o piano é em bloco.
+      ['acorde-na-pauta', {}, { ...base, arp: 0.08 }],
+      ['acorde-no-instrumento', { instrumento: 'piano' }, { ...base }],
       ['pauta-escala', {}, { ...base, gap: 0.32 }],
       ['ouvido-tecla', {}, { ...base, gap: 0.9 }],
       ['ouvido-intervalo', {}, { ...base }],

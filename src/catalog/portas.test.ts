@@ -31,7 +31,9 @@ describe('as portas apontam para itens que existem', () => {
   // O mesmo item servir a várias portas é o desenho, não um descuido: "qual acorde é esse?" é leitura
   // E harmonia E teoria, e esconder isso obrigaria a escolher uma por item.
   it('itens compartilhados entre portas existem, e isso é de propósito', () => {
-    expect(portasDoItem('que-acorde-e-esse').length).toBeGreaterThan(1);
+    // `acorde-no-instrumento` herdou as três portas em que o item antigo estava: achar no braço,
+    // harmonia, e o atalho do instrumento.
+    expect(portasDoItem('acorde-no-instrumento').length).toBeGreaterThan(1);
   });
 });
 
