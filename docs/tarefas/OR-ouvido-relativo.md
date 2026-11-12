@@ -231,7 +231,7 @@ provavelmente não abre.
 | empréstimos modais | 🟡 aprovados, não implementados |
 | reorganização do par de **acorde** | ✅ feita em 10/11 |
 | conferência por **contorno** | ❌ |
-| **cadências** como contexto | ❌ |
+| **cadências** como contexto | ✅ motor feito em 10/11 · ligado em `reconhecer-padroes-escala` |
 | direção `audiar` em nota, intervalo e acorde | ✅ feita em 10/11, nos seis itens |
 | **campo harmônico** (grau do campo) | ❌ |
 | sorteio **anti-repetição** | ❌ |
@@ -296,7 +296,9 @@ Por valor sobre custo, não por posição na matriz:
    foram removidos sem chamador. Falta o **desenhar o acorde** — o oposto que o Paulo notou que
    faltava —, que precisa de superfície que acumula notas, resposta que as carrega e conferência que
    diga se formam o acorde: peça própria, do tamanho da superfície `sequence`;
-5. **cadências como contexto** — gerador novo, pequeno;
+5. ~~**cadências como contexto**~~ — ✅ motor feito em 10/11 (`theory/cadencia-harmonica.ts`, 11
+   testes) e ligado em `reconhecer-padroes-escala`, onde virou o **padrão**. Falta ligar em
+   `ouvido-celulas` e nas direções `audiar`, que hoje usam tônica ou tríade;
 6. **campo harmônico** com os empréstimos;
 7. **sorteio anti-repetição**, genérico;
 8. **piano de amostras**;

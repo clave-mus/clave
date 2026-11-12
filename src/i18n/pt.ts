@@ -838,6 +838,8 @@ const pt = {
     patternSize: 'Notas no padrão',
     patternContext: 'Contexto que estabelece a tônica',
     contextTriad: 'A tríade do grau I',
+    contextIIVI: 'Cadência ii–V–I',
+    contextIIVVI: 'Cadência I–IV–V–I',
     contextTetrade: 'A tétrade do grau I',
     contextTonic: 'Só a tônica',
     direction2: 'O que fazer',

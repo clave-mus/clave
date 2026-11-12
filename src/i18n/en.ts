@@ -836,6 +836,8 @@ const en: Shape<typeof pt> = {
     patternSize: 'Notes in the pattern',
     patternContext: 'Context that sets the tonic',
     contextTriad: 'The I triad',
+    contextIIVI: 'ii–V–I cadence',
+    contextIIVVI: 'I–IV–V–I cadence',
     contextTetrade: 'The I seventh chord',
     contextTonic: 'The tonic only',
     direction2: 'What to do',
