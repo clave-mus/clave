@@ -34,6 +34,7 @@ describe('catálogo de exercícios', () => {
           // a superfície consegue produzir uma resposta que a conferência entende
           if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(['pitch', 'pitchClass']).toContain(e.kind);
           if (sf.kind === 'sequence') expect(e.kind).toBe('option');
+          if (sf.kind === 'autoavaliacao') expect(e.kind).toBe('option');
           if (sf.kind === 'letters' || sf.kind === 'staff') expect(['spelled', 'pitchClass']).toContain(e.kind);
           if (e.kind === 'spelled') expect(Math.abs(e.acc)).toBeLessThanOrEqual(1);
         }
@@ -47,6 +48,9 @@ describe('catálogo de exercícios', () => {
         const sf = q.surface, e = q.expected;
         let can = false;
         if (sf.kind === 'choices') can = sf.options.some(o => validate(e, optionResponse(o)));
+        // Autoavaliação não tem resposta a conferir: quem julga é a pessoa. O que o teste exige é
+        // que o esperado seja a opção que a superfície de fato oferece ("consegui").
+        else if (sf.kind === 'autoavaliacao') can = e.kind === 'option' && e.id === 'facil';
         // `sequence` monta a resposta com `comprimento` escolhas em ordem, entre as opções. Dá
         // para dar a certa se, e só se, cada pedaço dela estiver na paleta — e se o tamanho
         // combinar. Sem isto, uma paleta incompleta deixaria a pergunta sem resposta possível e

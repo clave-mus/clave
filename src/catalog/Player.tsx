@@ -452,6 +452,27 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
       </div>
     );
   }
+  if (sf.kind === 'autoavaliacao') {
+    /**
+     * Audiar e conferir. Não há resposta a conferir — a pessoa diz como foi.
+     *
+     * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
+     * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
+     *
+     * O gabarito mora em `sound.partes` e é tocado pelo botão de pedaço — não aqui. Audiar **antes**
+     * de ouvir é o exercício, e um botão de resposta nesta fileira convidaria a ouvir primeiro.
+     */
+    const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
+    if (phase !== 'ask') return <div className="answers compact" />;
+    return (
+      <div className="answers compact" role="group" aria-label={t('session.howWasIt')}>
+        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+      </div>
+    );
+  }
+
   if (sf.kind === 'sequence') {
     return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;
   }

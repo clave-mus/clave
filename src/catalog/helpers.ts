@@ -245,6 +245,24 @@ export const semiOptions = (ctx: Ctx): ChoiceOption[] => Array.from({ length: 12
  * atalho pôs — ele só não mexe. Para voltar ao sorteio é preciso dizer `key: null`.
  */
 export const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
+
+/**
+ * A tônica que serve de **contexto** para audiar, numa região escolhida.
+ *
+ * Não é `tonicaNaRegiao`: aquela sorteia uma altura qualquer quando não há tonalidade fixa, e uma
+ * altura qualquer **não é um centro tonal** — tocá-la como contexto de uma nota gerada à parte não
+ * estabelece nada. Aqui, sem tonalidade, cai em dó.
+ *
+ * Existe porque os quatro itens com a direção `audiar` precisavam dela e **dois deles erraram
+ * sozinhos**: um cravou dó3 ignorando a tonalidade, e o outro tocou a corda mais grave do
+ * instrumento como se fosse tônica.
+ */
+export function tonicaDeContexto(ctx: Ctx, abaixoDe: number): number {
+  const pcTonica = ctx.params.key?.tonic ?? 0;
+  let m = abaixoDe - mod(abaixoDe - pcTonica, 12);
+  while (m > abaixoDe - 2) m -= 12;
+  return m;
+}
 export const TONALIDADE_LIVRE = { key: null } as const;
 
 /** Os doze intervalos, do uníssono à oitava, como os ids que `semiOptions` usa. */

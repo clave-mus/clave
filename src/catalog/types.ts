@@ -73,6 +73,20 @@ export type Surface =
    * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
    */
   | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
+  /**
+   * **Audiar e conferir**: não há resposta a conferir, só a pessoa dizendo como foi.
+   *
+   * É a superfície da direção `audiar` — a terceira ao lado de ler e escrever, e o que faz a coluna
+   * "oposto" do desenho do Paulo (`OR-ouvido-relativo.md`) deixar de ser cinco exercícios novos.
+   *
+   * O gabarito **não toca sozinho**: fica atrás de um botão, porque audiar antes de ouvir é o
+   * exercício. Declare-o em `sound.partes` e deixe `autoplay: false`.
+   *
+   * `expected` é `{ kind: 'option', id: 'facil' }` — "consegui" é o acerto, e o resto da máquina
+   * funciona sem caso novo. O que muda é o `validation_type` da tentativa, **deduzido** desta
+   * superfície: autoavaliação não é medida, e o histórico não pode dizer que foi.
+   */
+  | { kind: 'autoavaliacao' }
   | { kind: 'letters'; accidentals: boolean }
   | { kind: 'keyboard'; lo: number; hi: number }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }

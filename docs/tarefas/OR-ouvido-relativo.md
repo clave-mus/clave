@@ -232,7 +232,7 @@ provavelmente não abre.
 | reorganização do par de **acorde** | ❌ |
 | conferência por **contorno** | ❌ |
 | **cadências** como contexto | ❌ |
-| direção `audiar` nos itens de nota, intervalo e acorde | ❌ |
+| direção `audiar` em nota e intervalo | ✅ feito em 10/11 · falta no acorde, que ainda não foi reorganizado |
 | **campo harmônico** (grau do campo) | ❌ |
 | sorteio **anti-repetição** | ❌ |
 | **oitava exata** em "Nota" | ✅ feito em 10/11 |
@@ -288,8 +288,9 @@ Por valor sobre custo, não por posição na matriz:
    uma por resposta), e a melodia respondida no instrumento é o item 9. Implementá-la agora seria o
    terceiro motor órfão do projeto — `digitacoes.ts` e `padrao-de-escala.ts` já ficaram prontos e
    inalcançáveis;
-3. **direção `audiar`** nos itens de nota e intervalo — o padrão já está provado na leitura, e
-   fecha uma coluna inteira da matriz;
+3. ~~**direção `audiar`** nos itens de nota e intervalo~~ — ✅ feita em 10/11, nos quatro. Entrou com
+   a superfície `autoavaliacao` no Player e com o `validation_type` da tentativa passando a ser
+   **deduzido** da forma da pergunta. Falta no par de acorde, e vai junto com a reorganização dele;
 4. **reorganização do par de acorde** — mecânica, o molde está escrito;
 5. **cadências como contexto** — gerador novo, pequeno;
 6. **campo harmônico** com os empréstimos;

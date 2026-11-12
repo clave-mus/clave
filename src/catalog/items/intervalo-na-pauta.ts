@@ -1,4 +1,4 @@
-import { CLEFS, INTERVALS, arr, clefBottom, ivLabel, midi, notaNaPauta, noteName, pick, pickClef, semisFor, transpose } from '../helpers';
+import { CLEFS, INTERVALS, arr, tonicaDeContexto, clefBottom, ivLabel, midi, notaNaPauta, noteName, pick, pickClef, semisFor, transpose } from '../helpers';
 import type { Note } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -38,6 +38,7 @@ export const intervaloNaPauta: CatalogItem = {
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'ler', label: ctx.t('settings.readIt') },
       { id: 'escrever', label: ctx.t('settings.writeIt') },
+      { id: 'audiar', label: ctx.t('settings.audiateIt') },
     ] },
     CLEFS(ctx),
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
@@ -58,6 +59,21 @@ export const intervaloNaPauta: CatalogItem = {
       upper = transpose(lower, { num: iv.num, semis: semisFor(iv.num, iv.q) });
     } while (Math.abs(upper.acc) > 1);
 
+    if (s.direcao === 'audiar') {
+      const tonica = tonicaDeContexto(ctx, midi(lower));
+      return {
+        prompt: ctx.t('quiz.audiateInterval'), visual: { kind: 'staff', clef, columns: [[lower], [upper]] },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[tonica]],
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[midi(lower)], [midi(upper)]] },
+          ],
+        },
+        autoplay: false, reveal: ivLabel(id, ctx),
+      };
+    }
     if (s.direcao === 'escrever') {
       return {
         prompt: ctx.t('quiz.writeInterval', { interval: ivLabel(iv.id, ctx), note: `${noteName(lower, ctx.naming)}${lower.oct}` }),

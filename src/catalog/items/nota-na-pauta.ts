@@ -1,4 +1,4 @@
-import { CLEFS, EXT, midi, mod, notaNaPauta, noteName, pickClef, randAcc, stepRange } from '../helpers';
+import { CLEFS, EXT, midi, tonicaDeContexto, mod, notaNaPauta, noteName, pickClef, randAcc, stepRange } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -40,6 +40,8 @@ export const notaNaPautaItem: CatalogItem = {
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'ler', label: ctx.t('settings.readIt') },
       { id: 'escrever', label: ctx.t('settings.writeIt') },
+      // A terceira direção (10/11/2026): o "oposto" do desenho do Paulo. Ver `OR-ouvido-relativo.md`.
+      { id: 'audiar', label: ctx.t('settings.audiateIt') },
     ] },
     CLEFS(ctx), EXT(ctx),
     { id: 'acidentes', label: ctx.t('settings.accidentals'), type: 'toggle' },
@@ -54,6 +56,28 @@ export const notaNaPautaItem: CatalogItem = {
   make(s, ctx): Question {
     const clef = pickClef(s, ctx);
     const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
+    /**
+     * **Audiar**: a nota aparece escrita, o contexto toca, você canta por dentro, e o gabarito só
+     * soa quando você pede. O padrão é o mesmo que entrou no gerador de leitura em 10/11.
+     *
+     * `autoplay: false` e o gabarito em `partes` não são detalhe: se a nota tocasse sozinha, o
+     * exercício seria ouvir e comparar, que é o outro exercício.
+     */
+    if (s.direcao === 'audiar') {
+      const tonica = tonicaDeContexto(ctx, midi(n));
+      return {
+        prompt: ctx.t('quiz.audiateNote'), visual: { kind: 'staff', clef, columns: [[n]] },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[tonica]],
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[midi(n)]] },
+          ],
+        },
+        autoplay: false, reveal: `${noteName(n, ctx.naming)}${n.oct}`,
+      };
+    }
     if (s.direcao === 'escrever') {
       return {
         prompt: ctx.t('quiz.writeNote', { note: `${noteName(n, ctx.naming)}${n.oct}` }), visual: { kind: 'text', text: '' },
