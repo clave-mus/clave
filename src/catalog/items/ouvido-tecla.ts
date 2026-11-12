@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, note, noteName, pcName, pcsPermitidas, pick } from '../helpers';
+import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, mod, note, noteName, pcNameUm, pcsPermitidas, pick } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -47,9 +47,24 @@ export const ouvidoTecla: CatalogItem = {
       // 48–83: soava um ré3, não havia tecla de ré3, e o Paulo tinha de clicar uma oitava acima.
       // A resposta é por classe de altura, então clicar na oitava errada acertava — o errado era a
       // tela mentir sobre o que tinha soado.
-      surface: { kind: 'keyboard', ...FAIXA }, expected: { kind: 'pitchClass', pc: p },
+      surface: { kind: 'keyboard', ...FAIXA },
+      /**
+       * **A oitava exata**, não a classe de altura (decisão do Paulo, 10/11/2026: *"fazer com que o
+       * exercício receba como resposta correta apenas a oitava específica da nota que foi tocada, e
+       * não a mesma nota em outras oitavas como atualmente é"*).
+       *
+       * Era `pitchClass`, e isso é o que esconde o defeito que ele achou no teclado: clicar a nota
+       * certa na oitava errada **acertava**, então nem o acerto denunciava que a tela mostrava uma
+       * faixa e o som usava outra.
+       *
+       * De graça, a revelação melhora: o Player marca de verde toda tecla que valida como certa, e
+       * com classe de altura ele pintava **as três oitavas**. Agora pinta uma.
+       */
+      expected: { kind: 'pitch', midi: m },
       sound: { groups: s.referencia ? [[60], [m]] : [[m]] }, autoplay: true,
-      reveal: pcName(m, ctx.naming),
+      // A oitava entra na revelação porque entrou na resposta: errar a oitava e não saber qual era
+      // não ensina nada.
+      reveal: `${pcNameUm(mod(m, 12), ctx.naming, false)}${Math.floor(m / 12) - 1}`,
     };
   },
 };

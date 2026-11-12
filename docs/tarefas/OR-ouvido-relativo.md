@@ -235,7 +235,7 @@ provavelmente não abre.
 | direção `audiar` nos itens de nota, intervalo e acorde | ❌ |
 | **campo harmônico** (grau do campo) | ❌ |
 | sorteio **anti-repetição** | ❌ |
-| **oitava exata** em "Nota" | ❌ |
+| **oitava exata** em "Nota" | ✅ feito em 10/11 |
 | superfície de resposta como parâmetro dos de ouvido | ❌ |
 | botões por **grau** | ❌ |
 | motivos pela escala — **exploração** | ❌ |
@@ -283,8 +283,11 @@ Por valor sobre custo, não por posição na matriz:
 1. ~~**cache offline**~~ — ✅ feito em 10/11. Service worker em `public/sw.js`, manifest, e
    aquecimento das telas sob demanda. Verificado com o servidor **desligado**: o app abre, navega e
    a leitura rítmica desenha partitura;
-2. **conferência por contorno** + **oitava exata em Nota** — pequenas, e consertam a frouxura que
-   hoje deixa acertar na oitava errada;
+2. **oitava exata em Nota** — ✅ feita em 10/11. A **conferência por contorno** ficou para a tarefa
+   que cria quem a usa: nada no app produz uma sequência de ALTURAS hoje (o teclado e o braço emitem
+   uma por resposta), e a melodia respondida no instrumento é o item 9. Implementá-la agora seria o
+   terceiro motor órfão do projeto — `digitacoes.ts` e `padrao-de-escala.ts` já ficaram prontos e
+   inalcançáveis;
 3. **direção `audiar`** nos itens de nota e intervalo — o padrão já está provado na leitura, e
    fecha uma coluna inteira da matriz;
 4. **reorganização do par de acorde** — mecânica, o molde está escrito;
