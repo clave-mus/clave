@@ -1,5 +1,9 @@
-// Motor de som do Clave: tudo sintetizado com Web Audio, sem arquivos de áudio.
+// Motor de som do Clave: Web Audio, quase tudo sintetizado. A exceção é o piano, que desde 12/11
+// toca amostras (Salamander, ver `piano-amostras.ts`) com o sintetizado de reserva enquanto elas
+// não chegam — o som nunca espera a rede.
 // O navegador só libera som depois de um toque do usuário, então o contexto é criado sob demanda.
+
+import { amostraDePiano } from './piano-amostras';
 
 export type Voice = 'piano' | 'violao' | 'pad' | 'baixo' | 'orgao';
 export type Drum = 'bumbo' | 'caixa' | 'chimbal' | 'aro' | 'clique' | 'clique-forte';
@@ -202,11 +206,38 @@ function cordaPulsada(m: number, t: number, dur: number, vel: number, corda: typ
   registrar(out, [fonte], t + total / sr);
 }
 
+/**
+ * Piano amostrado: a amostra mais próxima, transposta por `playbackRate` e normalizada pelo pico
+ * para soar no nível do sintetizado (que toca a ~0,3·vel de amplitude). O ataque é o da gravação;
+ * o release em `t + dur` é o abafador — sem ele, toda nota duraria os 5 s da cauda da amostra.
+ */
+function pianoAmostrado(t: number, dur: number, vel: number, a: { buffer: AudioBuffer; pico: number; taxa: number }) {
+  const c = audio();
+  const fonte = c.createBufferSource();
+  fonte.buffer = a.buffer;
+  fonte.playbackRate.value = a.taxa;
+  const out = c.createGain();
+  const ganho = (0.3 * vel) / a.pico;
+  out.gain.setValueAtTime(ganho, t);
+  out.gain.setTargetAtTime(0.0001, t + dur, 0.12);
+  fonte.connect(out).connect(master);
+  const fim = Math.min(t + dur + 0.7, t + a.buffer.duration / a.taxa);
+  fonte.start(t);
+  fonte.stop(fim);
+  registrar(out, [fonte], fim);
+}
+
 /** Toca uma altura MIDI. `t` é o tempo absoluto do contexto (use now() + atraso). */
 export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel = 0.7) {
   // violão e baixo são cordas: a síntese por osciladores não dá o timbre delas
   if (voice === 'baixo') return cordaPulsada(m, t, dur, CORDAS.baixo.vel * vel, CORDAS.baixo);
   if (voice === 'violao') return cordaPulsada(m, t, dur, CORDAS.violao.vel * vel, CORDAS.violao);
+  if (voice === 'piano') {
+    // A primeira chamada dispara o carregamento; até a amostra desta nota decodificar, o
+    // sintetizado logo abaixo cobre — o exercício nunca começa em silêncio (§7).
+    const amostra = amostraDePiano(m, audio());
+    if (amostra) return pianoAmostrado(t, dur, vel, amostra);
+  }
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();

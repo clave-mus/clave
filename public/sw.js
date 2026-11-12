@@ -70,7 +70,10 @@ self.addEventListener('fetch', e => {
   }
 
   // Assets com hash no nome: cache primeiro. O nome muda quando o conteúdo muda.
-  if (url.pathname.startsWith('/assets/')) {
+  // As amostras de piano entram na mesma regra: não têm hash, mas são gravações — o conteúdo de
+  // `C4.mp3` não muda numa atualização do app. Trocar o conjunto de amostras um dia = trocar o
+  // nome da pasta (`/amostras/piano2/`), que é o mesmo contrato do hash.
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/amostras/')) {
     e.respondWith((async () => {
       const doCache = await caches.match(req);
       if (doCache) return doCache;

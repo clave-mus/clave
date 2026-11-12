@@ -58,11 +58,11 @@ virou o item, e `SUP`/`porSuperficie` saíram de `helpers.ts` sem chamador. Seis
 
 **A ordem de trabalho mora em `OR-ouvido-relativo.md`, §11** — ela é a fonte de verdade do que falta.
 Feitos: cache offline, oitava exata, direção `audiar`, reorganização do acorde, cadências, e o
-**campo harmônico** com os empréstimos e o **sorteio anti-repetição** no Player (12/11).
+**campo harmônico** com os empréstimos, o **sorteio anti-repetição** no Player e o **piano de
+amostras** (12/11).
 
-Falta, em ordem: **piano de amostras** · **superfície de resposta como parâmetro** nos de ouvido ·
-**relação melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos motivos** pela
-escala.
+Falta, em ordem: **superfície de resposta como parâmetro** nos de ouvido · **relação
+melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos motivos** pela escala.
 
 ### Três peças esperam o consumidor, de propósito
 

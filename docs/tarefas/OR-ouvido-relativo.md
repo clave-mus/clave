@@ -240,7 +240,7 @@ provavelmente não abre.
 | botões por **grau** | ❌ |
 | motivos pela escala — **exploração** | ❌ |
 | relação melodia-harmonia — exploração 2 e os quizzes | ❌ |
-| **piano de amostras** | ❌ |
+| **piano de amostras** | ✅ feito em 12/11 |
 | **cache offline** | ✅ feito em 10/11 |
 
 ---
@@ -312,7 +312,13 @@ Por valor sobre custo, não por posição na matriz:
    igual ao peso (0 · ½ · ¾ · ⅞…). Nenhum item foi tocado e todos ganharam — nunca a mesma resposta
    duas vezes seguidas, com repetição dentro da janela, como o §3.1 pede. Medido ao vivo: 14
    rodadas, zero repetições coladas, IVmaj7 saindo 4 vezes;
-8. **piano de amostras**;
+8. ~~**piano de amostras**~~ — ✅ feito em 12/11. Salamander Grand Piano (CC-BY, crédito no README
+   e em `public/amostras/piano/CREDITOS.txt`), 17 amostras C2–C6 a cada três semitons, recodificadas
+   para mono 64 kbps com 5 s: **684 KB**, dentro do orçamento do §7. Carregamento preguiçoso na
+   primeira nota de piano; **até cada amostra decodificar, vale o sintetizado** — o som nunca espera
+   a rede. O service worker guarda `/amostras/` como `/assets/`, e foi provado com o servidor morto:
+   o app abre e as amostras saem do cache. Só o piano: cordas e drone seguem sintetizados. O "synth
+   mais limpo como opção" do §7 ainda não existe — é ponta solta;
 9. **superfície de resposta como parâmetro** nos de ouvido;
 10. **relação melodia-harmonia** — exploração 2 e os três quizzes. É o mais caro e, nas palavras
     dele, *"um dos exercícios mais difíceis e valiosos do app"*;
