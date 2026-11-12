@@ -40,6 +40,18 @@ export const CADENCIAS = Object.keys(GRAUS) as CadenciaId[];
 const TETO_ACIMA_DA_TONICA = 16;
 
 /**
+ * Põe um acorde (semitons sobre a tônica) no registro da cadência: desce de oitava até a nota mais
+ * aguda caber no teto. Exportada porque o acorde-ALVO de um exercício tem de morar no mesmo
+ * registro do contexto — senão a diferença de registro vira pista, e a pergunta deixa de ser
+ * sobre harmonia.
+ */
+export function acordeNoTeto(tonica: number, semis: number[]): number[] {
+  let acorde = semis.map(s => tonica + s);
+  while (Math.max(...acorde) > tonica + TETO_ACIMA_DA_TONICA) acorde = acorde.map(m => m - 12);
+  return acorde;
+}
+
+/**
  * Os acordes de uma cadência, em grupos de alturas MIDI, prontos para tocar em sequência.
  *
  * O campo vem de `acordeDoCampo`, que já resolve o modo e a pentatônica — e é por isso que este
@@ -48,12 +60,7 @@ const TETO_ACIMA_DA_TONICA = 16;
 export function cadenciaHarmonica(
   id: CadenciaId, tonica: number, escala: ScaleId | ModoDoCampo = 'maior', tetrade = false,
 ): number[][] {
-  return GRAUS[id].map(grau => {
-    const semis = acordeDoCampo(escala as ScaleId, grau, tetrade);
-    let acorde = semis.map(s => tonica + s);
-    while (Math.max(...acorde) > tonica + TETO_ACIMA_DA_TONICA) acorde = acorde.map(m => m - 12);
-    return acorde;
-  });
+  return GRAUS[id].map(grau => acordeNoTeto(tonica, acordeDoCampo(escala as ScaleId, grau, tetrade)));
 }
 
 /** O último acorde da cadência é o da tônica? É o que faz uma cadência **fechar**. */

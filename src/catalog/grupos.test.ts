@@ -158,6 +158,7 @@ describe('o que está em rascunho nos grupos', () => {
       // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
       'acento-deslocado', 'deslocamento-ritmico',
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
+      'ouvido-campo',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',
     ]);

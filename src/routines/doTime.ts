@@ -108,6 +108,11 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, EM_DO)] },
       { porque: 'todas as qualidades de acorde, sobre a mesma fundamental: sobra a cor',
         instancias: [i('ouvido-acorde', { tipos: ALL_CHORDS, arpejo: true, duracao: 2 }, EM_DO)] },
+      // Entrou em 12/11/2026, a pedido dele ("não tínhamos um exercício de reconhecer graus do
+      // campo harmônico?"). Vem colada na de qualidades porque é a mesma pergunta mudando de eixo:
+      // ali a cor sobre a mesma fundamental, aqui o LUGAR dentro de um campo, depois da cadência.
+      { porque: 'os mesmos acordes, agora dentro de um campo: a pergunta deixa de ser a cor e vira a função',
+        instancias: [i('ouvido-campo', { campo: 'maior', tetrades: true, contexto: 'ii-V-I' }, EM_DO)] },
       { porque: 'todas as escalas, subindo e descendo — é descendo que as duas melódicas se separam',
         instancias: [i('ouvido-escala', { tipos: ALL_SCALES, direcao: 'ambos' }, EM_DO)] },
       // Duas etapas do mesmo item, a pedido dele: uma nota e três notas. Sem alternativas nas

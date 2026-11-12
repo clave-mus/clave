@@ -95,6 +95,7 @@ export const SKILL_TAGS = {
   'ear.pitch_identification': 'Identificar uma altura ouvida, com ou sem referência.',
   'ear.interval_identification': 'Identificar um intervalo ouvido.',
   'ear.chord_quality': 'Identificar a qualidade de um acorde ouvido (maior, menor, diminuto…).',
+  'ear.harmonic_function': 'Identificar o grau (a função) de um acorde ouvido dentro de um campo harmônico.',
   'ear.scale_quality': 'Identificar uma escala ou modo ouvido.',
   'ear.scale_degrees': 'Identificar os graus de notas ouvidas em relação a uma tônica.',
   'ear.rhythm_recognition': 'Reconhecer um ritmo ouvido.',

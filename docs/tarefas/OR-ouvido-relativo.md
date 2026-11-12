@@ -299,7 +299,13 @@ Por valor sobre custo, não por posição na matriz:
 5. ~~**cadências como contexto**~~ — ✅ motor feito em 10/11 (`theory/cadencia-harmonica.ts`, 11
    testes) e ligado em `reconhecer-padroes-escala`, onde virou o **padrão**. Falta ligar em
    `ouvido-celulas` e nas direções `audiar`, que hoje usam tônica ou tríade;
-6. **campo harmônico** com os empréstimos;
+6. ~~**campo harmônico** com os empréstimos~~ — ✅ feito em 12/11. Item `ouvido-campo` sobre
+   `theory/campo-harmonico.ts` (20 testes), que põe os empréstimos em cima do `harmonicField` que o
+   Backing já usava. Grau e qualidade numa pergunta só, pelo algarismo romano; "só o grau" é o modo
+   fácil. Empréstimos do MENOR decididos em 12/11: V e vii° da harmônica, IV e ii do dórico, e o
+   ♭II — a picardia ficou de fora. No menor a cadência de contexto sai da harmônica (o v natural
+   não puxa). Entrou na rotina do fone, depois das qualidades. De quebra, o Player ganhou
+   `podeVazio`: multi de ACRÉSCIMO (vazio é o padrão) agora deixa desligar o último chip;
 7. **sorteio anti-repetição**, genérico;
 8. **piano de amostras**;
 9. **superfície de resposta como parâmetro** nos de ouvido;

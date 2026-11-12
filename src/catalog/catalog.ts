@@ -18,6 +18,7 @@ import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
+import { ouvidoCampo } from './items/ouvido-campo';
 import { ouvidoEscala } from './items/ouvido-escala';
 import { ouvidoCelulas } from './items/ouvido-celulas';
 import { reconhecerPadroesEscala } from './items/reconhecer-padroes-escala';
@@ -37,6 +38,7 @@ export const EXERCISES: CatalogItem[] = [
   ouvidoTecla,
   ouvidoIntervalo,
   ouvidoAcorde,
+  ouvidoCampo,
   ouvidoEscala,
   ouvidoCelulas,
   reconhecerPadroesEscala,

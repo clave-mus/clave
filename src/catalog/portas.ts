@@ -51,14 +51,14 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'ouvido',
     // Tudo o que tem etiqueta `ear.*`, mais o ambiente de cantar/tocar com referência.
-    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'audiar', 'maos-livres', 'relacoes-melodia-harmonia', 'ambiente'],
+    itens: ['ouvido-intervalo', 'ouvido-acorde', 'ouvido-campo', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'audiar', 'maos-livres', 'relacoes-melodia-harmonia', 'ambiente'],
   },
   {
     id: 'harmonia',
     // "Campo harmônico, cifras e condução": os acordes em todas as superfícies, e a harmonia tocando.
     // Deixou de estar abaixo do mínimo em 07/11, quando "Relações entre melodia e harmonia" entrou:
     // são quatro, e a exceção da decisão 20 não é mais necessária aqui.
-    itens: ['backing', 'ouvido-acorde', 'acorde-no-instrumento', 'relacoes-melodia-harmonia'],
+    itens: ['backing', 'ouvido-acorde', 'ouvido-campo', 'acorde-no-instrumento', 'relacoes-melodia-harmonia'],
   },
   {
     id: 'teoria', abaixoDoMinimoPorOra: true,
