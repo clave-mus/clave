@@ -241,7 +241,7 @@ provavelmente não abre.
 | motivos pela escala — **exploração** | ❌ |
 | relação melodia-harmonia — exploração 2 e os quizzes | ❌ |
 | **piano de amostras** | ❌ |
-| **cache offline** | ❌ |
+| **cache offline** | ✅ feito em 10/11 |
 
 ---
 
@@ -272,8 +272,7 @@ anterior). O desenho completo está em `PE-padroes-de-escala.md`, e a metade de 
 Falta a **exploração**: a escada clicável, as posições à vista, o drone, e o link do vídeo do
 ChicagoBassBuddy — que é onde o crédito clicável mora.
 
-👤 **Decisão ainda aberta:** o texto de abertura da tela de exploração. Proposta em
-`PE-padroes-de-escala.md`, §4.
+O texto de abertura foi aprovado em 10/11/2026 e está em `PE-padroes-de-escala.md`, §4.
 
 ---
 
@@ -281,7 +280,9 @@ ChicagoBassBuddy — que é onde o crédito clicável mora.
 
 Por valor sobre custo, não por posição na matriz:
 
-1. **cache offline** — pré-requisito do piano, e vale sozinho pelo ônibus;
+1. ~~**cache offline**~~ — ✅ feito em 10/11. Service worker em `public/sw.js`, manifest, e
+   aquecimento das telas sob demanda. Verificado com o servidor **desligado**: o app abre, navega e
+   a leitura rítmica desenha partitura;
 2. **conferência por contorno** + **oitava exata em Nota** — pequenas, e consertam a frouxura que
    hoje deixa acertar na oitava errada;
 3. **direção `audiar`** nos itens de nota e intervalo — o padrão já está provado na leitura, e
