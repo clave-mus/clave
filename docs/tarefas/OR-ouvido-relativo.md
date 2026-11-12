@@ -234,7 +234,7 @@ provavelmente não abre.
 | **cadências** como contexto | ✅ motor feito em 10/11 · ligado em `reconhecer-padroes-escala` |
 | direção `audiar` em nota, intervalo e acorde | ✅ feita em 10/11, nos seis itens |
 | **campo harmônico** (grau do campo) | ❌ |
-| sorteio **anti-repetição** | ❌ |
+| sorteio **anti-repetição** | ✅ feito em 12/11 |
 | **oitava exata** em "Nota" | ✅ feito em 10/11 |
 | superfície de resposta como parâmetro dos de ouvido | ❌ |
 | botões por **grau** | ❌ |
@@ -306,7 +306,12 @@ Por valor sobre custo, não por posição na matriz:
    ♭II — a picardia ficou de fora. No menor a cadência de contexto sai da harmônica (o v natural
    não puxa). Entrou na rotina do fone, depois das qualidades. De quebra, o Player ganhou
    `podeVazio`: multi de ACRÉSCIMO (vazio é o padrão) agora deixa desligar o último chip;
-7. **sorteio anti-repetição**, genérico;
+7. ~~**sorteio anti-repetição**, genérico~~ — ✅ feito em 12/11, no lugar mais barato: o `make` do
+   Player, por **amostragem com rejeição sobre a resposta** (`catalog/sorteio.ts`, 7 testes). O item
+   gera uniforme como sempre; pergunta cuja resposta saiu há pouco é regerada com probabilidade
+   igual ao peso (0 · ½ · ¾ · ⅞…). Nenhum item foi tocado e todos ganharam — nunca a mesma resposta
+   duas vezes seguidas, com repetição dentro da janela, como o §3.1 pede. Medido ao vivo: 14
+   rodadas, zero repetições coladas, IVmaj7 saindo 4 vezes;
 8. **piano de amostras**;
 9. **superfície de resposta como parâmetro** nos de ouvido;
 10. **relação melodia-harmonia** — exploração 2 e os três quizzes. É o mais caro e, nas palavras

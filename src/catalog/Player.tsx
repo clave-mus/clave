@@ -6,6 +6,7 @@ import { atTime, now, pararTudo } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
 import { useContent } from '../data/localized';
 import { getState, recordAnswer, saveSettings, useStore } from '../state/store';
+import { sortearSemEco } from './sorteio';
 import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
@@ -85,7 +86,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // `settings` é lido pela ref, para a pergunta não ser refeita quando só a apresentação muda
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
-  const make = useCallback(() => def.make(settingsRef.current, ctx), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
+  // `sortearSemEco` é o anti-repetição genérico (OR §3.1): o item gera uniforme, e perguntas cuja
+  // RESPOSTA saiu há pouco são regeradas — nunca a mesma duas vezes seguidas, sem o item saber.
+  const make = useCallback(() => sortearSemEco(def.id, () => def.make(settingsRef.current, ctx)), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
   // Por que estas configurações não geram pergunta (decisão 13). Havendo motivo, `make` NUNCA é
   // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
   const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
