@@ -540,7 +540,8 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
               const on = cur.includes(o.id);
               return <Chip key={o.id} on={on} onClick={() => {
                 const nextV = on ? cur.filter(x => x !== o.id) : [...cur, o.id];
-                if (nextV.length) onChange({ ...values, [s.id]: nextV });
+                // Lista vazia só onde o item declarou que vazio é estado legítimo (`podeVazio`).
+                if (nextV.length || s.podeVazio) onChange({ ...values, [s.id]: nextV });
               }}>{o.label}</Chip>;
             })}</div>
           )}

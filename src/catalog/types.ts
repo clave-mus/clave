@@ -189,6 +189,13 @@ export interface Setting {
    * longo também pode ficar pior.
    */
   justify?: true;
+  /**
+   * Um `multi` que pode ficar VAZIO. O Player bloqueia desligar o último chip porque na maioria
+   * das listas (tipos de acorde, graus) vazio = nenhuma pergunta possível. Mas há listas de
+   * ACRÉSCIMO, onde vazio é o padrão e um estado legítimo — os empréstimos modais de
+   * `ouvido-campo`: sem isto, quem ligasse um empréstimo nunca mais conseguiria desligar o último.
+   */
+  podeVazio?: true;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {
