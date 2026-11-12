@@ -105,6 +105,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const [heard, setHeard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const started = useRef(Date.now());
+  /** Já avisamos que o alvo da etapa foi batido? `onDone` é uma vez por etapa, não por resposta. */
+  const avisouDoAlvo = useRef(false);
   const scoreRef = useRef(score);
   scoreRef.current = score;
   // registro da tentativa (C2): sessão, quando dava para responder e quantas vezes ouviu
@@ -200,7 +202,11 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       series.current = [];
     }
     if (!q.autoplay && soundOn) play(q);
-    if (target && ns.total >= target) {
+    // Uma vez só. Antes disparava a CADA resposta depois do alvo, porque a condição é `>=` e nada
+    // guardava que já tinha avisado — com a correção de 10/11 (ficar na etapa depois de completá-la)
+    // isso passaria a chamar `onDone` sem parar.
+    if (target && ns.total >= target && !avisouDoAlvo.current) {
+      avisouDoAlvo.current = true;
       window.setTimeout(() => onDone?.({ correct: ns.correct, total: ns.total, seconds: Math.round((Date.now() - started.current) / 1000) }), ok ? 900 : 1800);
       return;
     }
@@ -267,7 +273,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {score.seguidas > 1 && <div><b className="num">{score.seguidas}</b><span>{t('player.inARow')}</span></div>}
         </div>
       </div>
-      {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}
+      {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
       <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
 

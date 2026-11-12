@@ -375,6 +375,7 @@ const pt = {
     swapHint: 'Esta etapa tem {n} variantes; trocar resolve outra agora.',
     fromRoutine: 'da rotina',
     fromStep: 'da etapa',
+    targetReached: 'As {n} perguntas desta etapa estão feitas. Pode seguir praticando o quanto quiser, ou passar para a próxima.',
     finishStep: 'Concluir etapa',
     leave: 'Sair',
     missingTitle: 'Uma etapa aponta para um exercício que não existe mais',

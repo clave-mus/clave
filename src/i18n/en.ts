@@ -375,6 +375,7 @@ const en: Shape<typeof pt> = {
     swapHint: 'This step has {n} variants; swapping picks another one now.',
     fromRoutine: 'from the routine',
     fromStep: 'from the step',
+    targetReached: 'The {n} questions in this step are done. Keep practising as long as you like, or move on.',
     finishStep: 'Finish step',
     leave: 'Leave',
     missingTitle: 'A step points to an exercise that no longer exists',
