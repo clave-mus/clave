@@ -44,75 +44,50 @@ afrouxado — e dois eram erro meu, não do código. Um sinal de que o eixo novo
 "leitura na pauta" tinha o comentário *"ache-a-nota na pauta entra mesmo sendo escrever, não ler"*,
 uma justificativa que existia só para remendar a estrutura antiga. Saiu.
 
-## As quatro frentes
+## Onde tudo está, em 10/11/2026 ao fim do dia
 
-| | frente | estado |
-|---|---|---|
-| 1 | acorde no braço pelo gerador | ✅ feito |
-| 2 | audiação na leitura | ✅ feito |
-| 3 | reorganização: nota ✅ · intervalo ✅ · **acorde a fazer** · absorver o `no-instrumento` a fazer | ⬅️ **próxima** |
-| 4 | as duas rotinas do Paulo | depende de 3 |
-| 5 | **explorar padrões pela escala** — a tela com a escada | a fazer |
+**A reorganização terminou.** Nenhum item do catálogo tem a configuração `superficie`: a superfície
+virou o item, e `SUP`/`porSuperficie` saíram de `helpers.ts` sem chamador. Seis itens, com
+`ler/identificar` · `escrever/achar` · `audiar`:
 
-### O par de padrões de escala, em 10/11/2026
+| antes | agora |
+|---|---|
+| `que-nota-e-essa` + `ache-a-nota` | `nota-na-pauta` · `nota-no-instrumento` |
+| `que-intervalo-e-esse` + `faca-o-intervalo` | `intervalo-na-pauta` · `intervalo-no-instrumento` |
+| `que-acorde-e-esse` | `acorde-na-pauta` · `acorde-no-instrumento` |
 
-A metade de **adivinhar** está pronta e no catálogo: `reconhecer-padroes-escala`, `serie`, roda no
-Player, cabe no ônibus. As alternativas são **todas** as posições do padrão (5 na pentatônica, 7 nas
-de sete notas), não quatro — não há distrator a inventar nem como descartar por eliminação, e elas
-explicam o exercício sozinhas.
+**A ordem de trabalho mora em `OR-ouvido-relativo.md`, §11** — ela é a fonte de verdade do que falta.
+Feitos: cache offline, oitava exata, direção `audiar`, reorganização do acorde, cadências.
 
-A metade de **explorar** não existe. É a tela com a escada clicável, as posições à vista, o drone
-sustentado e o link do vídeo — e é com ela que vem o link clicável do ChicagoBassBuddy. No item de
-adivinhar o crédito está na descrição, em texto.
+Falta, em ordem: **campo harmônico** com os empréstimos modais · **sorteio anti-repetição** ·
+**piano de amostras** · **superfície de resposta como parâmetro** nos de ouvido · **relação
+melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos motivos** pela escala.
 
-Duas coisas que a construção ensinou:
+### Três peças esperam o consumidor, de propósito
 
-- o padrão **desce** abaixo da tônica (decisão do Paulo), e aí a nota mais grave saía da região. O
-  desenho sobe **inteiro**, por oitavas, até caber: um deslocamento só para todas as notas, porque
-  mover notas soltas quebraria o contorno — mesma lição de `acomodarMelodiaEAcorde`;
-- eu nomeei um atalho de "(mais difícil)" e o teste reprovou: a decisão 100 proíbe nome por nível. O
-  teste estava certo.
+Não foram escritas porque seriam motor órfão — o projeto já teve dois (`digitacoes.ts` com 22 testes
+e `padrao-de-escala.ts` com 25 ficaram prontos e inalcançáveis por semanas):
 
-### Frente 2 — audiação na leitura
+| peça | espera |
+|---|---|
+| conferência por **contorno** | nada produz sequência de ALTURAS; teclado e braço emitem uma por resposta. Vem com a melodia respondida no instrumento |
+| **desenhar o acorde** | `Response` só sabe de cifra digitada. Precisa de superfície que acumula notas, resposta que as carrega e conferência que diga se formam o acorde |
+| **absorver o `no-instrumento`** | o modo "todas as posições" precisa da mesma superfície que acumula |
 
-Ideia do Paulo, e é melhor que a minha: *"tu vê a melodia, audia, e aí o som das notas vem como
-confirmação. Só penso que aí precisa poder ouvir um contexto — 1 nota — pra entrar no tom certo."*
+### Pontas soltas pequenas
 
-Eu ia fazer uma família de estímulo no `audiar`. A dele é mais barata: `tools/Leitura.tsx` **já tem**
-a melodia gerada, as notas e o cursor. Falta ele parar de tocar antes de a pessoa tentar.
+- a **cadência** está ligada só em `reconhecer-padroes-escala`; falta em `ouvido-celulas` e nas
+  quatro direções `audiar`, que usam tônica ou tríade;
+- as **duas rotinas do Paulo** (reconhecer notas e acordes no violão e no piano; leitura de
+  partitura) dependem de nada agora — os itens existem. É montar as etapas em `doTime.ts`;
+- `revisao-pendente.md` tem os itens novos listados, e há teste que falha se faltar.
 
-Hoje o liga-desliga "ouvir a melodia" toca *junto* com a leitura. O modo novo: a pauta aparece, nada
-soa, a pessoa audia, e **aí** pede o som como conferência.
+### O que o deploy precisa
 
-👤 Nota de contexto: uma nota dá a altura mas **não dá o modo** (dó serve a dó maior e a lá menor).
-Proposta: configurável, nota ou tríade, com a nota como padrão porque é o mínimo e foi o que ele
-pediu.
-
-> **Padrão que apareceu três vezes:** `ouvido-tecla` tem `referencia`, `audiar` tem `referencia`, e
-> agora a leitura precisa dela. É o mesmo botão três vezes, e provavelmente devia ser uma coisa só.
-
-### Frente 3 — o que absorver no `no-instrumento`
-
-Desenho dele: a pessoa clica **todas** as posições da nota no braço (ou dentro de uma região), cada
-uma uma ou mais vezes; e uma opção com metrônomo para responder no instrumento real.
-
-"Todas as posições" é uma pergunta que **nenhuma superfície do app sabe fazer** — o braço aceita um
-toque e confere classe de altura, então qualquer posição certa encerra. É o mesmo molde da
-superfície `sequence` que entrou hoje no `Player`: acumula escolhas e só fecha quando completa.
-
-E resolve um defeito de passagem: o item de instrumento fixa uma corda e o gabarito diz **uma**
-casa, quando a nota existe em até quatro lugares.
-
-⚠️ `validation` é uma **lista** — "os modos que o item aceita; o primeiro é o padrão". Um item pode
-declarar `['deterministic', 'self_report']`. Eu disse ao Paulo que não cabia e estava errado.
-
-### Frente 4 — as rotinas dele
-
-**Reconhecer notas e acordes no violão e no piano:** nota no instrumento (piano, ler e escrever) ·
-acorde no instrumento (piano) · acorde no instrumento (violão).
-
-**Leitura de partitura:** nota na pauta (ler e escrever) · acorde na pauta (ler e escrever) ·
-melodia na pauta (audiar) — esta última depende da frente 2.
+A produção sai da **`dev`**, e os dois fluxos a vigiam. Falta só o Paulo pôr
+`CLOUDFLARE_API_TOKEN` (modelo *Edit Cloudflare Workers*) e `CLOUDFLARE_ACCOUNT_ID` nos segredos do
+repositório. Sem eles o fluxo avisa e passa — e **quem publica hoje é a integração Workers Builds do
+Cloudflare**, que funciona na `dev` e falha em branch de PR (esperado).
 
 ## Decisões 👤 ainda abertas
 
