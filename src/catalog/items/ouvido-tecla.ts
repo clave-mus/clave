@@ -1,4 +1,4 @@
-import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -28,20 +28,15 @@ function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pc: number): number 
   return pick(naRegiao.length ? naRegiao : noBraco);
 }
 
-/** A nota escrita de uma altura, na grafia com sustenido — a pauta precisa de letra e acidente. */
-function notaEscrita(m: number) {
-  const pc = mod(m, 12);
-  return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
-}
+// `notaEscrita` morava aqui, com sustenido fixo — e era um defeito que sobreviveu à revisão do
+// Paulo: a pauta deste item já desenhava a armadura certa, então em Ré menor saía um **Lá♯ sob uma
+// armadura de Si♭**. O nome da nota ele viu e eu consertei em 13/11 (`nomeNaTonalidade`); a nota
+// DESENHADA continuou errada, porque eram dois caminhos para a mesma coisa. Agora os dois passam por
+// `notaGrafada`.
 
-/**
- * O nome de uma classe de altura **na tonalidade em vigor**: em Ré♭ maior, a classe 1 é Ré♭, não
- * Dó♯. Sem tonalidade não há grafia preferida, e aí vale o sustenido.
- */
-function nomeNaTonalidade(ctx: Ctx, pc: number): string {
-  const f = quintasDaTonalidade(ctx);
-  return pcNameUm(pc, ctx.naming, f !== null && f < 0);
-}
+// `nomeNaTonalidade` nasceu aqui, em 13/11, quando o Paulo relatou *"na tonalidade diz Ré♭, no
+// exercício diz Dó♯"*. Foi para `contexto-musical.ts` no mesmo dia, ao se descobrir que outros
+// quatro itens tinham o mesmo defeito — dois deles sorteando a grafia com `Math.random()`.
 
 /**
  * **As oitavas que a superfície escolhida alcança de verdade.**
@@ -161,16 +156,9 @@ function todasAsCasas(tuning: readonly number[], m: number): { s: number; f: num
   return out;
 }
 
-/** Uma casa do braço que dá exatamente esta altura, preferindo a corda mais grave que a alcança. */
-function casaDaAltura(tuning: readonly number[], m: number): { s: number; f: number } | null {
-  for (let s = 0; s < tuning.length; s++) {
-    const f = m - tuning[s];
-    if (f >= 0 && f <= 12) return { s, f };
-  }
-  // **Devolve `null` quando o braço não alcança**, em vez da casa 0 da corda mais grave: desenhar a
-  // nota errada é pior que não desenhar, e foi o que o Paulo desconfiou ao ver a referência faltando.
-  return null;
-}
+// `casaDaAltura` morava aqui — esta era a versão CERTA das três que existiam (devolvia `null` quando
+// o braço não alcança). Foi para `helpers.ts` em 13/11, e com ela as outras duas, que devolviam a
+// casa 0 da corda mais grave e desenhavam a nota errada calada.
 
 export const ouvidoTecla: CatalogItem = {
   id: 'ouvido-tecla',
@@ -487,7 +475,7 @@ export const ouvidoTecla: CatalogItem = {
          * precisa mostrar qual é o contexto"*): duas colunas, a referência primeiro, a nota a audiar
          * depois. Ler a segunda sem ver a primeira é audiar sem saber de onde.
          */
-        onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: [[notaEscrita(referencia)], [notaEscrita(m)]] }
+        onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: [[notaGrafada(ctx, referencia)], [notaGrafada(ctx, m)]] }
         : onde === 'teclado' ? { kind: 'keyboard', ...desenho, marks: [referencia, m], marcasFracas: [referencia], rotulos: { [referencia]: nomeDaReferencia } }
         /**
          * **A referência aparece junto da nota**, no braço e no teclado (Paulo, 13/11: *"em audie no

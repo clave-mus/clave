@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, faixaDaClave, tonalidade, GRAUS_DO_MATERIAL, grauDoPc, grausDaTonalidade, notaDaTonalidade, pcsDosGraus, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, faixaDaClave, tonalidade, GRAUS_DO_MATERIAL, grauDoPc, grausDaTonalidade, nomeNaTonalidade, notaDaTonalidade, notaGrafada, pcsDosGraus, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -105,6 +105,98 @@ export function alturaDeTeclado(ctx: Ctx, s: S, lo: number, hi: number): number 
 
 /** Quatro cordas é baixo; seis é violão. */
 export const vozDoBraco = (tuning: readonly number[]) => (tuning.length === 4 ? 'baixo' as const : 'violao' as const);
+
+/**
+ * A faixa de teclado que **cabe** estas notas, de dó a dó e com pelo menos `minimo` semitons.
+ *
+ * Existe porque faixa fixa com nota variável é resposta impossível: `ouvido-acorde` desenhava o
+ * teclado de resposta em 48–72 enquanto a fundamental saía da região de quem usa e as inversões
+ * somavam até 19 semitons — medido, o acorde chegava a MIDI 83 com a região padrão, e a tecla para
+ * clicar a resposta **não existia na tela**. Quem erra assim não errou de música.
+ *
+ * Alinhar nos dós é para o teclado não começar no meio de um grupo de teclas pretas, que é onde o
+ * desenho fica ilegível.
+ */
+export function faixaQueCabe(ms: readonly number[], minimo = 24): { lo: number; hi: number } {
+  const piso = Math.min(...ms), teto = Math.max(...ms);
+  let lo = Math.floor(piso / 12) * 12;
+  let hi = Math.ceil((teto + 1) / 12) * 12;
+  // alarga em oitavas, de baixo e de cima alternadamente, até a largura mínima
+  while (hi - lo < minimo) { if (lo >= 12) lo -= 12; if (hi - lo < minimo) hi += 12; }
+  return { lo, hi };
+}
+
+/**
+ * Uma altura que **existe no braço** e tem uma das classes pedidas — `null` quando não há nenhuma.
+ *
+ * Enumerar e sortear, em vez de calcular uma oitava: é a diferença entre esta função e
+ * `alturaDoPc`, e foi ela que custou duas rodadas de conserto em 13/11.
+ *
+ * `alturaDoPc` promete "uma altura desta classe na faixa", e quando **nenhuma** cabe ela cai num
+ * fallback (`lo + mod(pc − lo, 12)`) que pode **passar do teto**. Com a janela estreita que o braço
+ * de um baixo impõe — quatro semitons, às vezes — isso acontece para oito das doze classes, e aí a
+ * resposta certa caía fora do braço desenhado: medido, MIDI 57 num instrumento cuja última casa dá
+ * 55, em `ouvido-acorde` e `ouvido-intervalo`. O guarda de varredura só pegou na quinta rodada,
+ * porque depende do sorteio.
+ *
+ * Aqui não há como estourar: a lista é de alturas reais do braço. A `preferida` (a região de quem
+ * usa) filtra quando dá, e é descartada quando não dá — sair da região é melhor que sair do
+ * instrumento.
+ *
+ * Havia uma quarta cópia desta conta, local em `ouvido-tecla`; esta é a dela, generalizada para
+ * várias classes e uma janela.
+ */
+export function alturaNoBraco(
+  tuning: readonly number[], pcs: readonly number[],
+  preferida?: { lo: number; hi: number }, from = 0, to = 12,
+): number | null {
+  const doBraco: number[] = [];
+  for (const corda of tuning) for (let f = from; f <= to; f++) if (pcs.includes(mod(corda + f, 12))) doBraco.push(corda + f);
+  if (!doBraco.length) return null;
+  const naFaixa = preferida ? doBraco.filter(m => m >= preferida.lo && m <= preferida.hi) : [];
+  return pick(naFaixa.length ? naFaixa : doBraco);
+}
+
+/**
+ * As alturas que um braço alcança entre duas casas — da corda mais grave solta ao topo da mais aguda.
+ *
+ * Serve para o sorteio não produzir nota que o braço não tem. É a mesma regra que o `ouvido-tecla`
+ * aprendeu em 13/11 depois de três relatos do Paulo: **não ofereça o que aquela tela não entrega.**
+ * Sem isto, uma melodia sorteada na região global podia pedir um Si5 num baixo de quatro cordas, e
+ * aí só havia escolha entre desenhar a casa errada ou não desenhar a nota.
+ */
+export function faixaDoBraco(tuning: readonly number[], from = 0, to = 12): { lo: number; hi: number } {
+  return { lo: Math.min(...tuning) + from, hi: Math.max(...tuning) + to };
+}
+
+/**
+ * **Todas** as casas do braço que dão exatamente esta altura — vazio quando nenhuma alcança.
+ *
+ * A mesma altura vive em várias cordas, e o braço só vira mapa quando se vê que o dó da casa 8 da
+ * quarta corda é o mesmo dó da casa 3 da segunda. Foi o pedido do Paulo em 13/11: *"no baixo a nota
+ * de referência se mostra apenas em uma das suas posições. mostre ela em todas."*
+ */
+export function casasDaAltura(tuning: readonly number[], m: number, from = 0, to = 12): { s: number; f: number }[] {
+  const out: { s: number; f: number }[] = [];
+  for (let s = 0; s < tuning.length; s++) {
+    const f = m - tuning[s];
+    if (f >= from && f <= to) out.push({ s, f });
+  }
+  return out;
+}
+/**
+ * Uma casa que dá esta altura, preferindo a corda mais grave — **`null` quando o braço não alcança**.
+ *
+ * Havia três cópias desta função, e elas **divergiam no caso que importa**: a de `ouvido-tecla`
+ * devolvia `null`, e as de `ouvido-acorde` e `melodia-de-ouvido` devolviam `{ s: 0, f: 0 }` — a casa
+ * 0 da corda mais grave, que é **uma nota diferente da pedida**. Um acorde com uma nota fora do
+ * braço era desenhado com um Mi2 no lugar dela, calado, e a pessoa estudava um acorde que não é o
+ * acorde. O próprio Player já tinha aprendido a regra e a escreve: *"marca na casa errada é pior que
+ * marca nenhuma"*.
+ */
+export function casaDaAltura(tuning: readonly number[], m: number, from = 0, to = 12): { s: number; f: number } | null {
+  return casasDaAltura(tuning, m, from, to)[0] ?? null;
+}
 
 /** Como a pergunta chama a corda. No violão as duas Mi se distinguem por grave e aguda. */
 export function nomeDaCorda(tuning: readonly number[], str: number, ctx: Ctx): string {
@@ -648,7 +740,21 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
 export function chordOptions(root: Note, type: ChordId, conv: Ctx['conv'], emJogo?: ChordId[]) {
   const sym = chordSymbol(root, type, conv);
   const types: ChordId[] = emJogo?.length ? emJogo : ['maior', 'menor', '7', 'm7', '7M'];
-  const pool = [...types.map(t => chordSymbol(root, t, conv)), ...shuffle(ROOTS).slice(0, 5).map(r => chordSymbol(r, type, conv))];
+  /**
+   * Os distratores de fundamental **excluem a enarmônica da resposta**, e não só a string igual.
+   *
+   * A conferência de acorde compara **classe de altura** da fundamental (`chordExpected`), então
+   * "Ré♭m" e "Dó♯m" são a mesma resposta certa — e duas respostas certas é o que a decisão 13
+   * proíbe. Passava escondido porque a fundamental vinha da própria lista `ROOTS`: a string saía
+   * idêntica e o `Set` a engolia. Em 13/11 a fundamental passou a ser grafada pela tonalidade, a
+   * string deixou de coincidir, e o teste de "exatamente uma alternativa certa" caiu na hora.
+   *
+   * Filtrar por classe de altura é o conserto de verdade — a string igual era coincidência, não
+   * proteção.
+   */
+  const pcDaResposta = pc({ ...root, oct: 4 });
+  const outrasFundamentais = shuffle(ROOTS.filter(r => pc({ ...r, oct: 4 }) !== pcDaResposta)).slice(0, 5);
+  const pool = [...types.map(t => chordSymbol(root, t, conv)), ...outrasFundamentais.map(r => chordSymbol(r, type, conv))];
   return { sym, options: optionsWith(sym, [...new Set(pool)], 6).map(chordOption), expected: chordExpected(root, type) };
 }
 /**

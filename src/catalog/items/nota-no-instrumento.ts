@@ -1,5 +1,5 @@
 import {
-  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, alturaDoPc, arr, casaPermitida, fretRange, mod, pcNameUm,
+  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, alturaDoPc, arr, casaPermitida, fretRange, mod, nomeNaTonalidade,
   pcOptions, pcsDosGraus, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
@@ -112,17 +112,17 @@ export const notaNoInstrumento: CatalogItem = {
         const p = pick(pcsDosGraus(ctx, arr(s.grausEscolhidos, [])));
         const soa = alturaDoPc(ctx, p, { lo, hi });
         return {
-          prompt: ctx.t('quiz.tapNote', { note: pcNameUm(p, ctx.naming, Math.random() < 0.5) }),
+          prompt: ctx.t('quiz.tapNote', { note: nomeNaTonalidade(ctx, p, Math.random() < 0.5) }),
           visual: { kind: 'text', text: '' },
           surface: { kind: 'keyboard', lo, hi }, expected: { kind: 'pitchClass', pc: p },
-          sound: { groups: [[soa]] }, reveal: pcNameUm(p, ctx.naming, false),
+          sound: { groups: [[soa]] }, reveal: nomeNaTonalidade(ctx, p),
         };
       }
       const m = alturaDeTeclado(ctx, s, lo, hi);
       return {
         prompt: ctx.t('quiz.whatNote'), visual: { kind: 'keyboard', lo, hi, marks: [m] },
         surface: { kind: 'choices', options: teclasPermitidas(ctx, s) }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
-        sound: { groups: [[m]] }, reveal: pcNameUm(mod(m, 12), ctx.naming, false),
+        sound: { groups: [[m]] }, reveal: nomeNaTonalidade(ctx, mod(m, 12)),
       };
     }
 
@@ -138,7 +138,7 @@ export const notaNoInstrumento: CatalogItem = {
     if (s.direcao === 'achar') {
       // Uma grafia só, sorteada, e a mesma no enunciado e no gabarito — ver `pcNameUm`.
       const bemol = Math.random() < 0.5;
-      const nome = pcNameUm(mod(m, 12), ctx.naming, bemol);
+      const nome = nomeNaTonalidade(ctx, mod(m, 12), bemol);
       /**
        * **Todas as posições**: a resposta é o conjunto de casas daquela nota na faixa visível, e a
        * conferência é contorno **não ordenada** — a ordem em que a pessoa varre o braço não é
@@ -174,7 +174,7 @@ export const notaNoInstrumento: CatalogItem = {
     return {
       prompt: ctx.t('quiz.whatNote'), visual: { kind: 'fretboard', tuning, from, to, marks: [{ s: str, f }] },
       surface: { kind: 'choices', options: pcOptions(ctx.naming) }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
-      sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: pcNameUm(mod(m, 12), ctx.naming, false),
+      sound: { groups: [[m]], instrument: vozDoBraco(tuning) }, reveal: nomeNaTonalidade(ctx, mod(m, 12)),
     };
   },
 };

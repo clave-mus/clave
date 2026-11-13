@@ -1,10 +1,9 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, clave, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, plain, regiao, tonicaNaRegiao } from '../helpers';
+import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
-import type { Ctx } from '../types';
 
 /**
  * **Melodia de ouvido** — a linha §3.2 do `OR-ouvido-relativo.md`, e o molde do modelo novo.
@@ -116,8 +115,31 @@ export const melodiaDeOuvido: CatalogItem = {
   },
   make(s, ctx): Question {
     const n = Math.round(Number(s.notas ?? 3));
+    /**
+     * **Onde**, antes do sorteio — e é por isso que ele subiu para cá.
+     *
+     * A expressão estava escrita duas vezes, uma em cada ramo, e nas duas **depois** de a melodia
+     * existir. Com isso o braço recebia uma melodia sorteada na região global: num baixo de quatro
+     * cordas, uma nota podia simplesmente não ter casa, e então só havia escolher entre desenhar a
+     * casa errada (era o que acontecia) ou não desenhar a nota. Sabendo a superfície antes, a
+     * melodia nasce no alcance dela.
+     */
+    const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
+    const noBraco = onde === 'braco';
+    const tuning = ctx.params.tuning;
     const { lo, hi } = regiao(ctx);
-    const melodia = sortearMelodia({ pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo, hi, n, saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)) });
+    /**
+     * No braço, a melodia se sorteia na **interseção** da região com o que o braço alcança. Se a
+     * interseção não der duas alturas, vale o braço inteiro: tocar fora do instrumento é pior que
+     * sair da região escolhida, e quem recusa configuração impossível é o `problema()`.
+     */
+    const alcance = faixaDoBraco(tuning, 0, 12);
+    const faixa = noBraco
+      ? (Math.min(hi, alcance.hi) - Math.max(lo, alcance.lo) >= 2
+        ? { lo: Math.max(lo, alcance.lo), hi: Math.min(hi, alcance.hi) }
+        : alcance)
+      : { lo, hi };
+    const melodia = sortearMelodia({ pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo: faixa.lo, hi: faixa.hi, n, saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)) });
     const tonica = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
     const cadencia = CADENCIAS.find(c => c === s.contexto);
     // O contexto cabe na MESMA faixa da melodia: nada soa fora do que a superfície desenha.
@@ -136,31 +158,39 @@ export const melodiaDeOuvido: CatalogItem = {
     ];
     const grau = (m: number) => grauDaFundamental(m - tonica);
     const emGraus = melodia.map(grau).join('-');
-    const comNomes = melodia.map(m => pcNameUm(mod(m, 12), ctx.naming, false)).join('-');
+    const comNomes = melodia.map(m => nomeNaTonalidade(ctx, mod(m, 12))).join('-');
 
     // Audiando, a superfície MOSTRA a melodia e a resposta é autoavaliação.
     if (audiando) {
-      const ondeMostrar = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
       /**
        * Nos instrumentos a melodia é **animada**, nota por nota — é o que faz a ordem existir ali.
        * Na pauta e nos graus ela aparece de uma vez: a leitura da esquerda para a direita já é a
        * ordem, e animar seria enfeite.
        */
       const visual: Question['visual'] =
-        ondeMostrar === 'graus' ? { kind: 'text', text: '' }
-        : ondeMostrar === 'pauta' ? { kind: 'staff', clef: clave(ctx), columns: melodia.map(m => [notaEscrita(m)]) }
-        : ondeMostrar === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...melodia), hi: Math.max(hi, ...melodia), marks: melodia, animar: true }
-        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: melodia.map(m => casaDaAltura(ctx, m)), animar: true };
+        onde === 'graus' ? { kind: 'text', text: '' }
+        : onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: melodia.map(m => [notaGrafada(ctx, m)]) }
+        : onde === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...melodia), hi: Math.max(hi, ...melodia), marks: melodia, animar: true }
+        /**
+         * No braço, **a primeira casa de cada nota**, e a melodia já foi sorteada no alcance dele —
+         * então a animação tem uma marca por nota, na ordem. Antes, a nota que o braço não
+         * alcançasse virava a casa 0 da corda mais grave: a animação mostrava outra melodia.
+         *
+         * Uma posição por nota, e não todas (como na referência do `ouvido-tecla`): aqui o que se
+         * lê é a ORDEM, e três marcas simultâneas por nota desmanchariam a linha.
+         */
+        : { kind: 'fretboard', tuning, from: 0, to: 12, animar: true,
+            marks: melodia.flatMap(m => casasDaAltura(tuning, m).slice(0, 1)) };
       return {
-        prompt: ondeMostrar === 'graus' ? ctx.t('quiz.audiateDegrees', { degrees: emGraus }) : ctx.t('quiz.audiateMelody'),
+        prompt: onde === 'graus' ? ctx.t('quiz.audiateDegrees', { degrees: emGraus }) : ctx.t('quiz.audiateMelody'),
         visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: { groups: grupos, partes }, autoplay: false,
+        // O gabarito soa no instrumento que está desenhado, não de piano.
+        sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: false,
         reveal: `${emGraus}  ·  ${comNomes}`,
       };
     }
 
-    const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
     /**
      * Respondendo por **graus**, a superfície é a `sequence` que já existe (a mesma do
      * `ouvido-celulas`): escolher entre todos os graus, em ordem. Nas outras três, é a superfície
@@ -168,37 +198,25 @@ export const melodiaDeOuvido: CatalogItem = {
      */
     const superficie: Surface = onde === 'graus'
       ? { kind: 'sequence', options: grausDaTonalidade(ctx).map(g => plain(g.id)), comprimento: n, separador: '-' }
-      : onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), accidentals: true, quantas: n }
+      : onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: n }
       // O teclado cobre **o que soou**, não só a região: `caberNaFaixa` pode empurrar o contexto
       // acima do teto quando ele não cabe inteiro, e a tela não pode mentir sobre o que soou (o
       // teste `superficie-cobre-o-som` guarda isso desde 09/11).
       : onde === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...grupos.flat()), hi: Math.max(hi, ...grupos.flat()), quantas: n }
-      : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, quantas: n };
+      : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: n };
 
     return {
       prompt: ctx.t('quiz.earMelody'),
       visual: { kind: 'ear', hint: ctx.t('quiz.earMelodyHint') },
       surface: superficie,
       expected: onde === 'graus' ? { kind: 'option', id: emGraus } : { kind: 'contorno', midis: melodia },
-      sound: { groups: grupos, partes }, autoplay: true,
+      sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true,
       reveal: `${emGraus}  ·  ${comNomes}`,
     };
   },
 };
 
-/** Uma casa que dá esta altura, da corda mais grave que a alcança — a mesma conta dos outros itens. */
-function casaDaAltura(ctx: Ctx, m: number) {
-  for (let s = 0; s < ctx.params.tuning.length; s++) {
-    const f = m - ctx.params.tuning[s];
-    if (f >= 0 && f <= 12) return { s, f };
-  }
-  return { s: 0, f: 0 };
-}
-
-/** A nota escrita de uma altura, na grafia com sustenido — a pauta precisa de letra e acidente. */
-function notaEscrita(m: number) {
-  const pc = mod(m, 12);
-  const letra = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
-  const acc = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
-  return { letter: letra as 0, acc, oct: Math.floor(m / 12) - 1 };
-}
+// `casaDaAltura` e `notaEscrita` moravam aqui, e o comentário de uma delas dizia "a mesma conta dos
+// outros itens" — o código admitindo a duplicação. As duas foram para `helpers.ts` em 13/11, uma vez
+// só: `casasDaAltura` (que não inventa casa quando o braço não alcança) e `notaGrafada` (que grafa
+// pela tonalidade). Ver a nota em `contexto-musical.ts`, onde está a história das cinco cópias.

@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, CLEFS, ROOTS, arr, buildChord, chordName, chordOptions, chordTypes, midi, pcPermitido, pick, pickClef, randInt } from '../helpers';
+import { ALL_CHORDS, CHORDS, CLEFS, arr, buildChord, chordName, chordOptions, chordTypes, midi, notaGrafada, pcPermitido, pick, pickClef, quintasDaTonalidade, randInt } from '../helpers';
 import type { ChordId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -45,13 +45,17 @@ export const acordeNaPauta: CatalogItem = {
     const types = arr(s.tipos, ['maior']) as ChordId[];
     const type = pick(types);
     const clef = pickClef(s, ctx);
-    const root = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
+    // A fundamental **grafada pela tonalidade** (em Ré♭ maior, Sol♭ e não Fá♯): era `ROOTS[pc]`,
+    // lista fixa que ignora a armadura desenhada ao lado. As notas do acorde seguem saindo de
+    // `buildChord`, com a grafia da teoria — um Si aumentado tem Fá♯♯, e isso está certo.
+    const oct = clef === 'sol' ? 4 : 2;
+    const root = notaGrafada(ctx, (oct + 1) * 12 + pcPermitido(ctx));
     const inv = s.inversoes ? randInt(0, CHORDS[type].degs.length - 1) : 0;
     const notes = buildChord(root, type, inv);
     const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
 
     return {
-      prompt: ctx.t('quiz.whatChord'), visual: { kind: 'staff', clef, columns: [notes] },
+      prompt: ctx.t('quiz.whatChord'), visual: { kind: 'staff', clef, fifths: quintasDaTonalidade(ctx) ?? undefined, columns: [notes] },
       surface: { kind: 'choices', options }, expected,
       sound: { groups: [notes.map(midi)] },
       reveal: ctx.t('quiz.chordReveal', { symbol: sym, name: chordName(ctx.t, type).toLowerCase() }),

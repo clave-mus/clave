@@ -1,4 +1,4 @@
-import { INST, arr, mod, paresNoBraco, pcNameUm, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
+import { INST, arr, mod, nomeNaTonalidade, paresNoBraco, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
 import { INTERVALS } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -87,7 +87,7 @@ export const intervaloNoInstrumento: CatalogItem = {
         visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: par.s1, f: par.f1, label: '1' }] },
         surface: { kind: 'fretboard', tuning, from: 0, to: 9 }, expected: { kind: 'pitchClass', pc: alvoPc },
         sound: { groups: [[lo]], instrument: vozDoBraco(tuning) },
-        reveal: pcNameUm(alvoPc, ctx.naming, Math.random() < 0.5),
+        reveal: nomeNaTonalidade(ctx, alvoPc, Math.random() < 0.5),
       };
     }
     return {

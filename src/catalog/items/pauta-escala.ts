@@ -1,4 +1,4 @@
-import { ALL_SCALES, CLEFS, ROOTS, arr, buildScale, midi, noteName, optionsWith, pcPermitido, pick, pickClef, plain, scaleName, shuffle } from '../helpers';
+import { ALL_SCALES, CLEFS, arr, buildScale, midi, notaGrafada, noteName, optionsWith, pcPermitido, pick, pickClef, plain, quintasDaTonalidade, scaleName, shuffle } from '../helpers';
 import type { MessageKey, Note, ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -18,7 +18,20 @@ export const pautaEscala: CatalogItem = {
     const clef = pickClef(s, ctx);
     const types = arr(s.tipos, ['maior']) as ScaleId[];
     const type = pick(types);
-    const tonic = { ...ROOTS[pcPermitido(ctx)], oct: clef === 'sol' ? 4 : 2 };
+    /**
+     * A tônica **grafada pela tonalidade**: em Ré♭ maior a classe 6 é Sol♭, não Fá♯.
+     *
+     * Era `ROOTS[pc]`, uma lista fixa de doze grafias que não sabe de tonalidade — e aí o enunciado
+     * anunciava "escala de Fá♯ maior" sob uma armadura de cinco bemóis. A tônica é o enunciado, e
+     * ela tem de concordar com a armadura desenhada ao lado.
+     *
+     * As OUTRAS notas da escala continuam saindo de `buildScale`, com a grafia que a teoria manda —
+     * uma menor harmônica sobre Si tem Lá♯, e trocá-lo por Si♭ faria dela outra escala. Medir isso
+     * em 13/11 evitou um conserto errado: o que precisa seguir a tonalidade é a tônica sorteada,
+     * não a construção.
+     */
+    const oct = clef === 'sol' ? 4 : 2;
+    const tonic = notaGrafada(ctx, (oct + 1) * 12 + pcPermitido(ctx));
     const notes = [...buildScale(tonic, type), { ...tonic, oct: tonic.oct + 1 }];
     const name = (t: Note, id: ScaleId) => ctx.t('quiz.scaleOf', { note: noteName(t, ctx.naming), scale: ctx.t(`theory.scalesInline.${id}` as MessageKey) });
     /**
@@ -41,7 +54,7 @@ export const pautaEscala: CatalogItem = {
     const pool = [type, ...outros.slice(0, 5)].map(t => name(tonic, t));
     const correct = name(tonic, type);
     return {
-      prompt: ctx.t('quiz.whatScale'), visual: { kind: 'staff', clef, columns: notes.map(n => [n]) },
+      prompt: ctx.t('quiz.whatScale'), visual: { kind: 'staff', clef, fifths: quintasDaTonalidade(ctx) ?? undefined, columns: notes.map(n => [n]) },
       surface: { kind: 'choices', options: optionsWith(correct, [...new Set(pool)], 6).map(plain), wide: true }, expected: { kind: 'option', id: correct },
       sound: { groups: notes.map(n => [midi(n)]) }, reveal: correct,
     };

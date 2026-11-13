@@ -1,12 +1,6 @@
-import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, pcsDosGraus, pick, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, faixaQueCabe, notaGrafada, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Surface } from '../types';
-
-/** A nota escrita de uma altura, na grafia com sustenido. */
-function notaEscrita(m: number) {
-  const pc = ((m % 12) + 12) % 12;
-  return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
-}
 
 export const ouvidoIntervalo: CatalogItem = {
   id: 'ouvido-intervalo',
@@ -91,7 +85,27 @@ export const ouvidoIntervalo: CatalogItem = {
      */
     const degraus = Array.from({ length: quantas - 1 }, () => Number(pick(ids)));
     const alto = degraus.reduce((a, b) => a + b, 0);
-    const teto = Math.max(53, 67 - alto);
+    /**
+     * **Respondendo no braço, o intervalo tem de caber no braço** — e aqui ele não cabia.
+     *
+     * A faixa de sorteio era 52–67 fixa, escrita pensando no violão. Num baixo de quatro cordas o
+     * braço vai do Mi1 (28) ao Mi4 (55) nas casas 0–12: uma base em 52 com uma oitava acima pede
+     * MIDI 64, **nove semitons acima da última casa**, e a pessoa não tinha onde clicar a resposta.
+     * Medido pela varredura de 13/11, que achou o mesmo em `ouvido-acorde`.
+     *
+     * No braço, então, a faixa é a do braço; nas outras superfícies, a de sempre. O teto desconta a
+     * altura do intervalo para a nota de cima também caber — é a mesma precaução que o comentário
+     * acima já tomava contra sair da região.
+     */
+    const ondeResponder = s.resposta === 'notas'
+      ? (s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie))
+      : null;
+    const vaiNoBraco = ondeResponder !== null && ondeResponder !== 'pauta' && ondeResponder !== 'teclado';
+    const alcance = faixaDoBraco(ctx.params.tuning, 0, 12);
+    const piso = vaiNoBraco ? alcance.lo : 52;
+    const teto = vaiNoBraco
+      ? Math.max(piso, Math.min(alcance.hi - alto, 67 - alto))
+      : Math.max(53, 67 - alto);
     /**
      * A base: a tônica, uma das notas escolhidas, ou qualquer altura da região.
      *
@@ -99,11 +113,39 @@ export const ouvidoIntervalo: CatalogItem = {
      * sorteia altura livre e não saberia filtrar por classe.
      */
     const escolhidas = arr(s.grausEscolhidos, []);
-    const base = s.comTonica
-      ? tonicaNaRegiao(ctx, { lo: 52, hi: teto })
-      : escolhidas.length
-        ? alturaDoPc(ctx, pick(pcsDosGraus(ctx, escolhidas)), { lo: 52, hi: teto })
-        : alturaNaRegiao(ctx, { lo: 52, hi: teto });
+    const naJanela = { lo: piso, hi: teto };
+    /**
+     * **No braço, a base sai de uma lista de alturas que cabem** — e não de `alturaDoPc`.
+     *
+     * Esta é a segunda metade do conserto, e ela só apareceu porque o guarda ganhou uma base com
+     * todo `multi` cheio. Com os doze graus marcados e a janela do braço do baixo, que pode ficar
+     * com quatro semitons, **oito das doze classes não têm representante na janela** — e aí
+     * `alturaDoPc` cai no fallback dela ("a mais próxima do piso"), que sobe **acima do teto**.
+     * Medido: pedia MIDI 57 num braço cuja última casa dá 55.
+     *
+     * Escolher a classe depois de saber quais cabem inverte a ordem e não tem como estourar: a
+     * lista é de alturas reais do braço, filtradas pelo que a pessoa escolheu.
+     */
+    const base = vaiNoBraco
+      ? (() => {
+        const pcs = s.comTonica
+          ? [mod(ctx.params.key?.tonic ?? 0, 12)]
+          : pcsDosGraus(ctx, escolhidas.length ? escolhidas : undefined);
+        const cabem: number[] = [];
+        for (let m = piso; m <= teto; m++) {
+          if (pcs.includes(mod(m, 12)) && ctx.params.tuning.some(t => m - t >= 0 && m - t <= 12)) cabem.push(m);
+        }
+        // Nenhuma classe escolhida cabe: qualquer altura do braço na janela, para o item ter
+        // pergunta. Quem recusa configuração impossível é o `problema()`, não o sorteio.
+        if (cabem.length) return pick(cabem);
+        for (let m = piso; m <= teto; m++) if (ctx.params.tuning.some(t => m - t >= 0 && m - t <= 12)) cabem.push(m);
+        return cabem.length ? pick(cabem) : piso;
+      })()
+      : s.comTonica
+        ? tonicaNaRegiao(ctx, naJanela)
+        : escolhidas.length
+          ? alturaDoPc(ctx, pick(pcsDosGraus(ctx, escolhidas)), naJanela)
+          : alturaNaRegiao(ctx, naJanela);
     // As alturas, de baixo para cima: a base e cada degrau somado ao anterior.
     const alturas = degraus.reduce((acc, passo) => [...acc, acc[acc.length - 1] + passo], [base]);
     const d = degraus[0];
@@ -125,7 +167,8 @@ export const ouvidoIntervalo: CatalogItem = {
       const tonica = tonicaDeContexto(ctx, base);
       return {
         prompt: ctx.t('quiz.audiateInterval'),
-        visual: { kind: 'staff', clef: clave(ctx), columns: dir === 'juntas' ? [alturas.map(notaEscrita)] : groups.map(g => g.map(notaEscrita)) },
+        visual: { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined,
+          columns: dir === 'juntas' ? [alturas.map(m => notaGrafada(ctx, m))] : groups.map(g => g.map(m => notaGrafada(ctx, m))) },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[tonica]],
@@ -148,16 +191,18 @@ export const ouvidoIntervalo: CatalogItem = {
      */
     if (s.resposta === 'notas') {
       const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
-      const faixa = { lo: Math.min(48, ...alturas), hi: Math.max(72, ...alturas) };
+      const noBraco = onde !== 'pauta' && onde !== 'teclado';
+      const tuning = ctx.params.tuning;
       const superficie: Surface = onde === 'pauta'
-        ? { kind: 'staff', clef: clave(ctx), accidentals: true, quantas: alturas.length }
-        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, quantas: alturas.length }
-        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, quantas: alturas.length };
+        ? { kind: 'staff', clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: alturas.length }
+        : onde === 'teclado' ? { kind: 'keyboard', ...faixaQueCabe(alturas), quantas: alturas.length }
+        : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: alturas.length };
       return {
         prompt: ctx.t('quiz.earIntervalNotes'), visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
         surface: superficie,
         expected: { kind: 'contorno', midis: dir === 'juntas' ? alturas : ordenadas, ordenada: dir !== 'juntas' },
-        sound: { groups }, autoplay: true, reveal: nome,
+        // Respondendo no braço, o som é do braço: era piano, como ele relatou no `audiar` em 13/11.
+        sound: { groups, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true, reveal: nome,
       };
     }
     return {

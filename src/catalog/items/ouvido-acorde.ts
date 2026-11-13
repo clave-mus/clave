@@ -1,21 +1,8 @@
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, chordName, chordTypes, clave, pick, porComplexidade, randInt, tonalidade } from '../helpers';
-import type { ChordId, Ctx, Question } from '../helpers';
+import { caberNaFaixa } from '../../theory/cadencia-harmonica';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco } from '../helpers';
+import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
-
-/** A nota escrita de uma altura, na grafia com sustenido. */
-function notaEscrita(m: number) {
-  const pc = ((m % 12) + 12) % 12;
-  return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
-}
-/** Uma casa que dá esta altura, da corda mais grave que a alcança. */
-function casaDaAltura(ctx: Ctx, m: number) {
-  for (let s = 0; s < ctx.params.tuning.length; s++) {
-    const f = m - ctx.params.tuning[s];
-    if (f >= 0 && f <= 12) return { s, f };
-  }
-  return { s: 0, f: 0 };
-}
 
 export const ouvidoAcorde: CatalogItem = {
   id: 'ouvido-acorde',
@@ -134,7 +121,25 @@ export const ouvidoAcorde: CatalogItem = {
     // Pela função de contexto, não por `ctx.params` direto: é a regra do projeto, e a sonda de
     // `contexto-declarado` mede as chamadas — ler direto faz o item declarar o que não se vê.
     const pcDaFundamental = s.fundamental === 'sorteada' ? randInt(0, 11) : tonalidade(ctx)?.tonic ?? 0;
-    const root = alturaDoPc(ctx, pcDaFundamental, { lo: 53, hi: 64 });
+    /**
+     * **Desenhando no braço, o acorde tem de caber no braço.**
+     *
+     * A janela da fundamental era 53–64 fixa, e o acorde cresce dela: onze semitons de tétrade mais
+     * até oito de inversão. Num baixo de quatro cordas (casas 0–12 vão do Mi1 ao Mi4, 28 a 55) isso
+     * sai do instrumento, e aí não havia casa para clicar a resposta — defeito que a varredura de
+     * 13/11 achou junto com o gêmeo em `ouvido-intervalo`.
+     *
+     * O desconto é a extensão do que vai soar, para a nota mais aguda caber também.
+     */
+    const noBracoDesenhado = (s.resposta === 'desenhar' || s.estimulo === 'escrito')
+      && s.instrumento !== 'pauta'
+      && !(s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano'));
+    const extensao = Math.max(...CHORDS[type].degs.map(([, semi]) => semi)) + (s.inversoes ? 12 : 0);
+    const alcance = faixaDoBraco(ctx.params.tuning, 0, 12);
+    const janela = noBracoDesenhado
+      ? { lo: alcance.lo, hi: Math.max(alcance.lo, Math.min(64, alcance.hi - extensao)) }
+      : { lo: 53, hi: 64 };
+    let root = alturaDoPc(ctx, pcDaFundamental, janela);
     const ms = CHORDS[type].degs.map(([, semi]) => root + semi);
     // Inverter é levar a nota mais grave uma oitava acima, tantas vezes quanto a inversão. Em
     // MIDI direto, como o resto do item — `buildChord` faz o mesmo sobre `Note`, e aqui não há
@@ -143,20 +148,62 @@ export const ouvidoAcorde: CatalogItem = {
       for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
     }
     /**
+     * **E, no braço, o acorde inteiro é empurrado para dentro dele** — por oitavas, com
+     * `caberNaFaixa`, o mesmo motor que a cadência usa.
+     *
+     * Descontar a extensão da janela da fundamental (acima) resolve a maioria dos casos, mas não
+     * todos: `alturaDoPc` cruza a janela com a região de quem usa, e quando nenhuma oitava daquela
+     * classe cabe na interseção ela cai num fallback que **passa do teto**. Medido pelo guarda de
+     * varredura, e só na quinta rodada, porque depende do sorteio: MIDI 57 num braço cuja última
+     * casa dá 55.
+     *
+     * Deslocar o conjunto por oitavas não muda a pergunta — a qualidade do acorde é a mesma e as
+     * classes de altura também —, e é a única operação que garante o acorde dentro do instrumento
+     * sem mexer no que foi sorteado.
+     */
+    /**
+     * **A fundamental acompanha o deslocamento** — e esquecê-la foi um defeito que eu introduzi
+     * aqui mesmo, pego pelo teste `direcao-audiar` na mesma rodada.
+     *
+     * `root` é o que toca como **contexto** ("a tônica, para fixar o centro"). Deslocando só `ms`,
+     * o contexto soava numa oitava e o acorde desenhado estava noutra: a referência que deveria
+     * ancorar o ouvido apontava para fora do que se vê. Um deslocamento, nas duas coisas.
+     */
+    if (noBracoDesenhado) {
+      /**
+       * A **cópia** é obrigatória: `caberNaFaixa` devolve os mesmos arrays quando o deslocamento é
+       * zero, e sem copiar o `ms.length = 0` abaixo zerava a própria fonte — o acorde saía **vazio**,
+       * sem marca no braço e sem som. Peguei pelo teste `direcao-audiar`, não pela varredura: ela
+       * conferia que a resposta cabe na superfície, e uma resposta vazia cabe em qualquer lugar.
+       */
+      const dentro = [...caberNaFaixa([ms], alcance.lo, alcance.hi)[0]];
+      root += dentro[0] - ms[0];
+      ms.length = 0;
+      ms.push(...dentro);
+    }
+    /**
      * **Audiar**: o acorde aparece desenhado, a tônica toca como contexto, e o arpejo fica no botão
      * de conferência. Mesma superfície do modo "desenhar", lida em vez de clicada.
      */
     if (s.estimulo === 'escrito') {
       const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
+      const noBraco = !noPiano && s.instrumento !== 'pauta';
+      const tuning = ctx.params.tuning;
       const visual: Question['visual'] = s.instrumento === 'pauta'
-        ? { kind: 'staff', clef: clave(ctx), columns: ms.map(m => [notaEscrita(m)]) }
-        : noPiano ? { kind: 'keyboard', lo: Math.min(48, ...ms), hi: Math.max(72, ...ms), marks: ms }
-        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: ms.map(m => casaDaAltura(ctx, m)) };
+        ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: ms.map(m => [notaGrafada(ctx, m)]) }
+        : noPiano ? { kind: 'keyboard', ...faixaQueCabe(ms), marks: ms }
+        // **Só as notas que o braço alcança são desenhadas.** `casaDaAltura` devolvia a casa 0 da
+        // corda mais grave quando não achava — um Mi2 no lugar da nota pedida, calado. O acorde
+        // desenhado não era o acorde, e a pessoa audiava outra coisa.
+        : { kind: 'fretboard', tuning, from: 0, to: 12, marks: ms.map(m => casaDaAltura(tuning, m)).filter((c): c is { s: number; f: number } => c !== null) };
       return {
         prompt: ctx.t(s.instrumento === 'pauta' ? 'quiz.audiateChord' : 'quiz.audiateChordOnInstrument'), visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[root]],
+          // O timbre segue o desenho: um acorde mostrado no braço soava de piano, que foi queixa
+          // dele em 13/11 no `audiar` do braço.
+          instrument: noBraco ? vozDoBraco(tuning) : undefined,
           partes: [
             { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[root]] },
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
@@ -175,15 +222,21 @@ export const ouvidoAcorde: CatalogItem = {
       const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
       const naPauta = s.instrumento === 'pauta';
       const clef = clave(ctx);
+      const tuning = ctx.params.tuning;
       const superficie = naPauta
-        ? { kind: 'staff' as const, clef, accidentals: true, quantas: ms.length }
+        ? { kind: 'staff' as const, clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: ms.length }
         : noPiano
-          ? { kind: 'keyboard' as const, lo: 48, hi: 72, quantas: ms.length }
-          : { kind: 'fretboard' as const, tuning: ctx.params.tuning, from: 0, to: 12, quantas: ms.length };
+          // **A faixa cabe o acorde.** Era 48–72 fixo, e o acorde não: a fundamental sai da região
+          // de quem usa e as inversões somam até 19 semitons. Com a região padrão o acorde chegava
+          // a MIDI 83 — onze semitons acima da última tecla desenhada —, e não havia onde clicar a
+          // resposta. Erro de configuração aparecendo como erro da pessoa.
+          ? { kind: 'keyboard' as const, ...faixaQueCabe(ms), quantas: ms.length }
+          : { kind: 'fretboard' as const, tuning, from: 0, to: 12, quantas: ms.length };
       return {
         prompt: ctx.t('quiz.drawChord', { chord: chordName(ctx.t, type) }), visual: { kind: 'ear' },
         surface: superficie, expected: { kind: 'contorno', midis: ms, ordenada: false },
-        sound: { groups: [ms] }, autoplay: true, reveal: chordName(ctx.t, type),
+        sound: { groups: [ms], instrument: !naPauta && !noPiano ? vozDoBraco(tuning) : undefined },
+        autoplay: true, reveal: chordName(ctx.t, type),
       };
     }
     return {

@@ -42,6 +42,7 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   notaNaPauta: ['range', 'key', 'material'],
   alturaDoPc: ['range'],
   notaGrafada: ['key'],
+  nomeNaTonalidade: ['key'],
   // Entrou em 10/11/2026 com a direção `audiar`: lê a tonalidade para saber qual tônica tocar como
   // contexto, e o piso da região para não botar o contexto fora dela.
   tonicaDeContexto: ['key', 'range'],

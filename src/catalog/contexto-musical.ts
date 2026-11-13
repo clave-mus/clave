@@ -11,7 +11,7 @@
 //
 // E é por isso que elas moram num arquivo só: acrescentar um parâmetro musical novo se faz aqui,
 // e passa a valer para todo item sem editar o catálogo. É o critério de pronto da F2-1.
-import { applyKey, buildScale, clefBottom, fromStep, midi, mod, note, pick, randInt, type Clef, type Note } from '../theory/core';
+import { applyKey, buildScale, clefBottom, fromMidi, fromStep, midi, mod, note, pcNameUm, pick, randInt, type Clef, type Note } from '../theory/core';
 import type { GlobalParams } from './params';
 import type { Ctx } from './types';
 
@@ -324,14 +324,49 @@ export function clave(ctx: Ctx, doItem?: Clef): Clef {
  *
  * É o que impede Lá♯ de aparecer em Fá maior — o motor de teoria já sabe grafar, mas só se alguém
  * disser qual é a tonalidade.
+ *
+ * **Esta é a única função que grafa uma altura, e passou a ser em 13/11.** Havia cinco cópias da
+ * mesma tabela de doze pares letra/acidente: esta, e uma `notaEscrita` local em cada um de
+ * `ouvido-tecla`, `ouvido-acorde`, `ouvido-intervalo` e `melodia-de-ouvido` — as quatro com
+ * sustenido fixo, nenhuma olhando a tonalidade. Era a razão de o mesmo defeito reaparecer em telas
+ * diferentes: o Paulo relatou *"na tonalidade diz Ré♭, no exercício diz Dó♯"* no `ouvido-tecla`, e
+ * consertar lá não consertava as outras três.
+ *
+ * Duas coisas mudaram aqui ao recolher as cópias:
+ *
+ * 1. a tabela saiu, e quem grafa é `fromMidi`, do motor — o CLAUDE.md diz *"`src/theory/core.ts` já
+ *    resolve isso. Não contorne"*, e seis implementações eram seis contornos;
+ * 2. **o critério passou a ser a armadura, não a tônica.** Era `[1, 3, 5, 8, 10].includes(tonic)`,
+ *    que ignora o modo: em Ré menor dava sustenido, e Ré menor tem **Si♭**. Isso errava exatamente
+ *    o caso do CLAUDE.md, de cabeça para baixo.
+ *
+ * Medido, muda em **seis tonalidades, todas menores**, e em nenhuma maior: dó, ré e sol menores
+ * passam a grafar com bemol (as armaduras têm 3, 1 e 2 bemóis), e dó♯, ré♯ e sol♯ menores passam a
+ * grafar com sustenido (4, 6 e 5 sustenidos). As duas metades são conserto: a tônica sozinha não
+ * diz de que lado a armadura cai, porque não sabe o modo.
  */
 export function notaGrafada(ctx: Ctx, m: number): Note {
-  const k = ctx.params.key;
-  const prefereBemol = k ? [1, 3, 5, 8, 10].includes(mod(k.tonic, 12)) : false;
-  const letras = prefereBemol ? [0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6] : [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
-  const acidentes = prefereBemol ? [0, -1, 0, -1, 0, 0, -1, 0, -1, 0, -1, 0] : [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
-  const i = mod(m, 12);
-  return { letter: letras[i] as Note['letter'], acc: acidentes[i], oct: Math.floor(m / 12) - 1 };
+  const f = quintasDaTonalidade(ctx);
+  return fromMidi(m, f !== null && f < 0 ? 'flat' : 'sharp');
+}
+
+/**
+ * O **nome** de uma classe de altura na tonalidade em vigor: em Ré♭ maior, a classe 1 é Ré♭, não
+ * Dó♯. A irmã de `notaGrafada` para o texto — uma pergunta escrita, um gabarito revelado.
+ *
+ * `bemolSeLivre` só decide **quando não há tonalidade**, e existe para preservar uma intenção que
+ * estava no código de `nota-no-instrumento`: ali a grafia é sorteada a cada rodada (*"uma grafia só,
+ * sorteada, e a mesma no enunciado e no gabarito"*), para não treinar sempre o mesmo lado da
+ * enarmonia. O que estava errado não era o sorteio e sim sortear **também quando há tonalidade** —
+ * em Sol maior o exercício pedia "Ré♭" em metade das rodadas, que é a queixa do Paulo de 13/11 vista
+ * de outro ângulo.
+ *
+ * É a regra de ouro deste arquivo aplicada à grafia: respeitar o parâmetro quando ele está definido,
+ * sortear quando não está.
+ */
+export function nomeNaTonalidade(ctx: Ctx, p: number, bemolSeLivre = false): string {
+  const f = quintasDaTonalidade(ctx);
+  return pcNameUm(p, ctx.naming, f === null ? bemolSeLivre : f < 0);
 }
 
 /** O que gravar no snapshot de uma tentativa ou atividade. */
