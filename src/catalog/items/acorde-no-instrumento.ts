@@ -47,10 +47,14 @@ export const acordeNoInstrumento: CatalogItem = {
       options: [{ id: 'acorde', label: ctx.t('settings.askChord') }, { id: 'baixo', label: ctx.t('settings.askBass') }] },
     { id: 'soltas', label: ctx.t('settings.openStrings'), type: 'toggle', quando: s => s.instrumento !== 'piano' },
     { ...FRETS(ctx), quando: s => s.instrumento !== 'piano' },
+    // Pedido do Paulo em 12/11. É o MESMO toggle de `ouvido-acorde`, e vale a pena ser o mesmo:
+    // arpejar antes é como se ouve um acorde desenhado, nota por nota, para depois ouvi-lo junto.
+    { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true,
+      present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
   ],
   defaults: {
     direcao: 'identificar', instrumento: 'auto', tipos: ['maior', 'menor', 'dim', 'aum'],
-    pergunta: 'acorde', soltas: false, casas: '0-12',
+    pergunta: 'acorde', soltas: false, casas: '0-12', arpejo: false,
   },
   make(s, ctx) {
     /** `auto` com baixo cai no piano: as formas de violão não existem num baixo de quatro cordas. */

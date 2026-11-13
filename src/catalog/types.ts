@@ -110,6 +110,14 @@ export interface SoundContent {
    * sabe se separar ajuda ou estraga é o item.
    */
   partes?: ParteDoSom[];
+  /**
+   * Índices de `groups` que o arpejo alcança. Sem a lista, o arpejo vale para todos.
+   *
+   * Existe porque arpejar o CONTEXTO estraga o contexto: ele é uma cadência que deve soar como
+   * harmonia, e quebrá-la em notas soltas tira dela exatamente o que ela estabelece. Quem arpeja é
+   * o acorde da pergunta (Paulo, 12/11/2026).
+   */
+  arpejaveis?: number[];
 }
 
 /** Um pedaço do som que a pessoa pode repetir sozinho. */

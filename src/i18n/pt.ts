@@ -257,6 +257,8 @@ const pt = {
     campoEmprestimos: 'Maior com empréstimos modais',
     campoMenor: 'Campo menor, tétrades',
     campoMenorDominante: 'Menor com V7 e vii°',
+    campoMenorTriades: 'Campo menor, tríades',
+    campoMenorEmprestimos: 'Menor com empréstimos modais',
     teclaGrau: 'Que grau é, com dó de referência',
     teclaBrancas: 'Só teclas brancas, com referência',
     teclaSemAncora: 'Sem referência e sem tonalidade',

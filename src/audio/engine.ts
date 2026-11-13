@@ -164,16 +164,54 @@ export function amostrasDeCorda(
    * Um dedo ou palheta real injeta muito menos agudo, e é o mesmo passa-baixa do laço que modela
    * isso. Aplicado duas vezes, para a queda ser mais firme que a de uma volta só.
    */
-  // O estouro dura uma volta da corda, **mas no máximo 6 ms**: o tempo de contato de um dedo não
-  // cresce porque a nota é grave. Sem o teto, no Si0 ele durava 32 ms, e filtrado virava uma rampa
-  // quase contínua que excitava mal o modo — a altura media 18 cents fora.
-  const exc = Math.max(2, Math.min(Math.round(sr / f), Math.round(sr * 0.006)));
+  /**
+   * O estouro dura **uma volta inteira da corda** — e isto conserta o bug que o Paulo achou em
+   * 12/11: *"o fá da casa 3 da corda ré soou mais grave que o si da corda lá casa 2"*.
+   *
+   * Havia aqui um teto de 6 ms, posto para o ataque não virar uma rampa longa nas graves. Mas o
+   * laço de uma nota grave dura 16–24 ms: com 6 ms, só um terço do atraso recebia energia, e **a
+   * amplitude da fundamental passava a ser o que o ruído aleatório tivesse somado naquele pedaço**
+   * — sorte. Medido: o período sai certo em toda a extensão (0–3 cents), mas a fundamental saía
+   * mais fraca que o 2º harmônico em notas sorteadas, e aí a nota soa uma oitava acima. Como isso
+   * acontecia com umas notas e não com outras, **a ordem entre duas posições invertia** — foi
+   * exatamente o que ele ouviu.
+   *
+   * Encher o atraso todo é o Karplus-Strong clássico, e o 2º harmônico deixa de ganhar por acaso.
+   * Só muda abaixo de ~167 Hz (onde uma volta já passava de 6 ms); acima disso o ataque é o mesmo.
+   */
+  const exc = Math.max(2, Math.round(sr / f));
+  /**
+   * A forma do estouro é um **triângulo com ruído por cima**, não ruído puro.
+   *
+   * Ruído puro é o Karplus-Strong de manual, e foi o que escondia o bug: a amplitude de cada
+   * harmônico é o que o sorteio deu, então em metade das notas o 2º harmônico vencia a
+   * fundamental e a nota soava uma oitava acima — medido, 56 de 120 casos.
+   *
+   * Uma corda pulsada de verdade parte de um **deslocamento triangular**: o dedo puxa num ponto e
+   * solta. Esse formato tem fundamental forte e harmônicos caindo com 1/k², o que é também o que
+   * se ouve. O ruído entra com peso menor, para o ataque continuar tendo o "dedo" e as notas não
+   * saírem idênticas umas às outras.
+   *
+   * O pico fica a 1/5 do comprimento porque é por ali que se pulsa uma corda — mais perto da
+   * ponte, mais harmônico; no meio exato, os pares desaparecem.
+   */
+  const PONTO = 0.2;
+  const PESO_DO_RUIDO = 0.35;
   let ataque = 0;
   let pico = 0;
+  let soma = 0;
   for (let i = 0; i < exc; i++) {
-    ataque += k * (rnd() * (1 - i / exc) - ataque);
+    const u = i / exc;
+    const triangulo = u < PONTO ? u / PONTO : (1 - u) / (1 - PONTO);
+    ataque += k * (triangulo + PESO_DO_RUIDO * rnd() * (1 - u) - ataque);
     x[i] = ataque;
-    pico = Math.max(pico, Math.abs(ataque));
+    soma += ataque;
+  }
+  // Tira o valor médio: DC não é altura nenhuma, só um baque — e empurra o laço para um lado.
+  const media = soma / exc;
+  for (let i = 0; i < exc; i++) {
+    x[i] -= media;
+    pico = Math.max(pico, Math.abs(x[i]));
   }
   // O filtro tira energia, e quanto ela cai depende da nota. Normalizar o pico devolve o volume
   // sem número mágico — a primeira tentativa multiplicava por 2,2 e estourava amplitude 1.

@@ -77,6 +77,14 @@
 
   /* --- nomes antigos, mapeados para os novos.
          Há estilo em linha nos .tsx que ainda os usa; a limpeza é a F4-4. --- */
+  /* --- o teclado é um objeto físico, não um tema ---
+     Tecla branca é branca no modo claro e no escuro; tecla preta é preta nos dois. Estas cores
+     ficam FORA dos blocos de tema de propósito. O defeito que isto conserta (Paulo, 12/11): o
+     teclado usava `--cream`/`--bk`, que são apelidos de `--ink`/`--ground` e INVERTEM com o tema —
+     no modo claro as brancas saíam escuras e as pretas claras. */
+  --key-white: #f7f3ec;
+  --key-black: #211e1c;
+
   --bk: var(--ground);
   --bk-2: var(--surface);
   --bk-3: var(--raised);
@@ -504,6 +512,20 @@ select.sel {
 .ans.right { background: var(--ok); border-color: var(--ok); color: var(--ok-ink); font-weight: 650; }
 .ans.right .k { color: var(--ok-ink); opacity: .7; }
 .ans.right::before { content: '✓'; position: absolute; right: 8px; top: 5px; font-size: 13px; }
+
+/* O acerto PULSA uma vez, 280 ms. Pedido do Paulo em 12/11: "o aviso de que eu acertei é pouco
+   perceptível, é um textinho no canto — precisamos de algo mais visível, talvez uma animação rápida
+   e não exagerada". Então é um pulso só, na cor que já marcava o acerto: nada de confete nem de
+   comemoração, que a visão do produto proíbe. Só o olho achando a resposta sem procurar. */
+@keyframes pulso-acerto {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.055); }
+  100% { transform: scale(1); }
+}
+.ans.right { animation: pulso-acerto 280ms ease-out 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ans.right { animation: none; }
+}
 .ans.wrong { border-color: var(--err); background: var(--err-quiet); color: var(--err-strong); text-decoration: line-through; }
 .ans:disabled { cursor: default; }
 .ans.rhythm { padding: 10px 12px; }

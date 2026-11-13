@@ -128,3 +128,27 @@ it('o laço decai: a corda não sustenta para sempre', () => {
   const fim = Math.max(...Array.from(x.slice(SR * 1.5)).map(Math.abs));
   expect(fim).toBeLessThan(inicio * 0.5);
 });
+
+/**
+ * A fundamental tem de mandar em TODA a extensão — o bug do Paulo em 12/11: *"o fá da casa 3 da
+ * corda ré soou mais grave que o si da corda lá casa 2"*.
+ *
+ * Com ruído puro no ataque, a amplitude de cada harmônico era sorteada, e em 56 de 120 casos o 2º
+ * harmônico vencia a fundamental: a nota soava uma oitava acima. Como acontecia com umas notas e
+ * não com outras, **a ordem entre duas posições invertia**. Daí o estouro triangular.
+ */
+describe('a fundamental manda', () => {
+  it('em 15 alturas e 4 ruídos, a fundamental tem mais energia que o 2º harmônico', () => {
+    for (const m of [24, 28, 31, 33, 35, 38, 40, 41, 43, 45, 48, 50, 55, 59, 64]) {
+      const f = hz(m);
+      for (let s = 1; s <= 4; s++) {
+        let semente = (s * 7919) >>> 0;
+        const rnd = () => ((semente = (semente * 1664525 + 1013904223) >>> 0) / 2 ** 32) * 2 - 1;
+        const x = amostrasDeCorda(m, SR, 1800, 2.2, SR * 2, rnd);
+        const razao = magnitude(x, f, 2000, SR) / Math.max(1e-9, magnitude(x, 2 * f, 2000, SR));
+        // Medido: a pior razão é 2,4. O piso de 1,5 é folga sem deixar passar o bug (que dava < 1).
+        expect(razao, `midi ${m}, ruído ${s}`).toBeGreaterThan(1.5);
+      }
+    }
+  });
+});

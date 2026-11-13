@@ -52,7 +52,9 @@ export const notaNoInstrumento: CatalogItem = {
     { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', quando: s => s.instrumento === 'piano',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] },
   ],
-  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-5', pretas: true, oitavas: '2' },
+  // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
+  // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
+  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', pretas: true, oitavas: '2' },
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {
       const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });

@@ -257,6 +257,8 @@ const en: Shape<typeof pt> = {
     campoEmprestimos: 'Major with borrowed chords',
     campoMenor: 'Minor field, seventh chords',
     campoMenorDominante: 'Minor with V7 and vii°',
+    campoMenorTriades: 'Minor field, triads',
+    campoMenorEmprestimos: 'Minor with borrowed chords',
     teclaGrau: 'Which degree, with C as reference',
     teclaBrancas: 'White keys only, with reference',
     teclaSemAncora: 'No reference, no key',

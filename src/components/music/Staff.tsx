@@ -68,6 +68,11 @@ function ClefGlyph({ clef }: { clef: Clef }) {
   </g>;
 }
 
+/** Pixels na tela por unidade do `viewBox`. Um fator só para toda pauta: é o que faz a nota ter o
+ *  mesmo tamanho em todo o app (ver o comentário no `style` abaixo). 2,9 mantém a pauta mais larga
+ *  no tamanho que ela já tinha. */
+const ESCALA = 2.9;
+
 export default function Staff({ clef, fifths = 0, columns, timeSig, cursor = null, colWidth = 58, onPick, ghostAcc = 0, label }: Props) {
   const t = useT();
   const bottom = clefBottom(clef);
@@ -102,7 +107,16 @@ export default function Staff({ clef, fifths = 0, columns, timeSig, cursor = nul
       viewBox={`0 0 ${width} 176`}
       role="img"
       aria-label={label ?? t('music.staff')}
-      style={{ cursor: onPick ? 'pointer' : undefined, touchAction: onPick ? 'none' : undefined, maxWidth: Math.max(width * 2, 320) }}
+      /**
+       * A largura máxima é **proporcional ao `viewBox`**, e isso é o que mantém a escala igual
+       * entre uma pauta e outra. Era `max(width * 2, 320)`, e o piso de 320 criava o defeito que o
+       * Paulo achou em 12/11: *"a clave de dó maior, sem acidentes, está com a imagem maior que as
+       * demais e desloca a interface"*. Medido no navegador — três armaduras com `viewBox` de 89,
+       * 100 e 111 saíam todas com 320 px na tela, ou seja, **três escalas diferentes**, e a de dó
+       * (a mais estreita) era a maior de todas. Com um fator só, pauta estreita ocupa menos
+       * largura em vez de crescer, e a nota tem o mesmo tamanho em todo o app.
+       */
+      style={{ cursor: onPick ? 'pointer' : undefined, touchAction: onPick ? 'none' : undefined, maxWidth: width * ESCALA }}
       onPointerMove={onPick ? ev => setGhost(stepFromEvent(ev)) : undefined}
       onPointerLeave={onPick ? () => setGhost(null) : undefined}
       onPointerDown={onPick ? ev => { const s = stepFromEvent(ev); setGhost(s); onPick(s); } : undefined}

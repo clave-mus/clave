@@ -41,13 +41,13 @@ export default function Keyboard({ lo, hi, marks = {}, onPress, labels = 'do', n
         const showLabel = labels === 'all' || (labels === 'do' && m % 12 === 0);
         return (
           <g key={m} onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }}>
-            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--cream)'} className={interactive ? 'key white' : undefined} />
-            {showLabel && <text x={x + WW / 2 - 0.75} y={WH - 9} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--bk)" fontFamily="var(--body)">{pcName(m, naming, false)}{m % 12 === 0 && labels === 'do' ? Math.floor(m / 12) - 1 : ''}</text>}
+            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--key-white)'} className={interactive ? 'key white' : undefined} />
+            {showLabel && <text x={x + WW / 2 - 0.75} y={WH - 9} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--key-black)" fontFamily="var(--body)">{pcName(m, naming, false)}{m % 12 === 0 && labels === 'do' ? Math.floor(m / 12) - 1 : ''}</text>}
           </g>
         );
       })}
       {blacks.map(({ m, x }) => (
-        <rect key={m} x={x} y={0} width={BW} height={BH} fill={marks[m] ?? 'var(--bk)'} stroke="var(--bk)" strokeWidth="1.5"
+        <rect key={m} x={x} y={0} width={BW} height={BH} fill={marks[m] ?? 'var(--key-black)'} stroke="var(--key-black)" strokeWidth="1.5"
           onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }} className={interactive ? 'key black' : undefined} />
       ))}
     </svg>

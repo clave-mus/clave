@@ -64,7 +64,9 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'maior-triades', nome: 'presets.campoTriades', settings: { campo: 'maior', tetrades: false, emprestimos: [] }, params: EM_DO_MAIOR },
     { id: 'maior-emprestimos', nome: 'presets.campoEmprestimos', settings: { campo: 'maior', tetrades: true, emprestimos: ['iv', 'bVI', 'bVII', 'bIII', 'iio', 'bII'] }, params: EM_DO_MAIOR },
     { id: 'menor-tetrades', nome: 'presets.campoMenor', settings: { campo: 'menor', tetrades: true, emprestimosMenor: [] }, params: EM_LA_MENOR },
+    { id: 'menor-triades', nome: 'presets.campoMenorTriades', settings: { campo: 'menor', tetrades: false, emprestimosMenor: [] }, params: EM_LA_MENOR },
     { id: 'menor-dominante', nome: 'presets.campoMenorDominante', settings: { campo: 'menor', tetrades: true, emprestimosMenor: ['V', 'viio'] }, params: EM_LA_MENOR },
+    { id: 'menor-emprestimos', nome: 'presets.campoMenorEmprestimos', settings: { campo: 'menor', tetrades: true, emprestimosMenor: ['V', 'viio', 'IV', 'ii', 'bII'] }, params: EM_LA_MENOR },
   ],
   presentation: { gap: 0.45 },
   // Com um acorde só não há o que perguntar (decisão 13: recusar, não sortear).
@@ -108,7 +110,10 @@ export const ouvidoCampo: CatalogItem = {
       surface: { kind: 'choices', options, compact: options.length > 8 },
       expected: { kind: 'option', id: nomeDe(alvo) },
       sound: {
-        groups: [...contexto, ms],
+        // O grupo VAZIO entre contexto e alvo é um respiro de um `gap` (Paulo, 12/11: "precisa de um
+        // tempo maior entre o contexto e o acorde"), e `arpejaveis` deixa o arpejo só no alvo — o
+        // contexto é harmonia, e arpejá-lo tira dele o que ele estabelece.
+        groups: [...contexto, [], ms], arpejaveis: [contexto.length + 1],
         partes: [
           { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [ms] },

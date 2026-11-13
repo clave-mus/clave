@@ -41,15 +41,29 @@ export function resolvePresentation(layers: (Partial<Presentation> | undefined)[
 export function schedule(content: SoundContent, p: Presentation): { notes: [number, number][]; length: number } {
   const notes: [number, number][] = [];
   let t = 0;
-  for (const group of content.groups) {
-    if (group.length > 1 && p.chord !== 'block') {
+  content.groups.forEach((group, g) => {
+    /**
+     * Um grupo VAZIO é um respiro: nada toca, e o relógio anda um `gap`.
+     *
+     * Serve ao pedido do Paulo em 12/11 — *"em graus do campo harmônico, precisa de um tempo maior
+     * entre o contexto e o acorde"* —, e serve a qualquer item que precise separar duas partes do
+     * estímulo sem inventar parâmetro de tempo novo.
+     */
+    if (!group.length) { t += p.gap; return; }
+    /**
+     * `arpejaveis` restringe o arpejo a certos grupos (Paulo, 12/11: *"ao selecionar arpejar antes,
+     * acho que isso deve se aplicar apenas ao acorde solicitado, não ao contexto"*). Sem a lista,
+     * vale para todos — que é como sempre foi.
+     */
+    const arpeja = p.chord !== 'block' && (content.arpejaveis?.includes(g) ?? true);
+    if (group.length > 1 && arpeja) {
       group.forEach((m, i) => notes.push([m, t + i * p.gap]));
       t += group.length * p.gap;
-      if (p.chord === 'arpeggio') continue;
+      if (p.chord === 'arpeggio') return;
     }
     group.forEach((m, i) => notes.push([m, t + i * p.arp]));
     t += p.gap;
-  }
+  });
   return { notes, length: t };
 }
 
