@@ -64,6 +64,12 @@ amostras** (12/11).
 Falta, em ordem: **relação melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos
 motivos** pela escala.
 
+### A fila de trabalho decidido
+
+**`FILA-12-11.md`** tem o que está decidido e não feito, em ordem, com "pronto quando" em cada item
+e as três perguntas que esperam o Paulo. Foi escrita quando ele saiu em 12/11 pedindo uma fila que
+não deixasse ninguém inventar.
+
 ### As peças que esperavam consumidor — duas saíram
 
 Não foram escritas porque seriam motor órfão — o projeto já teve dois (`digitacoes.ts` com 22 testes
