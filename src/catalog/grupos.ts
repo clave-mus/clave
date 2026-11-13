@@ -50,7 +50,7 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     id: 'ouvido', nome: 'grupos.ouvido',
     // `relacoes-melodia-harmonia` entrou em 09/11, aprovado pelo Paulo: combina na mesma etapa que
     // os outros de ouvido, que é o critério do grupo (e não "treina a mesma habilidade").
-    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-campo' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' },
+    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-campo' }, { itemId: 'melodia-de-ouvido' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' },
       { itemId: 'relacoes-melodia-harmonia' }],
   },
   {

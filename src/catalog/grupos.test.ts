@@ -93,9 +93,27 @@ describe('a mesma instância em vários grupos', () => {
    * ofereceria pauta dentro do grupo do braço" — perdeu o assunto. O que este teste passa a afirmar
    * é o fato que a substituiu, e que é mais forte: o eixo saiu do catálogo.
    */
-  it('nenhum item declara a configuração `superficie` — a superfície virou o item', () => {
+  /**
+   * A superfície é o ITEM onde ela é o estímulo; é PARÂMETRO onde o estímulo é som.
+   *
+   * Em 09–10/11 este teste dizia "nenhum item declara `superficie`", e estava certo para o catálogo
+   * daquele dia: em `nota-na-pauta` você lê uma pauta e em `nota-no-instrumento` olha um braço — ali
+   * a superfície é o conteúdo, e a validação e a unidade de extensão mudam com ela.
+   *
+   * Em 12/11 o Paulo fechou o modelo das linhas de ouvido: **o item é o objeto musical e o seu
+   * gerador; direção e superfície são parâmetros.** Num exercício de ouvido não há superfície de
+   * estímulo — o estímulo é som —, então onde a pessoa responde (e, audiando, onde a melodia aparece
+   * escrita) é escolha dela.
+   *
+   * A lista é explícita de propósito: item novo que queira `superficie` tem de entrar aqui, e
+   * entrar aqui obriga a responder "o estímulo deste item é som?".
+   */
+  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido'];
+
+  it('a superfície só é parâmetro onde o estímulo é som', () => {
     for (const item of ITEMS) {
       const ids = (item.settings?.({ t: (k: string) => k } as never) ?? []).map(st => st.id);
+      if (SUPERFICIE_E_PARAMETRO.includes(item.id)) continue;
       expect(ids, `${item.id} ainda tem seletor de superfície`).not.toContain('superficie');
     }
   });
@@ -158,6 +176,7 @@ describe('o que está em rascunho nos grupos', () => {
       // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
       'acento-deslocado', 'deslocamento-ritmico',
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
+      'melodia-de-ouvido',
       'ouvido-campo',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',

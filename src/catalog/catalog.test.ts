@@ -32,10 +32,16 @@ describe('catálogo de exercícios', () => {
             expect(sf.options.filter(o => validate(e, optionResponse(o))).length).toBe(1);
           }
           // a superfície consegue produzir uma resposta que a conferência entende
-          if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(['pitch', 'pitchClass']).toContain(e.kind);
+          /**
+           * Superfície que **acumula** (`quantas > 1`) responde com várias alturas, e a conferência
+           * dela é o `contorno` (ver `OR-ouvido-relativo.md`, §4). Um toque só continua sendo
+           * `pitch`/`pitchClass`: o que muda com `quantas` é quantas respostas entram antes de valer.
+           */
+          const acumula = 'quantas' in sf && (sf.quantas ?? 1) > 1;
+          if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(acumula ? ['contorno'] : ['pitch', 'pitchClass']).toContain(e.kind);
           if (sf.kind === 'sequence') expect(e.kind).toBe('option');
           if (sf.kind === 'autoavaliacao') expect(e.kind).toBe('option');
-          if (sf.kind === 'letters' || sf.kind === 'staff') expect(['spelled', 'pitchClass']).toContain(e.kind);
+          if (sf.kind === 'letters' || sf.kind === 'staff') expect(acumula ? ['contorno'] : ['spelled', 'pitchClass']).toContain(e.kind);
           if (e.kind === 'spelled') expect(Math.abs(e.acc)).toBeLessThanOrEqual(1);
         }
       }
@@ -60,6 +66,20 @@ describe('catálogo de exercícios', () => {
           const pedacos = e.kind === 'option' ? e.id.split(sep) : [];
           const paleta = new Set(sf.options.map(o => o.id));
           can = pedacos.length === sf.comprimento && pedacos.every(x => paleta.has(x));
+        }
+        /**
+         * Acumulando, a resposta é o conjunto de alturas: dá para dar a certa se, e só se, **toda**
+         * altura do gabarito existir na superfície. Sem isto, um acorde com uma nota fora do
+         * teclado desenhado ficaria sem resposta possível e ninguém veria.
+         */
+        else if ('quantas' in sf && (sf.quantas ?? 1) > 1 && e.kind === 'contorno') {
+          const alcance = sf.kind === 'keyboard'
+            ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => sf.lo + k)
+            : sf.kind === 'fretboard'
+              ? sf.tuning.flatMap(t => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => t + sf.from + k))
+              // Pauta: a pessoa escolhe a linha, então qualquer altura da clave é alcançável.
+              : e.midis;
+          can = e.midis.length === (sf.quantas ?? 1) && e.midis.every(m => alcance.includes(m));
         }
         else if (sf.kind === 'keyboard') can = Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => sf.lo + k).some(m => validate(e, { kind: 'pitch', midi: m }));
         else if (sf.kind === 'fretboard') {

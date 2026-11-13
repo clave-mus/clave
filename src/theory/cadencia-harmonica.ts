@@ -63,5 +63,25 @@ export function cadenciaHarmonica(
   return GRAUS[id].map(grau => acordeNoTeto(tonica, acordeDoCampo(escala as ScaleId, grau, tetrade)));
 }
 
+/**
+ * Sobe ou desce um conjunto de grupos **por oitavas inteiras** até caber na faixa.
+ *
+ * Existe porque a tela não pode mentir sobre o que soou (lição de 09/11): se o contexto soa fora do
+ * teclado ou do braço desenhado, a pessoa ouve algo que não consegue apontar. E o deslocamento é do
+ * conjunto INTEIRO, nunca de acorde solto: mover um acorde sozinho quebraria a condução, que é
+ * justamente o que a cadência estabelece.
+ *
+ * Quando a faixa é mais estreita que o próprio acorde, caber é impossível — aí vale o piso, porque
+ * tocar grave demais é menos ruim que tocar acima do teto de quem ouve.
+ */
+export function caberNaFaixa(grupos: number[][], lo: number, hi: number): number[][] {
+  let desloc = 0;
+  const min = () => Math.min(...grupos.flat()) + desloc;
+  const max = () => Math.max(...grupos.flat()) + desloc;
+  while (min() < lo) desloc += 12;
+  while (max() > hi && min() - 12 >= lo) desloc -= 12;
+  return desloc ? grupos.map(g => g.map(m => m + desloc)) : grupos;
+}
+
 /** O último acorde da cadência é o da tônica? É o que faz uma cadência **fechar**. */
 export const fechaNaTonica = (id: CadenciaId): boolean => mod(GRAUS[id][GRAUS[id].length - 1], 7) === 1;

@@ -19,6 +19,7 @@ import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
 import { ouvidoCampo } from './items/ouvido-campo';
+import { melodiaDeOuvido } from './items/melodia-de-ouvido';
 import { ouvidoEscala } from './items/ouvido-escala';
 import { ouvidoCelulas } from './items/ouvido-celulas';
 import { reconhecerPadroesEscala } from './items/reconhecer-padroes-escala';
@@ -39,6 +40,7 @@ export const EXERCISES: CatalogItem[] = [
   ouvidoIntervalo,
   ouvidoAcorde,
   ouvidoCampo,
+  melodiaDeOuvido,
   ouvidoEscala,
   ouvidoCelulas,
   reconhecerPadroesEscala,

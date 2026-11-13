@@ -26,7 +26,34 @@ Os dois desenhos são a mesma ideia de dois ângulos, não um contra o outro.
 
 ---
 
-## 2. A decisão que encolheu o trabalho: o "oposto" é uma direção, não uma coluna
+## 2. O "oposto" é uma direção — e, desde 12/11, uma direção DO ITEM DE OUVIDO
+
+> ### ⚠️ Revisão do modelo, 12/11/2026
+>
+> O que está escrito abaixo valeu de 10 a 12/11 e **mudou**. O Paulo perguntou: *"será que audiar
+> não tem mais a ver com o ouvido? Onde que entraria a habilidade, por exemplo, de ler uma sequência
+> de graus — 1543 — e conseguir audiá-la / solfejá-la ouvindo apenas um contexto?"*
+>
+> A pergunta não tinha resposta no modelo antigo: o `audiar` estava pendurado em **seis itens de
+> notação** (nota, intervalo e acorde, na pauta e no instrumento), e nenhum deles é melodia — nem
+> tem "graus" como superfície. O modelo novo é o que o rascunho dele sempre descreveu, com um
+> "oposto" em cada linha de ouvido:
+>
+> **O item é o objeto musical e o seu gerador. Direção (ouvir / audiar) e superfície são parâmetros.**
+>
+> **O argumento que decidiu foi o gerador.** Nota solta não tem; melodia tem — quantas notas, de
+> que notas, em que extensão, com que salto. Se o audiar morasse num `melodia-na-pauta`, aquele item
+> precisaria do mesmo gerador, e **motor duplicado é proibido**. Quem tem o gerador tem as duas
+> direções.
+>
+> Isto **não desfaz o eixo de 09–10/11**: lá a superfície separa itens porque validação e unidade de
+> extensão mudam com ela (na pauta a resposta é a grafia; no braço, a altura). Aqui o estímulo é
+> **som** — não há superfície de estímulo —, e aí ela é periférica. É o §1 deste documento.
+>
+> Consequência pendente: as seis direções `audiar` dos itens de notação **mudam de casa** para as
+> linhas de ouvido correspondentes. `melodia-de-ouvido` é o molde; as outras quatro seguem.
+
+## 2-bis. O registro original (10/11): o "oposto" é uma direção, não uma coluna
 
 O Paulo descreveu, para cada linha, um "oposto" — ler a coisa, ouvir o contexto, audiar, e ouvir o
 gabarito como conferência. Parecia cinco exercícios novos. **Não é nenhum.**
@@ -273,6 +300,26 @@ Falta a **exploração**: a escada clicável, as posições à vista, o drone, e
 ChicagoBassBuddy — que é onde o crédito clicável mora.
 
 O texto de abertura foi aprovado em 10/11/2026 e está em `PE-padroes-de-escala.md`, §4.
+
+---
+
+## 10-bis. Melodia de ouvido — feita em 12/11, e é o molde
+
+A linha §3.2 existe como `melodia-de-ouvido`, **com as duas direções**:
+
+| direção | estímulo | resposta | conferência |
+|---|---|---|---|
+| `ouvir` | contexto e a melodia tocada | as notas na ordem, na superfície escolhida | **contorno** (§4) |
+| `audiar` | contexto tocado e a melodia **escrita** (pauta ou graus, `3-6-2-4`) | autoavaliação | a pessoa, com o gabarito num botão |
+
+O gerador é `theory/melodia.ts` (6 testes): quantidade 2–8, classes permitidas, faixa, e **salto
+máximo** (padrão: quinta justa). Nota nunca repete logo em seguida — duas iguais coladas soariam
+como uma nota longa, e a pessoa responderia duas tendo ouvido uma. Quando o salto não deixa
+candidata, ele afrouxa em vez de a melodia sair menor: a quantidade é promessa da configuração.
+
+**O que falta nesta linha:** restringir a notas específicas escolhidas por ele, e `teclado`/`braco`
+como estímulo do `audiar` (mostrar ordem ali exige numerar as marcas, e marca de teclado não tem
+rótulo). Os dois estão em `revisao-pendente.md`.
 
 ---
 

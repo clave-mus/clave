@@ -2,7 +2,7 @@ import { EM_DO_MAIOR, arr, pick, randInt, regiao, scaleName, tonicaNaRegiao } fr
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, SettingValue } from '../types';
 import { grauDaFundamental, materialDoCampo, opcoesDeEmprestimo, type CampoDoExercicio } from '../../theory/campo-harmonico';
-import { CADENCIAS, acordeNoTeto, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
+import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 
 const EM_LA_MENOR = { key: { tonic: 9, mode: 'menor' } } as const;
 /** O material filtrado pelo que a pessoa incluiu: graus marcados + empréstimos marcados. */
@@ -86,15 +86,15 @@ export const ouvidoCampo: CatalogItem = {
     let ms = acordeNoTeto(tonica, alvo.semis);
     if (s.inversoes) for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
 
-    // Com tétrades, o teto de registro derruba o V7 (e alvos como o vii) uma oitava abaixo da tônica,
-    // furando o piso da região. Sobe TUDO, por oitavas, até caber: transpor o conjunto inteiro
-    // preserva a harmonia — a lição do desenho que desce em `reconhecer-padroes-escala`.
-    let sobe = 0;
-    while (Math.min(...contexto.flat(), ...ms) + sobe < regiao(ctx).lo) sobe += 12;
-    if (sobe) {
-      ms = ms.map(m => m + sobe);
-      contexto.forEach((g, n) => { contexto[n] = g.map(m => m + sobe); });
-    }
+    /**
+     * Com tétrades, o teto de registro derruba o V7 (e alvos como o vii) uma oitava abaixo da
+     * tônica, furando o piso da região. `caberNaFaixa` sobe o conjunto INTEIRO — contexto e alvo
+     * juntos, porque deslocar um sem o outro mudaria a relação entre eles, que é a pergunta.
+     */
+    const { lo, hi } = regiao(ctx);
+    const juntos = caberNaFaixa([...contexto, ms], lo, hi);
+    for (let g = 0; g < contexto.length; g++) contexto[g] = juntos[g];
+    ms = juntos[juntos.length - 1];
 
     // No modo "só o grau", iv e IV viram o MESMO botão `4` — daí o filtro de repetidos.
     const soGrau = s.resposta === 'grau';

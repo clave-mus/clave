@@ -42,6 +42,15 @@ describe('classificação do erro', () => {
 function answer(q: Question, wantCorrect: boolean): Response {
   const ok = (r: Response) => validate(q.expected, r) === wantCorrect;
   const sf = q.surface;
+  /**
+   * Superfície que **acumula** (`quantas > 1`): a resposta é o conjunto de alturas. A certa é o
+   * gabarito do contorno; as erradas deslocam UMA nota, que é o caso que o contorno recusa.
+   */
+  if ('quantas' in sf && (sf.quantas ?? 1) > 1 && q.expected.kind === 'contorno') {
+    const certas = q.expected.midis;
+    const erradas = certas.map((_, i) => certas.map((m, k) => (k === i ? m + 12 : m)));
+    return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
+  }
   const candidates: Response[] =
     sf.kind === 'choices' ? sf.options.map(optionResponse)
       : sf.kind === 'keyboard' ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.lo + k }) as Response)
