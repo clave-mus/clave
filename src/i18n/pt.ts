@@ -492,6 +492,7 @@ const pt = {
     resetWarn: 'Isso apaga histórico e acertos deste navegador. Não dá para desfazer.',
   },
   voices: {
+    limpo: 'Synth limpo',
     piano: 'Piano',
     pad: 'Synth pad',
     violao: 'Violão',

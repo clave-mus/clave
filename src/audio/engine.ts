@@ -5,7 +5,7 @@
 
 import { amostraDePiano } from './piano-amostras';
 
-export type Voice = 'piano' | 'violao' | 'pad' | 'baixo' | 'orgao';
+export type Voice = 'piano' | 'violao' | 'pad' | 'baixo' | 'orgao' | 'limpo';
 export type Drum = 'bumbo' | 'caixa' | 'chimbal' | 'aro' | 'clique' | 'clique-forte';
 
 let ctx: BaseAudioContext | null = null;
@@ -299,6 +299,30 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     f.frequency.exponentialRampToValueAtTime(900, t + Math.max(0.4, dur));
     env(out, t, 0.32 * vel, 0.006, Math.max(0.6, dur * 1.4));
     stop = t + Math.max(0.6, dur * 1.4) + 0.05;
+  } else if (voice === 'limpo') {
+    /**
+     * **Synth limpo, de sustain longo** — o que o Paulo pediu em três linhas do rascunho: *"ter o
+     * synth como opção"*, e para o intervalo harmônico, *"synths de timbre limpo e bom sustain pra
+     * segurar o intervalo um pouco"*.
+     *
+     * Três diferenças em relação ao `piano` sintetizado, e cada uma atende metade do pedido:
+     *
+     * - **só senoides**, com os harmônicos pares em proporção suave. O triângulo do piano tem
+     *   energia em harmônicos ímpares altos, que é o que soa "duro" numa nota longa;
+     * - **ataque mais lento** (30 ms contra 6): sem a batida do martelo, o que sobra é a nota;
+     * - **sustain de verdade**: o nível se mantém até `dur` e só então cai, em vez de decair desde o
+     *   ataque. É isto que faz um intervalo ainda estar soando dois segundos depois — o teste mede.
+     *
+     * O corte do filtro acompanha a nota em vez de ser fixo: corte fixo come o fundamental das
+     * agudas (a lição de `CORTE_MINIMO_EM_FUNDAMENTAIS`, nas cordas).
+     */
+    add('sine', 1, 0.6); add('sine', 2, 0.18); add('sine', 3, 0.07); add('sine', 4, 0.03);
+    f.frequency.value = Math.max(2000, hz(m) * 8);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(0.22 * vel, t + 0.03);
+    out.gain.setValueAtTime(0.22 * vel, t + Math.max(0.3, dur));
+    out.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.3, dur) + 0.35);
+    stop = t + Math.max(0.3, dur) + 0.4;
   } else if (voice === 'pad') {
     add('sawtooth', 1, 0.3, -7); add('sawtooth', 1, 0.3, 7); add('sine', 0.5, 0.3);
     f.frequency.value = 1100;

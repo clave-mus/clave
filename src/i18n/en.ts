@@ -492,6 +492,7 @@ const en: Shape<typeof pt> = {
     resetWarn: 'This deletes history and answers from this browser. It cannot be undone.',
   },
   voices: {
+    limpo: 'Clean synth',
     piano: 'Piano',
     pad: 'Synth pad',
     violao: 'Acoustic guitar',

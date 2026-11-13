@@ -40,3 +40,4 @@ describe('perfil de apresentação', () => {
     expect(block.length).toBeCloseTo(0.9);
   });
 });
+
