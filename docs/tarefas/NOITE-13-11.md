@@ -7,7 +7,7 @@ de pontas soltas. Este arquivo é o registro do que aconteceu, para ele ler de u
 > alterações ou execute ações externas irreversíveis"*, e empurrar é publicar. São oito commits em
 > `reformulacao-f0-f4`, prontos para `git push` quando ele quiser.
 
-**Estado:** `1508 testes` passando, `tsc` limpo, `lint` sem erro, `build` ok. Verificado offline no
+**Estado:** `1517 testes` passando, `tsc` limpo, `lint` sem erro, `build` ok. Verificado offline no
 tamanho de celular, com o servidor desligado.
 
 ---
@@ -75,6 +75,30 @@ acusou; tirei — voltou ao verde. Criei um motor de mentira em `theory/` — o 
   e refeito um por um, mais devagar e sem erro.
 
 ---
+
+## A revisão dele de 13/11 (segunda rodada), item por item
+
+Ele testou "que nota tocou?" nas cinco superfícies e mandou uma lista. **Tudo atendido**, e a maior
+parte era um defeito só aparecendo em três telas.
+
+| o que ele relatou | causa | estado |
+|---|---|---|
+| "na primeira vez não soa nada e tenho que chutar"; "não tem botão pra ouvir" | o `Listen` renderizava **só** no ramo do teclado, e o navegador não toca som antes de um gesto — a primeira pergunta nunca soava | ✅ um controle só, nas três superfícies |
+| "não aparece a posição certa, só o vermelho onde cliquei" | a revelação só sabia desenhar gabarito de GRAFIA; aqui ele é ALTURA | ✅ |
+| "teclas brancas da mesma cor do fundo" | `--key-white` #f7f3ec contra o papel #fbf8f4 | ✅ contorno, como num piano de verdade |
+| "a cor da pauta está clara num fundo claro" | tinta creme, feita para o palco escuro | ✅ cor de texto do tema |
+| "o som está de piano, deveria ser de baixo; não chega nos graves" | as amostras de piano param em Dó2 (36) e um baixo chega a Mi1 (28) | ✅ timbre segue a superfície |
+| "deveria ter o braço da guitarra também" | havia um "braço" que herdava o perfil | ✅ dois braços, cada um com afinação e timbre |
+| "o teclado deveria ser do tamanho da extensão" | desenho fixo em Dó2–Si5 | ✅ mesma faixa que pode soar |
+| "mudar de tonalidade não faz aparecer a armadura" | o item não passava `fifths` | ✅ |
+| "a nota inicial deveria ser sempre a mesma oitava, configurável" | a referência acompanhava a pergunta | ✅ padrão fixo, medido em 20 rodadas |
+| "na tonalidade diz Ré♭, no exercício diz Dó♯" | a grafia ignorava a tonalidade | ✅ |
+| "pode remover 'aqui a oitava não conta'" | — | ✅ |
+| "os botões ficam meio por cima do teclado" | renderizavam antes do desenho | ✅ depois dele: olhar primeiro, ouvir depois |
+| "incluir teclas pretas não está redundante com cromático?" | estava | ✅ o controle deixou de existir |
+| "não quero ligar teclas pretas para ver os graus de Ré maior" | seleção por nome de nota | ✅ seleção por **grau**, ligada ao material |
+| "a ordem: tonalidade, material, só estes graus" | o painel de prática vinha por último | ✅ dividido em duas metades |
+| "analise quais outros exercícios têm o mesmo problema" | `nota-no-instrumento` tinha | ✅ |
 
 ## O que NÃO fiz, e por quê
 
