@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, grauDoPc, grausDaTonalidade, notaDaTonalidade, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, grauDoPc, grausDaTonalidade, notaDaTonalidade, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -56,6 +56,18 @@ export const EXT = ({ t }: Ctx): Setting => ({ id: 'extensao', label: t('setting
 export const ACC = ({ t }: Ctx): Setting => ({ id: 'acidentes', label: t('settings.accidentals'), type: 'toggle' });
 export const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.instrument'), type: 'single', options: [
   { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
+/**
+ * **Restringir às notas que a pessoa escolhe** — o `multi` que o rascunho do Paulo pede na Nota, na
+ * Melodia e no Intervalo harmônico. Vazio é o padrão e quer dizer "sem restrição".
+ *
+ * Os rótulos saem de `pcName`, então seguem o idioma e a convenção de nomes. É `podeVazio` porque
+ * vazio aqui é estado legítimo, não configuração pela metade — ver `Setting.podeVazio`.
+ */
+export const NOTAS_ESCOLHIDAS = ({ t, naming }: Ctx): Setting => ({
+  id: 'notasEscolhidas', label: t('settings.onlyTheseNotes'), type: 'multi', justify: true, podeVazio: true,
+  options: Array.from({ length: 12 }, (_, pc) => ({ id: String(pc), label: pcName(pc, naming) })),
+});
+
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 /** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */

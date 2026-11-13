@@ -14,7 +14,7 @@ const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
   params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }),
 };
-const perguntar = (s: Record<string, SettingValue>) => ouvidoIntervalo.make({ ...ouvidoIntervalo.defaults, ...s } as never, ctx);
+const perguntar = (s: Record<string, SettingValue>) => ouvidoIntervalo.make!({ ...ouvidoIntervalo.defaults, ...s } as never, ctx);
 const pitches = (midis: number[]): Response => ({ kind: 'pitches', midis });
 
 describe('responder as notas do intervalo', () => {
@@ -69,7 +69,7 @@ describe('responder as notas do intervalo', () => {
     for (const pc of [0, 5, 9]) {
       const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: pc, mode: 'maior' } }) };
       for (let i = 0; i < 20; i++) {
-        const q = ouvidoIntervalo.make({ ...ouvidoIntervalo.defaults, resposta: 'notas', comTonica: true, direcao: 'juntas' } as never, c);
+        const q = ouvidoIntervalo.make!({ ...ouvidoIntervalo.defaults, resposta: 'notas', comTonica: true, direcao: 'juntas' } as never, c);
         const baixo = Math.min(...(q.expected as { midis: number[] }).midis);
         expect(((baixo % 12) + 12) % 12, `tônica ${pc}`).toBe(pc);
       }

@@ -58,6 +58,9 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   // oferecidos sai do material.
   grauDoPc: ['key'],
   grausDaTonalidade: ['key', 'material'],
+  // Entrou em 13/11 com "restringir às notas que a pessoa escolhe": cruza a seleção dela com o que
+  // o material permite, então lê os mesmos dois parâmetros que `pcsPermitidas`.
+  pcsEscolhidas: ['key', 'material'],
 };
 
 /**

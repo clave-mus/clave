@@ -45,6 +45,29 @@ export function pcsPermitidas(ctx: Ctx): number[] {
 }
 
 /**
+ * As classes de altura permitidas, **cruzadas com as notas que a pessoa escolheu**.
+ *
+ * Pedido do Paulo, em três linhas do rascunho dele: *"restringir à notas específicas da seleção do
+ * usuário"*. Ele aparece na Nota, na Melodia e no Intervalo harmônico — é parâmetro das três, e
+ * por isso a conta mora aqui e não em cada item.
+ *
+ * A restrição entra **depois** do material: escolher notas não abre o que a tonalidade fechou. Se o
+ * cruzamento ficar vazio, vale o material — melhor sortear dentro da tonalidade do que não ter
+ * pergunta; quem recusa configuração impossível é o `problema()` do item, que sabe de quantas notas
+ * precisa.
+ *
+ * `escolhidas` são classes de altura como texto (o que um `multi` guarda), e vazio quer dizer "sem
+ * restrição" — o padrão.
+ */
+export function pcsEscolhidas(ctx: Ctx, escolhidas: readonly string[] | undefined): number[] {
+  const doMaterial = pcsPermitidas(ctx);
+  if (!escolhidas?.length) return doMaterial;
+  const pedidas = new Set(escolhidas.map(Number).filter(n => Number.isFinite(n)).map(n => mod(n, 12)));
+  const cruzado = doMaterial.filter(pc => pedidas.has(pc));
+  return cruzado.length ? cruzado : doMaterial;
+}
+
+/**
  * As **quintas** da tonalidade em vigor (−7..7), ou `null` com tonalidade livre.
  *
  * É o número que a pauta precisa para desenhar a armadura e que `applyKey` precisa para grafar a

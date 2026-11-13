@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, clave, grauDoPc, grausDaTonalidade, mod, note, noteName, pcNameUm, pcsPermitidas, pick, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, note, noteName, pcNameUm, pcsEscolhidas, pick, tonicaDeContexto } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -64,6 +64,7 @@ export const ouvidoTecla: CatalogItem = {
     // Sem `quando`: isto é sobre **o que pode soar**, não sobre o teclado. Eu tinha escondido nos
     // modos de letra e grau, e estava errado — acidentes existem em qualquer superfície.
     { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' },
+    NOTAS_ESCOLHIDAS(ctx),
     /**
      * **Onde se responde** (`OR-ouvido-relativo.md`, §3.1: *"superfície de resposta (padrão: o
      * instrumento do perfil)"*). O estímulo é som, então não há superfície de estímulo e onde você
@@ -84,7 +85,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, pretas: false, onde: 'auto' },
+  defaults: { estimulo: 'som', referencia: true, pretas: false, onde: 'auto', notasEscolhidas: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -100,8 +101,16 @@ export const ouvidoTecla: CatalogItem = {
     { id: 'sem-ancora', nome: 'presets.teclaSemAncora', settings: { referencia: false, pretas: true }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.9 },
+  /**
+   * Escolher só teclas pretas e desligar as pretas não deixa nota nenhuma. Recusar e explicar
+   * (decisão 13) — antes disto `pick` de lista vazia devolvia `undefined` e a pergunta saía quebrada.
+   */
+  problema(s, ctx) {
+    const possiveis = pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+    return possiveis.length ? null : ctx.t('player.poucasNotas');
+  },
   make(s, ctx): Question {
-    const permitidas = pcsPermitidas(ctx).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+    const permitidas = pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
     const p = pick(permitidas);
     const onde = s.onde === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.onde ?? 'teclado');
     /**
