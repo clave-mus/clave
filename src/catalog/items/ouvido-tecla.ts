@@ -1,4 +1,4 @@
-import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -44,6 +44,36 @@ function nomeNaTonalidade(ctx: Ctx, pc: number): string {
 }
 
 /**
+ * **As oitavas em que a referência de fato existe.**
+ *
+ * Pedido do Paulo em 13/11: *"faça com que apenas apareçam opções de oitava viáveis pra região
+ * disponível. C1 por exemplo nao entra no baixo de 4 cordas."* Ele está certo, e isto é a regra da
+ * casa: controle que oferece o que não acontece é promessa falsa — foi o que já tirou o "incluir
+ * teclas pretas" e os atalhos repetidos.
+ *
+ * A conta é a união de dois alcances, porque a superfície é escolha de quem usa e pode mudar sem
+ * refazer esta lista: a **região** (o registro que a pessoa pediu, que vale para teclado e pauta) e
+ * o **braço do instrumento do perfil** (que é físico — um baixo de quatro cordas começa no Mi1, e
+ * dó1 não existe nele).
+ *
+ * Sem nenhuma viável — região curtíssima —, devolve a oitava do meio da região, para o seletor não
+ * ficar vazio.
+ */
+function oitavasViaveis(ctx: Ctx): number[] {
+  const pcTonica = mod(tonalidade(ctx)?.tonic ?? 0, 12);
+  const { lo, hi } = ctx.params.range;
+  const braco = ctx.params.tuning;
+  const noBraco = braco.flatMap(t => Array.from({ length: 13 }, (_, k) => t + k));
+  const viaveis = new Set<number>();
+  for (let oitava = 0; oitava <= 8; oitava++) {
+    const m = (oitava + 1) * 12 + pcTonica;
+    if ((m >= lo && m <= hi) || noBraco.includes(m)) viaveis.add(oitava);
+  }
+  if (!viaveis.size) viaveis.add(Math.floor((lo + hi) / 24));
+  return [...viaveis].sort((a, b) => a - b);
+}
+
+/**
  * A oitava desta classe de altura que **cabe na faixa** e fica mais perto da pedida.
  *
  * Subir e descer por oitavas em laço não serve: quando a faixa é mais estreita que uma oitava —
@@ -76,14 +106,30 @@ function naFaixa(m: number, faixa: { lo: number; hi: number }, preferida?: { lo:
   return perto(melhores.length ? melhores : dentro, m);
 }
 
-/** A referência (fraca, rotulada) e a nota a audiar (em acento), quando as duas cabem no braço. */
+/**
+ * A referência (fraca, rotulada, em **todas** as posições em que existe) e a nota a audiar (em
+ * acento, numa posição).
+ *
+ * A referência em todas porque é mapa: a mesma altura vive em várias cordas, e ver isso é metade do
+ * que se aprende no braço. A nota a audiar numa só porque ela é a pergunta — mostrar todas as
+ * posições dela seria responder onde ela está antes de a pessoa audiar.
+ */
 function marcasNoBraco(tuning: readonly number[], referencia: number, alvo: number, nomeDaRef: string) {
   const marcas: { s: number; f: number; color?: string; label?: string }[] = [];
-  const posRef = casaDaAltura(tuning, referencia);
-  if (posRef) marcas.push({ ...posRef, color: 'var(--accent-quiet)', label: nomeDaRef });
+  for (const pos of todasAsCasas(tuning, referencia)) marcas.push({ ...pos, color: 'var(--accent-quiet)', label: nomeDaRef });
   const posAlvo = casaDaAltura(tuning, alvo);
   if (posAlvo) marcas.push({ ...posAlvo, color: 'var(--mu)' });
   return marcas;
+}
+
+/** Todas as casas (0 a 12) que dão exatamente esta altura. */
+function todasAsCasas(tuning: readonly number[], m: number): { s: number; f: number }[] {
+  const out: { s: number; f: number }[] = [];
+  for (let s = 0; s < tuning.length; s++) {
+    const f = m - tuning[s];
+    if (f >= 0 && f <= 12) out.push({ s, f });
+  }
+  return out;
 }
 
 /** Uma casa do braço que dá exatamente esta altura, preferindo a corda mais grave que a alcança. */
@@ -163,7 +209,7 @@ export const ouvidoTecla: CatalogItem = {
      */
     { id: 'oitavaDaReferencia', label: ctx.t('settings.referenceOctave'), type: 'single',
       quando: s => s.referencia === true, options: [
-        ...[1, 2, 3, 4, 5].map(o => ({ id: String(o), label: String(o) })),
+        ...oitavasViaveis(ctx).map(o => ({ id: String(o), label: String(o) })),
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
     /**
@@ -190,7 +236,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'auto', grausEscolhidos: [] },
+  defaults: { estimulo: 'som', referencia: true, onde: 'auto', grausEscolhidos: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -209,17 +255,23 @@ export const ouvidoTecla: CatalogItem = {
    * Os de agora cobrem os eixos que o item realmente tem: **onde se responde**, **quais graus**, e
    * **de onde vem a pergunta**. Nomeados pelo conteúdo, nunca por nível (decisão 100).
    */
+  /**
+   * ⚠️ **Nenhum atalho fixa a oitava da referência.** Ela é preferência de instrumento — quem toca
+   * baixo quer dó2, quem toca piano quer dó4 —, e um atalho que a fixasse sobreporia o padrão do
+   * item para quem clicasse nele. O Paulo relatou o sintoma: *"ele começa no 4, o que eu acho que é
+   * incorreto"* — e começava, porque o atalho de entrada a declarava.
+   */
   presets: [
     { id: 'tonica-e-quinta', nome: 'presets.teclaTonicaEQuinta',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'teclado', grausEscolhidos: ['0', '7'] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, onde: 'teclado', grausEscolhidos: ['0', '7'] }, params: EM_DO_DIATONICO },
     { id: 'graus-da-maior', nome: 'presets.teclaGrausDaMaior',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'no-meu-instrumento', nome: 'presets.teclaNoMeuInstrumento',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'na-pauta', nome: 'presets.teclaNaPauta',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'audiar-grau', nome: 'presets.teclaAudiarGrau',
-      settings: { estimulo: 'escrito', referencia: true, oitavaDaReferencia: '2', onde: 'graus', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'escrito', referencia: true, onde: 'graus', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'sem-ancora', nome: 'presets.teclaSemAncora',
       settings: { estimulo: 'som', referencia: false, onde: 'teclado', grausEscolhidos: [] }, params: TONALIDADE_LIVRE },
   ],
@@ -323,7 +375,24 @@ export const ouvidoTecla: CatalogItem = {
      * mandar no que se DESENHA. Entre as oitavas que o braço alcança, prefere-se a que também cai na
      * região.
      */
-    const faixaDaSuperficie = noBraco ? { lo: tuning[0], hi: tuning[tuning.length - 1] + 12 } : faixa;
+    /**
+     * **A oitava escolhida manda, e a superfície se abre para caber nela.**
+     *
+     * Era aqui o defeito que o Paulo relatou duas vezes: *"eu mudo pra 2 e ele não muda"*. No
+     * teclado a faixa desenhada é a região (48–72 por padrão), e dó2 (36) não está nela — então
+     * escolher 1, 2 ou 3 dava **todos 48**, medido. A escolha dele era silenciosamente descartada
+     * por um limite que não era dele.
+     *
+     * Agora a ordem se inverte: a referência sai da oitava pedida, e **o desenho cresce** para
+     * incluí-la. É o que ele já havia pedido na rodada anterior — *"se vai da nota Dó3 a Dó5, o
+     * teclado desenhado deveria ser desse tamanho"*.
+     *
+     * O braço é a exceção, e por ser físico: um violão não tem dó2: ali a referência cai na oitava
+     * mais próxima que o braço alcança, e isso aparece na tela porque a marca está lá.
+     */
+    const faixaDaSuperficie = noBraco
+      ? { lo: tuning[0], hi: tuning[tuning.length - 1] + 12 }
+      : { lo: Math.min(faixa.lo, 24), hi: Math.max(faixa.hi, 96) };
     const preferida = noBraco ? faixa : undefined;
     const referencia = s.oitavaDaReferencia === 'sorteada'
       ? tonicaDeContexto(ctx, m)
@@ -347,6 +416,10 @@ export const ouvidoTecla: CatalogItem = {
      * precisa ver onde está (ver `Apoio`, em `types.ts`). Sem `referencia` não há o que mostrar.
      */
     const apoio = s.referencia ? { midis: [referencia], rotulos: { [referencia]: nomeDaReferencia } } : undefined;
+    /** O desenho cobre a pergunta **e** a referência: ela é marca na tela, não só som. */
+    const desenho = s.referencia
+      ? { lo: Math.min(faixa.lo, referencia), hi: Math.max(faixa.hi, referencia) }
+      : faixa;
     const superficie =
       noBraco ? { kind: 'fretboard' as const, tuning, from: 0, to: 12, apoio }
       // A armadura da tonalidade em vigor, como em `nota-na-pauta`: sem ela, praticar em Sol maior
@@ -354,7 +427,7 @@ export const ouvidoTecla: CatalogItem = {
       : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, apoio }
       : onde === 'letras' ? { kind: 'letters' as const, accidentals: true }
       : onde === 'graus' ? { kind: 'choices' as const, options: grausDaTonalidade(ctx, permitidas) }
-      : { kind: 'keyboard' as const, ...faixa, apoio };
+      : { kind: 'keyboard' as const, ...desenho, apoio };
     /**
      * **Audiar**: a nota está escrita (ou marcada), só o contexto toca, e o gabarito fica num botão.
      *
@@ -372,7 +445,7 @@ export const ouvidoTecla: CatalogItem = {
          * depois. Ler a segunda sem ver a primeira é audiar sem saber de onde.
          */
         onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: [[notaEscrita(referencia)], [notaEscrita(m)]] }
-        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, marks: [referencia, m], marcasFracas: [referencia], rotulos: { [referencia]: nomeDaReferencia } }
+        : onde === 'teclado' ? { kind: 'keyboard', ...desenho, marks: [referencia, m], marcasFracas: [referencia], rotulos: { [referencia]: nomeDaReferencia } }
         /**
          * **A referência aparece junto da nota**, no braço e no teclado (Paulo, 13/11: *"em audie no
          * braço, tem que mostrar a nota de referência. só a nota escrita não dá"*).

@@ -183,18 +183,42 @@ describe('a referência segue a tonalidade', () => {
   });
 
   /**
-   * Oitava escolhida que a região não alcança: a referência **sobe até caber**, em vez de não soar.
-   * É a mesma troca de `caberNaFaixa` — âncora noutra oitava serve ao exercício, âncora muda não.
+   * **A oitava escolhida vence a região**, e a superfície desenhada cresce para caber nela.
+   *
+   * Este teste dizia o contrário — "oitava fora da região recua para dentro dela" — e estava
+   * descrevendo um defeito. O Paulo relatou duas vezes que *"eu mudo pra 2 e ele não muda"*: no
+   * teclado a faixa desenhada é a região (48–72 por padrão), dó2 (36) não está nela, e a escolha
+   * dele era descartada em silêncio. Medido antes do conserto: as oitavas 1, 2 e 3 davam **todas
+   * 48**.
+   *
+   * Escolha explícita não é desempate, é instrução. A região continua mandando na nota a
+   * IDENTIFICAR — é o que `contexto-musical.test.ts` trava, com a exceção escrita lá.
    */
-  it('oitava fora da região recua para dentro dela', () => {
+  it('a oitava escolhida vale, mesmo fora da região, e a superfície a desenha', () => {
     const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }) };
-    for (const oitava of ['1', '2', '5'] as const) {
+    for (const oitava of ['2', '3', '4', '5'] as const) {
       const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado', oitavaDaReferencia: oitava } as never, c);
       const referencia = q.sound!.groups[0][0];
-      expect(referencia, `oitava ${oitava}`).toBeGreaterThanOrEqual(c.params.range.lo);
-      expect(referencia, `oitava ${oitava}`).toBeLessThanOrEqual(c.params.range.hi);
-      // E continua sendo a tônica, só noutra oitava.
-      expect(((referencia % 12) + 12) % 12).toBe(0);
+      expect(Math.floor(referencia / 12) - 1, `oitava ${oitava}`).toBe(Number(oitava));
+      const sf = q.surface as { kind: 'keyboard'; lo: number; hi: number };
+      // Referência que soa fora do desenho é referência invisível.
+      expect(referencia, `oitava ${oitava} fora do desenho`).toBeGreaterThanOrEqual(sf.lo);
+      expect(referencia, `oitava ${oitava} fora do desenho`).toBeLessThanOrEqual(sf.hi);
     }
+  });
+
+  /**
+   * No BRAÇO a exceção é física: um violão não tem dó2 — a corda mais grave é mi2 (MIDI 40). Ali a
+   * referência cai na oitava mais próxima que o braço alcança, e isso é honesto porque ela aparece
+   * desenhada: a pessoa vê em que dó ela está.
+   */
+  it('no braço, a oitava pedida cede ao que o instrumento alcança', () => {
+    const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }) };
+    const q = item.make!({ ...item.defaults, referencia: true, onde: 'violao', oitavaDaReferencia: '2' } as never, c);
+    const referencia = q.sound!.groups[0][0];
+    const sf = q.surface as { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number };
+    const alcance = sf.tuning.flatMap(t => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => t + sf.from + k));
+    expect(alcance, 'a referência tem de existir no braço').toContain(referencia);
+    expect(((referencia % 12) + 12) % 12, 'e continua sendo a tônica').toBe(0);
   });
 });

@@ -591,15 +591,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   if (sf.kind === 'fretboard') {
     const marks = [];
     /**
-     * O apoio no braço: a corda mais grave que alcança a altura, dentro das casas desenhadas. Se
-     * nenhuma alcança, a marca é omitida — desenhar na casa errada é pior que não desenhar.
+     * O apoio no braço, em **todas as posições** em que aquela altura existe — pedido do Paulo em
+     * 13/11: *"no baixo agora a nota de referencia se mostra apenas em uma das suas posicoes. mostre
+     * ela em todas."*
+     *
+     * Ele está certo, e a razão é do instrumento: a mesma altura vive em várias cordas, e o braço só
+     * vira mapa quando se vê que o dó da casa 8 da quarta corda é o mesmo dó da casa 3 da terceira.
+     * Mostrar uma posição só ensina um ponto; mostrar todas ensina o braço.
+     *
+     * Se nenhuma casa alcança, nada é desenhado — marca na casa errada é pior que marca nenhuma.
      */
     for (const m of sf.apoio?.midis ?? []) {
       for (let st = 0; st < sf.tuning.length; st++) {
         const casa = m - sf.tuning[st];
         if (casa >= sf.from && casa <= sf.to) {
           marks.push({ s: st, f: casa, color: 'var(--accent-quiet)', label: sf.apoio?.rotulos?.[m] });
-          break;
         }
       }
     }
