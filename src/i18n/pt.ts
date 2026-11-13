@@ -867,6 +867,7 @@ const pt = {
     contextIIVVI: 'Cadência I–IV–V–I',
     contextTetrade: 'A tétrade do grau I',
     contextTonic: 'Só a tônica',
+    contextNone: 'Sem antessala (só o acorde)',
     direction2: 'O que fazer',
     audiateIt: 'Audiar e conferir',
     readIt: 'Ler o que está escrito',

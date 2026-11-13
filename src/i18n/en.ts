@@ -865,6 +865,7 @@ const en: Shape<typeof pt> = {
     contextIIVVI: 'I–IV–V–I cadence',
     contextTetrade: 'The I seventh chord',
     contextTonic: 'The tonic only',
+    contextNone: 'No lead-in (just the chord)',
     direction2: 'What to do',
     audiateIt: 'Audiate and check',
     readIt: 'Read what is written',

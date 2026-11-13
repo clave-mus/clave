@@ -1,5 +1,6 @@
 import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao } from '../helpers';
 import { acomodarMelodiaEAcorde } from '../../theory/nota-sobre-acorde';
+import { CADENCIAS, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -41,11 +42,37 @@ export const ouvidoCelulas: CatalogItem = {
     // Pedido do Paulo (09/11): "ao inves de termos só 4 alternativas, a gente tenha que escolher
     // entre todas opções possiveis". Quatro alternativas dão pista — descartar duas já deixa
     // cinquenta por cento. Escolher entre todos os graus não dá pista nenhuma.
+    /**
+     * **A cadência como antessala** (decisão de 10/11: a cadência é o contexto padrão — `OR`, §5).
+     *
+     * Aqui ela é **acréscimo, não substituição**: o acorde deste item não é contexto, é o leito
+     * contra o qual a melodia soa, e é dele que a pergunta fala ("que grau é esta nota sobre este
+     * acorde"). A cadência vem antes, estabelece a tonalidade, e sai de cena.
+     *
+     * É onde ela mais rende: com `graus` sorteando acordes que não são a tônica, a pessoa ficava
+     * sem referência nenhuma do centro — o próprio item já dizia isso no atalho "acorde sorteado"
+     * (*"a tônica precisa ser reencontrada"*). Agora ela é dada antes, e reencontrá-la deixa de ser
+     * adivinhação.
+     *
+     * **O padrão é `nenhum`, e isto é uma correção de rota.** A fila dizia "cadência como padrão",
+     * citando a decisão de 10/11 — mas aquela decisão fala do CONTEXTO de itens que só tinham uma
+     * tônica solta, e aqui o contexto harmônico já existe: é o acorde. Ligar a cadência por padrão
+     * mudaria o som de um item `legado` que duas rotinas fixam, e os testes de "o que já existia não
+     * mudou" reprovaram na primeira rodada — eles existem exatamente para isso.
+     *
+     * Então a cadência entra onde ela **rende**: no atalho `acorde-sorteado`, onde o acorde muda a
+     * cada rodada e a tônica tinha de ser adivinhada.
+     */
+    { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single', options: [
+      { id: 'ii-V-I', label: ctx.t('settings.contextIIVI') },
+      { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
+      { id: 'nenhum', label: ctx.t('settings.contextNone') },
+    ] },
     { id: 'resposta', label: ctx.t('settings.answerMode'), type: 'single', options: [
       { id: 'todos', label: ctx.t('settings.answerAll') },
       { id: 'alternativas', label: ctx.t('settings.answerFour') },
     ] }],
-  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' },
+  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos', contexto: 'nenhum' },
   /**
    * Os atalhos (09/11/2026). **O primeiro é a entrada do item** — quem abre sem nada salvo cai
    * nele, e o Paulo pediu que fosse o mais simples de todos: uma nota, escala maior, dó maior.
@@ -65,7 +92,7 @@ export const ouvidoCelulas: CatalogItem = {
     { id: 'cinco-notas', nome: 'presets.celulaCincoNotas', settings: { escala: 'maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
     { id: 'pentatonica', nome: 'presets.celulaPentatonica', settings: { escala: 'penta-maior', tamanho: '5', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
     { id: 'sobre-o-v', nome: 'presets.celulaSobreOV', settings: { escala: 'maior', tamanho: '3', graus: ['5'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
-    { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'todos', contexto: 'ii-V-I' }, params: EM_DO_MAIOR },
     { id: 'menor', nome: 'presets.celulaMenor', settings: { escala: 'menor', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.55},
@@ -148,6 +175,15 @@ export const ouvidoCelulas: CatalogItem = {
       acordeNaEscala, c.map(i => tonic + semis[i]),
       s.registro === 'abaixo' ? 'abaixo' : 'acima', regiao(ctx));
 
+    /**
+     * A cadência cabe na MESMA faixa do que vem depois: nada soa fora do que a pessoa aguenta, e é
+     * `caberNaFaixa` que garante (a lição de 09/11, de a tela não mentir sobre o que soou).
+     */
+    const cadencia = CADENCIAS.find(x => x === s.contexto);
+    const antessala: number[][] = cadencia
+      ? [...caberNaFaixa(cadenciaHarmonica(cadencia, tonic, ctx.params.key?.mode === 'menor' ? 'menor-harmonica' : 'maior', s.tetrade === true), regiao(ctx).lo, regiao(ctx).hi), []]
+      : [];
+
     return {
       prompt: ctx.t('quiz.cells'),
       visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
@@ -158,11 +194,13 @@ export const ouvidoCelulas: CatalogItem = {
         : { kind: 'sequence', comprimento: size, options: degs.slice(0, top + 1).map(plain) },
       expected: { kind: 'option', id: key(c) },
       sound: {
-        groups: [acorde, ...melodia.map(n => [n])],
+        // A cadência, o respiro (grupo vazio), e então o acorde com a melodia — nesta ordem.
+        groups: [...antessala, acorde, ...melodia.map(n => [n])],
         // Ouvir o acorde sozinho e cada nota sozinha (pedido do Paulo). Aqui separar AJUDA: a
         // pergunta é qual grau cada nota é, e isolá-la não entrega nada — o grau continua a
         // depender de ouvi-la contra o acorde. Em `ouvido-intervalo` seria o oposto.
         partes: [
+          ...(antessala.length ? [{ id: 'contexto', label: ctx.t('quiz.partContext'), groups: antessala.filter(g => g.length) }] : []),
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [acorde] },
           ...melodia.map((nota, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[nota]] })),
         ],
