@@ -376,6 +376,45 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 
 // ---------------- palco: o que é perguntado ----------------
 /**
+ * **Quase um segundo por nota** (pedido do Paulo em 13/11: *"deixe ela lenta, com quase um segundo
+ * por nota"*). É o tempo de olhar a casa, reconhecê-la e imaginar o som — correr aqui tornaria a
+ * animação decorativa.
+ */
+const MS_POR_NOTA = 900;
+
+/**
+ * Percorre uma sequência de marcas, acendendo uma por vez.
+ *
+ * Devolve o índice da marca em foco e um jeito de recomeçar. As anteriores continuam marcadas, mais
+ * fracas: ao fim da volta a melodia inteira está à vista, e o caminho dela também.
+ *
+ * Com `prefers-reduced-motion` ele **não anima** — devolve tudo aceso de uma vez, e quem desenha
+ * numera as marcas. A ordem é informação do exercício, não enfeite: tirá-la junto com o movimento
+ * seria tirar a pergunta.
+ */
+function useSequenciaAnimada(quantas: number, ativo: boolean, chave: unknown) {
+  const semMovimento = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  const [foco, setFoco] = useState(0);
+  const [volta, setVolta] = useState(0);
+
+  useEffect(() => { setFoco(0); }, [chave, volta]);
+  useEffect(() => {
+    if (!ativo || semMovimento || quantas < 2) return;
+    if (foco >= quantas - 1) return;
+    const t = window.setTimeout(() => setFoco(f => f + 1), MS_POR_NOTA);
+    return () => window.clearTimeout(t);
+  }, [ativo, semMovimento, quantas, foco]);
+
+  return {
+    /** Até qual marca mostrar. Sem movimento, todas. */
+    ate: semMovimento ? quantas - 1 : foco,
+    semMovimento,
+    recomecar: () => setVolta(v => v + 1),
+  };
+}
+
+/**
  * Uma altura posta numa superfície que acumula. No braço vem com a POSIÇÃO: duas cordas dão a mesma
  * nota, e marcar a altura sem saber onde ela foi tocada acenderia várias casas de uma vez.
  */
@@ -438,6 +477,13 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   const ok = (r: Response) => validate(q.expected, r);
   const fb = phase === 'right' ? <div className="feedback ok">{t('player.feedbackRight')}</div> : phase === 'wrong' ? <div className="feedback bad">{t('player.feedbackWrong')}</div> : null;
   const isText = v.kind === 'text' && v.text;
+  /**
+   * A sequência animada do visual, quando ele pede (`animar`): as marcas acendem uma a uma, na
+   * ordem, com quase um segundo em cada. A chave da animação é o enunciado — pergunta nova
+   * recomeça do zero.
+   */
+  const animando = (v.kind === 'keyboard' || v.kind === 'fretboard') && v.animar === true;
+  const seq = useSequenciaAnimada(animando ? v.marks.length : 0, animando, q.prompt);
 
   // superfícies que ficam no próprio palco (teclado, braço, pauta)
   if (sf.kind === 'keyboard') {
@@ -543,8 +589,30 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       {v.kind !== 'ear' && !!q.sound?.partes?.length && (
         <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
       )}
-      {v.kind === 'keyboard' && <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />}
-      {v.kind === 'fretboard' && <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />}
+      {v.kind === 'keyboard' && (
+        v.animar
+          ? <Keyboard lo={v.lo} hi={v.hi} naming={naming}
+              marks={Object.fromEntries(v.marks.slice(0, seq.ate + 1).map((m, i) => [m, i === seq.ate ? 'var(--mu)' : 'var(--accent-quiet)']))}
+              marcasComTexto={seq.semMovimento ? Object.fromEntries(v.marks.map((m, i) => [m, String(i + 1)])) : {}} />
+          : <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />
+      )}
+      {v.kind === 'fretboard' && (
+        v.animar
+          ? <Fretboard tuning={v.tuning} from={v.from} to={v.to} muted={v.muted} naming={naming}
+              marks={v.marks.slice(0, seq.ate + 1).map((mk, i) => ({
+                ...mk,
+                color: i === seq.ate ? 'var(--mu)' : 'var(--accent-quiet)',
+                // Sem movimento, a ordem vira número na própria marca.
+                label: seq.semMovimento ? String(i + 1) : mk.label,
+              }))} />
+          : <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />
+      )}
+      {/* Ver de novo: a animação roda uma vez, e audiar costuma pedir mais de uma olhada. */}
+      {animando && !seq.semMovimento && (
+        <div className="row" style={{ marginTop: 10 }}>
+          <Btn small tone="ghost" onClick={seq.recomecar}>{t('player.verDeNovo')}</Btn>
+        </div>
+      )}
       {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
     </div>
   );

@@ -19,8 +19,20 @@ import type { FretMark } from '../components/music/Fretboard';
 
 export type Visual =
   | { kind: 'staff'; clef: Clef; fifths?: number; columns: Note[][] }
-  | { kind: 'keyboard'; lo: number; hi: number; marks: number[] }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[] }
+  /**
+   * `animar` acende as marcas **uma a uma, na ordem da lista**, com quase um segundo em cada
+   * (pedido do Paulo em 13/11).
+   *
+   * Existe porque num braço ou teclado três notas são três pontos acesos, e **nada diz qual é a
+   * primeira** — `● ● ●` não é melodia. A alternativa era numerar as marcas; ele escolheu a
+   * animação, que mostra a ordem no tempo em vez de pedir que se leia um número.
+   *
+   * Com `prefers-reduced-motion` a animação não roda, e aí as marcas aparecem **numeradas** de uma
+   * vez: a ordem é informação do exercício, não enfeite, e some junto com o movimento seria perder
+   * a pergunta.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; marks: number[]; animar?: boolean }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[]; animar?: boolean }
   | { kind: 'ear'; hint?: string }
   | { kind: 'text'; text: string };
 

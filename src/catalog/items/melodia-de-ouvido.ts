@@ -4,6 +4,7 @@ import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory
 import { NOTAS_ESCOLHIDAS, arr, clave, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, plain, regiao, tonicaNaRegiao } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
+import type { Ctx } from '../types';
 
 /**
  * **Melodia de ouvido** — a linha §3.2 do `OR-ouvido-relativo.md`, e o molde do modelo novo.
@@ -66,9 +67,14 @@ export const melodiaDeOuvido: CatalogItem = {
      * A superfície vale para as DUAS direções, e é o mesmo parâmetro: ouvindo, é onde se responde;
      * audiando, é onde a melodia aparece escrita. Foi o que o rascunho dele descreveu desde o começo.
      *
-     * ⚠️ `teclado` e `braco` não entram como estímulo do `audiar`: mostrar uma melodia ali exige
-     * numerar as marcas para a ordem ser visível, e o teclado não tem rótulo em marca. Audiando, a
-     * superfície cai para a pauta — e isto está anotado em `revisao-pendente.md`.
+     * **Audiando, teclado e braço também servem** — desde 13/11, quando o Paulo pediu a animação:
+     * *"faça com que rode uma animação mostrando quais teclas ou casas foram tocadas e em qual
+     * ordem. Deixe ela lenta, com quase um segundo por nota."*
+     *
+     * Era o que faltava. Três notas num braço são três pontos acesos e nada diz qual é a primeira;
+     * a alternativa era numerar as marcas, e ele escolheu mostrar a ordem **no tempo**. Com
+     * `prefers-reduced-motion` a animação não roda e as marcas aparecem numeradas, porque a ordem
+     * é informação do exercício e não enfeite.
      */
     { id: 'superficie', label: ctx.t('settings.answerWhere'), type: 'single', options: [
       { id: 'auto', label: ctx.t('settings.myInstrument') },
@@ -134,14 +140,20 @@ export const melodiaDeOuvido: CatalogItem = {
 
     // Audiando, a superfície MOSTRA a melodia e a resposta é autoavaliação.
     if (audiando) {
-      const naPauta = s.superficie !== 'graus';
+      const ondeMostrar = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
+      /**
+       * Nos instrumentos a melodia é **animada**, nota por nota — é o que faz a ordem existir ali.
+       * Na pauta e nos graus ela aparece de uma vez: a leitura da esquerda para a direita já é a
+       * ordem, e animar seria enfeite.
+       */
+      const visual: Question['visual'] =
+        ondeMostrar === 'graus' ? { kind: 'text', text: '' }
+        : ondeMostrar === 'pauta' ? { kind: 'staff', clef: clave(ctx), columns: melodia.map(m => [notaEscrita(m)]) }
+        : ondeMostrar === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...melodia), hi: Math.max(hi, ...melodia), marks: melodia, animar: true }
+        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: melodia.map(m => casaDaAltura(ctx, m)), animar: true };
       return {
-        prompt: naPauta ? ctx.t('quiz.audiateMelody') : ctx.t('quiz.audiateDegrees', { degrees: emGraus }),
-        visual: naPauta
-          ? { kind: 'staff', clef: clave(ctx), columns: melodia.map(m => [notaEscrita(m)]) }
-          // Convenção do Player: num visual `text`, **o enunciado é o conteúdo** (ver os outros
-          // itens que o usam). Os graus vão no `prompt`; aqui fica vazio, como nos demais.
-          : { kind: 'text', text: '' },
+        prompt: ondeMostrar === 'graus' ? ctx.t('quiz.audiateDegrees', { degrees: emGraus }) : ctx.t('quiz.audiateMelody'),
+        visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: { groups: grupos, partes }, autoplay: false,
         reveal: `${emGraus}  ·  ${comNomes}`,
@@ -173,6 +185,15 @@ export const melodiaDeOuvido: CatalogItem = {
     };
   },
 };
+
+/** Uma casa que dá esta altura, da corda mais grave que a alcança — a mesma conta dos outros itens. */
+function casaDaAltura(ctx: Ctx, m: number) {
+  for (let s = 0; s < ctx.params.tuning.length; s++) {
+    const f = m - ctx.params.tuning[s];
+    if (f >= 0 && f <= 12) return { s, f };
+  }
+  return { s: 0, f: 0 };
+}
 
 /** A nota escrita de uma altura, na grafia com sustenido — a pauta precisa de letra e acidente. */
 function notaEscrita(m: number) {

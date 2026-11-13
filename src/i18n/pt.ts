@@ -517,6 +517,7 @@ const pt = {
     answer: 'Resposta:',
     right: 'Certo!',
     next: 'Próxima ↵',
+    verDeNovo: 'Ver de novo',
     montadaDica: 'Enter confirma · + sustenido · − bemol · Esc limpa',
     close: 'Fechar',
     customize: 'Personalizar',

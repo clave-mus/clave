@@ -517,6 +517,7 @@ const en: Shape<typeof pt> = {
     answer: 'Answer:',
     right: 'Right!',
     next: 'Next ↵',
+    verDeNovo: 'Show again',
     montadaDica: 'Enter confirms · + sharp · − flat · Esc clears',
     close: 'Close',
     customize: 'Customize',
