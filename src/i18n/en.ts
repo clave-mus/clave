@@ -913,6 +913,7 @@ const en: Shape<typeof pt> = {
     octaves: 'Octaves',
     all: 'All',
     reference: 'Play a reference {note} first',
+    referenceTonic: 'Play the tonic as a reference first',
     direction: 'Direction',
     up: 'Ascending',
     down: 'Descending',

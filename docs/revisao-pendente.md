@@ -71,14 +71,15 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 Não são itens novos (nenhum nasceu rascunho por isso), são **parâmetros** de itens que já existiam.
 Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 
-| onde | o quê | confira |
-|---|---|---|
-| `ouvido-intervalo` | a resposta pode ser **as notas** (contorno), e elas podem ser **três** | se três notas empilhadas ainda é um exercício de intervalo ou já é acorde; e se `comTonica` (partir sempre da tônica) deveria ser o padrão |
-| `ouvido-tecla` · `melodia-de-ouvido` · `ouvido-intervalo` | **restringir às notas que você escolhe** | se a restrição deveria cruzar com a tonalidade (hoje cruza: escolher ré♭ em dó maior diatônico não o traz) |
-| todos com som | o **synth limpo** como timbre | se ele soa bem no fone e se o nível bate com o piano (medi 1,18× — 1,4 dB acima) |
-| `ouvido-celulas` | a **cadência como antessala**, ligada só no atalho `acorde-sorteado` | se vale ligá-la também nos outros atalhos, ou se o acorde sozinho basta |
-| `nota-no-instrumento` | **todas as posições** da nota no braço | se a conta de posições em casas 0–12 é exercício ou maratona (num violão, um Fá tem 4 ou 5 posições) |
-| `ouvido-acorde` | **fundamental fixa ou sorteada** (padrão fixa) | se sorteada deveria ser o padrão em algum atalho |
+| onde                                                      | o quê                                                                  | confira                                                                                                                                    |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ouvido-intervalo`                                        | a resposta pode ser **as notas** (contorno), e elas podem ser **três** | se três notas empilhadas ainda é um exercício de intervalo ou já é acorde; e se `comTonica` (partir sempre da tônica) deveria ser o padrão |
+| `ouvido-tecla` · `melodia-de-ouvido` · `ouvido-intervalo` | **restringir às notas que você escolhe**                               | se a restrição deveria cruzar com a tonalidade (hoje cruza: escolher ré♭ em dó maior diatônico não o traz)                                 |
+| todos com som                                             | o **synth limpo** como timbre                                          | se ele soa bem no fone e se o nível bate com o piano (medi 1,18× — 1,4 dB acima)                                                           |
+| `ouvido-celulas`                                          | a **cadência como antessala**, ligada só no atalho `acorde-sorteado`   | se vale ligá-la também nos outros atalhos, ou se o acorde sozinho basta                                                                    |
+| `nota-no-instrumento`                                     | **todas as posições** da nota no braço                                 | se a conta de posições em casas 0–12 é exercício ou maratona (num violão, um Fá tem 4 ou 5 posições)                                       |
+| `ouvido-acorde`                                           | **fundamental fixa ou sorteada** (padrão fixa)                         | se sorteada deveria ser o padrão em algum atalho                                                                                           |
+|                                                           |                                                                        |                                                                                                                                            |
 
 ---
 

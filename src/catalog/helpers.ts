@@ -246,7 +246,18 @@ export const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
  * instrumento como se fosse tônica.
  */
 export function tonicaDeContexto(ctx: Ctx, abaixoDe: number): number {
-  const pcTonica = ctx.params.key?.tonic ?? 0;
+  /**
+   * **Com tonalidade livre, o centro é SORTEADO** (decisão do Paulo em 13/11), e não dó.
+   *
+   * O raciocínio dele, e ele está certo: centro fixo deixa a altura absoluta substituir o ouvido
+   * relativo — se o contexto é sempre dó, depois de uma semana a pessoa reconhece o ré por lembrar
+   * da frequência, não por ouvir a relação. Sorteando, a única coisa estável entre rodadas é o
+   * intervalo, que é o que o exercício mede. É o mesmo motivo pelo qual `reconhecer-padroes-escala`
+   * sorteia a tônica desde que nasceu.
+   *
+   * Antes disto, duas linhas de ouvido fixavam dó e três sorteavam. Agora as cinco sorteiam.
+   */
+  const pcTonica = ctx.params.key?.tonic ?? randInt(0, 11);
   let m = abaixoDe - mod(abaixoDe - pcTonica, 12);
   while (m > abaixoDe - 2) m -= 12;
   /**

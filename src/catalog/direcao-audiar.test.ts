@@ -150,13 +150,38 @@ describe('o contexto estabelece A TONALIDADE, e dois itens erraram isso sozinhos
   });
 
   /**
-   * ⚠️ **Decisão pendente do Paulo** (12/11): com tonalidade LIVRE, duas linhas fixam o centro em dó
-   * (`ouvido-tecla` e `ouvido-intervalo`, via `tonicaDeContexto`) e três o sorteiam (`ouvido-acorde`,
-   * `ouvido-campo`, `melodia-de-ouvido`). Os dois se defendem — centro fixo dá referência, centro
-   * sorteado impede a altura absoluta de substituir o ouvido relativo — e escolher é decisão de
-   * produto. Enquanto ele não escolhe, **nenhum teste afirma um dos dois**, de propósito: travar um
-   * lado seria registrar como acordada uma escolha que ninguém fez. Está na fila (`FILA-12-11.md`).
+   * **Com tonalidade livre, o centro é SORTEADO** — decidido pelo Paulo em 13/11, com o raciocínio
+   * que importa: centro fixo deixa a altura absoluta substituir o ouvido relativo. Se o contexto é
+   * sempre dó, depois de uma semana a pessoa reconhece o ré por lembrar da frequência em vez de
+   * ouvir a relação; sorteando, a única coisa estável entre rodadas é o intervalo.
+   *
+   * Até 12/11 duas linhas fixavam dó e três sorteavam, e eu deixei **sem teste** de propósito
+   * enquanto ele não escolhia. Escolhido, as cinco sorteiam — e isto trava.
    */
+  /**
+   * ⚠️ **`ouvido-acorde` é a exceção, e ela é de desenho.** Ali o "centro" É a fundamental do
+   * acorde, e o rascunho do Paulo pede que ela possa ser fixa — *"se a tônica do acorde é sempre a
+   * mesma (padrão: sim, dó)"*. Fixá-la é o ponto daquele item: prender a fundamental tira a variação
+   * de altura e deixa só a cor, que é o que ele pergunta.
+   *
+   * Então ali o teste exercita `fundamental: 'sorteada'` — o que ele tem de provar é que a fixidez
+   * vem do PARÂMETRO e não de um dó cravado no código.
+   */
+  const extraPara = (id: string) => (id === 'ouvido-acorde' ? { fundamental: 'sorteada' } : {});
+
+  it.each(COM_AUDIAR)('%s sorteia o centro quando a tonalidade é livre', id => {
+    const ex = item(id);
+    const vistos = new Set<number>();
+    for (let i = 0; i < 60; i++) {
+      const q = ex.make({ ...ex.defaults, estimulo: 'escrito', ...extraPara(id) } as never, ctx);
+      const contexto = q.sound!.partes!.find(p => p.id === 'contexto')!.groups.filter(g => g.length);
+      vistos.add(((Math.min(...contexto[contexto.length - 1]) % 12) + 12) % 12);
+    }
+    // Com doze classes possíveis, 60 sorteios que caíssem todos na mesma seriam a marca de um
+    // centro cravado — o defeito que esta decisão resolveu.
+    expect(vistos.size, `${id} fixou o centro em ${[...vistos]}`).toBeGreaterThan(4);
+  });
+
 
   /**
    * O contexto **não sai da região**. Era "abaixo do que se audia, ou no piso": com uma tônica solta

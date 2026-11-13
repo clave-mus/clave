@@ -127,3 +127,36 @@ describe('a nota soa onde a resposta cabe', () => {
     }
   });
 });
+
+/**
+ * A **referência** do `ouvido-tecla` é a tônica em vigor — e isto é a correção de um bug que a
+ * pergunta do Paulo em 13/11 expôs.
+ *
+ * Praticando em Sol maior, ela tocava 60 (dó) e o enunciado dizia "Dó": a âncora ignorava a
+ * tonalidade inteira. "Que nota é esta, depois do dó" numa prática em Sol não situa nada — e com o
+ * centro passando a ser sorteado em tonalidade livre, o texto seguiria dizendo "Dó" enquanto o som
+ * sorteava.
+ */
+describe('a referência segue a tonalidade', () => {
+  it('em cada tonalidade, soa a tônica dela — e o enunciado nomeia a nota que soou', () => {
+    for (const [pc, nome] of [[0, 'Dó'], [5, 'Fá'], [7, 'Sol'], [9, 'Lá']] as const) {
+      const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: pc, mode: 'maior' } }) };
+      for (let i = 0; i < 10; i++) {
+        const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado' } as never, c);
+        const referencia = q.sound!.groups[0][0];
+        expect(((referencia % 12) + 12) % 12, `em ${nome}`).toBe(pc);
+        expect(q.prompt, `o enunciado em ${nome}`).toContain(nome);
+      }
+    }
+  });
+
+  it('a referência fica abaixo do que se vai ouvir, sem sair da região', () => {
+    const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }) };
+    for (let i = 0; i < 40; i++) {
+      const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado' } as never, c);
+      const [referencia, alvo] = [q.sound!.groups[0][0], q.sound!.groups[1][0]];
+      expect(referencia).toBeLessThanOrEqual(alvo);
+      expect(referencia).toBeGreaterThanOrEqual(c.params.range.lo);
+    }
+  });
+});

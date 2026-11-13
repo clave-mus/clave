@@ -915,6 +915,7 @@ const pt = {
     octaves: 'Oitavas',
     all: 'Todos',
     reference: 'Tocar {note} de referência antes',
+    referenceTonic: 'Tocar a tônica de referência antes',
     direction: 'Direção',
     up: 'Subindo',
     down: 'Descendo',

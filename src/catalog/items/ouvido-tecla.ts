@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, note, noteName, pcNameUm, pcsEscolhidas, pick, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, pick, tonicaDeContexto } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -60,7 +60,16 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'som', label: ctx.t('settings.hearIt') },
       { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
     ] },
-    { id: 'referencia', label: ctx.t('settings.reference', { note: noteName(note(0), ctx.naming) }), type: 'toggle' },
+    /**
+     * O rótulo diz **"a tônica"**, sem nomear nota.
+     *
+     * Ele dizia "Tocar Dó de referência antes" — parte do bug de 13/11, porque a referência não é
+     * dó: é a tônica em vigor, sorteada quando a tonalidade é livre. E o rótulo não pode consultar
+     * a tonalidade: `settings(ctx)` é chamado com contexto mínimo em vários lugares (testes e sondas
+     * passam só o `t`), e ler `params` ali quebra tudo — aprendido na primeira rodada. Quem nomeia a
+     * nota é o enunciado, que tem o contexto inteiro.
+     */
+    { id: 'referencia', type: 'toggle', label: ctx.t('settings.referenceTonic') },
     // Sem `quando`: isto é sobre **o que pode soar**, não sobre o teclado. Eu tinha escondido nos
     // modos de letra e grau, e estava errado — acidentes existem em qualquer superfície.
     { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' },
@@ -131,8 +140,23 @@ export const ouvidoTecla: CatalogItem = {
      * escolha que consertou os distratores de ritmo: onde o espaço é pequeno, enumere.
      */
     const m = onde === 'braco' ? alturaNoBraco(ctx, p) : alturaDoPc(ctx, p, faixa);
+    /**
+     * **A referência é a tônica em vigor**, não um dó cravado — e isto é a correção de um bug que a
+     * pergunta do Paulo em 13/11 expôs.
+     *
+     * Medido antes de mexer: praticando em **Sol maior**, a referência tocava 60 (dó) e o enunciado
+     * dizia "Dó". A âncora ignorava a tonalidade inteira, então "que nota é esta, depois do dó"
+     * numa prática em Sol não situava nada — e com a decisão nova (centro sorteado em tonalidade
+     * livre) o defeito ficaria mais visível ainda, porque o som sortearia e o texto seguiria dizendo
+     * "Dó".
+     *
+     * `tonicaDeContexto` resolve as duas coisas: respeita a tonalidade, sorteia quando ela é livre,
+     * e fica **abaixo** do que se vai ouvir, sem sair da região.
+     */
+    const referencia = tonicaDeContexto(ctx, m);
+    const nomeDaReferencia = pcNameUm(mod(referencia, 12), ctx.naming, false);
     // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
-    const tonicaDoContexto = tonicaDeContexto(ctx, m);
+
     /**
      * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
      * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
@@ -167,9 +191,9 @@ export const ouvidoTecla: CatalogItem = {
         prompt: enunciado, visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
-          groups: [[tonicaDoContexto]],
+          groups: [[referencia]],
           partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonicaDoContexto]] },
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[referencia]] },
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[m]] },
           ],
         },
@@ -177,7 +201,7 @@ export const ouvidoTecla: CatalogItem = {
       };
     }
 
-    const base = s.referencia ? ctx.t('quiz.earNoteRef', { note: noteName(note(0), ctx.naming) }) : ctx.t('quiz.earNote');
+    const base = s.referencia ? ctx.t('quiz.earNoteRef', { note: nomeDaReferencia }) : ctx.t('quiz.earNote');
     return {
       prompt: semOitava ? `${base} ${ctx.t('quiz.semOitava')}` : base, visual: { kind: 'ear' },
       // O teclado cobre **a mesma faixa que pode soar**. Era 60–71 enquanto o som sorteava em
@@ -200,7 +224,7 @@ export const ouvidoTecla: CatalogItem = {
       expected: semOitava
         ? (onde === 'graus' ? { kind: 'option', id: grauDoPc(ctx, mod(m, 12)) } : { kind: 'pitchClass', pc: mod(m, 12) })
         : { kind: 'pitch', midi: m },
-      sound: { groups: s.referencia ? [[60], [m]] : [[m]] }, autoplay: true,
+      sound: { groups: s.referencia ? [[referencia], [m]] : [[m]] }, autoplay: true,
       // A oitava entra na revelação porque entrou na resposta: errar a oitava e não saber qual era
       // não ensina nada.
       reveal: semOitava
