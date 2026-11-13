@@ -45,7 +45,10 @@ function answer(q: Question, wantCorrect: boolean): Response {
   const candidates: Response[] =
     sf.kind === 'choices' ? sf.options.map(optionResponse)
       : sf.kind === 'keyboard' ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.lo + k }) as Response)
-      : sf.kind === 'fretboard' ? Array.from({ length: sf.to - sf.from + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.tuning[sf.onlyString ?? 0] + sf.from + k }) as Response)
+      // Todas as cordas, não só a primeira: a resposta certa pode estar em qualquer uma, e com a
+      // superfície do `ouvido-tecla` virando parâmetro isso deixou de ser detalhe.
+      : sf.kind === 'fretboard' ? (sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i))
+        .flatMap(st => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.tuning[st] + sf.from + k }) as Response))
       : sf.kind === 'letters' ? [0, 1, 2, 3, 4, 5, 6].flatMap(l => [-1, 0, 1].map(acc => ({ kind: 'spelled', letter: l, acc }) as Response))
       // `sequence`: a resposta é a sequência montada, unida pelo separador. A certa, e algumas
       // erradas deslocando a paleta — mais de uma porque um deslocamento pode cair na certa.

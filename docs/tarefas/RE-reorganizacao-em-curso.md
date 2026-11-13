@@ -61,19 +61,19 @@ Feitos: cache offline, oitava exata, direção `audiar`, reorganização do acor
 **campo harmônico** com os empréstimos, o **sorteio anti-repetição** no Player e o **piano de
 amostras** (12/11).
 
-Falta, em ordem: **superfície de resposta como parâmetro** nos de ouvido · **relação
-melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos motivos** pela escala.
+Falta, em ordem: **relação melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos
+motivos** pela escala.
 
-### Três peças esperam o consumidor, de propósito
+### As peças que esperavam consumidor — duas saíram
 
 Não foram escritas porque seriam motor órfão — o projeto já teve dois (`digitacoes.ts` com 22 testes
 e `padrao-de-escala.ts` com 25 ficaram prontos e inalcançáveis por semanas):
 
 | peça | espera |
 |---|---|
-| conferência por **contorno** | nada produz sequência de ALTURAS; teclado e braço emitem uma por resposta. Vem com a melodia respondida no instrumento |
-| **desenhar o acorde** | `Response` só sabe de cifra digitada. Precisa de superfície que acumula notas, resposta que as carrega e conferência que diga se formam o acorde |
-| **absorver o `no-instrumento`** | o modo "todas as posições" precisa da mesma superfície que acumula |
+| ~~conferência por **contorno**~~ | ✅ feita em 12/11 (`Expected.contorno`) |
+| ~~**desenhar o acorde**~~ | ✅ feito em 12/11, em `ouvido-acorde` |
+| **absorver o `no-instrumento`** | a superfície que acumula existe agora (`Surface.quantas`); o modo "todas as posições" é o próximo consumidor dela |
 
 ### Pontas soltas pequenas
 

@@ -51,7 +51,9 @@ describe('a resposta é a altura, não a classe de altura', () => {
   // que era exatamente o defeito de antes, agora impossível de passar em silêncio.
   it('a nota que soa está sempre dentro do teclado desenhado', () => {
     for (let i = 0; i < 80; i++) {
-      const q = perguntar();
+      // `onde: 'teclado'` explícito desde 12/11: a superfície virou parâmetro e o PADRÃO passou a
+      // ser o instrumento do perfil. Este teste é sobre o teclado, então ele o pede.
+      const q = perguntar({ onde: 'teclado' });
       if (q.surface.kind !== 'keyboard') throw new Error('esperava teclado');
       for (const m of q.sound!.groups.flat()) {
         expect(m, `${m} fora de ${q.surface.lo}–${q.surface.hi}`).toBeGreaterThanOrEqual(q.surface.lo);
@@ -62,7 +64,7 @@ describe('a resposta é a altura, não a classe de altura', () => {
 
   it('exatamente uma tecla do teclado valida como certa', () => {
     for (let i = 0; i < 40; i++) {
-      const q = perguntar();
+      const q = perguntar({ onde: 'teclado' });
       if (q.surface.kind !== 'keyboard') throw new Error('esperava teclado');
       let certas = 0;
       for (let m = q.surface.lo; m <= q.surface.hi; m++) if (validate(q.expected, { kind: 'pitch', midi: m })) certas++;
@@ -82,6 +84,46 @@ describe('a revelação diz a oitava', () => {
       const oitava = Math.floor(soou / 12) - 1;
       expect(q.reveal, `${soou}`).toMatch(/[0-9]$/);
       expect(q.reveal.endsWith(String(oitava)), `${q.reveal} para MIDI ${soou}`).toBe(true);
+    }
+  });
+});
+
+/**
+ * **A nota só pode soar onde a resposta cabe** — em QUALQUER superfície, não só no teclado.
+ *
+ * A superfície virou parâmetro em 12/11, e com ela voltou o defeito de 09/11 por outro caminho: o
+ * som ia até Si5 e um violão nas casas 0–12 chega ao Mi4, então a pergunta ficava sem resposta
+ * possível. Este teste varre as superfícies que têm faixa.
+ */
+describe('a nota soa onde a resposta cabe', () => {
+  it('no braço, toda nota que soa tem casa; na pauta e no teclado, idem', () => {
+    for (const onde of ['braco', 'teclado', 'pauta']) {
+      for (let i = 0; i < 60; i++) {
+        const q = perguntar({ onde });
+        const sf = q.surface;
+        // **Só a nota a identificar.** A referência (o dó que soa antes) é contexto, não pergunta:
+        // ela não precisa existir no instrumento, e exigir isso foi erro meu ao escrever o teste.
+        const grupos = q.sound!.groups;
+        for (const m of grupos[grupos.length - 1]) {
+          if (sf.kind === 'keyboard') {
+            expect(m, `${onde}: ${m} fora de ${sf.lo}–${sf.hi}`).toBeGreaterThanOrEqual(sf.lo);
+            expect(m).toBeLessThanOrEqual(sf.hi);
+          }
+          if (sf.kind === 'fretboard') {
+            const alcance = sf.tuning.flatMap(t => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => t + sf.from + k));
+            expect(alcance, `${onde}: ${m} não tem casa`).toContain(m);
+          }
+        }
+      }
+    }
+  });
+
+  it('com letras ou graus, a oitava deixa de contar — e o enunciado diz isso', () => {
+    for (const onde of ['letras', 'graus']) {
+      const q = perguntar({ onde });
+      // A conferência relaxa de propósito (decisão do Paulo em 12/11), e por isso o enunciado avisa.
+      expect(q.expected.kind === 'pitchClass' || q.expected.kind === 'option', onde).toBe(true);
+      expect(q.prompt).toContain('oitava');
     }
   });
 });

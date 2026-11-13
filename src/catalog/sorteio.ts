@@ -30,6 +30,8 @@ export function assinatura(e: Expected): string {
     case 'pitch': return `p:${e.midi}`;
     case 'spelled': return `s:${e.letter}.${e.acc}.${e.oct ?? ''}`;
     case 'chord': return `c:${e.root}.${e.quality}`;
+    // Contorno: a assinatura é o conjunto de alturas, com a ordem quando ela importa.
+    case 'contorno': return `k:${(e.ordenada === false ? [...e.midis].sort((a, b) => a - b) : e.midis).join(',')}`;
   }
 }
 

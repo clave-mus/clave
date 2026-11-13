@@ -117,6 +117,13 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    * `Ctrl` ficou fora de propósito: `Ctrl+G` é atalho do navegador e não chega até a página.
    */
   const [montada, setMontada] = useState<{ letter: number; acc: number } | null>(null);
+  /**
+   * As alturas já postas numa superfície que **acumula** (`Surface.quantas`): um acorde sendo
+   * desenhado, uma melodia sendo tocada de volta. Nada é enviado antes de estar cheia, e dá para
+   * desfazer o último toque — a mesma regra do `sequence`, por um motivo que já está escrita lá:
+   * meia resposta não é resposta, e enviar sozinho ao completar tira a chance de corrigir.
+   */
+  const [juntadas, setJuntadas] = useState<Junta[]>([]);
   // `seguidas` é a contagem DENTRO da série. Não confundir com dias seguidos praticados, que
   // saiu de propósito (decisão 11): aquilo é cobrança, isto é informação útil — e é o gatilho da
   // sugestão de variação (F7-1), que dispara em acertos seguidos, não em taxa.
@@ -272,7 +279,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, q, next, play, submit, montada]);
   // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
-  useEffect(() => { setMontada(null); }, [q]);
+  useEffect(() => { setMontada(null); setJuntadas([]); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -319,7 +326,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+        juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
@@ -357,14 +365,66 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 }
 
 // ---------------- palco: o que é perguntado ----------------
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer }: {
+/**
+ * Uma altura posta numa superfície que acumula. No braço vem com a POSIÇÃO: duas cordas dão a mesma
+ * nota, e marcar a altura sem saber onde ela foi tocada acenderia várias casas de uma vez.
+ */
+interface Junta { m: number; s?: number; f?: number }
+
+/**
+ * Esta altura faz parte do gabarito de um `contorno`? Serve para a REVELAÇÃO numa superfície que
+ * acumula: errando um acorde desenhado, a pessoa precisa ver quais notas eram.
+ *
+ * Compara por classe de altura de propósito — o contorno aceita o conjunto deslocado por oitavas,
+ * então marcar só uma oitava mentiria sobre o que era aceito.
+ */
+function alturaEsperada(e: Question['expected'], m: number): boolean {
+  return e.kind === 'contorno' && e.midis.some(x => mod(x, 12) === mod(m, 12));
+}
+
+/** O nome de uma altura, com a oitava — a casa tem de dizer qual altura entrou, não só a nota. */
+const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
+  `${noteName(fromStep(stepDePc(mod(m, 12)), accDePc(mod(m, 12))), naming)}${Math.floor(m / 12) - 1}`;
+/** Passo diatônico e acidente de uma classe de altura, na grafia com sustenido. */
+const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
+const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
+
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
   onPlayParte: (p: ParteDoSom) => void; naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
+  /** Alturas já postas, quando a superfície acumula (`Surface.quantas`). */
+  juntadas: Junta[]; onJuntar: (j: Junta) => void; onDesfazer: () => void;
 }) {
   const t = useT();
   const v = q.visual;
   const sf = q.surface;
+  /**
+   * Quantas alturas a superfície espera antes de valer. `1` (ou ausente) é o caminho de sempre:
+   * um toque é a resposta.
+   */
+  const quantas = 'quantas' in sf ? (sf.quantas ?? 1) : 1;
+  const acumula = quantas > 1;
+  const cheia = juntadas.length >= quantas;
+  /** Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte. */
+  const tocar = (j: Junta) => (acumula ? onJuntar(j) : onAnswer({ kind: 'pitch', midi: j.m }, String(j.m)));
+  const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
+  /** As casas e os botões de desfazer/enviar, só quando a superfície acumula. */
+  const acoes = acumula && phase === 'ask' ? (
+    <div className="sequencia" style={{ marginTop: 12 }}>
+      <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
+        {Array.from({ length: quantas }, (_, i) => (
+          <span key={i} className={`seq-casa ${juntadas[i] !== undefined ? 'cheia' : ''}`}>
+            {juntadas[i] !== undefined ? nomeDaAltura(juntadas[i].m, naming) : ''}
+          </span>
+        ))}
+      </div>
+      <div className="row seq-acoes">
+        <Btn small tone="ghost" disabled={!juntadas.length} onClick={onDesfazer}>{t('player.undoLast')}</Btn>
+        <Btn disabled={!cheia} onClick={enviar}>{t('player.submitAnswer')}</Btn>
+      </div>
+    </div>
+  ) : null;
   const ok = (r: Response) => validate(q.expected, r);
   const fb = phase === 'right' ? <div className="feedback ok">{t('player.feedbackRight')}</div> : phase === 'wrong' ? <div className="feedback bad">{t('player.feedbackWrong')}</div> : null;
   const isText = v.kind === 'text' && v.text;
@@ -372,35 +432,43 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   // superfícies que ficam no próprio palco (teclado, braço, pauta)
   if (sf.kind === 'keyboard') {
     const marks: Record<number, string> = {};
-    if (picked) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
-    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m })) marks[m] = 'var(--ok)';
+    // As que já foram postas aparecem no acento: a pessoa precisa ver o acorde que está montando.
+    for (const j of juntadas) marks[j.m] = 'var(--mu)';
+    if (picked && !acumula) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
+    if (acumula && phase !== 'ask') for (const j of juntadas) marks[j.m] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
+    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m }) || (acumula && alturaEsperada(q.expected, m))) marks[m] = 'var(--ok)';
     return (
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
         {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && onAnswer({ kind: 'pitch', midi: m }, String(m))} labels="do" />
+          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && tocar({ m })} labels="do" />
         </div>
+        {acoes}
       </div>
     );
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
-    if (picked) {
+    // Acumulando, a posição clicada é guardada pelo índice da corda e da casa — duas cordas podem
+    // dar a mesma altura, e desenhar um acorde é escolher ONDE, não só qual nota.
+    for (const j of juntadas) if (j.s !== undefined && j.f !== undefined) marks.push({ s: j.s, f: j.f, color: phase === 'ask' ? 'var(--mu)' : phase === 'right' ? 'var(--ok)' : 'var(--err)' });
+    if (picked && !acumula) {
       const [s, f] = picked.split(':').map(Number);
       marks.push({ s, f, color: phase === 'right' ? 'var(--ok)' : 'var(--err)', label: phase === 'right' ? '✓' : undefined });
     }
     if (phase === 'wrong') {
       const strings = sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i);
-      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f })) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
+      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f }) || (acumula && alturaEsperada(q.expected, sf.tuning[s] + f))) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
     }
     return (
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
-          onPick={(s, f) => phase === 'ask' && onAnswer({ kind: 'pitch', midi: sf.tuning[s] + f }, `${s}:${f}`)} />
+          onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
+        {acoes}
       </div>
     );
   }

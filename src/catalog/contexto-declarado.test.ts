@@ -51,6 +51,13 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   notaDaTonalidade: ['key'],
   // Entrou em 12/11/2026 no lugar do parâmetro "extensão": os passos da pauta saem da REGIÃO.
   passosDaRegiao: ['range'],
+  // Lê `params.clef`, que NÃO é parâmetro de prática (os três são key, range e material) — então
+  // chamá-la não obriga o item a declarar nada. Entrou na lista em 12/11 com "desenhar o acorde".
+  clave: [],
+  // Entraram em 12/11/2026 com os botões por grau: o grau é contado da tônica, e a lista de graus
+  // oferecidos sai do material.
+  grauDoPc: ['key'],
+  grausDaTonalidade: ['key', 'material'],
 };
 
 /**

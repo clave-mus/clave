@@ -230,14 +230,14 @@ provavelmente não abre.
 | relação melodia-harmonia — exploração 1 | ✅ |
 | empréstimos modais | 🟡 aprovados, não implementados |
 | reorganização do par de **acorde** | ✅ feita em 10/11 |
-| conferência por **contorno** | ❌ |
+| conferência por **contorno** | ✅ feita em 12/11, com a superfície que acumula |
 | **cadências** como contexto | ✅ motor feito em 10/11 · ligado em `reconhecer-padroes-escala` |
 | direção `audiar` em nota, intervalo e acorde | ✅ feita em 10/11, nos seis itens |
 | **campo harmônico** (grau do campo) | ❌ |
 | sorteio **anti-repetição** | ✅ feito em 12/11 |
 | **oitava exata** em "Nota" | ✅ feito em 10/11 |
-| superfície de resposta como parâmetro dos de ouvido | ❌ |
-| botões por **grau** | ❌ |
+| superfície de resposta como parâmetro dos de ouvido | ✅ feito em 12/11 |
+| botões por **grau** | ✅ feito em 12/11 |
 | motivos pela escala — **exploração** | ❌ |
 | relação melodia-harmonia — exploração 2 e os quizzes | ❌ |
 | **piano de amostras** | ✅ feito em 12/11 |
@@ -319,7 +319,24 @@ Por valor sobre custo, não por posição na matriz:
    a rede. O service worker guarda `/amostras/` como `/assets/`, e foi provado com o servidor morto:
    o app abre e as amostras saem do cache. Só o piano: cordas e drone seguem sintetizados. O "synth
    mais limpo como opção" do §7 ainda não existe — é ponta solta;
-9. **superfície de resposta como parâmetro** nos de ouvido;
+9. ~~**superfície de resposta como parâmetro** nos de ouvido~~ — ✅ feito em 12/11, junto com a
+   **superfície que acumula** e a **conferência por contorno**, porque o Paulo pediu para ir direto
+   ao caro. O que entrou:
+   - **contorno** (§4) como `Expected`, com a regra dele — toda nota deslocada pelo MESMO número de
+     oitavas —, e `ordenada: false` para acorde desenhado, onde a ordem dos cliques não é a resposta.
+     Os três exemplos do §4 são teste;
+   - **superfície que acumula**: `Surface.quantas` em teclado, braço e pauta, não uma quarta
+     superfície — desenhar um acorde é clicar nas mesmas teclas, o que muda é quantas respostas
+     entram antes de valer. Casas, desfazer e envio explícito, como o `sequence`;
+   - **desenhar o acorde** (§3.4) em `ouvido-acorde`, o primeiro consumidor;
+   - **`ouvido-tecla` com a superfície solta**: teclado · braço · pauta · **letras** · **graus**,
+     padrão no instrumento do perfil. Letras e graus não carregam oitava, e o Paulo escolheu
+     mantê-los assim (*"vale a pena ter letras e números como resposta pra praticar"*) com a
+     condição de **o enunciado avisar** que ali a oitava não conta — relaxar em silêncio faria o
+     histórico mentir. **Botões por grau**, da linha aberta do §8, saiu junto;
+   - um defeito achado pelo caminho: com a superfície solta, a nota podia soar **fora do alcance do
+     braço** (o som ia a Si5, um violão a Mi4) — era o defeito de 09/11 por outro caminho. No braço
+     a nota passa a sair do conjunto de alturas que existem nele. Medido: 200 sorteios, zero fora;
 10. **relação melodia-harmonia** — exploração 2 e os três quizzes. É o mais caro e, nas palavras
     dele, *"um dos exercícios mais difíceis e valiosos do app"*;
 11. **exploração dos motivos** pela escala.

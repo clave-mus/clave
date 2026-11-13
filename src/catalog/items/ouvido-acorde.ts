@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, pick, porComplexidade, randInt, tonicaNaRegiao } from '../helpers';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, clave, pick, porComplexidade, randInt, tonicaNaRegiao } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -20,8 +20,29 @@ export const ouvidoAcorde: CatalogItem = {
     //
     // "Qual inversão" como PERGUNTA é outro exercício, o do campo harmônico: lá a inversão
     // distingue um I de um V com a terça no baixo, e aqui distinguiria nada.
-    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' }],
-  defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false },
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
+    /**
+     * **Onde se responde** (`OR-ouvido-relativo.md`, §3.4: *"dois modos: alternativas com a
+     * descrição, ou desenhar o acorde na pauta, no piano ou no violão"*).
+     *
+     * Desenhar é outra habilidade: nas alternativas você reconhece a cor e aponta o nome; desenhando
+     * você tem de saber **quais notas** formam aquela cor. É o mesmo estímulo com resposta mais
+     * exigente — e é por isso que a superfície é parâmetro e não item novo (decisão 15).
+     *
+     * `instrumento` é a superfície do desenho, e o padrão é o do perfil: o item passa a responder no
+     * instrumento de quem usa, que é o pedido do §3.1.
+     */
+    { id: 'resposta', label: ctx.t('settings.answerWhere'), type: 'single', options: [
+      { id: 'alternativas', label: ctx.t('settings.answerOptions') },
+      { id: 'desenhar', label: ctx.t('settings.answerDraw') },
+    ] },
+    { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', quando: s => s.resposta === 'desenhar',
+      options: [
+        { id: 'auto', label: ctx.t('settings.myInstrument') },
+        { id: 'piano', label: ctx.t('settings.instrumentPiano') },
+        { id: 'pauta', label: ctx.t('settings.onStaff') },
+      ] }],
+  defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -66,6 +87,26 @@ export const ouvidoAcorde: CatalogItem = {
     // grafia para preservar.
     if (s.inversoes) {
       for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
+    }
+    /**
+     * Desenhando, o gabarito é **contorno não ordenada**: as notas que formam o acorde, em qualquer
+     * ordem de clique e em qualquer oitava — desde que TODAS deslocadas junto (a regra do §4). Um
+     * Dó maior desenhado uma oitava abaixo é um Dó maior; com uma nota solta fora, não é.
+     */
+    if (s.resposta === 'desenhar') {
+      const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
+      const naPauta = s.instrumento === 'pauta';
+      const clef = clave(ctx);
+      const superficie = naPauta
+        ? { kind: 'staff' as const, clef, accidentals: true, quantas: ms.length }
+        : noPiano
+          ? { kind: 'keyboard' as const, lo: 48, hi: 72, quantas: ms.length }
+          : { kind: 'fretboard' as const, tuning: ctx.params.tuning, from: 0, to: 12, quantas: ms.length };
+      return {
+        prompt: ctx.t('quiz.drawChord', { chord: chordName(ctx.t, type) }), visual: { kind: 'ear' },
+        surface: superficie, expected: { kind: 'contorno', midis: ms, ordenada: false },
+        sound: { groups: [ms] }, autoplay: true, reveal: chordName(ctx.t, type),
+      };
     }
     return {
       prompt: ctx.t('quiz.earChord'), visual: { kind: 'ear' },

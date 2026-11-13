@@ -97,6 +97,33 @@ export function passosDaRegiao(clef: Clef, ctx: Ctx): [number, number] {
   return baixo > alto ? [minimo, maximo] : [baixo, alto];
 }
 
+/**
+ * **Botões por grau** (linha aberta do `OR-ouvido-relativo.md`, §8; pedida pelo Paulo em 12/11:
+ * *"e deixa os graus também"*).
+ *
+ * O grau de uma classe de altura em relação à tônica em vigor — `1`, `♭3`, `5`… Com tonalidade
+ * livre não há grau nenhum, e aí a lista cai nos doze semitons contados da própria nota: é o que
+ * sobra de verdade quando não há centro.
+ */
+const GRAUS_POR_SEMI = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
+
+export const grauDoPc = (ctx: Ctx, pc: number): string =>
+  GRAUS_POR_SEMI[mod(pc - (ctx.params.key?.tonic ?? 0), 12)];
+
+/**
+ * Os graus que podem ser resposta, em ordem.
+ *
+ * `pcs` é **a lista exata do que pode soar**, e passá-la não é opcional por capricho: o item filtra
+ * mais que o material (o `ouvido-tecla` tira as teclas pretas, por exemplo), e oferecer um grau que
+ * nunca pode ser a resposta é ruído — mede-se escolher entre o que existe, não descartar fantasmas.
+ * Sem a lista, vale o material.
+ */
+export const grausDaTonalidade = (ctx: Ctx, pcs?: number[]): { id: string; label: string }[] =>
+  (pcs ?? pcsPermitidas(ctx))
+    .map(pc => grauDoPc(ctx, pc))
+    .sort((a, b) => GRAUS_POR_SEMI.indexOf(a) - GRAUS_POR_SEMI.indexOf(b))
+    .map(g => ({ id: g, label: g }));
+
 /** Uma classe de altura que o material permite. */
 export function pcPermitido(ctx: Ctx): number {
   return pick(pcsPermitidas(ctx));

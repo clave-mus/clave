@@ -34,7 +34,13 @@ export type Response =
   /** Uma nota escrita (letras, pauta); oct só quando a superfície define a oitava. */
   | { kind: 'spelled'; letter: number; acc: number; oct?: number }
   /** Uma cifra digitada, em qualquer convenção. */
-  | { kind: 'chord'; text: string };
+  | { kind: 'chord'; text: string }
+  /**
+   * **Várias alturas**, montadas numa superfície de instrumento ou pauta — um acorde desenhado, uma
+   * melodia tocada de volta. A ordem é a de quem respondeu; se ela importa, quem decide é o
+   * `Expected` (ver `contorno`).
+   */
+  | { kind: 'pitches'; midis: number[] };
 
 /** O que está certo, em termos musicais. */
 export type Expected =
@@ -46,7 +52,22 @@ export type Expected =
   /** Grafia exata: letra e acidente (e oitava, se dada). Aqui Dó♯ ≠ Ré♭. */
   | { kind: 'spelled'; letter: number; acc: number; oct?: number }
   /** Acorde: classe de altura da fundamental e qualidade. */
-  | { kind: 'chord'; root: number; quality: ChordId };
+  | { kind: 'chord'; root: number; quality: ChordId }
+  /**
+   * **Contorno**: a conferência do meio, que o Paulo pediu e definiu (`OR-ouvido-relativo.md`, §4).
+   *
+   * As duas que existiam não serviam a melodia: `pitchClass` é frouxa (acerta na oitava errada — foi
+   * o que escondeu o bug do teclado) e `pitch` é rígida (exigiria a oitava absoluta de cada nota).
+   * Nas palavras dele: *"não dá pro usuário ouvir uma nota, saber qual é, ouvir uma nota acima e
+   * dizer que estava abaixo"*.
+   *
+   * **A regra:** certo se TODA nota da resposta está deslocada da esperada pelo MESMO número de
+   * oitavas. O conjunto inteiro pode subir ou descer junto; nota solta, não.
+   *
+   * `ordenada` é `true` para melodia (a ordem é a resposta) e `false` para acorde desenhado, onde
+   * a pessoa clica as notas em qualquer ordem e o que importa é o conjunto.
+   */
+  | { kind: 'contorno'; midis: number[]; ordenada?: boolean };
 
 export interface ChoiceOption {
   id: string;
@@ -88,14 +109,25 @@ export type Surface =
    */
   | { kind: 'autoavaliacao' }
   | { kind: 'letters'; accidentals: boolean }
-  | { kind: 'keyboard'; lo: number; hi: number }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
+  /**
+   * `quantas` transforma teclado, braço e pauta em **superfície que acumula**: a pessoa põe N notas
+   * e envia de uma vez, e a resposta sai como `{ kind: 'pitches' }`.
+   *
+   * Não é uma quarta superfície de propósito. Desenhar um acorde no piano é clicar nas mesmas
+   * teclas de sempre — o que muda é quantas respostas entram antes de valer. Uma superfície nova
+   * duplicaria o teclado, o braço e a pauta, e motor duplicado é proibido.
+   *
+   * Mesma regra do `sequence`: nada é enviado antes de estar cheia, e a pessoa pode desfazer o
+   * último toque. Meia resposta não é resposta.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; quantas?: number }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number }
   /**
    * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
    * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
    */
-  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number };
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number };
 
 /** Conteúdo sonoro: só as notas. Como elas soam fica com a apresentação. */
 export interface SoundContent {
