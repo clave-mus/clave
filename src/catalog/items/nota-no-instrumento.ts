@@ -72,13 +72,30 @@ export const notaNoInstrumento: CatalogItem = {
      */
     { id: 'pergunta', label: ctx.t('settings.whatToAsk'), type: 'single', quando: s => s.instrumento !== 'piano',
       options: [{ id: 'nota', label: ctx.t('settings.askNoteName') }, { id: 'altura', label: ctx.t('settings.askExactPitch') }] },
+    /**
+     * **Todas as posições daquela nota**, e não uma (pedido do Paulo em 10/11: *"clicar em todas
+     * posicoes da nota no braço"*).
+     *
+     * Esperou dois dias por uma razão boa: precisava da superfície que ACUMULA respostas, e ela só
+     * nasceu em 12/11 com o `Surface.quantas`. Construí-la antes teria sido motor órfão — o projeto
+     * já teve dois.
+     *
+     * É outra habilidade que achar uma: achar uma é reconhecer a nota; achar todas é **ver o braço
+     * como mapa**, saber que o mesmo Fá está na casa 1 da 6ª, na 6 da 5ª, na 11 da 4ª. Por isso é
+     * parâmetro e não padrão: quem está aprendendo a nota não deve ser cobrado pelo mapa inteiro.
+     *
+     * Só na direção `achar`, e só no braço: no teclado uma classe de altura tem uma tecla por
+     * oitava, e "todas" ali é outra pergunta (qual oitava), que a direção `altura` já faz.
+     */
+    { id: 'todasAsPosicoes', label: ctx.t('settings.allPositions'), type: 'toggle',
+      quando: s => s.instrumento !== 'piano' && s.direcao === 'achar' && s.pergunta !== 'altura' },
     { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.instrumento === 'piano' },
     { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', quando: s => s.instrumento === 'piano',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] },
   ],
   // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
   // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
-  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', pretas: true, oitavas: '2' },
+  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, pretas: true, oitavas: '2' },
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {
       const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
@@ -113,6 +130,31 @@ export const notaNoInstrumento: CatalogItem = {
       // Uma grafia só, sorteada, e a mesma no enunciado e no gabarito — ver `pcNameUm`.
       const bemol = Math.random() < 0.5;
       const nome = pcNameUm(mod(m, 12), ctx.naming, bemol);
+      /**
+       * **Todas as posições**: a resposta é o conjunto de casas daquela nota na faixa visível, e a
+       * conferência é contorno **não ordenada** — a ordem em que a pessoa varre o braço não é
+       * resposta nenhuma.
+       *
+       * As posições saem das cordas que a pessoa incluiu, não do braço todo: oferecer uma corda
+       * desligada como resposta certa seria pedir o que a configuração dela excluiu.
+       */
+      if (s.todasAsPosicoes && !porAltura) {
+        const cordasAtivas = cordas?.length
+          ? [...new Set(cordas.map(x => tuning.length - Number(x)).filter(i => i >= 0 && i < tuning.length))]
+          : tuning.map((_, i) => i);
+        const inicio = from === 0 ? 0 : from + 1;
+        const posicoes: number[] = [];
+        for (const st of cordasAtivas) for (let casa = inicio; casa <= to; casa++) {
+          if (mod(tuning[st] + casa, 12) === mod(m, 12)) posicoes.push(tuning[st] + casa);
+        }
+        return {
+          prompt: ctx.t('quiz.tapAllPositions', { note: nome }), visual: { kind: 'text', text: '' },
+          surface: { kind: 'fretboard', tuning, from, to, quantas: posicoes.length },
+          expected: { kind: 'contorno', midis: posicoes, ordenada: false },
+          sound: { groups: [[m]], instrument: vozDoBraco(tuning) },
+          reveal: ctx.t('quiz.howManyPositions', { note: nome, n: String(posicoes.length) }),
+        };
+      }
       return {
         prompt: ctx.t('quiz.tapNoteOnNeck', { note: comOitava(nome) }), visual: { kind: 'text', text: '' },
         surface: { kind: 'fretboard', tuning, from, to }, expected: gabarito,
