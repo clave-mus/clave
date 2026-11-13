@@ -229,14 +229,38 @@ export function amostrasDeCorda(
    */
   const MS_DO_DEDO = 3;
   const nRuido = Math.min(exc, Math.round((sr * MS_DO_DEDO) / 1000));
+  /**
+   * **O dedo tem banda própria, e ela não acompanha a nota** — terceiro e último capítulo do som
+   * percussivo (13/11: *"pode remover ainda mais o agudo percussivo dos dedos, ou deixar ele mais
+   * sutil"*).
+   *
+   * Até aqui o ruído do dedo só era filtrado pelo filtro do laço, cujo corte acompanha a
+   * fundamental (`max(corteBase, f × CORTE_MINIMO_EM_FUNDAMENTAIS)`). O efeito disso é
+   * fisicamente errado: **quanto mais aguda a corda, mais agudo o dedo**, como se a polpa mudasse
+   * de material ao trocar de corda. Medido, a contribuição do dedo na banda de 2–8 kHz em relação
+   * ao que a corda produz sozinha: 0,02–0,06 nas graves do baixo e **1,38 no Mi4 do violão** — ali
+   * o dedo acrescentava mais agudo que a corda inteira, e é exatamente onde ele ouvia metal.
+   *
+   * Agora o ruído passa por um passa-baixa **de corte fixo** antes de entrar no estouro, porque o
+   * contato dura o mesmo milissegundo em qualquer corda. O ganho compensa a energia que o filtro
+   * come (`√(k/(2−k))` é o RMS de um polo sobre ruído branco), para `PESO_DO_RUIDO` continuar
+   * significando a mesma coisa se o corte mudar.
+   */
+  const CORTE_DO_DEDO = 900;
+  const GANHO_DO_DEDO = 2.5;
+  const kDedo = 1 - Math.exp((-2 * Math.PI * CORTE_DO_DEDO) / sr);
   let ataque = 0;
+  let ruido = 0;
+  let ruido2 = 0;
   let pico = 0;
   let soma = 0;
   for (let i = 0; i < exc; i++) {
     const u = i / exc;
     const triangulo = u < PONTO ? u / PONTO : (1 - u) / (1 - PONTO);
     const entrada = u < ENTRADA ? 0.5 - 0.5 * Math.cos((Math.PI * u) / ENTRADA) : 1;
-    const dedo = i < nRuido ? PESO_DO_RUIDO * rnd() * (1 - i / nRuido) : 0;
+    ruido += kDedo * ((i < nRuido ? rnd() * (1 - i / nRuido) : 0) - ruido);
+    ruido2 += kDedo * (ruido - ruido2);
+    const dedo = PESO_DO_RUIDO * GANHO_DO_DEDO * ruido2;
     ataque += k * (entrada * triangulo + dedo - ataque);
     x[i] = ataque;
     soma += ataque;

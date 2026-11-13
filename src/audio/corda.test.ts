@@ -107,7 +107,6 @@ describe.each(VOZES)('$nome', ({ corte, t60, alturas }) => {
   });
 
   // O coração: a nota que soa é a nota pedida. Antes, 440 Hz saíam 191.
-  // O coração: a nota que soa é a nota pedida. Antes, 440 Hz saíam 191.
   //
   // Varre TRÊS sementes de ruído. Com uma só, uma excitação azarada passaria e o defeito voltaria
   // sem ninguém ver — foi o que a instabilidade do teste ensinou.
@@ -127,6 +126,48 @@ it('o laço decai: a corda não sustenta para sempre', () => {
   const inicio = Math.max(...Array.from(x.slice(0, SR * 0.1)).map(Math.abs));
   const fim = Math.max(...Array.from(x.slice(SR * 1.5)).map(Math.abs));
   expect(fim).toBeLessThan(inicio * 0.5);
+});
+
+/**
+ * **O dedo não pode ser mais agudo que a corda** — o som percussivo, que o Paulo relatou três vezes
+ * (09/11, 13/11 e de novo em 13/11: *"pode remover ainda mais o agudo percussivo dos dedos"*).
+ *
+ * As duas primeiras rodadas trataram sintomas reais (o degrau na primeira amostra; o ruído que
+ * durava o laço inteiro) e **nenhuma delas mediu o dedo em separado** — por isso o defeito voltou.
+ * A medida que o isola é rodar a mesma nota com `rnd = () => 0`: o que sobra na banda de 2–8 kHz
+ * quando há ruído é o dedo, e dividido pelo que a corda produz sozinha é o quanto ele domina.
+ *
+ * Medido antes do conserto, com ruído de verdade: 0,02–0,06 nas graves do baixo e **1,38 no Mi4 do
+ * violão** — ali o dedo acrescentava mais agudo que a corda inteira. A causa era o corte do filtro
+ * do laço acompanhar a fundamental: o dedo ficava mais agudo em corda mais aguda, o que nenhum dedo
+ * faz. Daí o passa-baixa de corte fixo, de dois polos.
+ *
+ * **O teto de 0,4 foi escolhido medindo os dois motores com estas mesmas sementes**, porque as
+ * sementes do teste dão números menores que o `Math.random` do app: antes, pior caso 0,609 e sete
+ * dos vinte e um casos acima de 0,25; depois, pior caso 0,252 e um só. 0,4 fica fora dos dois
+ * conjuntos — um teto de 0,6, que foi minha primeira escolha, passava a 0,009 do estado anterior e
+ * reprovaria por sorte do sorteio, não por defeito.
+ */
+describe('o dedo soa como dedo', () => {
+  it('em 7 alturas e 3 ruídos, o dedo não acrescenta mais agudo que a própria corda', () => {
+    const JAN = 2048;
+    /** Energia de 2 a 8 kHz na janela do ataque, somando a magnitude de 125 em 125 Hz. */
+    const brilho = (x: Float32Array) => {
+      let e = 0;
+      for (let f = 2000; f <= 8000; f += 125) { const v = magnitude(x, f, 0, JAN) / JAN; e += v * v; }
+      return e;
+    };
+    for (const { nome, corte, t60 } of VOZES) {
+      for (const m of nome === 'baixo' ? [28, 33, 40, 52] : [52, 64, 69]) {
+        const semRuido = brilho(amostrasDeCorda(m, SR, corte, t60, SR, () => 0));
+        for (const semente of [12345, 20261113, 777]) {
+          const comRuido = brilho(corda(m, corte, t60, 1, semente));
+          const doDedo = Math.max(0, comRuido - semRuido) / semRuido;
+          expect(doDedo, `${nome} MIDI ${m}, semente ${semente}`).toBeLessThan(0.4);
+        }
+      }
+    }
+  });
 });
 
 /**
