@@ -37,6 +37,22 @@ function alturas(rotulo: string, ctx: Ctx, n = 120): number[] {
   return out;
 }
 
+/**
+ * Só as alturas do ÚLTIMO grupo — a nota a identificar, nos itens em que uma referência soa antes.
+ * Ver `SO_O_ULTIMO_GRUPO`, mais abaixo, para o porquê.
+ */
+function ultimoGrupo(rotulo: string, ctx: Ctx, n = 120): number[] {
+  const v = variante(rotulo);
+  const ex = SERIES.find(e => e.id === v.id)!;
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const q = ex.make(v.settings, ctx);
+    const g = q.sound?.groups.filter(x => x.length) ?? [];
+    if (g.length) out.push(...g[g.length - 1]);
+  }
+  return out;
+}
+
 /** Itens que tocam ALTURA. `ritmo-ouvido` tem som, mas só percussão — não há o que pôr em região. */
 const comSom = VARIANTES.filter(v => {
   const ctx = ctxCom({});
@@ -91,6 +107,21 @@ const REGIAO_NAO_SE_APLICA = [
   'acorde-no-instrumento',
 ];
 
+/**
+ * **A nota de REFERÊNCIA não obedece à região**, e isto é escolha, não descuido.
+ *
+ * O Paulo pediu em 13/11 que a oitava da referência fosse dele — *"faça com que o padrão seja a 2.
+ * C2 por exemplo"* —, e no baixo dó2 (36) está fora da região padrão (48–72). Entre obedecer à
+ * região e obedecer à escolha explícita, vence a escolha: a região diz o que se quer ouvir **como
+ * pergunta**, e a referência é uma âncora dada, não a pergunta.
+ *
+ * O limite dela é a SUPERFÍCIE: a referência tem de caber onde é desenhada, porque ela também é
+ * marca na tela. Isso está travado em `resposta-marcada.test.ts` e no próprio item.
+ *
+ * Então aqui a conferência olha a nota a identificar — o último grupo —, não a referência.
+ */
+const SO_O_ULTIMO_GRUPO = ['ouvido-tecla'];
+
 describe('F2-3 · a região é lida', () => {
   // Guarda contra a regressão da decisão 57: se um item voltar a ignorar a cascata, o piso não é
   // respeitado e isto falha.
@@ -99,7 +130,7 @@ describe('F2-3 · a região é lida', () => {
       const nat = faixaNatural(id);
       const lo = Math.max(nat.lo, Math.round((nat.lo + nat.hi) / 2) - 6);
       const hi = lo + 12;
-      const ms = alturas(id, ctxCom({ range: { lo, hi } }));
+      const ms = SO_O_ULTIMO_GRUPO.includes(id) ? ultimoGrupo(id, ctxCom({ range: { lo, hi } })) : alturas(id, ctxCom({ range: { lo, hi } }));
       // conteúdo pode subir uma oitava acima da fundamental (escala, acorde): o teto é o da
       // fundamental, não o da última nota
       expect(Math.min(...ms), `${id} tocou abaixo do piso`).toBeGreaterThanOrEqual(lo);

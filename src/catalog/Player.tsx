@@ -568,6 +568,8 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   // superfícies que ficam no próprio palco (teclado, braço, pauta)
   if (sf.kind === 'keyboard') {
     const marks: Record<number, string> = {};
+    // **O apoio primeiro**, para que uma resposta sobre a mesma tecla o sobreponha e não o contrário.
+    for (const m of sf.apoio?.midis ?? []) marks[m] = 'var(--accent-quiet)';
     // As que já foram postas aparecem no acento: a pessoa precisa ver o acorde que está montando.
     for (const j of juntadas) marks[j.m] = 'var(--mu)';
     if (picked && !acumula) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
@@ -579,7 +581,8 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
         <div className="prompt">{q.prompt}</div>
         {ouvir}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && tocar({ m })} labels="do" />
+          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} marcasComTexto={sf.apoio?.rotulos ?? {}} naming={naming}
+            onPress={m => phase === 'ask' && tocar({ m })} labels="do" />
         </div>
         {acoes}
       </div>
@@ -587,6 +590,19 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
+    /**
+     * O apoio no braço: a corda mais grave que alcança a altura, dentro das casas desenhadas. Se
+     * nenhuma alcança, a marca é omitida — desenhar na casa errada é pior que não desenhar.
+     */
+    for (const m of sf.apoio?.midis ?? []) {
+      for (let st = 0; st < sf.tuning.length; st++) {
+        const casa = m - sf.tuning[st];
+        if (casa >= sf.from && casa <= sf.to) {
+          marks.push({ s: st, f: casa, color: 'var(--accent-quiet)', label: sf.apoio?.rotulos?.[m] });
+          break;
+        }
+      }
+    }
     // Acumulando, a posição clicada é guardada pelo índice da corda e da casa — duas cordas podem
     // dar a mesma altura, e desenhar um acorde é escolher ONDE, não só qual nota.
     for (const j of juntadas) if (j.s !== undefined && j.f !== undefined) marks.push({ s: j.s, f: j.f, color: phase === 'ask' ? 'var(--mu)' : phase === 'right' ? 'var(--ok)' : 'var(--err)' });
@@ -644,7 +660,16 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
         {fb}
         <div className="prompt">{q.prompt}</div>
         {ouvir}
-        <Staff clef={sf.clef} fifths={sf.fifths} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
+        <Staff clef={sf.clef} fifths={sf.fifths} colWidth={64} ghostAcc={acc}
+          /**
+           * O apoio ganha **coluna própria, antes da resposta**: na pauta duas notas na mesma coluna
+           * seriam um acorde, e a referência não é parte da resposta. Lado a lado, lê-se "daqui para
+           * aquela", que é o que o exercício pede.
+           */
+          columns={[
+            ...(sf.apoio?.midis ?? []).map(m => ({ notes: [{ note: notaDeAltura(m), color: 'var(--accent-quiet)' }] })),
+            { notes: notas },
+          ]}
           /**
            * O acidente da resposta: o que a pessoa escolheu à mão (`acc`), ou — se ela não escolheu
            * nenhum — **o que a armadura manda** (`fifths`). Em Sol maior, clicar a linha do fá dá

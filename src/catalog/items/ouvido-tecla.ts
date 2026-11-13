@@ -61,7 +61,17 @@ function naFaixa(m: number, faixa: { lo: number; hi: number }, preferida?: { lo:
   const perto = (lista: number[], alvo: number) => lista.reduce((a, b) => (Math.abs(b - alvo) < Math.abs(a - alvo) ? b : a));
   const dentro = candidatas.filter(x => x >= faixa.lo && x <= faixa.hi);
   if (!dentro.length) return perto(candidatas, (faixa.lo + faixa.hi) / 2);
-  // `preferida` é um desejo, não um limite: entre as que cabem, as que também a satisfazem.
+  /**
+   * **A altura pedida vence, se ela cabe.**
+   *
+   * Isto era um bug, e o Paulo pegou: *"parece que a escolha da Oitava da referência nao esta
+   * funcionando no baixo"*. Não estava — a preferência pela região passava na frente da escolha
+   * dele. Num baixo, pedir a oitava 2 (dó2 = 36) dava dó3 (48), porque 48 está na região e 36 não.
+   *
+   * Escolha explícita não é desempate: é instrução. A `preferida` só decide entre as que cabem
+   * quando a pedida não cabe.
+   */
+  if (dentro.includes(m)) return m;
   const melhores = preferida ? dentro.filter(x => x >= preferida.lo && x <= preferida.hi) : [];
   return perto(melhores.length ? melhores : dentro, m);
 }
@@ -146,6 +156,10 @@ export const ouvidoTecla: CatalogItem = {
      * Estava certo: a versão anterior só oferecia o eixo (mesma/sorteada) e escolhia a oitava mais
      * grave da faixa — daí sair sempre Dó3. Agora a escolha é a oitava, pelo número que se lê na
      * tela (`4` é o dó central, MIDI 60), com `sorteada` como a opção de quem quer variar.
+     *
+     * **O padrão é a oitava 2** (dó2), escolhido por ele em 13/11. Faz sentido para quem toca baixo:
+     * é a oitava que o instrumento tem de verdade. Onde a superfície não alcança — no teclado, com a
+     * região padrão —, a referência sobe para a oitava mais próxima que cabe, e isso é visível.
      */
     { id: 'oitavaDaReferencia', label: ctx.t('settings.referenceOctave'), type: 'single',
       quando: s => s.referencia === true, options: [
@@ -176,7 +190,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'auto', grausEscolhidos: [] },
+  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'auto', grausEscolhidos: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -197,15 +211,15 @@ export const ouvidoTecla: CatalogItem = {
    */
   presets: [
     { id: 'tonica-e-quinta', nome: 'presets.teclaTonicaEQuinta',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'teclado', grausEscolhidos: ['0', '7'] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'teclado', grausEscolhidos: ['0', '7'] }, params: EM_DO_DIATONICO },
     { id: 'graus-da-maior', nome: 'presets.teclaGrausDaMaior',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'no-meu-instrumento', nome: 'presets.teclaNoMeuInstrumento',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'na-pauta', nome: 'presets.teclaNaPauta',
-      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '2', onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'audiar-grau', nome: 'presets.teclaAudiarGrau',
-      settings: { estimulo: 'escrito', referencia: true, oitavaDaReferencia: '4', onde: 'graus', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'escrito', referencia: true, oitavaDaReferencia: '2', onde: 'graus', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'sem-ancora', nome: 'presets.teclaSemAncora',
       settings: { estimulo: 'som', referencia: false, onde: 'teclado', grausEscolhidos: [] }, params: TONALIDADE_LIVRE },
   ],
@@ -328,14 +342,19 @@ export const ouvidoTecla: CatalogItem = {
      * Nos outros três modos a oitava continua sendo a resposta.
      */
     const semOitava = onde === 'letras' || onde === 'graus';
+    /**
+     * A referência também é **apoio visível** na superfície de resposta: ela soou, é dada, e a pessoa
+     * precisa ver onde está (ver `Apoio`, em `types.ts`). Sem `referencia` não há o que mostrar.
+     */
+    const apoio = s.referencia ? { midis: [referencia], rotulos: { [referencia]: nomeDaReferencia } } : undefined;
     const superficie =
-      noBraco ? { kind: 'fretboard' as const, tuning, from: 0, to: 12 }
+      noBraco ? { kind: 'fretboard' as const, tuning, from: 0, to: 12, apoio }
       // A armadura da tonalidade em vigor, como em `nota-na-pauta`: sem ela, praticar em Sol maior
       // pedia ligar o sustenido à mão (o Paulo relatou isso em 12/11 e de novo em 13/11).
-      : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined }
+      : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, apoio }
       : onde === 'letras' ? { kind: 'letters' as const, accidentals: true }
       : onde === 'graus' ? { kind: 'choices' as const, options: grausDaTonalidade(ctx, permitidas) }
-      : { kind: 'keyboard' as const, ...faixa };
+      : { kind: 'keyboard' as const, ...faixa, apoio };
     /**
      * **Audiar**: a nota está escrita (ou marcada), só o contexto toca, e o gabarito fica num botão.
      *

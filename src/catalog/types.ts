@@ -137,14 +137,33 @@ export type Surface =
    * Mesma regra do `sequence`: nada é enviado antes de estar cheia, e a pessoa pode desfazer o
    * último toque. Meia resposta não é resposta.
    */
-  | { kind: 'keyboard'; lo: number; hi: number; quantas?: number }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number }
+  | { kind: 'keyboard'; lo: number; hi: number; quantas?: number; apoio?: Apoio }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number; apoio?: Apoio }
   /**
    * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
    * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
    */
-  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number };
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio };
+
+/**
+ * **Notas de APOIO numa superfície de resposta**: dadas, não perguntadas.
+ *
+ * É a nota de referência de um exercício de ouvido, por exemplo. Ela soa antes da pergunta e a
+ * pessoa precisa **ver onde ela está** — num braço, saber que o dó de referência é a casa 8 da
+ * terceira corda é metade do trabalho de achar o resto. O Paulo pediu isto em 13/11, em três telas:
+ * *"no braço do baixo, ainda tem que ter alguma indicação visual de qual nota tocou como
+ * referencia"* e *"na pauta tambem ainda precisa mostrar a nota de referencia"*.
+ *
+ * Aparece na cor fraca, com o nome escrito, e **nunca conta como resposta**: a conferência não a
+ * conhece. Quem desenha é o Player, que já sabe a afinação e a clave da superfície.
+ */
+export interface Apoio {
+  /** As alturas a mostrar. */
+  midis: number[];
+  /** O nome de cada uma, para a marca não ser um ponto misterioso. */
+  rotulos?: Record<number, string>;
+}
 
 /** Conteúdo sonoro: só as notas. Como elas soam fica com a apresentação. */
 export interface SoundContent {
