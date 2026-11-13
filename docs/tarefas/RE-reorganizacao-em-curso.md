@@ -64,6 +64,12 @@ amostras** (12/11).
 Falta, em ordem: **relação melodia-harmonia** (exploração 2 e os três quizzes) · **exploração dos
 motivos** pela escala.
 
+### A noite de 12→13/11
+
+**`NOITE-13-11.md`** é o registro do que foi feito sozinho: a fila inteira (seis itens) e três
+pontas soltas do projeto. 1508 testes, verificado offline no tamanho de celular. **Os commits estão
+locais, não empurrados** — a instrução era não publicar.
+
 ### A fila de trabalho decidido
 
 **`FILA-12-11.md`** tem o que está decidido e não feito, em ordem, com "pronto quando" em cada item

@@ -66,6 +66,22 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
+### Modos e parâmetros novos de 13/11 — para a sua revisão musical
+
+Não são itens novos (nenhum nasceu rascunho por isso), são **parâmetros** de itens que já existiam.
+Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
+
+| onde | o quê | confira |
+|---|---|---|
+| `ouvido-intervalo` | a resposta pode ser **as notas** (contorno), e elas podem ser **três** | se três notas empilhadas ainda é um exercício de intervalo ou já é acorde; e se `comTonica` (partir sempre da tônica) deveria ser o padrão |
+| `ouvido-tecla` · `melodia-de-ouvido` · `ouvido-intervalo` | **restringir às notas que você escolhe** | se a restrição deveria cruzar com a tonalidade (hoje cruza: escolher ré♭ em dó maior diatônico não o traz) |
+| todos com som | o **synth limpo** como timbre | se ele soa bem no fone e se o nível bate com o piano (medi 1,18× — 1,4 dB acima) |
+| `ouvido-celulas` | a **cadência como antessala**, ligada só no atalho `acorde-sorteado` | se vale ligá-la também nos outros atalhos, ou se o acorde sozinho basta |
+| `nota-no-instrumento` | **todas as posições** da nota no braço | se a conta de posições em casas 0–12 é exercício ou maratona (num violão, um Fá tem 4 ou 5 posições) |
+| `ouvido-acorde` | **fundamental fixa ou sorteada** (padrão fixa) | se sorteada deveria ser o padrão em algum atalho |
+
+---
+
 | `melodia-de-ouvido` | **a linha §3.2 e o molde do modelo novo** (12/11): o item é o objeto musical e o seu gerador; direção (ouvir/audiar) e superfície são parâmetros. Ouvindo, responde-se a melodia em ordem na superfície escolhida, com conferência por **contorno**; audiando, a melodia aparece escrita (pauta ou graus, tipo `1-5-4-3`), só o contexto toca e o gabarito fica num botão. ⚠️ **Teclado e braço não servem de estímulo do audiar**: mostrar ordem ali exige numerar as marcas, e marca de teclado não tem rótulo — audiando, cai na pauta. Confira o salto padrão (quinta justa), as 3 notas de padrão, e se audiar por graus é claro o bastante sem o nome das notas |
 | `notas-acordes-e-leitura` | **a rotina que o Paulo pediu para si** (10/11): notas e acordes no violão E no piano, depois a pauta — ler, correr e audiar. O instrumento de cada etapa é declarado, não `auto`, porque a rotina diz "nos dois". ⚠️ **Falta a terceira parte que ele pediu**: audiar uma melodia ESCRITA de poucas notas. Hoje só existe audiar uma nota; várias notas na pauta é outro objeto (melodia), e se isso é parâmetro ou item novo é decisão dele (decisão 15) |
 | `ouvido-campo` | graus do campo harmônico de ouvido (`OR-ouvido-relativo.md`, §3.5): cadência de contexto e um acorde — qual grau soou? Grau e qualidade numa pergunta só, pelo algarismo romano. Empréstimos modais opcionais: no maior o grupo do menor paralelo + ♭II; no menor V e vii° da harmônica, IV e ii do dórico, e ♭II (12/11/2026). Confira a cadência do menor sair da harmônica, e os rótulos romanos |
