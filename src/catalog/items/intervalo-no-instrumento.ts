@@ -1,4 +1,4 @@
-import { INST, arr, mod, tonicaDeContexto, paresNoBraco, pcNameUm, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
+import { INST, arr, mod, paresNoBraco, pcNameUm, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
 import { INTERVALS } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -48,13 +48,18 @@ export const intervaloNoInstrumento: CatalogItem = {
    * de dó maior (30%), e **nenhum tamanho zera** — o mais magro fica com 4. E onde afina, a magreza
    * é verdadeira: o semitom em dó maior existe só em Mi→Fá e Si→Dó, e o trítono só em Fá→Si.
    */
-  respeita: ['key', 'material', 'range'],
+  // `range` saiu em 12/11 com o `audiar`: era `tonicaDeContexto` que o lia, e ela foi para a
+  // linha de ouvido. `contexto-declarado` mede as chamadas reais e cobrou na hora.
+  respeita: ['key', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'identificar', label: ctx.t('settings.nameIt') },
       { id: 'construir', label: ctx.t('settings.buildIt') },
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
+      /**
+       * **O `audiar` saiu daqui em 12/11** e foi para a linha de ouvido correspondente: audiar é
+       * ouvido, e quem tem o gerador tem as duas direções (`OR-ouvido-relativo.md`, §2).
+       */
     ] },
     INST(ctx),
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabelSemis(i.id, ctx), tier: i.tier })) },
@@ -75,21 +80,6 @@ export const intervaloNoInstrumento: CatalogItem = {
       : (p2 => p2.length ? pick(p2) : pick(todos))(todos.filter(x => querSemis.has(x.d)));
     const lo = tuning[par.s1] + par.f1;
 
-    if (s.direcao === 'audiar') {
-      return {
-        prompt: ctx.t('quiz.audiateIntervalOnNeck'),
-        visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: par.s1, f: par.f1, label: '1' }, { s: par.s2, f: par.f2, color: 'var(--ve)' }] },
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonicaDeContexto(ctx, lo)]], instrument: vozDoBraco(tuning),
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonicaDeContexto(ctx, lo)]] },
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[lo], [lo + par.d]] },
-          ],
-        },
-        autoplay: false, reveal: semitoneName(par.d, ctx.conv),
-      };
-    }
     if (s.direcao === 'construir') {
       const alvoPc = mod(lo + par.d, 12);
       return {

@@ -1,7 +1,21 @@
 import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, clave, pick, porComplexidade, randInt, tonicaNaRegiao } from '../helpers';
-import type { ChordId, Question } from '../helpers';
+import type { ChordId, Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
+
+/** A nota escrita de uma altura, na grafia com sustenido. */
+function notaEscrita(m: number) {
+  const pc = ((m % 12) + 12) % 12;
+  return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
+}
+/** Uma casa que dá esta altura, da corda mais grave que a alcança. */
+function casaDaAltura(ctx: Ctx, m: number) {
+  for (let s = 0; s < ctx.params.tuning.length; s++) {
+    const f = m - ctx.params.tuning[s];
+    if (f >= 0 && f <= 12) return { s, f };
+  }
+  return { s: 0, f: 0 };
+}
 
 export const ouvidoAcorde: CatalogItem = {
   id: 'ouvido-acorde',
@@ -11,7 +25,18 @@ export const ouvidoAcorde: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
   publicacao: LEGADO,
-  settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
+  settings: ctx => [
+    /**
+     * **De onde vem a pergunta** (modelo de 12/11). `escrito` é o oposto desta linha, nas palavras
+     * dele: *"ler um acorde na pauta, piano ou violão e audiar o arpejo. ouvir a tônica pra ter
+     * contexto. ouvir o gabarito como conferência."* A superfície do desenho (`instrumento`) serve
+     * de estímulo sem nada novo — num acorde a ordem não importa, então as três servem.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
+    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true, present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1, format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
     // Inversão aqui **não é a pergunta, é a dificuldade** (desenhado com o Paulo em 09/11). Um
@@ -36,13 +61,13 @@ export const ouvidoAcorde: CatalogItem = {
       { id: 'alternativas', label: ctx.t('settings.answerOptions') },
       { id: 'desenhar', label: ctx.t('settings.answerDraw') },
     ] },
-    { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', quando: s => s.resposta === 'desenhar',
+    { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', quando: s => s.resposta === 'desenhar' || s.estimulo === 'escrito',
       options: [
         { id: 'auto', label: ctx.t('settings.myInstrument') },
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
       ] }],
-  defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
+  defaults: { estimulo: 'som', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -88,6 +113,30 @@ export const ouvidoAcorde: CatalogItem = {
     if (s.inversoes) {
       for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
     }
+    /**
+     * **Audiar**: o acorde aparece desenhado, a tônica toca como contexto, e o arpejo fica no botão
+     * de conferência. Mesma superfície do modo "desenhar", lida em vez de clicada.
+     */
+    if (s.estimulo === 'escrito') {
+      const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
+      const visual: Question['visual'] = s.instrumento === 'pauta'
+        ? { kind: 'staff', clef: clave(ctx), columns: ms.map(m => [notaEscrita(m)]) }
+        : noPiano ? { kind: 'keyboard', lo: Math.min(48, ...ms), hi: Math.max(72, ...ms), marks: ms }
+        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: ms.map(m => casaDaAltura(ctx, m)) };
+      return {
+        prompt: ctx.t(s.instrumento === 'pauta' ? 'quiz.audiateChord' : 'quiz.audiateChordOnInstrument'), visual,
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[root]],
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[root]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
+          ],
+        },
+        autoplay: false, reveal: chordName(ctx.t, type),
+      };
+    }
+
     /**
      * Desenhando, o gabarito é **contorno não ordenada**: as notas que formam o acorde, em qualquer
      * ordem de clique e em qualquer oitava — desde que TODAS deslocadas junto (a regra do §4). Um

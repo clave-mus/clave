@@ -241,17 +241,20 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 4, porque: 'as mesmas notas no piano, onde a oitava é visível e o braço não ajuda',
         instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'piano', pretas: true, oitavas: '2' })] },
       { minutos: 5, porque: 'os acordes no braço, pelas formas que se tocam de verdade',
-        instancias: [i('acorde-no-instrumento', { direcao: 'identificar', instrumento: 'violao', tipos: ['maior', 'menor', 'dim', 'aum'], casas: '0-12' })] },
+        instancias: [i('acorde-no-instrumento', { instrumento: 'violao', tipos: ['maior', 'menor', 'dim', 'aum'], casas: '0-12' })] },
       { minutos: 5, porque: 'os mesmos acordes no piano: a mesma harmonia com outra geometria',
-        instancias: [i('acorde-no-instrumento', { direcao: 'identificar', instrumento: 'piano', tipos: ['maior', 'menor', 'dim', 'aum'] })] },
+        instancias: [i('acorde-no-instrumento', { instrumento: 'piano', tipos: ['maior', 'menor', 'dim', 'aum'] })] },
       { minutos: 5, porque: 'ler altura na pauta, sem ritmo para dividir a atenção',
         instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], acidentes: false })] },
       { minutos: 5, porque: 'a leitura corrida, onde altura e ritmo voltam a andar juntos',
         instancias: [i('leitura')] },
-      // Fecha audiando: ver a nota escrita e ouvi-la por dentro antes de conferir. É a parte da
-      // melodia que já existe hoje — uma nota.
-      { minutos: 4, porque: 'audiar o que está escrito: ouvir por dentro antes de conferir',
-        instancias: [i('nota-na-pauta', { direcao: 'audiar', claves: ['sol'], acidentes: false }, EM_DO)] },
+      /**
+       * A terceira parte do pedido dele — *"melodia na pauta (audiar uma melodia de poucas notas)"* —
+       * **passou a existir em 12/11**, com `melodia-de-ouvido` e o estímulo `escrito`. Era a ponta
+       * que esta rotina deixava aberta.
+       */
+      { minutos: 4, porque: 'audiar uma melodia escrita: ouvir por dentro antes de conferir',
+        instancias: [i('melodia-de-ouvido', { estimulo: 'escrito', superficie: 'pauta', notas: 3, salto: 7, contexto: 'ii-V-I' }, EM_DO)] },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import { ALL_CHORDS, INST, ROOTS, alturaDoPc, arr, buildChord, chordOptions, chordTypes, guitarChordQuestion, midi, mod, pcPermitido, pick, tonicaDeContexto } from '../helpers';
+import { ALL_CHORDS, INST, ROOTS, alturaDoPc, arr, buildChord, chordOptions, chordTypes, guitarChordQuestion, midi, mod, pcPermitido, pick } from '../helpers';
 import { FRETS } from '../helpers';
 import type { ChordId } from '../helpers';
 import { LEGADO } from '../publicacao';
@@ -32,10 +32,11 @@ export const acordeNoInstrumento: CatalogItem = {
   respeita: ['key', 'range', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
-    { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
-      { id: 'identificar', label: ctx.t('settings.nameIt') },
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
-    ] },
+    /**
+     * **O seletor de direção saiu em 12/11.** Ele tinha dois valores, e o segundo era `audiar`, que
+     * foi para a linha de ouvido (`ouvido-acorde`, estímulo `escrito`). Sobrou um valor só, e
+     * seletor de um valor é interface morta — o teste `configuracoes-vivas` cobrou isso na hora.
+     */
     // Piano entra junto, e o baixo não: ver o comentário do item.
     { ...INST(ctx), options: [
       { id: 'auto', label: ctx.t('settings.myInstrument') },
@@ -52,8 +53,7 @@ export const acordeNoInstrumento: CatalogItem = {
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true,
       present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
   ],
-  defaults: {
-    direcao: 'identificar', instrumento: 'auto', tipos: ['maior', 'menor', 'dim', 'aum'],
+  defaults: { instrumento: 'auto', tipos: ['maior', 'menor', 'dim', 'aum'],
     pergunta: 'acorde', soltas: false, casas: '0-12', arpejo: false,
   },
   make(s, ctx) {
@@ -67,21 +67,7 @@ export const acordeNoInstrumento: CatalogItem = {
       const q = guitarChordQuestion({
         superficie: 'braco', tipos: s.tipos, pergunta: s.pergunta, soltas: s.soltas, casas: s.casas,
       }, ctx);
-      if (s.direcao !== 'audiar') return q;
-      const notas = q.sound!.groups[0];
-      const tonica = tonicaDeContexto(ctx, Math.min(...notas));
-      return {
-        ...q, prompt: ctx.t('quiz.audiateChordOnInstrument'),
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonica]], instrument: q.sound!.instrument,
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [...notas.map(m => [m]), notas] },
-          ],
-        },
-        autoplay: false,
-      };
+      return q;
     }
 
     const types = arr(s.tipos, ['maior']) as ChordId[];
@@ -92,21 +78,6 @@ export const acordeNoInstrumento: CatalogItem = {
     const notes = buildChord(root, type).map(midi).map(m => (m > 76 ? m - 12 : m));
     const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
 
-    if (s.direcao === 'audiar') {
-      const tonica = tonicaDeContexto(ctx, Math.min(...notes));
-      return {
-        prompt: ctx.t('quiz.audiateChordOnInstrument'), visual: { kind: 'keyboard', lo: 48, hi: 83, marks: notes },
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonica]],
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [...notes.map(m => [m]), notes] },
-          ],
-        },
-        autoplay: false, reveal: sym,
-      };
-    }
     return {
       prompt: ctx.t('quiz.whatChord'), visual: { kind: 'keyboard', lo: 48, hi: 83, marks: notes },
       surface: { kind: 'choices', options }, expected, sound: { groups: [notes] }, reveal: sym,

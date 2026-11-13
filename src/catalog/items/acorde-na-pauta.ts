@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, CLEFS, ROOTS, arr, buildChord, chordName, chordOptions, chordTypes, midi, pcPermitido, pick, pickClef, randInt, tonicaDeContexto } from '../helpers';
+import { ALL_CHORDS, CHORDS, CLEFS, ROOTS, arr, buildChord, chordName, chordOptions, chordTypes, midi, pcPermitido, pick, pickClef, randInt } from '../helpers';
 import type { ChordId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -25,20 +25,21 @@ export const acordeNaPauta: CatalogItem = {
   skillTags: ['theory.chord_identification', 'notation.pitch_reading'],
   contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic', 'self_report'], mobile: true,
-  // `range` entra porque `tonicaDeContexto` (direção `audiar`) lê o piso da região para não botar
-  // o contexto fora dela. O teste `contexto-declarado` pegou a omissão.
-  respeita: ['key', 'material', 'range'],
+  // `range` saiu em 12/11 com o `audiar`: era `tonicaDeContexto` que o lia, e ela foi para a
+  // linha de ouvido. `contexto-declarado` mede as chamadas reais e cobrou na hora.
+  respeita: ['key', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
-    { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
-      { id: 'ler', label: ctx.t('settings.readIt') },
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
-    ] },
+    /**
+     * **O seletor de direção saiu em 12/11.** Ele tinha dois valores, e o segundo era `audiar`, que
+     * foi para a linha de ouvido (`ouvido-acorde`, estímulo `escrito`). Sobrou um valor só, e
+     * seletor de um valor é interface morta — o teste `configuracoes-vivas` cobrou isso na hora.
+     */
     CLEFS(ctx),
     { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
   ],
-  defaults: { direcao: 'ler', claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false },
+  defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'dim', 'aum'], inversoes: false },
   presentation: { arp: 0.08 },
   make(s, ctx) {
     const types = arr(s.tipos, ['maior']) as ChordId[];
@@ -49,22 +50,6 @@ export const acordeNaPauta: CatalogItem = {
     const notes = buildChord(root, type, inv);
     const { sym, options, expected } = chordOptions(root, type, ctx.conv, types);
 
-    if (s.direcao === 'audiar') {
-      const tonica = tonicaDeContexto(ctx, Math.min(...notes.map(midi)));
-      return {
-        prompt: ctx.t('quiz.audiateChord'), visual: { kind: 'staff', clef, columns: [notes] },
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonica]],
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
-            // O arpejo primeiro, depois o bloco: audiar um acorde é audiar as notas e depois a soma.
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [...notes.map(n => [midi(n)]), notes.map(midi)] },
-          ],
-        },
-        autoplay: false, reveal: sym,
-      };
-    }
     return {
       prompt: ctx.t('quiz.whatChord'), visual: { kind: 'staff', clef, columns: [notes] },
       surface: { kind: 'choices', options }, expected,

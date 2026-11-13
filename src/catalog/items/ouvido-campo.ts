@@ -34,6 +34,15 @@ export const ouvidoCampo: CatalogItem = {
   respeita: ['key', 'range'],
   publicacao: RASCUNHO,
   settings: ctx => [
+    /**
+     * **De onde vem a pergunta** (modelo de 12/11; ver `melodia-de-ouvido`). `escrito` é o oposto
+     * que o Paulo descreveu para esta linha: *"ler um grau do campo harmônico, ouvir o contexto,
+     * audiar seu arpejo, ouvir a resposta pra conferir"*.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
     { id: 'campo', label: ctx.t('settings.field'), type: 'single',
       options: (['maior', 'menor'] as const).map(m => ({ id: m, label: scaleName(ctx.t, m) })) },
     { id: 'tetrades', label: ctx.t('settings.tetrads'), type: 'toggle' },
@@ -57,7 +66,7 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [],
+  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [],
     emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2 },
   presets: [
     { id: 'maior-tetrades', nome: 'presets.campoTetrades', settings: { campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
@@ -103,6 +112,24 @@ export const ouvidoCampo: CatalogItem = {
     const options = pool.filter(a => !vistos.has(nomeDe(a)) && vistos.add(nomeDe(a)))
       .map(a => ({ id: nomeDe(a), label: nomeDe(a) }));
 
+    /**
+     * **Audiar**: o grau está escrito (o algarismo romano), o contexto toca, e o arpejo do acorde
+     * fica no botão de conferência. Arpejado, não em bloco: audiar um acorde é audiar as notas dele.
+     */
+    if (s.estimulo === 'escrito') {
+      return {
+        prompt: ctx.t('quiz.audiateDegreeChord', { degree: alvo.roman }), visual: { kind: 'text', text: '' },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: contexto,
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
+          ],
+        },
+        autoplay: false, reveal: alvo.roman,
+      };
+    }
     return {
       prompt: ctx.t('quiz.earFieldChord'), visual: { kind: 'ear' },
       // Em ordem de fundamental, SEM embaralhar: é a ordem do campo, botão parado entre rodadas

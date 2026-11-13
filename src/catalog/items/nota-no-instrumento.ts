@@ -1,5 +1,5 @@
 import {
-  FRETS, INST, PRETAS, tonicaDeContexto, alturaDeTeclado, alturaDoPc, casaPermitida, fretRange, mod, pcNameUm,
+  FRETS, INST, PRETAS, alturaDeTeclado, alturaDoPc, casaPermitida, fretRange, mod, pcNameUm,
   pcOptions, pcsPermitidas, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
@@ -41,7 +41,10 @@ export const notaNoInstrumento: CatalogItem = {
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'identificar', label: ctx.t('settings.nameIt') },
       { id: 'achar', label: ctx.t('settings.findIt') },
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
+      /**
+       * **O `audiar` saiu daqui em 12/11** e foi para a linha de ouvido correspondente: audiar é
+       * ouvido, e quem tem o gerador tem as duas direções (`OR-ouvido-relativo.md`, §2).
+       */
     ] },
     // `auto` é o instrumento do perfil. Mudar aqui e salvar na rotina é o caminho que o Paulo pediu.
     // `INST` já traz "o meu (do perfil)", violão e baixo; aqui o piano entra junto, porque neste
@@ -106,23 +109,6 @@ export const notaNoInstrumento: CatalogItem = {
     const porAltura = s.pergunta === 'altura';
     const gabarito = porAltura ? { kind: 'pitch' as const, midi: m } : { kind: 'pitchClass' as const, pc: mod(m, 12) };
     const comOitava = (nome: string) => (porAltura ? `${nome}${Math.floor(m / 12) - 1}` : nome);
-    if (s.direcao === 'audiar') {
-      // A posição aparece marcada, o contexto toca, e o gabarito espera o botão.
-      const tonica = tonicaDeContexto(ctx, m);
-      return {
-        prompt: ctx.t('quiz.audiateOnNeck'),
-        visual: { kind: 'fretboard', tuning, from, to, marks: [{ s: str, f }] },
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonica]], instrument: vozDoBraco(tuning),
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[m]] },
-          ],
-        },
-        autoplay: false, reveal: ctx.t('quiz.atFret', { note: pcNameUm(mod(m, 12), ctx.naming, false), fret: f }),
-      };
-    }
     if (s.direcao === 'achar') {
       // Uma grafia só, sorteada, e a mesma no enunciado e no gabarito — ver `pcNameUm`.
       const bemol = Math.random() < 0.5;

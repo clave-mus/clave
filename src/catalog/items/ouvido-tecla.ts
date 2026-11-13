@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, clave, grauDoPc, grausDaTonalidade, mod, note, noteName, pcNameUm, pcsPermitidas, pick } from '../helpers';
+import { EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, clave, grauDoPc, grausDaTonalidade, mod, note, noteName, pcNameUm, pcsPermitidas, pick, tonicaDeContexto } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -25,6 +25,21 @@ function alturaNoBraco(ctx: Ctx, pc: number): number {
   return pick(naRegiao.length ? naRegiao : noBraco);
 }
 
+/** A nota escrita de uma altura, na grafia com sustenido — a pauta precisa de letra e acidente. */
+function notaEscrita(m: number) {
+  const pc = mod(m, 12);
+  return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
+}
+
+/** Uma casa do braço que dá exatamente esta altura, preferindo a corda mais grave que a alcança. */
+function casaDaAltura(ctx: Ctx, m: number) {
+  for (let s = 0; s < ctx.params.tuning.length; s++) {
+    const f = m - ctx.params.tuning[s];
+    if (f >= 0 && f <= 12) return { s, f };
+  }
+  return { s: 0, f: 0 };
+}
+
 export const ouvidoTecla: CatalogItem = {
   id: 'ouvido-tecla',
   objetos: ['notas'], tarefas: ['ouvir', 'tocar'],
@@ -34,6 +49,17 @@ export const ouvidoTecla: CatalogItem = {
   respeita: ['key', 'range', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
+    /**
+     * **De onde vem a pergunta** — o eixo que o modelo de 12/11 pôs em toda linha de ouvido.
+     *
+     * `som`: a nota toca e você a acha. `escrito`: a nota aparece na superfície escolhida, só o
+     * contexto toca, você a ouve por dentro e confere. É o "oposto" que o Paulo descreveu para cada
+     * linha, e que até 12/11 morava nos itens de notação — ver `melodia-de-ouvido`, o molde.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
     { id: 'referencia', label: ctx.t('settings.reference', { note: noteName(note(0), ctx.naming) }), type: 'toggle' },
     // Sem `quando`: isto é sobre **o que pode soar**, não sobre o teclado. Eu tinha escondido nos
     // modos de letra e grau, e estava errado — acidentes existem em qualquer superfície.
@@ -58,7 +84,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { referencia: true, pretas: false, onde: 'auto' },
+  defaults: { estimulo: 'som', referencia: true, pretas: false, onde: 'auto' },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -96,6 +122,8 @@ export const ouvidoTecla: CatalogItem = {
      * escolha que consertou os distratores de ritmo: onde o espaço é pequeno, enumere.
      */
     const m = onde === 'braco' ? alturaNoBraco(ctx, p) : alturaDoPc(ctx, p, faixa);
+    // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
+    const tonicaDoContexto = tonicaDeContexto(ctx, m);
     /**
      * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
      * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
@@ -108,6 +136,38 @@ export const ouvidoTecla: CatalogItem = {
       : onde === 'letras' ? { kind: 'letters' as const, accidentals: true }
       : onde === 'graus' ? { kind: 'choices' as const, options: grausDaTonalidade(ctx, permitidas) }
       : { kind: 'keyboard' as const, ...faixa };
+    /**
+     * **Audiar**: a nota está escrita (ou marcada), só o contexto toca, e o gabarito fica num botão.
+     *
+     * A superfície já era parâmetro, então ela serve de estímulo sem nada novo — e para UMA nota
+     * todas as cinco servem, inclusive teclado e braço: ordem só é problema em melodia.
+     */
+    if (s.estimulo === 'escrito') {
+      const nome = pcNameUm(mod(m, 12), ctx.naming, false);
+      const comOitava = `${nome}${Math.floor(m / 12) - 1}`;
+      const grau = grauDoPc(ctx, mod(m, 12));
+      const visual: Question['visual'] =
+        onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), columns: [[notaEscrita(m)]] }
+        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, marks: [m] }
+        : onde === 'braco' ? { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: [casaDaAltura(ctx, m)] }
+        : { kind: 'text', text: '' };
+      const enunciado = onde === 'graus' ? ctx.t('quiz.audiateDegree', { degree: grau })
+        : onde === 'letras' ? ctx.t('quiz.audiateNamed', { note: comOitava })
+        : ctx.t('quiz.audiateNote');
+      return {
+        prompt: enunciado, visual,
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[tonicaDoContexto]],
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonicaDoContexto]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[m]] },
+          ],
+        },
+        autoplay: false, reveal: `${comOitava}  ·  ${grau}`,
+      };
+    }
+
     const base = s.referencia ? ctx.t('quiz.earNoteRef', { note: noteName(note(0), ctx.naming) }) : ctx.t('quiz.earNote');
     return {
       prompt: semOitava ? `${base} ${ctx.t('quiz.semOitava')}` : base, visual: { kind: 'ear' },

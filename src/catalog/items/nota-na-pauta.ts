@@ -1,4 +1,4 @@
-import { CLEFS, midi, passosDaRegiao, quintasDaTonalidade, tonicaDeContexto, mod, notaNaPauta, noteName, pickClef, randAcc } from '../helpers';
+import { CLEFS, midi, passosDaRegiao, quintasDaTonalidade, mod, notaNaPauta, noteName, pickClef, randAcc } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -40,8 +40,15 @@ export const notaNaPautaItem: CatalogItem = {
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'ler', label: ctx.t('settings.readIt') },
       { id: 'escrever', label: ctx.t('settings.writeIt') },
-      // A terceira direção (10/11/2026): o "oposto" do desenho do Paulo. Ver `OR-ouvido-relativo.md`.
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
+      /**
+       * **O `audiar` saiu daqui em 12/11.** Ele morou neste seletor de 10 a 12/11, e foi para a
+       * linha de ouvido correspondente (`ouvido-tecla`, estímulo `escrito`).
+       *
+       * O motivo, decidido com o Paulo: audiar é ouvido, e **quem tem o gerador tem as duas
+       * direções**. A pergunta dele — *"onde entraria ler uma sequência de graus, 1543, e audiá-la?"*
+       * — não tinha resposta com o audiar aqui: este item sabe de pauta, não de melodia nem de grau.
+       * Ver `OR-ouvido-relativo.md`, §2.
+       */
     ] },
     CLEFS(ctx),
     /**
@@ -75,28 +82,6 @@ export const notaNaPautaItem: CatalogItem = {
     const n = notaNaPauta(ctx, passosDaRegiao(clef, ctx), () => randAcc(s.acidentes));
     // A armadura da tonalidade em vigor, desenhada na pauta (e `undefined` com tonalidade livre).
     const fifths = quintasDaTonalidade(ctx) ?? undefined;
-    /**
-     * **Audiar**: a nota aparece escrita, o contexto toca, você canta por dentro, e o gabarito só
-     * soa quando você pede. O padrão é o mesmo que entrou no gerador de leitura em 10/11.
-     *
-     * `autoplay: false` e o gabarito em `partes` não são detalhe: se a nota tocasse sozinha, o
-     * exercício seria ouvir e comparar, que é o outro exercício.
-     */
-    if (s.direcao === 'audiar') {
-      const tonica = tonicaDeContexto(ctx, midi(n));
-      return {
-        prompt: ctx.t('quiz.audiateNote'), visual: { kind: 'staff', clef, fifths, columns: [[n]] },
-        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
-        sound: {
-          groups: [[tonica]],
-          partes: [
-            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonica]] },
-            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[midi(n)]] },
-          ],
-        },
-        autoplay: false, reveal: `${noteName(n, ctx.naming)}${n.oct}`,
-      };
-    }
     if (s.direcao === 'escrever') {
       return {
         prompt: ctx.t('quiz.writeNote', { note: `${noteName(n, ctx.naming)}${n.oct}` }), visual: { kind: 'text', text: '' },

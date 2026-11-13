@@ -48,9 +48,17 @@ export const melodiaDeOuvido: CatalogItem = {
   respeita: ['key', 'range', 'material'],
   publicacao: RASCUNHO,
   settings: ctx => [
-    { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
-      { id: 'ouvir', label: ctx.t('settings.hearIt') },
-      { id: 'audiar', label: ctx.t('settings.audiateIt') },
+    /**
+     * **De onde vem a pergunta**: do som, ou do que está escrito.
+     *
+     * O id é `estimulo` e não `direcao` de propósito. `direcao` já quer dizer **direção melódica**
+     * (sobe, desce, juntas) em `ouvido-intervalo`, `ouvido-escala` e nos padrões — e aquele é o
+     * sentido musical certo da palavra. O eixo novo é outro: muda por onde o enunciado chega, que é
+     * exatamente o que o modelo de 12/11 chama de estímulo.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
     ] },
     { id: 'notas', label: ctx.t('settings.howManyNotes'), type: 'range', min: MIN_NOTAS, max: MAX_NOTAS, step: 1,
       format: v => String(v) },
@@ -79,13 +87,13 @@ export const melodiaDeOuvido: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.3, max: 2, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { direcao: 'ouvir', notas: 3, superficie: 'auto', salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  defaults: { estimulo: 'som', notas: 3, superficie: 'auto', salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
   presets: [
-    { id: 'tres', nome: 'presets.melodiaTres', settings: { direcao: 'ouvir', notas: 3, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
-    { id: 'graus', nome: 'presets.melodiaGraus', settings: { direcao: 'ouvir', notas: 3, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
-    { id: 'cinco', nome: 'presets.melodiaCinco', settings: { direcao: 'ouvir', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
-    { id: 'audiar-graus', nome: 'presets.melodiaAudiarGraus', settings: { direcao: 'audiar', notas: 4, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
-    { id: 'audiar-pauta', nome: 'presets.melodiaAudiarPauta', settings: { direcao: 'audiar', notas: 3, superficie: 'pauta', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    { id: 'tres', nome: 'presets.melodiaTres', settings: { estimulo: 'som', notas: 3, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    { id: 'graus', nome: 'presets.melodiaGraus', settings: { estimulo: 'som', notas: 3, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    { id: 'cinco', nome: 'presets.melodiaCinco', settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    { id: 'audiar-graus', nome: 'presets.melodiaAudiarGraus', settings: { estimulo: 'escrito', notas: 4, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    { id: 'audiar-pauta', nome: 'presets.melodiaAudiarPauta', settings: { estimulo: 'escrito', notas: 3, superficie: 'pauta', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
   ],
   presentation: { gap: 0.55 },
   make(s, ctx): Question {
@@ -99,7 +107,7 @@ export const melodiaDeOuvido: CatalogItem = {
       ? cadenciaHarmonica(cadencia, tonica, ctx.params.key?.mode === 'menor' ? 'menor-harmonica' : 'maior', true)
       : [acordeNoTeto(tonica, [0])], lo, hi);
 
-    const audiando = s.direcao === 'audiar';
+    const audiando = s.estimulo === 'escrito';
     // Audiando, a melodia não toca: só o contexto. Ver `partes`, que é onde o gabarito mora.
     const grupos = audiando ? [...contexto] : [...contexto, [], ...melodia.map(m => [m])];
     const partes = [
