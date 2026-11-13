@@ -431,6 +431,16 @@ function alturaEsperada(e: Question['expected'], m: number): boolean {
   return e.kind === 'contorno' && e.midis.some(x => mod(x, 12) === mod(m, 12));
 }
 
+/**
+ * A nota escrita de uma altura, na grafia com sustenido — para desenhar na pauta um gabarito que
+ * veio como ALTURA, não como grafia. Dó♯ e Ré♭ soam igual, e a pauta precisa escolher uma.
+ */
+const notaDeAltura = (m: number): Note => ({
+  letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][mod(m, 12)] as 0,
+  acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][mod(m, 12)],
+  oct: Math.floor(m / 12) - 1,
+});
+
 /** O nome de uma altura, com a oitava — a casa tem de dizer qual altura entrou, não só a nota. */
 const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
   `${noteName(fromStep(stepDePc(mod(m, 12)), accDePc(mod(m, 12))), naming)}${Math.floor(m / 12) - 1}`;
@@ -458,6 +468,24 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   /** Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte. */
   const tocar = (j: Junta) => (acumula ? onJuntar(j) : onAnswer({ kind: 'pitch', midi: j.m }, String(j.m)));
   const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
+  /**
+   * **O controle de ouvir, em qualquer superfície.**
+   *
+   * Ele existia só no ramo do teclado, e o Paulo relatou a consequência em 13/11: no braço e na
+   * pauta *"não tem na interface um botão pra ouvir nada. só toca quando clico em próxima"* e *"na
+   * primeira vez que abre, nao soa nada e tenho que chutar qualquer posicao"*.
+   *
+   * A causa é a mesma das duas frases: o navegador não toca som antes de um gesto da pessoa, então
+   * a PRIMEIRA pergunta nunca soa sozinha — ela espera o botão. Sem botão, a única coisa que gerava
+   * som era passar de pergunta, e aí o exercício virava chute.
+   *
+   * A condição é o visual ser de ouvido, não a superfície: quem pergunta pelo som põe `visual.ear`,
+   * e é isso que diz que há o que ouvir.
+   */
+  const ouvir = v.kind === 'ear'
+    ? <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />
+    : null;
+
   /** As casas e os botões de desfazer/enviar, só quando a superfície acumula. */
   const acoes = acumula && phase === 'ask' ? (
     <div className="sequencia" style={{ marginTop: 12 }}>
@@ -497,7 +525,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />}
+        {ouvir}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
           <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && tocar({ m })} labels="do" />
         </div>
@@ -522,6 +550,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
+        {ouvir}
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
           onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
         {acoes}
@@ -530,7 +559,17 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   }
   if (sf.kind === 'staff') {
     const e = q.expected;
-    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
+    /**
+     * A nota certa, para a revelação.
+     *
+     * Era só o caso `spelled` com oitava — e o Paulo relatou o furo em 13/11: *"não está aparecendo
+     * a posição certa. eu estou errando tudo e só aparece um vermelho onde cliquei."* Quando o
+     * exercício pergunta por ALTURA (é o caso do `ouvido-tecla` respondendo na pauta), o gabarito é
+     * `pitch`, e aí nada era desenhado: a pessoa errava sem nunca ver o que era.
+     */
+    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined
+      ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct }
+      : e.kind === 'pitch' ? notaDeAltura(e.midi) : null;
     const minha = picked ? fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1])) : null;
     const mesmaNota = !!minha && !!certa && minha.letter === certa.letter && minha.acc === certa.acc && minha.oct === certa.oct;
     /**
@@ -552,6 +591,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       <div className="stage">
         {fb}
         <div className="prompt">{q.prompt}</div>
+        {ouvir}
         <Staff clef={sf.clef} fifths={sf.fifths} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
           /**
            * O acidente da resposta: o que a pessoa escolheu à mão (`acc`), ou — se ela não escolheu

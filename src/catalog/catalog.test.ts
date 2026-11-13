@@ -132,7 +132,14 @@ describe('catálogo de exercícios', () => {
       ['acorde-na-pauta', {}, { ...base, arp: 0.08 }],
       ['acorde-no-instrumento', { instrumento: 'piano' }, { ...base }],
       ['pauta-escala', {}, { ...base, gap: 0.32 }],
-      ['ouvido-tecla', {}, { ...base, gap: 0.9 }],
+      /**
+       * `ouvido-tecla` passou a soar **no timbre da superfície** em 13/11, a pedido do Paulo: *"o
+       * som está como o som do piano. deveria ser o som do baixo. som de piano é confuso demais e
+       * não chega nos graves"*. Com o perfil de violão e `onde: auto`, a resposta é no braço do
+       * violão — então o som é de violão. Respondendo no teclado, volta a ser piano.
+       */
+      ['ouvido-tecla', {}, { ...base, gap: 0.9, voice: 'violao' }],
+      ['ouvido-tecla', { onde: 'teclado' }, { ...base, gap: 0.9 }],
       ['ouvido-intervalo', {}, { ...base }],
       ['ouvido-escala', {}, { ...base, gap: 0.3 }],
       ['ouvido-celulas', {}, { ...base, gap: 0.55 }],

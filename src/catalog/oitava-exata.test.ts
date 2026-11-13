@@ -118,12 +118,22 @@ describe('a nota soa onde a resposta cabe', () => {
     }
   });
 
-  it('com letras ou graus, a oitava deixa de contar — e o enunciado diz isso', () => {
+  it('com letras ou graus, a oitava deixa de contar', () => {
     for (const onde of ['letras', 'graus']) {
       const q = perguntar({ onde });
-      // A conferência relaxa de propósito (decisão do Paulo em 12/11), e por isso o enunciado avisa.
+      // A conferência relaxa de propósito (decisão do Paulo em 12/11).
       expect(q.expected.kind === 'pitchClass' || q.expected.kind === 'option', onde).toBe(true);
-      expect(q.prompt).toContain('oitava');
+    }
+  });
+
+  /**
+   * O aviso "(aqui a oitava não conta)" **saiu do enunciado** em 13/11, a pedido dele: *"pode
+   * remover... fica implícito"*. E fica: respondendo pelo nome da nota ou pelo grau não há onde
+   * dizer a oitava — o enunciado não precisa avisar do que a tela nem oferece.
+   */
+  it('e o enunciado não carrega mais o aviso', () => {
+    for (const onde of ['letras', 'graus']) {
+      expect(perguntar({ onde }).prompt.toLowerCase(), onde).not.toContain('oitava');
     }
   });
 });

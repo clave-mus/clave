@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, pick, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -17,8 +17,8 @@ const FAIXA = { lo: 48, hi: 83 };
  * região pedida. Sem nenhuma na região, vale qualquer uma do braço: melhor sair da região que fazer
  * uma pergunta sem resposta possível — a mesma regra que `regiao` já segue.
  */
-function alturaNoBraco(ctx: Ctx, pc: number): number {
-  const noBraco = ctx.params.tuning.flatMap(t => Array.from({ length: 13 }, (_, k) => t + k))
+function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pc: number): number {
+  const noBraco = tuning.flatMap(t => Array.from({ length: 13 }, (_, k) => t + k))
     .filter(m => mod(m, 12) === pc);
   const { lo, hi } = ctx.params.range;
   const naRegiao = noBraco.filter(m => m >= lo && m <= hi);
@@ -31,10 +31,19 @@ function notaEscrita(m: number) {
   return { letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc] as 0, acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc], oct: Math.floor(m / 12) - 1 };
 }
 
+/**
+ * O nome de uma classe de altura **na tonalidade em vigor**: em Ré♭ maior, a classe 1 é Ré♭, não
+ * Dó♯. Sem tonalidade não há grafia preferida, e aí vale o sustenido.
+ */
+function nomeNaTonalidade(ctx: Ctx, pc: number): string {
+  const f = quintasDaTonalidade(ctx);
+  return pcNameUm(pc, ctx.naming, f !== null && f < 0);
+}
+
 /** Uma casa do braço que dá exatamente esta altura, preferindo a corda mais grave que a alcança. */
-function casaDaAltura(ctx: Ctx, m: number) {
-  for (let s = 0; s < ctx.params.tuning.length; s++) {
-    const f = m - ctx.params.tuning[s];
+function casaDaAltura(tuning: readonly number[], m: number) {
+  for (let s = 0; s < tuning.length; s++) {
+    const f = m - tuning[s];
     if (f >= 0 && f <= 12) return { s, f };
   }
   return { s: 0, f: 0 };
@@ -70,6 +79,20 @@ export const ouvidoTecla: CatalogItem = {
      * nota é o enunciado, que tem o contexto inteiro.
      */
     { id: 'referencia', type: 'toggle', label: ctx.t('settings.referenceTonic') },
+    /**
+     * **Em que oitava a referência soa** (Paulo, 13/11: *"poderia ter uma configuração pra escolher
+     * se a nota inicial que vai tocar é sempre um dó3 (por exemplo) ou se vai ser sorteio entre os
+     * dós disponíveis. Acho que o padrão deveria ser sempre a mesma nota"*).
+     *
+     * Padrão `fixa`, como ele pediu: a âncora no mesmo lugar toda rodada é o que a torna âncora. Com
+     * `sorteada` ela pula de oitava, e aí reconhecer a nota exige ouvir a relação em vez de guardar
+     * a altura absoluta da referência.
+     */
+    { id: 'oitavaDaReferencia', label: ctx.t('settings.referenceOctave'), type: 'single',
+      quando: s => s.referencia === true, options: [
+        { id: 'fixa', label: ctx.t('settings.referenceSameOctave') },
+        { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
+      ] },
     // Sem `quando`: isto é sobre **o que pode soar**, não sobre o teclado. Eu tinha escondido nos
     // modos de letra e grau, e estava errado — acidentes existem em qualquer superfície.
     { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' },
@@ -88,13 +111,17 @@ export const ouvidoTecla: CatalogItem = {
     { id: 'onde', label: ctx.t('settings.answerWhere'), type: 'single', options: [
       { id: 'auto', label: ctx.t('settings.myInstrument') },
       { id: 'teclado', label: ctx.t('settings.instrumentPiano') },
-      { id: 'braco', label: ctx.t('settings.onNeck') },
+      // Dois braços, e não um "braço" genérico: o Paulo pediu em 13/11 — *"deveria ter a opção
+      // braço da guitarra também"*. O baixo tem quatro cordas e o violão seis; a afinação muda o
+      // que existe no braço, e o timbre vai junto.
+      { id: 'baixo', label: ctx.t('settings.onBassNeck') },
+      { id: 'violao', label: ctx.t('settings.onGuitarNeck') },
       { id: 'pauta', label: ctx.t('settings.onStaff') },
       { id: 'letras', label: ctx.t('settings.byLetters') },
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, pretas: false, onde: 'auto', notasEscolhidas: [] },
+  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: 'fixa', pretas: false, onde: 'auto', notasEscolhidas: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -121,7 +148,12 @@ export const ouvidoTecla: CatalogItem = {
   make(s, ctx): Question {
     const permitidas = pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
     const p = pick(permitidas);
-    const onde = s.onde === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.onde ?? 'teclado');
+    const onde = s.onde === 'auto'
+      ? (ctx.params.instrument === 'piano' ? 'teclado' : ctx.params.instrument === 'baixo' ? 'baixo' : 'violao')
+      : String(s.onde ?? 'teclado');
+    const noBraco = onde === 'baixo' || onde === 'violao';
+    /** A afinação da superfície escolhida — não a do perfil, que pode ser outra. */
+    const tuning = onde === 'baixo' ? TUNINGS.baixo : onde === 'violao' ? TUNINGS.violao : ctx.params.tuning;
     /**
      * **A nota só pode soar onde a resposta cabe.** É a lição que já estava escrita neste item para
      * o teclado — *"o teclado cobre a mesma faixa que pode soar"* — e que a superfície solta
@@ -130,7 +162,15 @@ export const ouvidoTecla: CatalogItem = {
      *
      * Com letras ou graus não há faixa: a resposta é a classe de altura, e qualquer oitava serve.
      */
-    const faixa = onde === 'pauta' ? { lo: 48, hi: 79 } : FAIXA;
+    /**
+     * **O teclado desenhado é do tamanho da extensão** (Paulo, 13/11: *"se vai da nota Dó3 a Dó5,
+     * acho que o teclado desenhado deveria ser desse tamanho também, pra aproveitar melhor o
+     * espaço. E isso se aplica pra qualquer extensão"*).
+     *
+     * Então a faixa sai da REGIÃO, apertada pelo que a clave ou o teclado alcançam — e é a mesma
+     * faixa que o desenho recebe, mais abaixo. Dois números que precisam concordar, num lugar só.
+     */
+    const faixa = onde === 'pauta' ? regiao(ctx, { lo: 48, hi: 79 }) : regiao(ctx, FAIXA);
     /**
      * No braço, a nota sai do **conjunto de alturas que existem nele**, não de uma faixa.
      *
@@ -139,7 +179,7 @@ export const ouvidoTecla: CatalogItem = {
      * fora do alcance (medido: soava 60 num baixo que chega a 55). Enumerar o que existe é a mesma
      * escolha que consertou os distratores de ritmo: onde o espaço é pequeno, enumere.
      */
-    const m = onde === 'braco' ? alturaNoBraco(ctx, p) : alturaDoPc(ctx, p, faixa);
+    const m = noBraco ? alturaNoBraco(tuning, ctx, p) : alturaDoPc(ctx, p, faixa);
     /**
      * **A referência é a tônica em vigor**, não um dó cravado — e isto é a correção de um bug que a
      * pergunta do Paulo em 13/11 expôs.
@@ -153,8 +193,22 @@ export const ouvidoTecla: CatalogItem = {
      * `tonicaDeContexto` resolve as duas coisas: respeita a tonalidade, sorteia quando ela é livre,
      * e fica **abaixo** do que se vai ouvir, sem sair da região.
      */
-    const referencia = tonicaDeContexto(ctx, m);
-    const nomeDaReferencia = pcNameUm(mod(referencia, 12), ctx.naming, false);
+    /**
+     * A referência: a tônica em vigor, numa **oitava fixa** por padrão.
+     *
+     * `tonicaDeContexto` a põe abaixo do que se vai ouvir — útil quando a referência acompanha a
+     * pergunta, mas é justamente o que fazia a âncora pular de oitava a cada rodada. Com `fixa` ela
+     * vai para a oitava mais grave que caiba na faixa e **fica lá**.
+     */
+    const referencia = s.oitavaDaReferencia === 'sorteada'
+      ? tonicaDeContexto(ctx, m)
+      : alturaDoPc(ctx, mod(tonicaDeContexto(ctx, faixa.hi), 12), { lo: faixa.lo, hi: faixa.lo + 11 });
+    /**
+     * **A grafia segue a tonalidade.** O Paulo em 13/11: *"na tonalidade, diz Réb, mas no exercicio
+     * diz 'primeiro um Do#'"*. `pcNameUm(..., false)` escolhe sempre o sustenido; em Ré♭ maior a
+     * nota se escreve Ré♭, e o motor de teoria já sabe disso — era só perguntar.
+     */
+    const nomeDaReferencia = nomeNaTonalidade(ctx, mod(referencia, 12));
     // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
 
     /**
@@ -164,8 +218,10 @@ export const ouvidoTecla: CatalogItem = {
      */
     const semOitava = onde === 'letras' || onde === 'graus';
     const superficie =
-      onde === 'braco' ? { kind: 'fretboard' as const, tuning: ctx.params.tuning, from: 0, to: 12 }
-      : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true }
+      noBraco ? { kind: 'fretboard' as const, tuning, from: 0, to: 12 }
+      // A armadura da tonalidade em vigor, como em `nota-na-pauta`: sem ela, praticar em Sol maior
+      // pedia ligar o sustenido à mão (o Paulo relatou isso em 12/11 e de novo em 13/11).
+      : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined }
       : onde === 'letras' ? { kind: 'letters' as const, accidentals: true }
       : onde === 'graus' ? { kind: 'choices' as const, options: grausDaTonalidade(ctx, permitidas) }
       : { kind: 'keyboard' as const, ...faixa };
@@ -176,13 +232,13 @@ export const ouvidoTecla: CatalogItem = {
      * todas as cinco servem, inclusive teclado e braço: ordem só é problema em melodia.
      */
     if (s.estimulo === 'escrito') {
-      const nome = pcNameUm(mod(m, 12), ctx.naming, false);
+      const nome = nomeNaTonalidade(ctx, mod(m, 12));
       const comOitava = `${nome}${Math.floor(m / 12) - 1}`;
       const grau = grauDoPc(ctx, mod(m, 12));
       const visual: Question['visual'] =
         onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), columns: [[notaEscrita(m)]] }
         : onde === 'teclado' ? { kind: 'keyboard', ...faixa, marks: [m] }
-        : onde === 'braco' ? { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, marks: [casaDaAltura(ctx, m)] }
+        : noBraco ? { kind: 'fretboard', tuning, from: 0, to: 12, marks: [casaDaAltura(tuning, m)] }
         : { kind: 'text', text: '' };
       const enunciado = onde === 'graus' ? ctx.t('quiz.audiateDegree', { degree: grau })
         : onde === 'letras' ? ctx.t('quiz.audiateNamed', { note: comOitava })
@@ -203,7 +259,9 @@ export const ouvidoTecla: CatalogItem = {
 
     const base = s.referencia ? ctx.t('quiz.earNoteRef', { note: nomeDaReferencia }) : ctx.t('quiz.earNote');
     return {
-      prompt: semOitava ? `${base} ${ctx.t('quiz.semOitava')}` : base, visual: { kind: 'ear' },
+      // O aviso "(aqui a oitava não conta)" saiu em 13/11, a pedido dele: *"pode remover... fica
+      // implícito"*. E fica: respondendo pelo nome ou pelo grau não há onde dizer a oitava.
+      prompt: base, visual: { kind: 'ear' },
       // O teclado cobre **a mesma faixa que pode soar**. Era 60–71 enquanto o som sorteava em
       // 48–83: soava um ré3, não havia tecla de ré3, e o Paulo tinha de clicar uma oitava acima.
       // A resposta é por classe de altura, então clicar na oitava errada acertava — o errado era a
@@ -224,12 +282,18 @@ export const ouvidoTecla: CatalogItem = {
       expected: semOitava
         ? (onde === 'graus' ? { kind: 'option', id: grauDoPc(ctx, mod(m, 12)) } : { kind: 'pitchClass', pc: mod(m, 12) })
         : { kind: 'pitch', midi: m },
-      sound: { groups: s.referencia ? [[referencia], [m]] : [[m]] }, autoplay: true,
+      /**
+       * **O timbre segue a superfície.** O Paulo em 13/11: *"o som está como o som do piano. deveria
+       * ser o som do baixo. som de piano é confuso demais e não chega nos graves"* — e estava certo
+       * em dobro: as amostras de piano vão até Dó2 (MIDI 36), e um baixo chega a Mi1 (28). Abaixo do
+       * fim da amostra o piano simplesmente não tinha o que tocar.
+       */
+      sound: { groups: s.referencia ? [[referencia], [m]] : [[m]], instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true,
       // A oitava entra na revelação porque entrou na resposta: errar a oitava e não saber qual era
       // não ensina nada.
       reveal: semOitava
-        ? (onde === 'graus' ? grauDoPc(ctx, mod(m, 12)) : pcNameUm(mod(m, 12), ctx.naming, false))
-        : `${pcNameUm(mod(m, 12), ctx.naming, false)}${Math.floor(m / 12) - 1}`,
+        ? (onde === 'graus' ? grauDoPc(ctx, mod(m, 12)) : nomeNaTonalidade(ctx, mod(m, 12)))
+        : `${nomeNaTonalidade(ctx, mod(m, 12))}${Math.floor(m / 12) - 1}`,
     };
   },
 };

@@ -43,7 +43,13 @@ export default function Keyboard({ lo, hi, marks = {}, marcasComTexto = {}, onPr
         const showLabel = labels === 'all' || (labels === 'do' && m % 12 === 0);
         return (
           <g key={m} onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }}>
-            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--key-white)'} className={interactive ? 'key white' : undefined} />
+            {/* O contorno não é enfeite: sem ele a tecla branca desaparece no fundo claro — o
+                Paulo relatou em 13/11 que elas ficavam "da mesma cor do fundo, se tornando
+                transparentes". `--key-white` é #f7f3ec e o papel do tema claro é #fbf8f4: quase a
+                mesma cor. Um piano de verdade também tem a borda entre as teclas. */}
+            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--key-white)'}
+              stroke="var(--key-black)" strokeWidth="0.9" strokeOpacity="0.45"
+              className={interactive ? 'key white' : undefined} />
             {showLabel && <text x={x + WW / 2 - 0.75} y={WH - 9} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--key-black)" fontFamily="var(--body)">{pcName(m, naming, false)}{m % 12 === 0 && labels === 'do' ? Math.floor(m / 12) - 1 : ''}</text>}
             {marcasComTexto[m] && <text x={x + WW / 2 - 0.75} y={WH - 34} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--key-black)" fontFamily="var(--display)">{marcasComTexto[m]}</text>}
           </g>

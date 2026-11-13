@@ -28,7 +28,15 @@ interface Props {
 
 const H = 6; // meio espaço
 const BASE = 112; // y da linha de baixo
-const INK = 'var(--staff-ink, #f4e8d0)';
+/**
+ * A tinta da pauta.
+ *
+ * O padrão era `#f4e8d0` — creme, feito para o palco escuro. Mas a pauta de RESPOSTA desenha num
+ * palco claro, e o Paulo relatou em 13/11: *"a cor da pauta está clara num fundo claro"*. Agora o
+ * padrão é a cor de texto do tema, que é legível sobre qualquer superfície dos dois temas; quem
+ * precisa de outra (a leitura rítmica, sobre o botão de acerto) segue sobrepondo `--staff-ink`.
+ */
+const INK = 'var(--staff-ink, var(--ink))';
 
 export function Sharp({ x, y, c = INK }: { x: number; y: number; c?: string }) {
   return <g stroke={c} strokeLinecap="butt">
