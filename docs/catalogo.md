@@ -92,10 +92,19 @@ acordes, campo harmônico) · `audio/engine` (síntese e agendamento com anteced
 | **Visualizador** de braço e teclado | ⚠️ componentes existem, falta a ferramenta | ~14: toda a coluna Explorar, e as superfícies de Tocar |
 | **Progressões** e harmonia aplicada | ⚠️ parcial | ~15: campo harmônico, cifras, walking, guide tones, improviso |
 | **Partituras** | ⚠️ existe em dois, **falta fundir** (decisão 18) | ~13: leitura melódica e rítmica, ditado |
-| **Padrões** | ❌ não existe — **e é uma tarde** | ~10, nas duas metades da matriz |
+| **Padrões** | ✅ pronto (10/11) — `theory/padrao-de-escala.ts`, 25 testes, consumido por `reconhecer-padroes-escala` | ~10, nas duas metades da matriz |
 | **Tarefa com metrônomo** + autoavaliação | ✅ existe (`tools/Cadencia.tsx`) — serve a 5 famílias | ~9: técnica, execução, groove |
 | **Altura** (microfone e MIDI) | ❌ não existe | ~4, todas opcionais |
-| **Digitações** | ❌ não existe | ~3 diretamente, e é parâmetro de muitos outros |
+| **Digitações** | ✅ pronto (10/11) — `theory/digitacoes.ts`, 22 testes, consumido por `acorde-no-instrumento` | ~3 diretamente, e é parâmetro de muitos outros |
+
+> ### ⚠️ Esta tabela já mentiu, e o preço disso é alto
+>
+> Até 13/11 ela dizia que **padrões** e **digitações** não existiam — e os dois estavam prontos,
+> testados e com consumidor desde 10/11. Um `❌ não existe` falso é pior que uma estimativa errada:
+> ele convida alguém a reconstruir motor que existe, que é a armadilha do motor órfão ao contrário.
+>
+> Quem mexer num motor, mexa nesta linha na mesma tarefa. É o passo 7 do `novo-item.md` — *"alguma
+> contagem em documento mudou?"* — e é o passo que mais se esquece.
 
 **Dois enumeradores, que não são motores.** `percorrer` (padrões de escala) e `conduções` (voice
 leading) são **funções puras** sem interface nenhuma: recebem material musical e devolvem uma lista
