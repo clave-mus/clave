@@ -1,4 +1,4 @@
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, clave, pick, porComplexidade, randInt, tonicaNaRegiao } from '../helpers';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, chordName, chordTypes, clave, pick, porComplexidade, randInt, tonalidade } from '../helpers';
 import type { ChordId, Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -45,6 +45,24 @@ export const ouvidoAcorde: CatalogItem = {
     //
     // "Qual inversão" como PERGUNTA é outro exercício, o do campo harmônico: lá a inversão
     // distingue um I de um V com a terça no baixo, e aqui distinguiria nada.
+    /**
+     * **A fundamental é sempre a mesma?** (rascunho dele: *"se a tônica do acorde é sempre a mesma
+     * (padrão: sim, dó)"*.)
+     *
+     * Era implícito: `tonicaNaRegiao` devolve a tônica da tonalidade quando há uma, e sorteia
+     * quando ela é livre — então a resposta dependia de um parâmetro de PRÁTICA, não de uma escolha
+     * sobre o exercício. Agora é explícito, e os dois convivem: com `sorteada` a fundamental muda a
+     * cada rodada mesmo em dó maior.
+     *
+     * ⚠️ **Fundamental fixa muda a pergunta** (§3.4, aprendido no acorde do braço em 10/11): com
+     * ela, "que acorde é" tem uma resposta só — a qualidade. Isso é desejado aqui, porque a
+     * pergunta DESTE item é a qualidade; prender a fundamental tira a variação de altura e deixa só
+     * a cor. Com `sorteada`, some a muleta de ouvir tudo sobre a mesma nota.
+     */
+    { id: 'fundamental', label: ctx.t('settings.chordRoot'), type: 'single', options: [
+      { id: 'fixa', label: ctx.t('settings.rootFixed') },
+      { id: 'sorteada', label: ctx.t('settings.rootRandom') },
+    ] },
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
     /**
      * **Onde se responde** (`OR-ouvido-relativo.md`, §3.4: *"dois modos: alternativas com a
@@ -67,7 +85,7 @@ export const ouvidoAcorde: CatalogItem = {
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
       ] }],
-  defaults: { estimulo: 'som', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
+  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -105,7 +123,18 @@ export const ouvidoAcorde: CatalogItem = {
   make(s, ctx): Question {
     const types = arr(s.tipos, ['maior', 'menor']) as ChordId[];
     const type = pick(types);
-    const root = tonicaNaRegiao(ctx, { lo: 53, hi: 64 });
+    /**
+     * A fundamental: a tônica em vigor (fixa), ou uma classe de altura sorteada a cada rodada.
+     *
+     * **Fixa cai em dó quando a tonalidade é livre**, que é o que o rascunho pede ("padrão: sim,
+     * dó"). `tonicaNaRegiao` não serve aqui: sem tonalidade ela SORTEIA a altura, e medindo saiu
+     * doze fundamentais diferentes com a opção chamada "sempre a mesma" — uma opção que não fazia
+     * o que o nome dela diz.
+     */
+    // Pela função de contexto, não por `ctx.params` direto: é a regra do projeto, e a sonda de
+    // `contexto-declarado` mede as chamadas — ler direto faz o item declarar o que não se vê.
+    const pcDaFundamental = s.fundamental === 'sorteada' ? randInt(0, 11) : tonalidade(ctx)?.tonic ?? 0;
+    const root = alturaDoPc(ctx, pcDaFundamental, { lo: 53, hi: 64 });
     const ms = CHORDS[type].degs.map(([, semi]) => root + semi);
     // Inverter é levar a nota mais grave uma oitava acima, tantas vezes quanto a inversão. Em
     // MIDI direto, como o resto do item — `buildChord` faz o mesmo sobre `Note`, e aqui não há

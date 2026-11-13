@@ -206,3 +206,34 @@ describe('pauta-escala: a nota inicial não entrega a escala', () => {
     },
   );
 });
+
+/**
+ * A fundamental do acorde: fixa ou sorteada (rascunho do Paulo — *"se a tônica do acorde é sempre a
+ * mesma (padrão: sim, dó)"*).
+ *
+ * O teste existe por causa de um furo achado medindo: a opção chamada "sempre a mesma" dava **doze**
+ * fundamentais diferentes quando a tonalidade era livre, porque `tonicaNaRegiao` sorteia nesse caso.
+ * Uma opção que não faz o que o nome dela diz é pior que não ter a opção.
+ */
+describe('ouvido-acorde: a fundamental', () => {
+  const item = EXERCISES.find(e => e.id === 'ouvido-acorde')!;
+  const raizes = (key: { tonic: number; mode: 'maior' | 'menor' } | null, fundamental: string) => {
+    const ctx = { ...ctxFor('pt'), params: { ...resolveParams('violao', key ? { key } : {}), key } };
+    const vistas = new Set<number>();
+    for (let i = 0; i < 40; i++) {
+      const q = item.make!({ ...item.defaults, fundamental } as never, ctx);
+      vistas.add(((Math.min(...q.sound!.groups[0]) % 12) + 12) % 12);
+    }
+    return [...vistas];
+  };
+
+  it('fixa é a tônica em vigor — e dó quando a tonalidade é livre', () => {
+    expect(raizes({ tonic: 0, mode: 'maior' }, 'fixa')).toEqual([0]);
+    expect(raizes({ tonic: 7, mode: 'maior' }, 'fixa')).toEqual([7]);
+    expect(raizes(null, 'fixa'), 'sem tonalidade, cai em dó').toEqual([0]);
+  });
+
+  it('sorteada varia mesmo com a tonalidade fixa', () => {
+    expect(raizes({ tonic: 0, mode: 'maior' }, 'sorteada').length).toBeGreaterThan(6);
+  });
+});
