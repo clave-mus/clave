@@ -65,6 +65,9 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   // material. As duas contam o grau a partir da tônica, então leem tonalidade e material.
   GRAUS_DO_MATERIAL: ['key', 'material'],
   pcsDosGraus: ['key', 'material'],
+  // Entrou em 13/11: a faixa que uma clave lê sem linhas suplementares demais. Depende só da
+  // CLAVE, que não é parâmetro de prática — como `clave`.
+  faixaDaClave: [],
 };
 
 /**

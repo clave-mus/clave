@@ -165,6 +165,26 @@ export function passosDaRegiao(clef: Clef, ctx: Ctx): [number, number] {
 }
 
 /**
+ * **A faixa que uma clave lê sem incomodar**, em MIDI.
+ *
+ * O Paulo diagnosticou o problema sozinho em 13/11: *"entendi por que nao aparecia a nota certa —
+ * por que as notas sorteadas estavam graves demais pra clave de sol. evite que isso aconteça. ponha
+ * um limite de acordo com a clave."*
+ *
+ * Medido: a clave de sol tem a linha de baixo no Mi4 (64) e a de cima no Fá5 (77); com duas linhas
+ * suplementares para cada lado, lê de 57 a 84. A região padrão vai de 48 a 72, então sorteava notas
+ * de 48 a 56 — três a cinco linhas suplementares abaixo, que é leitura de especialista, não de
+ * exercício.
+ *
+ * Duas suplementares é o limite escolhido: é o que se lê sem contar linhas. Quem quiser mais abre a
+ * região, e aí a conta respeita a escolha — este limite **aperta**, nunca alarga.
+ */
+export function faixaDaClave(clef: Clef): { lo: number; hi: number } {
+  const b = clefBottom(clef);
+  return { lo: midi(fromStep(b - 4, 0)), hi: midi(fromStep(b + 12, 0)) };
+}
+
+/**
  * **Botões por grau** (linha aberta do `OR-ouvido-relativo.md`, §8; pedida pelo Paulo em 12/11:
  * *"e deixa os graus também"*).
  *

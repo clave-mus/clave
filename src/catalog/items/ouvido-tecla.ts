@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -11,6 +11,9 @@ import type { CatalogItem } from '../types';
  * Paulo pediu ao dizer "um dó central e teclas abaixo e acima dele".
  */
 const FAIXA = { lo: 48, hi: 83 };
+
+/** Dó maior **e só as notas dela** — a lista de graus depende do material, então o atalho o leva. */
+const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico' } as const;
 
 /**
  * Uma altura da classe `pc` que **existe no braço** em vigor, casas 0–12, preferindo as que caem na
@@ -40,13 +43,48 @@ function nomeNaTonalidade(ctx: Ctx, pc: number): string {
   return pcNameUm(pc, ctx.naming, f !== null && f < 0);
 }
 
+/**
+ * A oitava desta classe de altura que **cabe na faixa** e fica mais perto da pedida.
+ *
+ * Subir e descer por oitavas em laço não serve: quando a faixa é mais estreita que uma oitava —
+ * a intersecção entre o braço de um baixo e a região pode ser de oito semitons — há classes de
+ * altura que simplesmente **não cabem**, e o laço sai pelo outro lado. Era o bug: pedindo lá4 numa
+ * faixa de 48 a 55, ele devolvia 45, abaixo do piso.
+ *
+ * Enumerar e escolher resolve: das oitavas que cabem, a mais perto da pedida; se nenhuma cabe, a
+ * mais perto da faixa — melhor a âncora sair um pouco da região que não existir.
+ */
+function naFaixa(m: number, faixa: { lo: number; hi: number }, preferida?: { lo: number; hi: number }): number {
+  const pc = mod(m, 12);
+  const candidatas: number[] = [];
+  for (let x = pc; x <= 127; x += 12) candidatas.push(x);
+  const perto = (lista: number[], alvo: number) => lista.reduce((a, b) => (Math.abs(b - alvo) < Math.abs(a - alvo) ? b : a));
+  const dentro = candidatas.filter(x => x >= faixa.lo && x <= faixa.hi);
+  if (!dentro.length) return perto(candidatas, (faixa.lo + faixa.hi) / 2);
+  // `preferida` é um desejo, não um limite: entre as que cabem, as que também a satisfazem.
+  const melhores = preferida ? dentro.filter(x => x >= preferida.lo && x <= preferida.hi) : [];
+  return perto(melhores.length ? melhores : dentro, m);
+}
+
+/** A referência (fraca, rotulada) e a nota a audiar (em acento), quando as duas cabem no braço. */
+function marcasNoBraco(tuning: readonly number[], referencia: number, alvo: number, nomeDaRef: string) {
+  const marcas: { s: number; f: number; color?: string; label?: string }[] = [];
+  const posRef = casaDaAltura(tuning, referencia);
+  if (posRef) marcas.push({ ...posRef, color: 'var(--accent-quiet)', label: nomeDaRef });
+  const posAlvo = casaDaAltura(tuning, alvo);
+  if (posAlvo) marcas.push({ ...posAlvo, color: 'var(--mu)' });
+  return marcas;
+}
+
 /** Uma casa do braço que dá exatamente esta altura, preferindo a corda mais grave que a alcança. */
-function casaDaAltura(tuning: readonly number[], m: number) {
+function casaDaAltura(tuning: readonly number[], m: number): { s: number; f: number } | null {
   for (let s = 0; s < tuning.length; s++) {
     const f = m - tuning[s];
     if (f >= 0 && f <= 12) return { s, f };
   }
-  return { s: 0, f: 0 };
+  // **Devolve `null` quando o braço não alcança**, em vez da casa 0 da corda mais grave: desenhar a
+  // nota errada é pior que não desenhar, e foi o que o Paulo desconfiou ao ver a referência faltando.
+  return null;
 }
 
 export const ouvidoTecla: CatalogItem = {
@@ -100,9 +138,18 @@ export const ouvidoTecla: CatalogItem = {
      * `sorteada` ela pula de oitava, e aí reconhecer a nota exige ouvir a relação em vez de guardar
      * a altura absoluta da referência.
      */
+    /**
+     * **Qual oitava**, e não só "fixa ou sorteada" — o Paulo em 13/11: *"ainda não consigo escolher
+     * qual dos dós vai ser o ponto de referencia. o padrão deve ser o dó4 nesse caso, e quero que
+     * isso seja ajustável. atualmente, so consigo escolher se vai ser sempre a mesma, nao qual."*
+     *
+     * Estava certo: a versão anterior só oferecia o eixo (mesma/sorteada) e escolhia a oitava mais
+     * grave da faixa — daí sair sempre Dó3. Agora a escolha é a oitava, pelo número que se lê na
+     * tela (`4` é o dó central, MIDI 60), com `sorteada` como a opção de quem quer variar.
+     */
     { id: 'oitavaDaReferencia', label: ctx.t('settings.referenceOctave'), type: 'single',
       quando: s => s.referencia === true, options: [
-        { id: 'fixa', label: ctx.t('settings.referenceSameOctave') },
+        ...[1, 2, 3, 4, 5].map(o => ({ id: String(o), label: String(o) })),
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
     /**
@@ -129,7 +176,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: 'fixa', onde: 'auto', grausEscolhidos: [] },
+  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'auto', grausEscolhidos: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -139,10 +186,28 @@ export const ouvidoTecla: CatalogItem = {
    * - sem referência e sem tonalidade, é nomear a altura sem âncora nenhuma — e **nenhum outro
    *   item do catálogo treina isso**.
    */
+  /**
+   * **Os atalhos foram reescritos em 13/11**, e o Paulo pediu a conferência: *"confira se os atalhos
+   * ainda fazem sentido. tenho a impressao que nao."* Não faziam — os três tinham sobrado da época
+   * do interruptor de teclas pretas, e depois que ele saiu os três declaravam a MESMA coisa
+   * (`referencia: true`), mudando só a tonalidade. Três atalhos para um exercício só.
+   *
+   * Os de agora cobrem os eixos que o item realmente tem: **onde se responde**, **quais graus**, e
+   * **de onde vem a pergunta**. Nomeados pelo conteúdo, nunca por nível (decisão 100).
+   */
   presets: [
-    { id: 'grau', nome: 'presets.teclaGrau', settings: { referencia: true }, params: EM_DO_MAIOR },
-    { id: 'brancas', nome: 'presets.teclaBrancas', settings: { referencia: true }, params: EM_DO_MAIOR },
-    { id: 'sem-ancora', nome: 'presets.teclaSemAncora', settings: { referencia: false }, params: TONALIDADE_LIVRE },
+    { id: 'tonica-e-quinta', nome: 'presets.teclaTonicaEQuinta',
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'teclado', grausEscolhidos: ['0', '7'] }, params: EM_DO_DIATONICO },
+    { id: 'graus-da-maior', nome: 'presets.teclaGrausDaMaior',
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+    { id: 'no-meu-instrumento', nome: 'presets.teclaNoMeuInstrumento',
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+    { id: 'na-pauta', nome: 'presets.teclaNaPauta',
+      settings: { estimulo: 'som', referencia: true, oitavaDaReferencia: '4', onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+    { id: 'audiar-grau', nome: 'presets.teclaAudiarGrau',
+      settings: { estimulo: 'escrito', referencia: true, oitavaDaReferencia: '4', onde: 'graus', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+    { id: 'sem-ancora', nome: 'presets.teclaSemAncora',
+      settings: { estimulo: 'som', referencia: false, onde: 'teclado', grausEscolhidos: [] }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.9 },
   /**
@@ -178,7 +243,12 @@ export const ouvidoTecla: CatalogItem = {
      * Então a faixa sai da REGIÃO, apertada pelo que a clave ou o teclado alcançam — e é a mesma
      * faixa que o desenho recebe, mais abaixo. Dois números que precisam concordar, num lugar só.
      */
-    const faixa = onde === 'pauta' ? regiao(ctx, { lo: 48, hi: 79 }) : regiao(ctx, FAIXA);
+    /**
+     * Na pauta, a faixa é a que **a clave lê** — duas linhas suplementares para cada lado. Era
+     * `48–79` cruzado com a região, e com a região padrão (48–72) saíam notas até cinco linhas
+     * abaixo da clave de sol: o Paulo relatou, e diagnosticou a causa sozinho.
+     */
+    const faixa = onde === 'pauta' ? regiao(ctx, faixaDaClave(clave(ctx))) : regiao(ctx, FAIXA);
     /**
      * No braço, a nota sai do **conjunto de alturas que existem nele**, não de uma faixa.
      *
@@ -208,9 +278,42 @@ export const ouvidoTecla: CatalogItem = {
      * pergunta, mas é justamente o que fazia a âncora pular de oitava a cada rodada. Com `fixa` ela
      * vai para a oitava mais grave que caiba na faixa e **fica lá**.
      */
+    const pcDaReferencia = mod(tonicaDeContexto(ctx, faixa.hi), 12);
+    /**
+     * A referência na **oitava escolhida**. O número da configuração é a oitava como se lê na tela
+     * (dó central = 4), e a conta é a de MIDI: `(oitava + 1) * 12 + classe`.
+     *
+     * Se a oitava escolhida cair fora do que a superfície alcança, sobe ou desce de oitava até
+     * caber — melhor a referência existir noutra oitava que não soar. É a mesma troca de
+     * `caberNaFaixa`.
+     */
+    /**
+     * A faixa em que a referência pode cair é a da **superfície**, não a do som.
+     *
+     * No braço isso muda tudo: um baixo nas casas 0–12 alcança 28 a 55, e a oitava padrão (dó4 = 60)
+     * está fora. O Paulo desconfiou exatamente disso — *"talvez não esteja aparecendo a nota de
+     * referencia por ela estar fora do alcance do braço do baixo"* — e estava certo: ela era
+     * escolhida pela faixa do SOM, não pelo que o braço desenha, e aí `casaDaAltura` não achava casa
+     * e a marca era omitida. Referência que não se vê não é referência.
+     */
+    /**
+     * **No braço, o alcance dele manda; a região é preferência.**
+     *
+     * As duas restrições podem ser incompatíveis, e isto não é teórico: um baixo nas casas 0–12
+     * alcança 28–55, a região padrão é 48–72, e a intersecção (48–55) tem oito semitons — não cabe
+     * uma oitava inteira. Pedir a referência em lá♯ ali é impossível: 46 está abaixo da região, 58
+     * está fora do braço.
+     *
+     * Escolhi o braço, porque é o que o Paulo pediu — *"tem que mostrar a nota de referência"* — e
+     * porque referência que não se vê não é referência. A região diz o que se quer OUVIR; não pode
+     * mandar no que se DESENHA. Entre as oitavas que o braço alcança, prefere-se a que também cai na
+     * região.
+     */
+    const faixaDaSuperficie = noBraco ? { lo: tuning[0], hi: tuning[tuning.length - 1] + 12 } : faixa;
+    const preferida = noBraco ? faixa : undefined;
     const referencia = s.oitavaDaReferencia === 'sorteada'
       ? tonicaDeContexto(ctx, m)
-      : alturaDoPc(ctx, mod(tonicaDeContexto(ctx, faixa.hi), 12), { lo: faixa.lo, hi: faixa.lo + 11 });
+      : naFaixa((Number(s.oitavaDaReferencia ?? 4) + 1) * 12 + pcDaReferencia, faixaDaSuperficie, preferida);
     /**
      * **A grafia segue a tonalidade.** O Paulo em 13/11: *"na tonalidade, diz Réb, mas no exercicio
      * diz 'primeiro um Do#'"*. `pcNameUm(..., false)` escolhe sempre o sustenido; em Ré♭ maior a
@@ -244,11 +347,36 @@ export const ouvidoTecla: CatalogItem = {
       const comOitava = `${nome}${Math.floor(m / 12) - 1}`;
       const grau = grauDoPc(ctx, mod(m, 12));
       const visual: Question['visual'] =
-        onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), columns: [[notaEscrita(m)]] }
-        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, marks: [m] }
-        : noBraco ? { kind: 'fretboard', tuning, from: 0, to: 12, marks: [casaDaAltura(tuning, m)] }
+        /**
+         * Na pauta, **o contexto aparece escrito também** (Paulo, 13/11: *"no audiar na pauta tambem
+         * precisa mostrar qual é o contexto"*): duas colunas, a referência primeiro, a nota a audiar
+         * depois. Ler a segunda sem ver a primeira é audiar sem saber de onde.
+         */
+        onde === 'pauta' ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: [[notaEscrita(referencia)], [notaEscrita(m)]] }
+        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, marks: [referencia, m], marcasFracas: [referencia], rotulos: { [referencia]: nomeDaReferencia } }
+        /**
+         * **A referência aparece junto da nota**, no braço e no teclado (Paulo, 13/11: *"em audie no
+         * braço, tem que mostrar a nota de referência. só a nota escrita não dá"*).
+         *
+         * Ela vem rotulada com o nome dela e numa cor fraca; a nota a audiar fica na cor de acento.
+         * Ele desconfiou que a referência não aparecia por estar fora do alcance do braço — não era
+         * isso (Dó3 cabe num baixo), era que ela nunca foi desenhada. Mas a desconfiança valia: por
+         * isso `casaDaAltura` agora avisa quando não alcança, e aí a referência é omitida em vez de
+         * ser desenhada na casa errada.
+         */
+        : noBraco ? { kind: 'fretboard', tuning, from: 0, to: 12, marks: marcasNoBraco(tuning, referencia, m, nomeDaReferencia) }
         : { kind: 'text', text: '' };
-      const enunciado = onde === 'graus' ? ctx.t('quiz.audiateDegree', { degree: grau })
+      /**
+       * **O grau sozinho é ambíguo**, e o Paulo pegou isso em 13/11: *"apareceu audie o grau 6 e eu
+       * audiei ele acima, mas a resposta era abaixo"*. O grau diz a classe de altura, não a oitava —
+       * e o 6 existe acima e abaixo da referência.
+       *
+       * Então o enunciado diz a direção. Não é detalhe de texto: sem ela a pergunta tem duas
+       * respostas e a autoavaliação fica sem sentido.
+       */
+      const acima = m >= referencia;
+      const enunciado = onde === 'graus'
+        ? ctx.t(acima ? 'quiz.audiateDegreeUp' : 'quiz.audiateDegreeDown', { degree: grau })
         : onde === 'letras' ? ctx.t('quiz.audiateNamed', { note: comOitava })
         : ctx.t('quiz.audiateNote');
       return {
@@ -256,6 +384,10 @@ export const ouvidoTecla: CatalogItem = {
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[referencia]],
+          // O timbre segue a superfície aqui também: audiando no braço do baixo, o contexto e o
+          // gabarito soam de baixo. Faltava, e o Paulo pegou: *"em audiar no braço, o som segue
+          // sendo de piano"*.
+          instrument: noBraco ? vozDoBraco(tuning) : undefined,
           partes: [
             { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[referencia]] },
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[m]] },

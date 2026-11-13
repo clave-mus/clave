@@ -31,7 +31,12 @@ export type Visual =
    * vez: a ordem é informação do exercício, não enfeite, e some junto com o movimento seria perder
    * a pergunta.
    */
-  | { kind: 'keyboard'; lo: number; hi: number; marks: number[]; animar?: boolean }
+  /**
+   * `marcasFracas` são marcas de APOIO, não a pergunta: a nota de referência num exercício de
+   * audiação, por exemplo. Elas aparecem na cor fraca e com o nome escrito, e a pergunta fica no
+   * acento — sem isso as duas eram iguais e a pessoa não sabia qual audiar.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; marks: number[]; marcasFracas?: number[]; rotulos?: Record<number, string>; animar?: boolean }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[]; animar?: boolean }
   | { kind: 'ear'; hint?: string }
   | { kind: 'text'; text: string };

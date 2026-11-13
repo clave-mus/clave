@@ -124,6 +124,11 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    * meia resposta não é resposta, e enviar sozinho ao completar tira a chance de corrigir.
    */
   const [juntadas, setJuntadas] = useState<Junta[]>([]);
+  /**
+   * Já ouviu o pedaço `resposta` desta pergunta? A autoavaliação espera por isso — ver o comentário
+   * em `autoavaliacao`, na área de resposta.
+   */
+  const [ouviuAResposta, setOuviuAResposta] = useState(false);
   // `seguidas` é a contagem DENTRO da série. Não confundir com dias seguidos praticados, que
   // saiu de propósito (decisão 11): aquilo é cobrança, isto é informação útil — e é o gatilho da
   // sugestão de variação (F7-1), que dispara em acertos seguidos, não em taxa.
@@ -189,6 +194,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const playParte = useCallback((question: Question, parte: ParteDoSom) => {
     if (!getState().sound) return;
+    // Ouvir o pedaço `resposta` é o que libera a autoavaliação: julgar antes de conferir é julgar
+    // no vácuo (ver `autoavaliacao`, na área de resposta).
+    if (parte.id === 'resposta') setOuviuAResposta(true);
     pararTudo();
     const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
     setPlaying(true);
@@ -203,7 +211,20 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     setPicked(null);
     setAcc(0);
     if (nq.autoplay && heard) window.setTimeout(() => play(nq, true), 250);
-  }, [make, heard, play, problema]);
+    /**
+     * **Audiando, o contexto soa sozinho na pergunta nova** (Paulo, 13/11: *"faça com que o contexto
+     * soe automaticamente quando passa de fase"*).
+     *
+     * A pergunta de audiação tem `autoplay: false` de propósito — o GABARITO não pode soar sozinho,
+     * senão o exercício vira ouvir e comparar. Mas o contexto não é o gabarito: é o que situa a
+     * audiação, e ouvi-lo é obrigatório antes de qualquer coisa. Tocá-lo é poupar um clique por
+     * rodada em quem vai clicá-lo sempre.
+     *
+     * Só depois do primeiro gesto (`heard`), porque o navegador não toca antes dele.
+     */
+    const contexto = nq.surface.kind === 'autoavaliacao' ? nq.sound?.partes?.find(p => p.id === 'contexto') : undefined;
+    if (contexto && heard) window.setTimeout(() => playParte(nq, contexto), 250);
+  }, [make, heard, play, playParte, problema]);
 
   // configurações mudaram: recomeça
   useEffect(() => { setQ(problema ? null : make()); setPhase('ask'); setPicked(null); }, [make, problema]);
@@ -289,7 +310,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, q, next, play, submit, montada]);
   // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
-  useEffect(() => { setMontada(null); setJuntadas([]); }, [q]);
+  useEffect(() => { setMontada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -348,7 +369,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
-      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
+      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
 
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
@@ -484,7 +505,20 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   const acumula = quantas > 1;
   const cheia = juntadas.length >= quantas;
   /** Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte. */
-  const tocar = (j: Junta) => (acumula ? onJuntar(j) : onAnswer({ kind: 'pitch', midi: j.m }, String(j.m)));
+  /**
+   * Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte.
+   *
+   * ⚠️ **O id da resposta carrega a POSIÇÃO quando ela existe** (`corda:casa`), e não só a altura.
+   * O braço desenha a marca a partir desse id, e eu quebrei isto em 12/11 ao unificar o toque das
+   * três superfícies: passei a mandar sempre `String(j.m)`, o `picked.split(':')` virou `NaN` e a
+   * marca do que a pessoa clicou **deixou de aparecer**. Foi o que o Paulo relatou em 13/11 —
+   * *"ainda não está tendo indicação visual da nota que tocou"* —, e a causa era minha refatoração.
+   *
+   * Duas cordas dão a mesma altura: a altura não diz onde se tocou, e é onde que a marca precisa.
+   */
+  const tocar = (j: Junta) => (acumula
+    ? onJuntar(j)
+    : onAnswer({ kind: 'pitch', midi: j.m }, j.s !== undefined ? `${j.s}:${j.f}` : String(j.m)));
   const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
   /**
    * **O controle de ouvir, em qualquer superfície.**
@@ -636,7 +670,9 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
           ? <Keyboard lo={v.lo} hi={v.hi} naming={naming}
               marks={Object.fromEntries(v.marks.slice(0, seq.ate + 1).map((m, i) => [m, i === seq.ate ? 'var(--mu)' : 'var(--accent-quiet)']))}
               marcasComTexto={seq.semMovimento ? Object.fromEntries(v.marks.map((m, i) => [m, String(i + 1)])) : {}} />
-          : <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />
+          : <Keyboard lo={v.lo} hi={v.hi} naming={naming}
+              marks={Object.fromEntries(v.marks.map(m => [m, v.marcasFracas?.includes(m) ? 'var(--accent-quiet)' : 'var(--mu)']))}
+              marcasComTexto={v.rotulos ?? {}} />
       )}
       {v.kind === 'fretboard' && (
         v.animar
@@ -719,10 +755,12 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }:
 }
 
 // ---------------- área de resposta ----------------
-function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }: {
+function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, ouviuAResposta }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
   /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */
   montada?: { letter: number; acc: number } | null;
+  /** Já ouviu o pedaço `resposta`? A autoavaliação espera por isso. */
+  ouviuAResposta?: boolean;
 }) {
   const t = useT();
   const sf = q.surface;
@@ -754,8 +792,26 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }
      */
     const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
     if (phase !== 'ask') return <div className="answers compact" />;
+    /**
+     * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
+     * só apareçam depois que tu ouvir a resposta"*).
+     *
+     * E a razão é a do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
+     * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela agora segue essa ordem em vez de
+     * oferecer as três coisas de uma vez.
+     *
+     * Até ouvir, o que aparece é o convite a conferir — o botão do pedaço `resposta` já está logo
+     * acima, e esta linha diz o que fazer com ele.
+     */
+    if (!ouviuAResposta) {
+      return (
+        <div className="auto-aval-espera" role="status">
+          <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
+        </div>
+      );
+    }
     return (
-      <div className="answers compact" role="group" aria-label={t('session.howWasIt')}>
+      <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
         <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
         <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
         <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>

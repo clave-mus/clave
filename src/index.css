@@ -525,6 +525,11 @@ select.sel {
 .ans.right { animation: pulso-acerto 280ms ease-out 1; }
 
 /* O eco do teclado físico: o que foi montado e ainda não valeu (ver `montada`, no Player). */
+/* A autoavaliação centralizada, e o convite a conferir no lugar dela antes de ouvir. O Paulo pediu
+   em 13/11: "centralize os botoes de consegui com esforço nao consegui e tal". */
+.answers.auto-aval { grid-template-columns: repeat(auto-fit, minmax(96px, max-content)); justify-content: center; }
+.auto-aval-espera { display: flex; justify-content: center; padding: 14px 0 6px; text-align: center; }
+
 .montada { display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; }
 .montada b { font-family: var(--display); font-size: 26px; font-weight: 800; color: var(--accent); }
 .montada .muted { font-size: 12px; }

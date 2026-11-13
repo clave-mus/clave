@@ -160,13 +160,41 @@ describe('a referência segue a tonalidade', () => {
     }
   });
 
-  it('a referência fica abaixo do que se vai ouvir, sem sair da região', () => {
+  /**
+   * **A referência fica na oitava que a pessoa escolheu**, e não necessariamente abaixo do alvo.
+   *
+   * O teste dizia "abaixo do que se vai ouvir", e isso valia enquanto a oitava era escolhida pelo
+   * app. Em 13/11 o Paulo pediu a escolha — *"quero que isso seja ajustável; o padrão deve ser o
+   * dó4"* — e a partir daí a âncora está onde ele a pôs: às vezes acima do alvo, o que é legítimo
+   * (ouvir um grau abaixo da referência é parte do exercício).
+   *
+   * O que continua travado é não sair da região, e cair na oitava pedida.
+   */
+  it('a referência fica na oitava escolhida, quando ela cabe na região', () => {
     const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }) };
-    for (let i = 0; i < 40; i++) {
-      const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado' } as never, c);
-      const [referencia, alvo] = [q.sound!.groups[0][0], q.sound!.groups[1][0]];
-      expect(referencia).toBeLessThanOrEqual(alvo);
-      expect(referencia).toBeGreaterThanOrEqual(c.params.range.lo);
+    // A região padrão é Dó3–Dó5 (MIDI 48–72), então as oitavas 3 e 4 cabem.
+    for (const oitava of ['3', '4'] as const) {
+      for (let i = 0; i < 20; i++) {
+        const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado', oitavaDaReferencia: oitava } as never, c);
+        // A oitava como se lê na tela: dó central é 4, e em MIDI isso é 60.
+        expect(Math.floor(q.sound!.groups[0][0] / 12) - 1, `oitava ${oitava}`).toBe(Number(oitava));
+      }
+    }
+  });
+
+  /**
+   * Oitava escolhida que a região não alcança: a referência **sobe até caber**, em vez de não soar.
+   * É a mesma troca de `caberNaFaixa` — âncora noutra oitava serve ao exercício, âncora muda não.
+   */
+  it('oitava fora da região recua para dentro dela', () => {
+    const c: Ctx = { ...ctx, params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }) };
+    for (const oitava of ['1', '2', '5'] as const) {
+      const q = item.make!({ ...item.defaults, referencia: true, onde: 'teclado', oitavaDaReferencia: oitava } as never, c);
+      const referencia = q.sound!.groups[0][0];
+      expect(referencia, `oitava ${oitava}`).toBeGreaterThanOrEqual(c.params.range.lo);
+      expect(referencia, `oitava ${oitava}`).toBeLessThanOrEqual(c.params.range.hi);
+      // E continua sendo a tônica, só noutra oitava.
+      expect(((referencia % 12) + 12) % 12).toBe(0);
     }
   });
 });

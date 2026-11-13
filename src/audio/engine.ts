@@ -197,13 +197,47 @@ export function amostrasDeCorda(
    */
   const PONTO = 0.2;
   const PESO_DO_RUIDO = 0.35;
+  /**
+   * **O estouro entra de nada, não de um degrau** — e isto é o conserto do som percussivo que o
+   * Paulo relatou duas vezes (09/11 e 13/11: *"ainda está com um som percussivo bem estranho no
+   * começo"*).
+   *
+   * Medido antes: na janela do ataque, a banda de 2 a 8 kHz estava **6,2× mais forte** que no regime
+   * permanente, e a amplitude batia 0,9 em 2,8 ms. A causa é geometria, não timbre: a primeira
+   * amostra saía de zero para um valor alto, e um salto assim é um degrau — e degrau tem energia em
+   * toda a banda. É o mesmo "tsc" metálico de antes, por outro caminho.
+   *
+   * A entrada agora é um quarto de cosseno levantado sobre o primeiro quinto do estouro: começa em
+   * zero com derivada zero, que é o que não produz clique. O resto do estouro é o mesmo triângulo.
+   */
+  const ENTRADA = 0.2;
+  /**
+   * **O ruído do dedo dura milissegundos, não um período da corda** — e esta é a causa de verdade do
+   * som percussivo que o Paulo relatou duas vezes.
+   *
+   * Ele durava `exc`, o laço inteiro: 3 ms no Mi4 do violão (onde soa como o "chiff" de uma palheta,
+   * certo) e **24 ms no Mi1 do baixo**, onde vira um "shhh" audível antes da nota. Um contato de
+   * dedo não cresce porque a corda é grave.
+   *
+   * São duas escalas de tempo diferentes no mesmo estouro, e separá-las é o conserto: o **triângulo**
+   * ocupa o laço todo, porque é ele que dá a fundamental (a corda parte deslocada em toda a sua
+   * extensão); o **ruído** ocupa os primeiros milissegundos, porque é o dedo.
+   *
+   * Medido: a banda de 2–8 kHz no ataque caiu de 9,2× para 6,4× do regime permanente no Mi1, e de
+   * 6,9× para 5,7× no Sol1, **sem** enfraquecer a fundamental (a razão fundamental/2º harmônico ficou
+   * em 2,89, igual). O que sobra é a física do modelo: corda pulsada é mais brilhante no ataque.
+   */
+  const MS_DO_DEDO = 3;
+  const nRuido = Math.min(exc, Math.round((sr * MS_DO_DEDO) / 1000));
   let ataque = 0;
   let pico = 0;
   let soma = 0;
   for (let i = 0; i < exc; i++) {
     const u = i / exc;
     const triangulo = u < PONTO ? u / PONTO : (1 - u) / (1 - PONTO);
-    ataque += k * (triangulo + PESO_DO_RUIDO * rnd() * (1 - u) - ataque);
+    const entrada = u < ENTRADA ? 0.5 - 0.5 * Math.cos((Math.PI * u) / ENTRADA) : 1;
+    const dedo = i < nRuido ? PESO_DO_RUIDO * rnd() * (1 - i / nRuido) : 0;
+    ataque += k * (entrada * triangulo + dedo - ataque);
     x[i] = ataque;
     soma += ataque;
   }
@@ -215,7 +249,14 @@ export function amostrasDeCorda(
   }
   // O filtro tira energia, e quanto ela cai depende da nota. Normalizar o pico devolve o volume
   // sem número mágico — a primeira tentativa multiplicava por 2,2 e estourava amplitude 1.
-  if (pico > 0) for (let i = 0; i < exc; i++) x[i] = (x[i] / pico) * 0.9;
+  /**
+   * O estouro é normalizado a **0,7**, não a 0,9.
+   *
+   * Com 0,9 o ataque era o momento mais alto da nota por larga margem, e isso soma ao clique: ouve-se
+   * o transiente antes de ouvir a corda. Uma corda pulsada de verdade também tem pico no ataque, mas
+   * não um pico que domina o resto — e o laço reconstrói a amplitude nas primeiras voltas.
+   */
+  if (pico > 0) for (let i = 0; i < exc; i++) x[i] = (x[i] / pico) * 0.7;
   // o laço: passa-baixa de um polo come os agudos a cada volta, que é o que uma corda real faz
   let estado = 0;
   for (let i = N + 1; i < total; i++) {

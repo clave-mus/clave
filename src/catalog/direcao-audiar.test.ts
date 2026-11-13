@@ -191,13 +191,42 @@ describe('o contexto estabelece A TONALIDADE, e dois itens erraram isso sozinhos
    * O que continua valendo, e é o que a lição de 09/11 ensinou, é que nada soa fora do que a pessoa
    * vê: `caberNaFaixa` garante, e aqui se confere.
    */
-  it.each(COM_AUDIAR)('%s mantém o contexto dentro da região', id => {
+  /**
+   * ⚠️ **Audiando num BRAÇO, quem manda é o alcance dele**, não a região.
+   *
+   * As duas restrições podem ser incompatíveis: um baixo nas casas 0–12 alcança 28–55, a região
+   * padrão é 48–72, e a intersecção tem oito semitons — não cabe uma oitava. Em 13/11 o Paulo pediu
+   * que a referência fosse MOSTRADA no braço, e referência que não se vê não é referência; a região
+   * diz o que se quer ouvir e não pode mandar no que se desenha.
+   *
+   * Então o teste afirma o que vale em cada caso: no braço, caber no braço; nas outras, na região.
+   */
+  it.each(COM_AUDIAR)('%s mantém o contexto na região, ou onde ele é desenhado', id => {
     const ex = item(id);
-    const { lo } = ctx.params.range;
     for (let i = 0; i < 20; i++) {
       const q = ex.make({ ...ex.defaults, estimulo: 'escrito' } as never, ctx);
       const contexto = q.sound!.partes!.find(p => p.id === 'contexto')!.groups.flat();
-      expect(Math.min(...contexto), `${id} saiu da região`).toBeGreaterThanOrEqual(lo);
+      const v = q.visual;
+      /**
+       * As alturas que o item DESENHA. Só o `ouvido-tecla` desenha o contexto (a referência, que o
+       * Paulo pediu para ver); nos outros a cadência não aparece, e aí só a região vale.
+       */
+      const desenhadas = v.kind === 'fretboard' ? v.marks.map(mk => v.tuning[mk.s] + mk.f)
+        : v.kind === 'keyboard' ? v.marks
+        : [];
+      /**
+       * O que o app garante: **nada soa abaixo do piso** da região, e o contexto desenhado cabe onde
+       * é desenhado.
+       *
+       * O teto é outra história, e está documentada em `caberNaFaixa`: uma cadência de tétrades é
+       * mais larga que a região padrão (24 semitons), então subir o conjunto para respeitar o piso
+       * pode levar a nota mais aguda acima do teto. Afirmar o teto aqui seria afirmar o que o app
+       * não promete — e eu quase fiz isso ao escrever este teste mais estrito que a realidade.
+       */
+      for (const m of contexto) {
+        const acimaDoPiso = m >= ctx.params.range.lo;
+        expect(acimaDoPiso || desenhadas.includes(m), `${id}: ${m} abaixo do piso e não desenhado`).toBe(true);
+      }
     }
   });
 });
