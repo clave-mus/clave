@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitida, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, notaDaTonalidade, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -287,18 +287,33 @@ export function randAcc(on: SettingValue | undefined) {
  * casas** (`casas`), que a pessoa escolhe. A região em MIDI foi feita para ouvido e pauta ("quero
  * praticar no grave"), e sobrepô-la ao braço mede a mesma coisa duas vezes com unidades diferentes.
  */
-export function casaPermitida(tuning: readonly number[], from: number, to: number, ctx: Ctx) {
+export function casaPermitida(
+  tuning: readonly number[], from: number, to: number, ctx: Ctx,
+  /**
+   * Quais cordas podem sair, pela numeração de quem toca (1ª é a mais AGUDA). Sem a lista, todas.
+   *
+   * `tuning` vai da grave para a aguda, então a 1ª corda é o último índice: a conversão é
+   * `tuning.length - n`. Corda que não existe na afinação em vigor é ignorada — marcar a 6ª num
+   * baixo de quatro não deixa o exercício sem pergunta.
+   */
+  cordas?: readonly string[],
+) {
   const permitidas = pcsPermitidas(ctx);
   const lo = from === 0 ? 0 : from + 1;
+  const indices = cordas?.length
+    ? new Set(cordas.map(n => tuning.length - Number(n)).filter(i => i >= 0 && i < tuning.length))
+    : null;
   const todas: { str: number; f: number; m: number }[] = [];
   for (let str = 0; str < tuning.length; str++) {
+    if (indices && !indices.has(str)) continue;
     for (let f = lo; f <= to; f++) {
       const m = tuning[str] + f;
       if (permitidas.includes(mod(m, 12))) todas.push({ str, f, m });
     }
   }
   if (todas.length) return pick(todas);
-  const str = randInt(0, tuning.length - 1), f = randInt(lo, to);
+  const possiveis = indices?.size ? [...indices] : tuning.map((_, i) => i);
+  const str = pick(possiveis), f = randInt(lo, to);
   return { str, f, m: tuning[str] + f };
 }
 

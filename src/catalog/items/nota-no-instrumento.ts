@@ -48,13 +48,34 @@ export const notaNoInstrumento: CatalogItem = {
     // item ele é um instrumento como os outros e não uma superfície à parte.
     { ...INST(ctx), options: [...(INST(ctx).options ?? []), { id: 'piano', label: ctx.t('settings.instrumentPiano') }] },
     { ...FRETS(ctx), quando: s => s.instrumento !== 'piano' },
+    /**
+     * **Quais cordas entram** (Paulo, 12/11; padrão: todas). Seis opções, porque o braço mais largo
+     * do app tem seis cordas; num baixo as duas últimas não aparecem — a lista real sai da afinação
+     * em vigor, no `make`, e marcar uma corda que não existe simplesmente não acha casa nenhuma.
+     *
+     * A numeração é a de quem toca: 1ª é a mais AGUDA, e as cordas de `tuning` vão da grave para a
+     * aguda — a conversão é `tuning.length - n`, e há teste conferindo.
+     */
+    { id: 'cordas', label: ctx.t('settings.strings'), type: 'multi', justify: true, quando: s => s.instrumento !== 'piano',
+      options: ['1', '2', '3', '4', '5', '6'].map(n => ({ id: n, label: n + 'ª' })) },
+    /**
+     * **Perguntar pela nota ou pela ALTURA EXATA** (Paulo, 12/11: *"quero que também tenha a opção
+     * de pedir uma altura de nota específica — como E1 — aí tem menos respostas corretas. Que isso
+     * seja um parâmetro, não o padrão"*).
+     *
+     * Com `altura`, a resposta certa é uma posição só (ou as poucas que dão aquela altura); com
+     * `nota`, qualquer posição daquela classe serve. É a mesma distinção que `nota-na-pauta` faz
+     * entre ler (sem oitava) e escrever (com oitava).
+     */
+    { id: 'pergunta', label: ctx.t('settings.whatToAsk'), type: 'single', quando: s => s.instrumento !== 'piano',
+      options: [{ id: 'nota', label: ctx.t('settings.askNoteName') }, { id: 'altura', label: ctx.t('settings.askExactPitch') }] },
     { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.instrumento === 'piano' },
     { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', quando: s => s.instrumento === 'piano',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] },
   ],
   // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
   // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
-  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', pretas: true, oitavas: '2' },
+  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', pretas: true, oitavas: '2' },
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {
       const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
@@ -78,7 +99,13 @@ export const notaNoInstrumento: CatalogItem = {
 
     const tuning = tuningOf(s, ctx);
     const [from, to] = fretRange(s);
-    const { str, f, m } = casaPermitida(tuning, from, to, ctx);
+    const cordas = Array.isArray(s.cordas) ? s.cordas : undefined;
+    const { str, f, m } = casaPermitida(tuning, from, to, ctx, cordas);
+    // Perguntando pela ALTURA exata, o gabarito é a altura (uma posição, ou as poucas que a dão);
+    // perguntando pela nota, qualquer posição daquela classe de altura serve.
+    const porAltura = s.pergunta === 'altura';
+    const gabarito = porAltura ? { kind: 'pitch' as const, midi: m } : { kind: 'pitchClass' as const, pc: mod(m, 12) };
+    const comOitava = (nome: string) => (porAltura ? `${nome}${Math.floor(m / 12) - 1}` : nome);
     if (s.direcao === 'audiar') {
       // A posição aparece marcada, o contexto toca, e o gabarito espera o botão.
       const tonica = tonicaDeContexto(ctx, m);
@@ -101,10 +128,10 @@ export const notaNoInstrumento: CatalogItem = {
       const bemol = Math.random() < 0.5;
       const nome = pcNameUm(mod(m, 12), ctx.naming, bemol);
       return {
-        prompt: ctx.t('quiz.tapNoteOnNeck', { note: nome }), visual: { kind: 'text', text: '' },
-        surface: { kind: 'fretboard', tuning, from, to }, expected: { kind: 'pitchClass', pc: mod(m, 12) },
+        prompt: ctx.t('quiz.tapNoteOnNeck', { note: comOitava(nome) }), visual: { kind: 'text', text: '' },
+        surface: { kind: 'fretboard', tuning, from, to }, expected: gabarito,
         sound: { groups: [[m]], instrument: vozDoBraco(tuning) },
-        reveal: ctx.t('quiz.atFret', { note: nome, fret: f }),
+        reveal: ctx.t('quiz.atFret', { note: comOitava(nome), fret: f }),
       };
     }
     return {

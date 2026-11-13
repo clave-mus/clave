@@ -1,4 +1,4 @@
-import { CLEFS, EXT, midi, tonicaDeContexto, mod, notaNaPauta, noteName, pickClef, randAcc, stepRange } from '../helpers';
+import { CLEFS, midi, passosDaRegiao, quintasDaTonalidade, tonicaDeContexto, mod, notaNaPauta, noteName, pickClef, randAcc } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -43,19 +43,38 @@ export const notaNaPautaItem: CatalogItem = {
       // A terceira direção (10/11/2026): o "oposto" do desenho do Paulo. Ver `OR-ouvido-relativo.md`.
       { id: 'audiar', label: ctx.t('settings.audiateIt') },
     ] },
-    CLEFS(ctx), EXT(ctx),
-    { id: 'acidentes', label: ctx.t('settings.accidentals'), type: 'toggle' },
+    CLEFS(ctx),
+    /**
+     * **A extensão saiu em 12/11**, a pedido do Paulo: *"seria interessante definir a nota mínima e
+     * máxima ao invés de dizer só se quer linha suplementar ou não"*. Ela dizia "pauta" ou "com
+     * linhas suplementares", dois degraus grossos para a mesma coisa que a REGIÃO já expressa com
+     * precisão — e era um controle a mais num painel que ele achou cheio demais. Os passos da pauta
+     * agora saem da região (ver `passosDaRegiao`), limitados pelo que a clave alcança.
+     */
+    /**
+     * **Acidentes só fazem sentido sem tonalidade fixa** (decidido com o Paulo em 12/11).
+     *
+     * Ele: *"acho que tem configurações demais pra coisas parecidas — pedir sustenidos e bemóis,
+     * cromático ou só tonalidade, tonalidade…"*. Com uma tonalidade escolhida, ela já diz **quais**
+     * acidentes existem e **como** a nota se escreve; ligar "sustenidos e bemóis" por cima só
+     * produzia a contradição que ele viu (Fá♭ em Sol maior). Então o controle desaparece quando há
+     * tonalidade, e a armadura passa a aparecer na pauta.
+     */
+    { id: 'acidentes', label: ctx.t('settings.accidentals'), type: 'toggle',
+      quando: () => quintasDaTonalidade(ctx) === null },
   ],
-  defaults: { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: false },
+  defaults: { direcao: 'ler', claves: ['sol'], acidentes: false },
   presets: [
-    { id: 'ler', nome: 'presets.pautaLer', settings: { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: false } },
-    { id: 'escrever', nome: 'presets.pautaEscrever', settings: { direcao: 'escrever', claves: ['sol'], extensao: 'pauta', acidentes: false } },
-    { id: 'com-acidentes', nome: 'presets.pautaAcidentes', settings: { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: true } },
-    { id: 'clave-de-fa', nome: 'presets.pautaClaveFa', settings: { direcao: 'ler', claves: ['fa'], extensao: 'pauta', acidentes: false } },
+    { id: 'ler', nome: 'presets.pautaLer', settings: { direcao: 'ler', claves: ['sol'], acidentes: false } },
+    { id: 'escrever', nome: 'presets.pautaEscrever', settings: { direcao: 'escrever', claves: ['sol'], acidentes: false } },
+    { id: 'com-acidentes', nome: 'presets.pautaAcidentes', settings: { direcao: 'ler', claves: ['sol'], acidentes: true } },
+    { id: 'clave-de-fa', nome: 'presets.pautaClaveFa', settings: { direcao: 'ler', claves: ['fa'], acidentes: false } },
   ],
   make(s, ctx): Question {
     const clef = pickClef(s, ctx);
-    const n = notaNaPauta(ctx, stepRange(clef, s.extensao), () => randAcc(s.acidentes));
+    const n = notaNaPauta(ctx, passosDaRegiao(clef, ctx), () => randAcc(s.acidentes));
+    // A armadura da tonalidade em vigor, desenhada na pauta (e `undefined` com tonalidade livre).
+    const fifths = quintasDaTonalidade(ctx) ?? undefined;
     /**
      * **Audiar**: a nota aparece escrita, o contexto toca, você canta por dentro, e o gabarito só
      * soa quando você pede. O padrão é o mesmo que entrou no gerador de leitura em 10/11.
@@ -66,7 +85,7 @@ export const notaNaPautaItem: CatalogItem = {
     if (s.direcao === 'audiar') {
       const tonica = tonicaDeContexto(ctx, midi(n));
       return {
-        prompt: ctx.t('quiz.audiateNote'), visual: { kind: 'staff', clef, columns: [[n]] },
+        prompt: ctx.t('quiz.audiateNote'), visual: { kind: 'staff', clef, fifths, columns: [[n]] },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[tonica]],
@@ -81,14 +100,14 @@ export const notaNaPautaItem: CatalogItem = {
     if (s.direcao === 'escrever') {
       return {
         prompt: ctx.t('quiz.writeNote', { note: `${noteName(n, ctx.naming)}${n.oct}` }), visual: { kind: 'text', text: '' },
-        surface: { kind: 'staff', clef, accidentals: !!s.acidentes },
+        surface: { kind: 'staff', clef, accidentals: !!s.acidentes, fifths },
         // A oitava entra no esperado: quem escreve escolhe a linha, então a altura é dela.
         expected: { kind: 'spelled', letter: n.letter, acc: n.acc, oct: n.oct },
         sound: { groups: [[midi(n)]] }, reveal: `${noteName(n, ctx.naming)}${n.oct}`,
       };
     }
     return {
-      prompt: ctx.t('quiz.whatNote'), visual: { kind: 'staff', clef, columns: [[n]] },
+      prompt: ctx.t('quiz.whatNote'), visual: { kind: 'staff', clef, fifths, columns: [[n]] },
       surface: { kind: 'letters', accidentals: !!s.acidentes },
       // Lendo, a oitava NÃO entra: a pergunta é que nota é, e o nome não tem oitava.
       expected: { kind: 'spelled', letter: mod(n.letter, 7), acc: n.acc },

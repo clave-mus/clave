@@ -90,7 +90,12 @@ export type Surface =
   | { kind: 'letters'; accidentals: boolean }
   | { kind: 'keyboard'; lo: number; hi: number }
   | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
-  | { kind: 'staff'; clef: Clef; accidentals: boolean };
+  /**
+   * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
+   * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
+   * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
+   */
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number };
 
 /** Conteúdo sonoro: só as notas. Como elas soam fica com a apresentação. */
 export interface SoundContent {

@@ -45,6 +45,12 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   // Entrou em 10/11/2026 com a direção `audiar`: lê a tonalidade para saber qual tônica tocar como
   // contexto, e o piso da região para não botar o contexto fora dela.
   tonicaDeContexto: ['key', 'range'],
+  // Entraram em 12/11/2026: a armadura da tonalidade em vigor (para desenhá-la na pauta) e a grafia
+  // que ela dita. Só tonalidade — nem região nem material passam por aqui.
+  quintasDaTonalidade: ['key'],
+  notaDaTonalidade: ['key'],
+  // Entrou em 12/11/2026 no lugar do parâmetro "extensão": os passos da pauta saem da REGIÃO.
+  passosDaRegiao: ['range'],
 };
 
 /**

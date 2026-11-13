@@ -224,7 +224,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // Altura e ritmo SEPARADOS, que é como se aprende a ler: juntar os dois cedo demais trava os dois.
     etapas: [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',
-        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
+        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], acidentes: false })] },
       { minutos: 5, porque: 'ritmo só, no nível de entrada (semínima e colcheias)',
         instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
       { minutos: 5, porque: 'os dois juntos, no ambiente de leitura corrida',

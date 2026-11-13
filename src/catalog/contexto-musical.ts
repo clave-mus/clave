@@ -11,7 +11,7 @@
 //
 // E é por isso que elas moram num arquivo só: acrescentar um parâmetro musical novo se faz aqui,
 // e passa a valer para todo item sem editar o catálogo. É o critério de pronto da F2-1.
-import { buildScale, fromStep, midi, mod, note, pick, randInt, type Clef, type Note } from '../theory/core';
+import { applyKey, buildScale, clefBottom, fromStep, midi, mod, note, pick, randInt, type Clef, type Note } from '../theory/core';
 import type { GlobalParams } from './params';
 import type { Ctx } from './types';
 
@@ -42,6 +42,59 @@ export function pcsPermitidas(ctx: Ctx): number[] {
   const tonica = note(0, 0, 4);
   const escala = buildScale({ ...tonica, letter: 0 }, k.mode === 'menor' ? 'menor' : 'maior');
   return escala.map(n => mod(midi(n) + k.tonic, 12));
+}
+
+/**
+ * As **quintas** da tonalidade em vigor (−7..7), ou `null` com tonalidade livre.
+ *
+ * É o número que a pauta precisa para desenhar a armadura e que `applyKey` precisa para grafar a
+ * nota. Sem isto, `nota-na-pauta` desenhava sempre a armadura de dó mesmo praticando em Sol maior —
+ * e aí todo Fá♯ precisava de um sustenido escrito à mão, o que o Paulo relatou em 12/11 como "muito
+ * trabalho de ligar o sustenido".
+ */
+export function quintasDaTonalidade(ctx: Ctx): number | null {
+  const k = ctx.params.key;
+  if (!k) return null;
+  // A relativa menor tem a MESMA armadura da maior três semitons acima (lá menor = dó maior).
+  const pcMaior = mod(k.mode === 'menor' ? k.tonic + 3 : k.tonic, 12);
+  // Quintas que dão cada classe de altura como tônica maior, escolhendo a grafia usual: dó♯ maior
+  // (7 sustenidos) não; ré♭ maior (5 bemóis) sim — é como a música escreve.
+  const PORPC: Record<number, number> = { 0: 0, 1: -5, 2: 2, 3: -3, 4: 4, 5: -1, 6: 6, 7: 1, 8: -4, 9: 3, 10: -2, 11: 5 };
+  return PORPC[pcMaior];
+}
+
+/**
+ * A nota de um passo diatônico **grafada pela tonalidade**: em Sol maior, o passo do fá é Fá♯.
+ *
+ * Sem isto o filtro de material era por CLASSE DE ALTURA, e grafia errada passava: em Sol maior a
+ * classe 4 é permitida (é o Mi), e `Fá♭` tem classe 4 — então o exercício pedia "Fá♭" numa
+ * tonalidade que não tem Fá♭ nenhum. Bug que o Paulo achou em 12/11.
+ */
+export function notaDaTonalidade(ctx: Ctx, passo: number): Note {
+  const f = quintasDaTonalidade(ctx);
+  return f === null ? fromStep(passo, 0) : applyKey(passo, f);
+}
+
+/**
+ * Os passos diatônicos que a pauta deve usar: os que **caem dentro da região**, sem passar do que a
+ * clave alcança.
+ *
+ * Substituiu o parâmetro "extensão" (pauta / com linhas suplementares) em 12/11, a pedido do Paulo:
+ * dois degraus grossos para a mesma coisa que a região já diz com precisão, e um controle a mais num
+ * painel que ele achou cheio demais. O limite externo continua sendo a clave — seis linhas
+ * suplementares para cada lado é o que ainda se lê.
+ */
+export function passosDaRegiao(clef: Clef, ctx: Ctx): [number, number] {
+  const b = clefBottom(clef);
+  const [minimo, maximo] = [b - 6, b + 14];
+  const { lo, hi } = ctx.params.range;
+  let baixo = maximo, alto = minimo;
+  for (let st = minimo; st <= maximo; st++) {
+    const m = midi(fromStep(st, 0));
+    if (m >= lo && m <= hi) { baixo = Math.min(baixo, st); alto = Math.max(alto, st); }
+  }
+  // Região que não cruza a clave nenhuma: vale o que a clave alcança, para haver pergunta.
+  return baixo > alto ? [minimo, maximo] : [baixo, alto];
 }
 
 /** Uma classe de altura que o material permite. */
@@ -107,10 +160,19 @@ export function tonicaNaRegiao(ctx: Ctx, doItem?: { lo: number; hi: number }): n
 export function notaNaPauta(ctx: Ctx, passos: [number, number], acidente: () => number): Note {
   const { lo, hi } = ctx.params.range;
   const permitidas = pcsPermitidas(ctx);
+  const quintas = quintasDaTonalidade(ctx);
   const candidatas: Note[] = [];
   for (let st = passos[0]; st <= passos[1]; st++) {
-    for (const acc of [0, 1, -1]) {
-      const n = fromStep(st, acc);
+    /**
+     * **Com tonalidade fixa, a armadura dita a grafia**: um candidato por passo, e nunca um que a
+     * tonalidade não escreve. Era este o bug de 12/11 — varrendo `[0, 1, -1]` em toda tonalidade, o
+     * `Fá♭` entrava em Sol maior porque o FILTRO era por classe de altura (a classe 4 é permitida,
+     * é o Mi) e a grafia não era conferida. Na pauta grafia é identidade.
+     *
+     * Sem tonalidade (livre), aí sim os três acidentes são candidatos legítimos.
+     */
+    const grafias = quintas === null ? [0, 1, -1].map(acc => fromStep(st, acc)) : [applyKey(st, quintas)];
+    for (const n of grafias) {
       const m = midi(n);
       if (m >= lo && m <= hi && permitidas.includes(mod(m, 12))) candidatas.push(n);
     }

@@ -157,3 +157,32 @@ describe('catálogo de exercícios', () => {
     }
   });
 });
+
+/**
+ * `pauta-escala`: a tônica não pode entregar a resposta.
+ *
+ * Paulo, 12/11: *"é muito fácil saber a resposta só vendo qual é a nota inicial, pois as
+ * alternativas têm isso no nome"*. Estava certo — e com um tipo só marcado (o padrão) a resposta era
+ * a única alternativa com a tônica certa.
+ */
+describe('pauta-escala: a nota inicial não entrega a escala', () => {
+  const item = EXERCISES.find(e => e.id === 'pauta-escala')!;
+
+  // A primeira palavra do rótulo é a tônica ("Dó maior (jônio)" → "Dó").
+  const tonicaDo = (label: string) => label.split(' ')[0];
+
+  it.each([['um tipo só', ['maior']], ['dois tipos', ['maior', 'dorico']], ['todos', undefined]])(
+    'com %s, todas as alternativas têm a mesma tônica', (_, tipos) => {
+      const ctx = ctxFor('pt');
+      const s = { ...item.defaults, ...(tipos ? { tipos } : {}) };
+      for (let i = 0; i < 80; i++) {
+        const q = item.make!(s, ctx);
+        const opcoes = (q.surface as { kind: 'choices'; options: { label: string }[] }).options;
+        const tonicas = new Set(opcoes.map(o => tonicaDo(o.label)));
+        expect(tonicas.size, `rodada ${i}: ${[...tonicas].join(', ')}`).toBe(1);
+        // E há de fato escolha a fazer: pelo menos quatro alternativas distintas.
+        expect(new Set(opcoes.map(o => o.label)).size).toBeGreaterThanOrEqual(4);
+      }
+    },
+  );
+});

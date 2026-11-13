@@ -10,7 +10,7 @@ import { sortearSemEco } from './sorteio';
 import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
-import { fromStep, mod, noteName, type Note } from '../theory/core';
+import { fromStep, keyAccidentals, mod, noteName, type Note } from '../theory/core';
 import Fretboard from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
 import RhythmLine from '../components/music/RhythmLine';
@@ -97,9 +97,26 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     (acc, s) => (s.present && settings[s.id] !== undefined ? { ...acc, ...s.present(settings[s.id]) } : acc), {}), [def, ctx, settings]);
 
   const [q, setQ] = useState<Question | null>(() => (def.problema?.(settings, ctx) ? null : make()));
+  /**
+   * A pergunta é respondida (ou mostrada) num BRAÇO? É o que diz se a região em MIDI se aplica —
+   * ver o comentário em `PracticePanel`. Sai da pergunta em vigor, não de uma lista de itens: assim
+   * vale para qualquer item que algum dia responda no braço, sem ninguém manter tabela.
+   */
+  const respondeNoBraco = q?.surface.kind === 'fretboard' || q?.visual.kind === 'fretboard';
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [acc, setAcc] = useState(0);
+  /**
+   * A resposta que está sendo **montada pelo teclado físico** (decidido com o Paulo em 12/11).
+   *
+   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `+` ou `3`
+   * para sustenido, `-` para bemol —, porque é assim que se fala ("sol sustenido"). `Enter`
+   * confirma, `Esc` limpa. Nada é enviado antes do `Enter`, e o que está montado aparece na tela:
+   * ele pediu *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"*.
+   *
+   * `Ctrl` ficou fora de propósito: `Ctrl+G` é atalho do navegador e não chega até a página.
+   */
+  const [montada, setMontada] = useState<{ letter: number; acc: number } | null>(null);
   // `seguidas` é a contagem DENTRO da série. Não confundir com dias seguidos praticados, que
   // saiu de propósito (decisão 11): aquilo é cobrança, isto é informação útil — e é o gatilho da
   // sugestão de variação (F7-1), que dispara em acertos seguidos, não em taxa.
@@ -216,13 +233,35 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     if (ok) window.setTimeout(next, 850);
   }, [phase, score, def, q, soundOn, play, presentationFor, locale, settings, params, target, onDone, next]);
 
-  // atalhos de teclado: 1-9 para opções, Enter para seguir, espaço para ouvir de novo
+  // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       if (!q) return;
-      if (e.key === 'Enter' && phase === 'wrong') { e.preventDefault(); next(); }
       if (e.key === ' ' && q.sound && q.autoplay) { e.preventDefault(); play(q, true); }
+      /**
+       * Responder pelo teclado onde a resposta é uma NOTA (superfície `letters`). A letra monta, o
+       * acidente modifica, `Enter` confirma — ver o comentário de `montada`.
+       *
+       * Os índices do app são diatônicos a partir do dó (0 = Dó … 6 = Si), e as teclas são os nomes
+       * em inglês, que é o que está gravado no teclado de quem usa.
+       */
+      if (q.surface.kind === 'letters' && phase === 'ask') {
+        const daLetra = 'CDEFGAB'.indexOf(e.key.toUpperCase());
+        if (daLetra >= 0) { e.preventDefault(); setMontada({ letter: daLetra, acc: 0 }); return; }
+        if (montada) {
+          if (e.key === '+' || e.key === '3') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
+          if (e.key === '-') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
+          if (e.key === 'Escape') { e.preventDefault(); setMontada(null); return; }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            setMontada(null);
+            submit({ kind: 'spelled', letter: montada.letter, acc: montada.acc }, `${montada.letter}:${montada.acc}`);
+            return;
+          }
+        }
+      }
+      if (e.key === 'Enter' && phase === 'wrong') { e.preventDefault(); next(); }
       const n = Number(e.key);
       if (q.surface.kind === 'choices' && n >= 1 && n <= q.surface.options.length && phase === 'ask') {
         const o = q.surface.options[n - 1];
@@ -231,7 +270,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, q, next, play, submit]);
+  }, [phase, q, next, play, submit, montada]);
+  // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
+  useEffect(() => { setMontada(null); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -258,7 +299,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           </div>
         </div>
         {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} /> : null}
           onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
     );
@@ -280,7 +321,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 
       <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
 
-      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} />
+      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
@@ -309,7 +350,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       )}
 
       {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} /> : null}
         onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
   );
@@ -387,8 +428,17 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       <div className="stage">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        <Staff clef={sf.clef} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
-          onPick={phase === 'ask' ? s => onAnswer({ kind: 'spelled', letter: mod(s, 7), acc, oct: Math.floor(s / 7) }, `${s}:${acc}`) : undefined} />
+        <Staff clef={sf.clef} fifths={sf.fifths} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
+          /**
+           * O acidente da resposta: o que a pessoa escolheu à mão (`acc`), ou — se ela não escolheu
+           * nenhum — **o que a armadura manda** (`fifths`). Em Sol maior, clicar a linha do fá dá
+           * Fá♯ sem precisar ligar sustenido, que era a queixa do Paulo em 12/11.
+           */
+          onPick={phase === 'ask' ? s => {
+            const daArmadura = sf.fifths === undefined ? 0 : keyAccidentals(sf.fifths)[mod(s, 7)] ?? 0;
+            const a = acc !== 0 ? acc : daArmadura;
+            onAnswer({ kind: 'spelled', letter: mod(s, 7), acc: a, oct: Math.floor(s / 7) }, `${s}:${a}`);
+          } : undefined} />
         <div className="hint">{phase === 'wrong' && notas.length > 1 ? t('player.staffYoursAndRight') : t('player.tapStaff')}</div>
       </div>
     );
@@ -434,8 +484,10 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
 }
 
 // ---------------- área de resposta ----------------
-function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
+function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
+  /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */
+  montada?: { letter: number; acc: number } | null;
 }) {
   const t = useT();
   const sf = q.surface;
@@ -490,13 +542,26 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
     return (
       <div>
         {accRow(sf.accidentals)}
+        {/**
+          * O eco do teclado físico: o que está montado, grande, antes de valer. Ele pediu em 12/11
+          * *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"* —
+          * então o estado parcial é visível, e diz o que falta fazer para enviar.
+          */}
+        {montada && phase === 'ask' && (
+          <div className="montada" role="status">
+            <b>{noteName({ letter: montada.letter as 0, acc: montada.acc }, naming)}</b>
+            <span className="muted">{t('player.montadaDica')}</span>
+          </div>
+        )}
         <div className="letters">
           {[0, 1, 2, 3, 4, 5, 6].map(l => {
             const right = ok({ kind: 'spelled', letter: l, acc: revealAcc });
+            const noTeclado = montada?.letter === l && phase === 'ask';
             return (
-              <button key={l} type="button" className={`ans ${phase === 'ask' ? '' : right ? 'right' : picked?.startsWith(`${l}:`) ? 'wrong' : ''}`}
+              <button key={l} type="button" className={`ans ${noTeclado ? 'montando' : ''} ${phase === 'ask' ? '' : right ? 'right' : picked?.startsWith(`${l}:`) ? 'wrong' : ''}`}
                 disabled={phase !== 'ask'} onClick={() => onAnswer({ kind: 'spelled', letter: l, acc }, `${l}:${acc}`)}>
-                {noteName({ letter: l as 0, acc: phase !== 'ask' && right ? revealAcc : acc }, naming)}
+                {noteName({ letter: l as 0, acc: noTeclado ? montada.acc : phase !== 'ask' && right ? revealAcc : acc }, naming)}
+                <span className="k">{'CDEFGAB'[l]}</span>
               </button>
             );
           })}

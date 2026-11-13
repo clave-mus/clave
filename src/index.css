@@ -523,6 +523,12 @@ select.sel {
   100% { transform: scale(1); }
 }
 .ans.right { animation: pulso-acerto 280ms ease-out 1; }
+
+/* O eco do teclado físico: o que foi montado e ainda não valeu (ver `montada`, no Player). */
+.montada { display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; }
+.montada b { font-family: var(--display); font-size: 26px; font-weight: 800; color: var(--accent); }
+.montada .muted { font-size: 12px; }
+.ans.montando { border-color: var(--accent); background: var(--accent-quiet); }
 @media (prefers-reduced-motion: reduce) {
   .ans.right { animation: none; }
 }
