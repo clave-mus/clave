@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { NOTAS_ESCOLHIDAS, arr, clave, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, plain, regiao, tonicaNaRegiao } from '../helpers';
+import { GRAUS_ESCOLHIDOS, arr, clave, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, plain, regiao, tonicaNaRegiao } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 import type { Ctx } from '../types';
@@ -49,6 +49,7 @@ export const melodiaDeOuvido: CatalogItem = {
   respeita: ['key', 'range', 'material'],
   publicacao: RASCUNHO,
   settings: ctx => [
+    GRAUS_ESCOLHIDOS(ctx),
     /**
      * **De onde vem a pergunta**: do som, ou do que está escrito.
      *
@@ -83,7 +84,6 @@ export const melodiaDeOuvido: CatalogItem = {
       { id: 'pauta', label: ctx.t('settings.onStaff') },
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
-    NOTAS_ESCOLHIDAS(ctx),
     { id: 'salto', label: ctx.t('settings.maxLeap'), type: 'range', min: 1, max: 12, step: 1,
       format: v => ctx.t('settings.semitones', { n: String(v) }) },
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single', options: [
@@ -94,7 +94,7 @@ export const melodiaDeOuvido: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.3, max: 2, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { estimulo: 'som', notas: 3, superficie: 'auto', notasEscolhidas: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  defaults: { estimulo: 'som', notas: 3, superficie: 'auto', grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
   presets: [
     { id: 'tres', nome: 'presets.melodiaTres', settings: { estimulo: 'som', notas: 3, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'graus', nome: 'presets.melodiaGraus', settings: { estimulo: 'som', notas: 3, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
@@ -109,7 +109,7 @@ export const melodiaDeOuvido: CatalogItem = {
    * não há segunda nota para ir. Recusar e explicar, não sortear o impossível (decisão 13).
    */
   problema(s, ctx) {
-    const pcs = pcsEscolhidas(ctx, arr(s.notasEscolhidas, []));
+    const pcs = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
     const { lo, hi } = regiao(ctx);
     const quantasAlturas = Array.from({ length: hi - lo + 1 }, (_, k) => lo + k).filter(m => pcs.includes(mod(m, 12))).length;
     return quantasAlturas < 2 ? ctx.t('player.poucasNotas') : null;
@@ -117,7 +117,7 @@ export const melodiaDeOuvido: CatalogItem = {
   make(s, ctx): Question {
     const n = Math.round(Number(s.notas ?? 3));
     const { lo, hi } = regiao(ctx);
-    const melodia = sortearMelodia({ pcs: pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])), lo, hi, n, saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)) });
+    const melodia = sortearMelodia({ pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo, hi, n, saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)) });
     const tonica = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
     const cadencia = CADENCIAS.find(c => c === s.contexto);
     // O contexto cabe na MESMA faixa da melodia: nada soa fora do que a superfície desenha.

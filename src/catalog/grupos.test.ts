@@ -8,6 +8,14 @@ import { estadoDe, visivel } from './publicacao';
 import pt from '../i18n/pt';
 import en from '../i18n/en';
 
+import { resolveParams } from './params';
+
+/**
+ * Contexto de sonda com `params` de verdade: desde 13/11 `settings(ctx)` lê tonalidade e
+ * material (a lista de "só estes graus" depende deles), e um contexto de mentira quebra ali.
+ */
+const ctxDeSonda = { t: (k: string) => k, naming: 'latin', conv: 'pt', params: resolveParams('violao') };
+
 const sempre = () => true;
 const chave = (m: MembroDeGrupo) => `${m.itemId}|${JSON.stringify(m.settings ?? {})}`;
 const inst = (itemId: string, settings?: Record<string, unknown>): MembroDeGrupo => ({ itemId, settings });
@@ -44,7 +52,7 @@ describe('a lista', () => {
   it('todo membro de um grupo de superfície declara a superfície', () => {
     for (const g of GRUPOS.filter(x => ['leitura-pauta', 'o-braco', 'o-teclado'].includes(x.id))) {
       for (const m of g.itens) {
-        const multisuperficie = (ITEMS.find(i => i.id === m.itemId)?.settings?.({ t: (k: string) => k } as never) ?? []).some(s => s.id === 'superficie');
+        const multisuperficie = (ITEMS.find(i => i.id === m.itemId)?.settings?.(ctxDeSonda as never) ?? []).some(s => s.id === 'superficie');
         if (multisuperficie) expect(m.settings?.superficie, `${g.id} → ${m.itemId}`).toBeTruthy();
       }
     }
@@ -112,7 +120,7 @@ describe('a mesma instância em vários grupos', () => {
 
   it('a superfície só é parâmetro onde o estímulo é som', () => {
     for (const item of ITEMS) {
-      const ids = (item.settings?.({ t: (k: string) => k } as never) ?? []).map(st => st.id);
+      const ids = (item.settings?.(ctxDeSonda as never) ?? []).map(st => st.id);
       if (SUPERFICIE_E_PARAMETRO.includes(item.id)) continue;
       expect(ids, `${item.id} ainda tem seletor de superfície`).not.toContain('superficie');
     }

@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsEscolhidas, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, clave, grauDoPc, grausDaTonalidade, mod, pcNameUm, pcsDosGraus, pick, quintasDaTonalidade, regiao, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -59,6 +59,18 @@ export const ouvidoTecla: CatalogItem = {
   publicacao: LEGADO,
   settings: ctx => [
     /**
+     * **"Incluir teclas pretas" saiu em 13/11.** O Paulo perguntou duas vezes se ele não era
+     * redundante — *"incluir teclas pretas não está redundante com cromático?"* e *"não quero que eu
+     * precise selecionar 'incluir as teclas pretas' ao selecionar a tonalidade de ré maior para que
+     * apareçam todos os graus"* — e era, por dois lados: tecla preta é **grau alterado**, e quem
+     * escolhe graus já disse se os quer; e com "só a tonalidade" quem decide é a tonalidade, não um
+     * interruptor por cima dela.
+     *
+     * Era o controle que obrigava a ligar um interruptor para o Fá♯ de Ré maior aparecer, e a ligar
+     * outro para dó menor fazer efeito. Os dois incômodos morrem com ele.
+     */
+    GRAUS_ESCOLHIDOS(ctx),
+    /**
      * **De onde vem a pergunta** — o eixo que o modelo de 12/11 pôs em toda linha de ouvido.
      *
      * `som`: a nota toca e você a acha. `escrito`: a nota aparece na superfície escolhida, só o
@@ -93,10 +105,6 @@ export const ouvidoTecla: CatalogItem = {
         { id: 'fixa', label: ctx.t('settings.referenceSameOctave') },
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
-    // Sem `quando`: isto é sobre **o que pode soar**, não sobre o teclado. Eu tinha escondido nos
-    // modos de letra e grau, e estava errado — acidentes existem em qualquer superfície.
-    { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle' },
-    NOTAS_ESCOLHIDAS(ctx),
     /**
      * **Onde se responde** (`OR-ouvido-relativo.md`, §3.1: *"superfície de resposta (padrão: o
      * instrumento do perfil)"*). O estímulo é som, então não há superfície de estímulo e onde você
@@ -121,7 +129,7 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: 'fixa', pretas: false, onde: 'auto', notasEscolhidas: [] },
+  defaults: { estimulo: 'som', referencia: true, oitavaDaReferencia: 'fixa', onde: 'auto', grausEscolhidos: [] },
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -132,21 +140,21 @@ export const ouvidoTecla: CatalogItem = {
    *   item do catálogo treina isso**.
    */
   presets: [
-    { id: 'grau', nome: 'presets.teclaGrau', settings: { referencia: true, pretas: true }, params: EM_DO_MAIOR },
-    { id: 'brancas', nome: 'presets.teclaBrancas', settings: { referencia: true, pretas: false }, params: EM_DO_MAIOR },
-    { id: 'sem-ancora', nome: 'presets.teclaSemAncora', settings: { referencia: false, pretas: true }, params: TONALIDADE_LIVRE },
+    { id: 'grau', nome: 'presets.teclaGrau', settings: { referencia: true }, params: EM_DO_MAIOR },
+    { id: 'brancas', nome: 'presets.teclaBrancas', settings: { referencia: true }, params: EM_DO_MAIOR },
+    { id: 'sem-ancora', nome: 'presets.teclaSemAncora', settings: { referencia: false }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.9 },
   /**
-   * Escolher só teclas pretas e desligar as pretas não deixa nota nenhuma. Recusar e explicar
-   * (decisão 13) — antes disto `pick` de lista vazia devolvia `undefined` e a pergunta saía quebrada.
+   * Seleção de graus que não sobra nenhuma nota: recusar e explicar (decisão 13) — `pick` de lista
+   * vazia devolveria `undefined` e a pergunta sairia quebrada.
    */
   problema(s, ctx) {
-    const possiveis = pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+    const possiveis = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
     return possiveis.length ? null : ctx.t('player.poucasNotas');
   },
   make(s, ctx): Question {
-    const permitidas = pcsEscolhidas(ctx, arr(s.notasEscolhidas, [])).filter(x => s.pretas || ![1, 3, 6, 8, 10].includes(x));
+    const permitidas = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
     const p = pick(permitidas);
     const onde = s.onde === 'auto'
       ? (ctx.params.instrument === 'piano' ? 'teclado' : ctx.params.instrument === 'baixo' ? 'baixo' : 'violao')

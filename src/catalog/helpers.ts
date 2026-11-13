@@ -14,7 +14,7 @@ import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
 import type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
-import { clave, pcsPermitidas } from './contexto-musical';
+import { clave, GRAUS_DO_MATERIAL, pcsPermitidas } from './contexto-musical';
 
 // Reexportado para o item declarar **um import só**. Sem isto, cada `items/<id>.ts` abriria com cinco
 // linhas de import de quatro módulos, e a declaração — que é o que se lê — ficaria enterrada.
@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, tonalidade, grauDoPc, grausDaTonalidade, notaDaTonalidade, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, tonalidade, GRAUS_DO_MATERIAL, grauDoPc, grausDaTonalidade, notaDaTonalidade, pcsDosGraus, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -57,15 +57,18 @@ export const ACC = ({ t }: Ctx): Setting => ({ id: 'acidentes', label: t('settin
 export const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.instrument'), type: 'single', options: [
   { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
 /**
- * **Restringir às notas que a pessoa escolhe** — o `multi` que o rascunho do Paulo pede na Nota, na
+ * **Restringir aos graus que a pessoa escolhe** — o `multi` que o rascunho do Paulo pede na Nota, na
  * Melodia e no Intervalo harmônico. Vazio é o padrão e quer dizer "sem restrição".
  *
- * Os rótulos saem de `pcName`, então seguem o idioma e a convenção de nomes. É `podeVazio` porque
- * vazio aqui é estado legítimo, não configuração pela metade — ver `Setting.podeVazio`.
+ * **Grau, e não nome de nota** (decisão dele em 13/11): a lista segue o material, então com "só a
+ * tonalidade" ela mostra os graus daquela tonalidade e nada mais — em dó maior sem ♭3, em dó menor
+ * com ele. E a seleção sobrevive à troca de tonalidade, porque o id é a distância da tônica.
+ *
+ * É `podeVazio` porque vazio aqui é estado legítimo, não configuração pela metade.
  */
-export const NOTAS_ESCOLHIDAS = ({ t, naming }: Ctx): Setting => ({
-  id: 'notasEscolhidas', label: t('settings.onlyTheseNotes'), type: 'multi', justify: true, podeVazio: true,
-  options: Array.from({ length: 12 }, (_, pc) => ({ id: String(pc), label: pcName(pc, naming) })),
+export const GRAUS_ESCOLHIDOS = (ctx: Ctx): Setting => ({
+  id: 'grausEscolhidos', label: ctx.t('settings.onlyTheseDegrees'), type: 'multi', justify: true, podeVazio: true,
+  options: GRAUS_DO_MATERIAL(ctx),
 });
 
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
@@ -320,8 +323,10 @@ export function casaPermitida(
    * baixo de quatro não deixa o exercício sem pergunta.
    */
   cordas?: readonly string[],
+  /** As classes de altura que podem sair. Sem a lista, o que o material permite. */
+  classes?: readonly number[],
 ) {
-  const permitidas = pcsPermitidas(ctx);
+  const permitidas = classes?.length ? classes : pcsPermitidas(ctx);
   const lo = from === 0 ? 0 : from + 1;
   const indices = cordas?.length
     ? new Set(cordas.map(n => tuning.length - Number(n)).filter(i => i >= 0 && i < tuning.length))

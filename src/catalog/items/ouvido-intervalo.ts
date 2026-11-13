@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, NOTAS_ESCOLHIDAS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, pcsEscolhidas, pick, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, pcsDosGraus, pick, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Surface } from '../types';
 
@@ -63,9 +63,9 @@ export const ouvidoIntervalo: CatalogItem = {
      * que parte dele é outra habilidade (ouvir o grau) que ouvir um intervalo solto no ar.
      */
     { id: 'comTonica', label: ctx.t('settings.fromTonic'), type: 'toggle' },
-    NOTAS_ESCOLHIDAS(ctx)],
+    GRAUS_ESCOLHIDOS(ctx)],
   defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
-    resposta: 'alternativas', superficie: 'auto', notas: '2', comTonica: false, notasEscolhidas: [] },
+    resposta: 'alternativas', superficie: 'auto', notas: '2', comTonica: false, grausEscolhidos: [] },
   /**
    * O Paulo quis os doze intervalos e dó maior como entrada, e **melódicos e harmônicos como
    * etapas distintas** na rotina dele — daí os dois primeiros atalhos serem o mesmo conteúdo em
@@ -98,11 +98,11 @@ export const ouvidoIntervalo: CatalogItem = {
      * Com restrição de notas é a CLASSE que se escolhe primeiro, e a altura depois — `alturaNaRegiao`
      * sorteia altura livre e não saberia filtrar por classe.
      */
-    const escolhidas = arr(s.notasEscolhidas, []);
+    const escolhidas = arr(s.grausEscolhidos, []);
     const base = s.comTonica
       ? tonicaNaRegiao(ctx, { lo: 52, hi: teto })
       : escolhidas.length
-        ? alturaDoPc(ctx, pick(pcsEscolhidas(ctx, escolhidas)), { lo: 52, hi: teto })
+        ? alturaDoPc(ctx, pick(pcsDosGraus(ctx, escolhidas)), { lo: 52, hi: teto })
         : alturaNaRegiao(ctx, { lo: 52, hi: teto });
     // As alturas, de baixo para cima: a base e cada degrau somado ao anterior.
     const alturas = degraus.reduce((acc, passo) => [...acc, acc[acc.length - 1] + passo], [base]);

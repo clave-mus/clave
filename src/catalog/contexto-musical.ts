@@ -68,6 +68,50 @@ export function pcsEscolhidas(ctx: Ctx, escolhidas: readonly string[] | undefine
 }
 
 /**
+ * **Os graus que a pessoa pode escolher**, e os ids deles — o desenho que o Paulo pediu em 13/11.
+ *
+ * Ele: *"ao inves de definir quais notas vao tocar pelo nome 'só essas notas', seria melhor definir
+ * pelo grau 'so esses graus'. E que isso tenha relação direta com o material cromático ou só a
+ * tonalidade — quando tu limita so pra tonalidade, mudam as opcoes selecionadas. se é dó maior, por
+ * exemplo, sai b3 e tal."*
+ *
+ * ## Por que grau resolve três coisas de uma vez
+ *
+ * Escolher **notas pelo nome** obrigava a saber, de cabeça, quais notas a tonalidade tem: para
+ * praticar os sete graus de Ré maior era preciso marcar Ré, Mi, Fá♯… e ainda ligar "incluir teclas
+ * pretas", senão o Fá♯ não saía. Ele relatou os dois incômodos, e os dois morrem aqui:
+ *
+ * 1. **a lista segue o material.** Com "só a tonalidade", os graus oferecidos são os da tonalidade —
+ *    em dó maior some o ♭3; em dó menor, aparece. A seleção não precisa ser refeita por tonalidade;
+ * 2. **"incluir teclas pretas" deixa de existir.** Tecla preta é grau alterado, e quem escolhe graus
+ *    já disse se os quer. Dois controles para a mesma coisa era o que o deixava avulso;
+ * 3. **o grau é o que o exercício de ouvido mede.** Pedir "Fá♯" é pedir uma letra; pedir "o grau 3"
+ *    é pedir a relação — e é a relação que a pessoa treina.
+ */
+export const GRAUS_DO_MATERIAL = (ctx: Ctx): { id: string; label: string }[] =>
+  pcsPermitidas(ctx)
+    .slice()
+    .sort((a, b) => mod(a - (ctx.params.key?.tonic ?? 0), 12) - mod(b - (ctx.params.key?.tonic ?? 0), 12))
+    .map(pc => ({ id: String(mod(pc - (ctx.params.key?.tonic ?? 0), 12)), label: grauDoPc(ctx, pc) }));
+
+/**
+ * As classes de altura permitidas, cruzadas com os **graus** que a pessoa escolheu.
+ *
+ * Os ids são distâncias em semitons a partir da tônica (`'0'` é a tônica, `'3'` é o ♭3), e não
+ * classes de altura: é isso que faz a seleção **sobreviver à troca de tonalidade**. Marcar 1-3-5 em
+ * dó maior e passar para sol maior continua sendo 1-3-5, agora em sol — se os ids fossem notas,
+ * virava outra coisa.
+ */
+export function pcsDosGraus(ctx: Ctx, graus: readonly string[] | undefined): number[] {
+  const doMaterial = pcsPermitidas(ctx);
+  if (!graus?.length) return doMaterial;
+  const tonica = ctx.params.key?.tonic ?? 0;
+  const pedidos = new Set(graus.map(Number).filter(Number.isFinite).map(g => mod(tonica + g, 12)));
+  const cruzado = doMaterial.filter(pc => pedidos.has(pc));
+  return cruzado.length ? cruzado : doMaterial;
+}
+
+/**
  * As **quintas** da tonalidade em vigor (−7..7), ou `null` com tonalidade livre.
  *
  * É o número que a pauta precisa para desenhar a armadura e que `applyKey` precisa para grafar a

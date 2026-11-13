@@ -99,7 +99,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     etapas: [
       // Primeiro porque é a porta: uma nota, com dó de referência, respondida no teclado.
       { porque: 'ouvir uma nota contra o dó e achá-la no teclado: a porta de entrada do ouvido',
-        instancias: [i('ouvido-tecla', { referencia: true, pretas: true }, EM_DO)] },
+        instancias: [i('ouvido-tecla', { referencia: true }, EM_DO)] },
       // Melódicos e harmônicos SEPARADOS, a pedido dele: são dois ouvidos. O harmônico não tem
       // ordem no tempo para se apoiar, e por isso é bem mais difícil que o melódico.
       { porque: 'intervalos melódicos, subindo: a unidade de tudo',
@@ -239,7 +239,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 4, porque: 'as notas no braço, o instrumento dele: o mapa antes da harmonia',
         instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'violao', casas: '0-12' })] },
       { minutos: 4, porque: 'as mesmas notas no piano, onde a oitava é visível e o braço não ajuda',
-        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'piano', pretas: true, oitavas: '2' })] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'piano', oitavas: '2' })] },
       { minutos: 5, porque: 'os acordes no braço, pelas formas que se tocam de verdade',
         instancias: [i('acorde-no-instrumento', { instrumento: 'violao', tipos: ['maior', 'menor', 'dim', 'aum'], casas: '0-12' })] },
       { minutos: 5, porque: 'os mesmos acordes no piano: a mesma harmonia com outra geometria',

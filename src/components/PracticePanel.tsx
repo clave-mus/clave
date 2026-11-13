@@ -9,6 +9,11 @@
 //
 // "Livre" é o padrão, e é uma escolha, não ausência de escolha: quem não fixa tonalidade quer
 // variedade, não Dó maior em tudo.
+//
+// **A ordem dos blocos é tonalidade → material → região**, e foi pedida pelo Paulo em 13/11. Ela não
+// é estética: a lista de "só estes graus" (uma configuração do ITEM, que aparece abaixo deste painel)
+// **depende do material**, e ver os graus mudarem ao trocar de material só ensina se o material
+// estiver logo acima deles.
 import type { GlobalParams, ParametroDePratica, ParametrosDePratica } from '../catalog/params';
 import { REGIOES, regiaoDe } from '../catalog/regioes';
 import { keyName, mod, noteNameOct } from '../theory/core';
@@ -22,6 +27,15 @@ const ALTURAS = Array.from({ length: 73 }, (_, i) => 24 + i);
 
 interface Props {
   respeita: readonly ParametroDePratica[];
+  /**
+   * Qual metade do painel desenhar.
+   *
+   * O Paulo pediu a ordem **tonalidade → material → só estes graus** (13/11), e "só estes graus" é
+   * uma configuração do ITEM, que aparece abaixo deste painel. Para os três ficarem juntos, o painel
+   * se divide: `tonal` (tonalidade e material) vem antes das configurações do item, e `regiao` vem
+   * depois delas. Sem isso a região se enfiava no meio dos três.
+   */
+  parte?: 'tonal' | 'regiao';
   /** O exercício está respondendo num braço? Então a região em MIDI não se aplica (ver abaixo). */
   instrumentoDeBraco?: boolean;
   /** Os valores em vigor, já resolvidos. */
@@ -29,7 +43,7 @@ interface Props {
   onChange: (patch: ParametrosDePratica) => void;
 }
 
-export default function PracticePanel({ respeita, params, onChange, instrumentoDeBraco }: Props) {
+export default function PracticePanel({ respeita, params, onChange, instrumentoDeBraco, parte = 'tonal' }: Props) {
   const t = useT();
   const naming = useNaming();
   // o material só faz sentido ao lado de uma tonalidade, e a tonalidade pode vir só por causa dele
@@ -43,13 +57,15 @@ export default function PracticePanel({ respeita, params, onChange, instrumentoD
    * exercício; a região em MIDI serve a ouvido, pauta e teclado.
    */
   const noBraco = instrumentoDeBraco === true;
-  if (!mostraTonalidade && (!respeita.includes('range') || noBraco)) return null;
+  const mostraRegiao = respeita.includes('range') && !noBraco;
+  if (parte === 'tonal' && !mostraTonalidade) return null;
+  if (parte === 'regiao' && !mostraRegiao) return null;
 
   return (
     <div className="field" style={{ display: 'grid', gap: 14 }}>
-      <span className="muted">{t('practice.sub')}</span>
+      {parte === 'tonal' && <span className="muted">{t('practice.sub')}</span>}
 
-      {mostraTonalidade && (
+      {parte === 'tonal' && mostraTonalidade && (
         <div style={{ display: 'grid', gap: 8 }}>
           <span className="eyebrow">{t('practice.key')}</span>
           {/* As doze SEMPRE visíveis (decisão 100). Antes elas só apareciam depois de sair de "Livre", e
@@ -77,7 +93,23 @@ export default function PracticePanel({ respeita, params, onChange, instrumentoD
         </div>
       )}
 
-      {respeita.includes('range') && !noBraco && (
+      {/**
+        * **Material só aparece com tonalidade fixa** (decidido com o Paulo em 12/11). Ele perguntou
+        * se "material cromático" e "tonalidade livre" não eram redundantes: em parte sim — sem
+        * tonalidade, `diatonico` **não restringe nada**, e o painel dizia isso num aviso. Oferecer
+        * um controle e avisar que ele não funciona é pior que não oferecer.
+        */}
+      {parte === 'tonal' && respeita.includes('material') && params.key !== null && (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <span className="eyebrow">{t('practice.material')}</span>
+          <div className="row">
+            <Chip on={params.material === 'cromatico'} onClick={() => onChange({ material: 'cromatico' })}>{t('practice.materialChromatic')}</Chip>
+            <Chip on={params.material === 'diatonico'} onClick={() => onChange({ material: 'diatonico' })}>{t('practice.materialDiatonic')}</Chip>
+          </div>
+        </div>
+      )}
+
+      {parte === 'regiao' && mostraRegiao && (
         <div style={{ display: 'grid', gap: 8 }}>
           <span className="eyebrow">{t('practice.region')}</span>
           <div className="row">
@@ -111,23 +143,6 @@ export default function PracticePanel({ respeita, params, onChange, instrumentoD
           </div>
         </div>
       )}
-
-      {/**
-        * **Material só aparece com tonalidade fixa** (decidido com o Paulo em 12/11). Ele perguntou
-        * se "material cromático" e "tonalidade livre" não eram redundantes: em parte sim — sem
-        * tonalidade, `diatonico` **não restringe nada**, e o painel dizia isso num aviso. Oferecer
-        * um controle e avisar que ele não funciona é pior que não oferecer.
-        */}
-      {respeita.includes('material') && params.key !== null && (
-        <div style={{ display: 'grid', gap: 8 }}>
-          <span className="eyebrow">{t('practice.material')}</span>
-          <div className="row">
-            <Chip on={params.material === 'cromatico'} onClick={() => onChange({ material: 'cromatico' })}>{t('practice.materialChromatic')}</Chip>
-            <Chip on={params.material === 'diatonico'} onClick={() => onChange({ material: 'diatonico' })}>{t('practice.materialDiatonic')}</Chip>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

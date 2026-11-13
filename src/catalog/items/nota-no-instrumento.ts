@@ -1,6 +1,6 @@
 import {
-  FRETS, INST, PRETAS, alturaDeTeclado, alturaDoPc, casaPermitida, fretRange, mod, pcNameUm,
-  pcOptions, pcsPermitidas, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
+  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, alturaDoPc, arr, casaPermitida, fretRange, mod, pcNameUm,
+  pcOptions, pcsDosGraus, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
 import { LEGADO } from '../publicacao';
@@ -38,6 +38,16 @@ export const notaNoInstrumento: CatalogItem = {
   respeita: ['key', 'range', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
+    /**
+     * **"Incluir teclas pretas" saiu em 13/11**, aqui também, pela mesma razão do `ouvido-tecla`:
+     * tecla preta é grau alterado, e quem escolhe graus já disse se os quer. O Paulo pediu que a
+     * seleção fosse por grau e ligada ao material — *"analise quais outros exercicios estao com esse
+     * mesmo problema e resolva"* —, e este era o outro.
+     *
+     * A seleção vale para o braço **e** para o teclado: restringir aos graus 1-3-5 é um exercício
+     * legítimo nas duas superfícies, e antes só havia o interruptor, e só no piano.
+     */
+    GRAUS_ESCOLHIDOS(ctx),
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'identificar', label: ctx.t('settings.nameIt') },
       { id: 'achar', label: ctx.t('settings.findIt') },
@@ -89,18 +99,17 @@ export const notaNoInstrumento: CatalogItem = {
      */
     { id: 'todasAsPosicoes', label: ctx.t('settings.allPositions'), type: 'toggle',
       quando: s => s.instrumento !== 'piano' && s.direcao === 'achar' && s.pergunta !== 'altura' },
-    { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.instrumento === 'piano' },
     { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', quando: s => s.instrumento === 'piano',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] },
   ],
   // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
   // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
-  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, pretas: true, oitavas: '2' },
+  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, oitavas: '2', grausEscolhidos: [] },
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {
       const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });
       if (s.direcao === 'achar') {
-        const p = pick(pcsPermitidas(ctx).filter(x => s.pretas || !PRETAS.includes(x)));
+        const p = pick(pcsDosGraus(ctx, arr(s.grausEscolhidos, [])));
         const soa = alturaDoPc(ctx, p, { lo, hi });
         return {
           prompt: ctx.t('quiz.tapNote', { note: pcNameUm(p, ctx.naming, Math.random() < 0.5) }),
@@ -120,7 +129,7 @@ export const notaNoInstrumento: CatalogItem = {
     const tuning = tuningOf(s, ctx);
     const [from, to] = fretRange(s);
     const cordas = Array.isArray(s.cordas) ? s.cordas : undefined;
-    const { str, f, m } = casaPermitida(tuning, from, to, ctx, cordas);
+    const { str, f, m } = casaPermitida(tuning, from, to, ctx, cordas, pcsDosGraus(ctx, arr(s.grausEscolhidos, [])));
     // Perguntando pela ALTURA exata, o gabarito é a altura (uma posição, ou as poucas que a dão);
     // perguntando pela nota, qualquer posição daquela classe de altura serve.
     const porAltura = s.pergunta === 'altura';

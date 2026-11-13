@@ -316,7 +316,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           </div>
         </div>
         {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} /> : null}
+          /**
+           * O painel de prática vem **antes** das configurações do item (pedido do Paulo em 13/11):
+           * *"quero que pra todos exercicios que sigam esse padrao, o botão de só a tonalidade fique
+           * acima do Só estes graus. Que fique na ordem: tonalidade, material, so estes graus."*
+           *
+           * A ordem importa porque a lista de graus **depende** do material: ver os graus mudarem
+           * ao trocar de material só ensina se o material estiver logo acima deles.
+           */
+          antes={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="tonal" /> : null}
+          depois={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="regiao" /> : null}
           onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
     );
@@ -368,7 +377,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       )}
 
       {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} /> : null}
+          /**
+           * O painel de prática vem **antes** das configurações do item (pedido do Paulo em 13/11):
+           * *"quero que pra todos exercicios que sigam esse padrao, o botão de só a tonalidade fique
+           * acima do Só estes graus. Que fique na ordem: tonalidade, material, so estes graus."*
+           *
+           * A ordem importa porque a lista de graus **depende** do material: ver os graus mudarem
+           * ao trocar de material só ensina se o material estiver logo acima deles.
+           */
+          antes={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="tonal" /> : null}
+          depois={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="regiao" /> : null}
         onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
   );
@@ -613,22 +631,6 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       {fb}
       {isText ? <div className="prompt text">{q.prompt}</div> : <div className="prompt">{q.prompt}</div>}
       {v.kind === 'staff' && <Staff clef={v.clef} fifths={v.fifths} columns={v.columns.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={v.columns.length > 4 ? 44 : 64} />}
-      {/**
-        * **Os pedaços também fora do visual de ouvido**, e isto conserta um defeito que o Paulo
-        * relatou em 12/11: *"em nota na pauta, em audiar, não tem botão pra tocar o contexto. nem
-        * pra ouvir a resposta"*.
-        *
-        * Ele estava certo, e o próprio comentário de `autoavaliacao` assumia um botão que não
-        * existia — *"o gabarito mora em `sound.partes` e é tocado pelo botão de pedaço"*. Só que o
-        * `Listen` só renderizava com `visual.kind === 'ear'`, e nas quatro direções `audiar` o
-        * visual é a pauta ou o braço: a nota está ESCRITA, e o som é o que se confere depois.
-        *
-        * A condição é `partes`, não a superfície: pedaços são opt-in do item (ver `SoundContent`),
-        * então quem os declara quer os botões, e nenhuma outra tela ganha controle que não pediu.
-        */}
-      {v.kind !== 'ear' && !!q.sound?.partes?.length && (
-        <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
-      )}
       {v.kind === 'keyboard' && (
         v.animar
           ? <Keyboard lo={v.lo} hi={v.hi} naming={naming}
@@ -654,6 +656,27 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
         </div>
       )}
       {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
+      {/**
+        * **Os pedaços também fora do visual de ouvido**, e isto conserta um defeito que o Paulo
+        * relatou em 12/11: *"em nota na pauta, em audiar, não tem botão pra tocar o contexto. nem
+        * pra ouvir a resposta"*.
+        *
+        * Ele estava certo, e o próprio comentário de `autoavaliacao` assumia um botão que não
+        * existia — *"o gabarito mora em `sound.partes` e é tocado pelo botão de pedaço"*. Só que o
+        * `Listen` só renderizava com `visual.kind === 'ear'`, e nas quatro direções `audiar` o
+        * visual é a pauta ou o braço: a nota está ESCRITA, e o som é o que se confere depois.
+        *
+        * A condição é `partes`, não a superfície: pedaços são opt-in do item (ver `SoundContent`),
+        * então quem os declara quer os botões, e nenhuma outra tela ganha controle que não pediu.
+        *
+        * ⚠️ **Depois do desenho, e não antes** — o Paulo relatou em 13/11 que eles ficavam *"meio
+        * por cima do teclado, numa posicao estranha"*. Estavam renderizando entre o enunciado e o
+        * teclado, o que empurrava o desenho para baixo e punha o controle no meio da leitura.
+        * Audiando, o gesto é **olhar primeiro, ouvir depois**: a ordem na tela é a ordem do gesto.
+        */}
+      {v.kind !== 'ear' && !!q.sound?.partes?.length && (
+        <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
+      )}
     </div>
   );
 }
@@ -786,7 +809,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; extra?: ReactNode; onReset: () => void }) {
+function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; antes?: ReactNode; depois?: ReactNode; onReset: () => void }) {
   const t = useT();
   return (
     <div className="settings">
@@ -805,6 +828,7 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
           </div>
         </div>
       ) : null}
+      {antes}
       {def.settings(ctx).filter(s => s.quando?.(values) ?? true).map(s => (
         <div className="field" key={s.id}>
           <span>{s.label}</span>
@@ -837,7 +861,7 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
           })()}
         </div>
       ))}
-      {extra}
+      {depois}
       {/* UM botão só: antes o painel de prática trazia o seu, e apareciam dois lado a lado. */}
       <div className="row"><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>
     </div>
