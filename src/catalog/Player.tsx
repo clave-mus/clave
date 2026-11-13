@@ -923,10 +923,11 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, on
             <label className="switch"><input type="checkbox" id={`set-${def.id}-${s.id}`} checked={!!values[s.id]} onChange={e => onChange({ ...values, [s.id]: e.target.checked })} />{t(values[s.id] ? 'common.yes' : 'common.no')}</label>
           )}
           {s.type === 'single' && (
-            <div className="row">{s.options!.map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
+            // `opcoesDe` manda quando existe: é o recorte que faz sentido com as outras escolhas.
+            <div className="row">{(s.opcoesDe?.(values) ?? s.options ?? []).map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
           )}
           {s.type === 'multi' && (
-            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{s.options!.map(o => {
+            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{(s.opcoesDe?.(values) ?? s.options ?? []).map(o => {
               const cur = (values[s.id] as string[]) ?? [];
               const on = cur.includes(o.id);
               return <Chip key={o.id} on={on} onClick={() => {

@@ -232,6 +232,20 @@ export interface Setting {
   label: string;
   type: 'single' | 'multi' | 'toggle' | 'range';
   options?: SettingOption[];
+  /**
+   * As opções que a TELA oferece, quando elas dependem de outras configurações.
+   *
+   * `options` é a lista completa — o que existe e o que os atalhos podem declarar, e é contra ela que
+   * os testes validam. `opcoesDe` é o recorte que faz sentido **agora**, dadas as outras escolhas.
+   *
+   * Nasceu de um defeito que o Paulo relatou três vezes seguidas, cada vez de um ângulo: a oitava da
+   * referência em `ouvido-tecla` dependia da superfície de resposta, e `options` não conhecia a
+   * superfície. Primeiro a lista saía do instrumento do PERFIL (e faltava dó2 no braço do baixo);
+   * depois virou a união de todos os alcances (e aí sobravam dó4 e dó5 no braço do baixo, que ao
+   * serem clicados não mudavam nada). As duas versões ofereciam o que não acontecia — e é isso que
+   * este campo existe para impedir.
+   */
+  opcoesDe?: (s: Record<string, SettingValue>) => SettingOption[];
   /** Para 'range': limites, passo e como mostrar o valor (ex.: v => `${v} s`). */
   min?: number;
   max?: number;

@@ -44,33 +44,62 @@ function nomeNaTonalidade(ctx: Ctx, pc: number): string {
 }
 
 /**
- * **As oitavas em que a referência de fato existe.**
+ * **As oitavas que a superfície escolhida alcança de verdade.**
  *
- * Pedido do Paulo em 13/11: *"faça com que apenas apareçam opções de oitava viáveis pra região
- * disponível. C1 por exemplo nao entra no baixo de 4 cordas."* Ele está certo, e isto é a regra da
- * casa: controle que oferece o que não acontece é promessa falsa — foi o que já tirou o "incluir
- * teclas pretas" e os atalhos repetidos.
+ * É a terceira versão desta conta, e as duas anteriores erraram por olhar o lugar errado — o Paulo
+ * relatou as duas: a lista saía do instrumento do perfil (*"no braço do baixo, não tem mais a opção
+ * do C2"*), e depois da união de todos os alcances (*"tem a opção C4 e C5... ao mudar entre elas,
+ * continuar só no dó agudo do baixo"*).
  *
- * A conta é a união de dois alcances, porque a superfície é escolha de quem usa e pode mudar sem
- * refazer esta lista: a **região** (o registro que a pessoa pediu, que vale para teclado e pauta) e
- * o **braço do instrumento do perfil** (que é físico — um baixo de quatro cordas começa no Mi1, e
- * dó1 não existe nele).
+ * O que estava errado nas duas era o mesmo: **oferecer o que aquela tela não entrega**. Num braço de
+ * baixo existem dois dós (dó2 na casa 8 da quarta corda, dó3 na casa 5 da segunda) e ponto — pedir
+ * dó4 ali não tem resposta, e cair em dó3 em silêncio é pior que não oferecer.
  *
- * Sem nenhuma viável — região curtíssima —, devolve a oitava do meio da região, para o seletor não
- * ficar vazio.
+ * Cada superfície tem o seu alcance, e é físico ou de leitura:
+ *
+ * - **braço**: as casas 0 a 12 daquela afinação. Baixo: dó2 e dó3. Violão: dó3, dó4, dó5;
+ * - **teclado**: o desenho cresce para caber na referência, então vale a faixa do item (dó2–dó5);
+ * - **pauta**: o que a clave lê sem linhas suplementares demais;
+ * - **letras e graus**: não há posição desenhada, e aí a região é o único limite.
+ */
+function oitavasDaSuperficie(ctx: Ctx, onde: string): number[] {
+  const pcTonica = mod(tonalidade(ctx)?.tonic ?? 0, 12);
+  const resolvido = onde === 'auto'
+    ? (ctx.params.instrument === 'piano' ? 'teclado' : ctx.params.instrument === 'baixo' ? 'baixo' : 'violao')
+    : onde;
+  const cabe = (m: number): boolean => {
+    if (resolvido === 'baixo' || resolvido === 'violao') {
+      const t = resolvido === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
+      return t.some(corda => m - corda >= 0 && m - corda <= 12);
+    }
+    if (resolvido === 'pauta') {
+      const f = faixaDaClave(clave(ctx));
+      return m >= f.lo && m <= f.hi;
+    }
+    if (resolvido === 'teclado') return m >= FAIXA.lo && m <= FAIXA.hi;
+    // letras e graus: a referência soa mas não é desenhada; vale a região.
+    return m >= ctx.params.range.lo && m <= ctx.params.range.hi;
+  };
+  const viaveis: number[] = [];
+  for (let oitava = 0; oitava <= 8; oitava++) if (cabe((oitava + 1) * 12 + pcTonica)) viaveis.push(oitava);
+  // Nenhuma cabe (região curtíssima com letras, por exemplo): a do meio da região, para o seletor
+  // não ficar vazio e a pessoa não ficar sem escolha nenhuma.
+  return viaveis.length ? viaveis : [Math.floor((ctx.params.range.lo + ctx.params.range.hi) / 24)];
+}
+
+/**
+ * A lista **completa** de oitavas: a união do que cada superfície oferece.
+ *
+ * É a lista contra a qual os testes e os atalhos validam, e ela é definida **a partir** da conta por
+ * superfície, não em paralelo. Duas contas em paralelo divergem — e divergiram: a pauta oferecia dó6
+ * e a completa parava em dó5, o que o teste pegou na primeira rodada.
  */
 function oitavasViaveis(ctx: Ctx): number[] {
-  const pcTonica = mod(tonalidade(ctx)?.tonic ?? 0, 12);
-  const { lo, hi } = ctx.params.range;
-  const braco = ctx.params.tuning;
-  const noBraco = braco.flatMap(t => Array.from({ length: 13 }, (_, k) => t + k));
-  const viaveis = new Set<number>();
-  for (let oitava = 0; oitava <= 8; oitava++) {
-    const m = (oitava + 1) * 12 + pcTonica;
-    if ((m >= lo && m <= hi) || noBraco.includes(m)) viaveis.add(oitava);
+  const todas = new Set<number>();
+  for (const onde of ['baixo', 'violao', 'teclado', 'pauta', 'letras', 'graus']) {
+    for (const o of oitavasDaSuperficie(ctx, onde)) todas.add(o);
   }
-  if (!viaveis.size) viaveis.add(Math.floor((lo + hi) / 24));
-  return [...viaveis].sort((a, b) => a - b);
+  return [...todas].sort((a, b) => a - b);
 }
 
 /**
@@ -208,8 +237,15 @@ export const ouvidoTecla: CatalogItem = {
      * região padrão —, a referência sobe para a oitava mais próxima que cabe, e isso é visível.
      */
     { id: 'oitavaDaReferencia', label: ctx.t('settings.referenceOctave'), type: 'single',
-      quando: s => s.referencia === true, options: [
+      quando: s => s.referencia === true,
+      // A lista completa, para os testes e os atalhos validarem contra ela...
+      options: [
         ...oitavasViaveis(ctx).map(o => ({ id: String(o), label: String(o) })),
+        { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
+      ],
+      // ...e o recorte que a TELA oferece: só as oitavas que a superfície escolhida alcança.
+      opcoesDe: valores => [
+        ...oitavasDaSuperficie(ctx, String(valores.onde ?? 'auto')).map(o => ({ id: String(o), label: String(o) })),
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
     /**
@@ -402,7 +438,14 @@ export const ouvidoTecla: CatalogItem = {
      * diz 'primeiro um Do#'"*. `pcNameUm(..., false)` escolhe sempre o sustenido; em Ré♭ maior a
      * nota se escreve Ré♭, e o motor de teoria já sabe disso — era só perguntar.
      */
-    const nomeDaReferencia = nomeNaTonalidade(ctx, mod(referencia, 12));
+    /**
+     * O rótulo da referência **leva a oitava**: `Dó2`, não `Dó`.
+     *
+     * É o que torna honesta a troca de oitava que uma superfície estreita obriga. Pedindo dó2 num
+     * braço de violão, que não o tem, a referência vira dó3 — e sem o número na marca a pessoa não
+     * teria como saber que o app mudou o que ela pediu.
+     */
+    const nomeDaReferencia = `${nomeNaTonalidade(ctx, mod(referencia, 12))}${Math.floor(referencia / 12) - 1}`;
     // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
 
     /**
