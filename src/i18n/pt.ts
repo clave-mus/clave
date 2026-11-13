@@ -95,6 +95,10 @@ const pt = {
       nome: 'Aquecimento de ouvido',
       sobre: 'Oito minutos antes de estudar: intervalo, acorde, escala e modos, dois minutos cada. Curta de propósito — pule o que não servir hoje.',
     },
+    notasAcordes: {
+      nome: 'Notas, acordes e leitura',
+      sobre: 'As notas e os acordes nos dois instrumentos, e depois a pauta: ler, correr e audiar.',
+    },
     leitura: {
       nome: 'Leitura diária',
       sobre: 'Altura e ritmo separados primeiro, juntos depois. Quinze minutos.',

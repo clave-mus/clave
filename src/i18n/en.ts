@@ -95,6 +95,10 @@ const en: Shape<typeof pt> = {
       nome: 'Ear warm-up',
       sobre: 'Eight minutes before you practise: interval, chord, scale and modes, two minutes each. Short on purpose — skip whatever does not serve you today.',
     },
+    notasAcordes: {
+      nome: 'Notes, chords and reading',
+      sobre: 'Notes and chords on both instruments, then the staff: read it, run it, audiate it.',
+    },
     leitura: {
       nome: 'Daily reading',
       sobre: 'Pitch and rhythm apart first, together after. Fifteen minutes.',

@@ -218,6 +218,42 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   },
 
   // ---------------------------------------------------------------------------------------------
+  /**
+   * A rotina que o Paulo pediu para si, em 10/11/2026: *"eu vou querer incluir isso em uma rotina
+   * minha: Reconhecer notas e acordes no violão e no piano · Leitura de partitura · Melodia na
+   * pauta (audiar uma melodia de poucas notas)"*.
+   *
+   * ⚠️ **A terceira parte não existe ainda** e é decisão dele: audiar uma melodia ESCRITA de poucas
+   * notas. Hoje `nota-na-pauta` audia **uma** nota; várias notas na pauta é outro objeto (melodia,
+   * não nota), e pela decisão 15 a pergunta é se isso é parâmetro de um item ou item novo — produto,
+   * não implementação. Enquanto ele não decide, a rotina fecha com a nota solta audiada, que é a
+   * parte verdadeira do que ele pediu.
+   *
+   * O instrumento de cada etapa é **declarado**, não `auto`: a rotina diz "no violão e no piano",
+   * então ela fixa os dois em etapas próprias em vez de seguir o perfil.
+   */
+  {
+    id: 'notas-acordes-e-leitura', nome: 'doTime.notasAcordes.nome', sobre: 'doTime.notasAcordes.sobre',
+    modo: 'guiado', publicacao: RASCUNHO,
+    etapas: [
+      { minutos: 4, porque: 'as notas no braço, o instrumento dele: o mapa antes da harmonia',
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'violao', casas: '0-12' })] },
+      { minutos: 4, porque: 'as mesmas notas no piano, onde a oitava é visível e o braço não ajuda',
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'piano', pretas: true, oitavas: '2' })] },
+      { minutos: 5, porque: 'os acordes no braço, pelas formas que se tocam de verdade',
+        instancias: [i('acorde-no-instrumento', { direcao: 'identificar', instrumento: 'violao', tipos: ['maior', 'menor', 'dim', 'aum'], casas: '0-12' })] },
+      { minutos: 5, porque: 'os mesmos acordes no piano: a mesma harmonia com outra geometria',
+        instancias: [i('acorde-no-instrumento', { direcao: 'identificar', instrumento: 'piano', tipos: ['maior', 'menor', 'dim', 'aum'] })] },
+      { minutos: 5, porque: 'ler altura na pauta, sem ritmo para dividir a atenção',
+        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], acidentes: false })] },
+      { minutos: 5, porque: 'a leitura corrida, onde altura e ritmo voltam a andar juntos',
+        instancias: [i('leitura')] },
+      // Fecha audiando: ver a nota escrita e ouvi-la por dentro antes de conferir. É a parte da
+      // melodia que já existe hoje — uma nota.
+      { minutos: 4, porque: 'audiar o que está escrito: ouvir por dentro antes de conferir',
+        instancias: [i('nota-na-pauta', { direcao: 'audiar', claves: ['sol'], acidentes: false }, EM_DO)] },
+    ],
+  },
   {
     id: 'leitura-diaria', nome: 'doTime.leitura.nome', sobre: 'doTime.leitura.sobre',
     modo: 'guiado', publicacao: RASCUNHO,

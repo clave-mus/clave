@@ -228,7 +228,17 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       if (shouldAskConfidence(series.current.length)) setConfidenceFor(series.current);
       series.current = [];
     }
-    if (!q.autoplay && soundOn) play(q);
+    /**
+     * Ao responder, o que soa.
+     *
+     * No `audiar` tocava `q.sound`, que ali é **só a tônica de contexto** — e o Paulo relatou
+     * exatamente isso em 12/11: *"a cada vez que clico em consegui ou não consegui, ele toca o
+     * mesmo dó. está confuso."* Ele estava certo: depois de dizer como foi, o que a pessoa quer
+     * ouvir é **o que ela audiou**, que é o pedaço `resposta`. Conferir é isso.
+     */
+    const resposta = q.surface.kind === 'autoavaliacao' ? q.sound?.partes?.find(p => p.id === 'resposta') : undefined;
+    if (resposta && soundOn) playParte(q, resposta);
+    else if (!q.autoplay && soundOn) play(q);
     // Uma vez só. Antes disparava a CADA resposta depois do alvo, porque a condição é `>=` e nada
     // guardava que já tinha avisado — com a correção de 10/11 (ficar na etapa depois de completá-la)
     // isso passaria a chamar `onDone` sem parar.
@@ -238,7 +248,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       return;
     }
     if (ok) window.setTimeout(next, 850);
-  }, [phase, score, def, q, soundOn, play, presentationFor, locale, settings, params, target, onDone, next]);
+  }, [phase, score, def, q, soundOn, play, playParte, presentationFor, locale, settings, params, target, onDone, next]);
 
   // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
   useEffect(() => {
@@ -517,6 +527,22 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       {fb}
       {isText ? <div className="prompt text">{q.prompt}</div> : <div className="prompt">{q.prompt}</div>}
       {v.kind === 'staff' && <Staff clef={v.clef} fifths={v.fifths} columns={v.columns.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={v.columns.length > 4 ? 44 : 64} />}
+      {/**
+        * **Os pedaços também fora do visual de ouvido**, e isto conserta um defeito que o Paulo
+        * relatou em 12/11: *"em nota na pauta, em audiar, não tem botão pra tocar o contexto. nem
+        * pra ouvir a resposta"*.
+        *
+        * Ele estava certo, e o próprio comentário de `autoavaliacao` assumia um botão que não
+        * existia — *"o gabarito mora em `sound.partes` e é tocado pelo botão de pedaço"*. Só que o
+        * `Listen` só renderizava com `visual.kind === 'ear'`, e nas quatro direções `audiar` o
+        * visual é a pauta ou o braço: a nota está ESCRITA, e o som é o que se confere depois.
+        *
+        * A condição é `partes`, não a superfície: pedaços são opt-in do item (ver `SoundContent`),
+        * então quem os declara quer os botões, e nenhuma outra tela ganha controle que não pediu.
+        */}
+      {v.kind !== 'ear' && !!q.sound?.partes?.length && (
+        <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
+      )}
       {v.kind === 'keyboard' && <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />}
       {v.kind === 'fretboard' && <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />}
       {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
@@ -524,15 +550,25 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
   );
 }
 
-function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
+function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }: {
   playing: boolean; heard: boolean; onPlay: () => void;
   partes?: ParteDoSom[]; onPlayParte?: (p: ParteDoSom) => void;
+  /**
+   * Esconde o botão grande de "ouvir tudo", deixando só os pedaços.
+   *
+   * É o caso do `audiar`: o estímulo é a nota ESCRITA, e o botão grande tocaria o contexto como se
+   * fosse a pergunta. Ali os dois pedaços — contexto e resposta — são o que existe para ouvir, e
+   * cada um é uma escolha diferente de quem estuda.
+   */
+  semBotaoGrande?: boolean;
 }) {
   const t = useT();
   return (
     <>
-      <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
-      <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      {!semBotaoGrande && <>
+        <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
+        <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      </>}
       {/* Os pedaços só aparecem onde o item os declarou — ver `SoundContent.partes`. Ficam abaixo
           do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. O rótulo
           em cima entrou com o pedido do Paulo de deixá-los mais visíveis: sem ele, botões soltos
