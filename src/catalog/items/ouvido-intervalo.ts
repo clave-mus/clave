@@ -1,6 +1,6 @@
-import { EM_DO_MAIOR, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaNaRegiao, arr, clave, pick, semiOptions, semitoneName, tonicaDeContexto } from '../helpers';
+import { EM_DO_MAIOR, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaNaRegiao, arr, clave, pick, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto } from '../helpers';
 import { LEGADO } from '../publicacao';
-import type { CatalogItem } from '../types';
+import type { CatalogItem, Surface } from '../types';
 
 /** A nota escrita de uma altura, na grafia com sustenido. */
 function notaEscrita(m: number) {
@@ -20,19 +20,51 @@ export const ouvidoIntervalo: CatalogItem = {
     /**
      * **De onde vem a pergunta** (modelo de 12/11). `escrito` é o oposto desta linha: *"ler duas
      * notas, audiar o intervalo e ouvir a resposta como conferência"*.
-     *
-     * ⚠️ **O que esta migração NÃO fez**: o §3.3 pede que, ouvindo, a resposta sejam **as notas**
-     * numa superfície (com conferência por contorno), e aqui ela continua sendo o NOME do intervalo
-     * em alternativas. Trocar isso é mexer na pergunta do item, não na direção — peça própria, e
-     * está anotada em `revisao-pendente.md`.
      */
     { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
       { id: 'som', label: ctx.t('settings.hearIt') },
       { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
     ] },
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx).map(o => ({ ...o, tier: SEMI_TIER[Number(o.id)] })) },
-    { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] }],
-  defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe' },
+    { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] },
+    /**
+     * **Onde se responde** — o §3.3 do `OR-ouvido-relativo.md`, nas palavras do Paulo: *"Resposta:
+     * indicar as notas que tocaram. Pode ser feito na pauta, no piano, no violão, no baixo ou em
+     * botões."*
+     *
+     * `alternativas` nomeia o intervalo, e **continua sendo o padrão**: ele pediu os dois modos
+     * (*"ou também como alternativas em alguns casos"*), e nomear é a habilidade que o item já
+     * treinava. `notas` é a outra — apontar quais notas soaram, com conferência por contorno.
+     */
+    { id: 'resposta', label: ctx.t('settings.answerWhere'), type: 'single', options: [
+      { id: 'alternativas', label: ctx.t('settings.answerOptions') },
+      { id: 'notas', label: ctx.t('settings.answerTheNotes') },
+    ] },
+    { id: 'superficie', label: ctx.t('settings.answerSurface'), type: 'single', quando: s => s.resposta === 'notas',
+      options: [
+        { id: 'auto', label: ctx.t('settings.myInstrument') },
+        { id: 'teclado', label: ctx.t('settings.instrumentPiano') },
+        { id: 'braco', label: ctx.t('settings.onNeck') },
+        { id: 'pauta', label: ctx.t('settings.onStaff') },
+      ] },
+    /**
+     * **Quantas notas**: duas, ou três (o máximo que ele pôs no rascunho). Com três, o que soa são
+     * dois intervalos empilhados — e aí **nomear não serve**: "qual intervalo?" tem duas respostas.
+     * Por isso três notas só existe com a resposta `notas`, e `problema()` recusa a combinação em
+     * vez de sortear o impossível (decisão 13).
+     */
+    { id: 'notas', label: ctx.t('settings.howManyNotes'), type: 'single',
+      options: [{ id: '2', label: '2' }, { id: '3', label: '3' }] },
+    /**
+     * **A nota central sempre participa** (primeiro item da lista dele para esta linha).
+     *
+     * "Central" aqui é o centro tonal — a tônica da tonalidade em vigor —, não o dó central do
+     * teclado: o exercício todo gira em torno de fixar um centro antes de perguntar, e um intervalo
+     * que parte dele é outra habilidade (ouvir o grau) que ouvir um intervalo solto no ar.
+     */
+    { id: 'comTonica', label: ctx.t('settings.fromTonic'), type: 'toggle' }],
+  defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
+    resposta: 'alternativas', superficie: 'auto', notas: '2', comTonica: false },
   /**
    * O Paulo quis os doze intervalos e dó maior como entrada, e **melódicos e harmônicos como
    * etapas distintas** na rotina dele — daí os dois primeiros atalhos serem o mesmo conteúdo em
@@ -46,12 +78,31 @@ export const ouvidoIntervalo: CatalogItem = {
     { id: 'descendo', nome: 'presets.intervalosDescendo', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'desce' }, params: EM_DO_MAIOR },
     { id: 'livre', nome: 'presets.intervalosLivre', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'misto' }, params: TONALIDADE_LIVRE },
   ],
+  // Três notas são dois intervalos empilhados, e nomear "o intervalo" deixa de ter resposta única.
+  problema: (s, ctx) => (s.notas === '3' && s.resposta !== 'notas' ? ctx.t('player.tresNotasPedemNotas') : null),
   make(s, ctx) {
     const ids = arr(s.intervalos, ['4', '7']);
-    const d = Number(pick(ids));
-    const base = alturaNaRegiao(ctx, { lo: 52, hi: 67 });
+    const quantas = s.notas === '3' ? 3 : 2;
+    /**
+     * Os intervalos saem **antes** da base, porque é o empilhamento que decide onde a base cabe:
+     * com duas terças sobre um lá4 o topo passaria do teto da janela, e aí a nota mais aguda sairia
+     * da região — a mesma armadilha que `caberNaFaixa` resolve na cadência.
+     */
+    const degraus = Array.from({ length: quantas - 1 }, () => Number(pick(ids)));
+    const alto = degraus.reduce((a, b) => a + b, 0);
+    const teto = Math.max(53, 67 - alto);
+    const base = s.comTonica
+      ? tonicaNaRegiao(ctx, { lo: 52, hi: teto })
+      : alturaNaRegiao(ctx, { lo: 52, hi: teto });
+    // As alturas, de baixo para cima: a base e cada degrau somado ao anterior.
+    const alturas = degraus.reduce((acc, passo) => [...acc, acc[acc.length - 1] + passo], [base]);
+    const d = degraus[0];
     const dir = s.direcao === 'misto' ? pick(['sobe', 'desce', 'juntas']) : s.direcao;
-    const groups = dir === 'juntas' ? [[base, base + d]] : dir === 'desce' ? [[base + d], [base]] : [[base], [base + d]];
+    /** Como as alturas soam: juntas num grupo, ou uma por grupo na ordem da direção. */
+    const ordenadas = dir === 'desce' ? [...alturas].reverse() : alturas;
+    const groups = dir === 'juntas' ? [alturas] : ordenadas.map(m => [m]);
+    /** O nome do que soou: um intervalo, ou os dois empilhados. */
+    const nome = degraus.map(x => semitoneName(x, ctx.conv)).join(' + ');
     /**
      * **Audiar**: as duas notas aparecem na pauta, o contexto toca, e o intervalo fica no botão de
      * conferência — na forma que a configuração pede (juntas ou em sequência).
@@ -64,7 +115,7 @@ export const ouvidoIntervalo: CatalogItem = {
       const tonica = tonicaDeContexto(ctx, base);
       return {
         prompt: ctx.t('quiz.audiateInterval'),
-        visual: { kind: 'staff', clef: clave(ctx), columns: dir === 'juntas' ? [[base, base + d].map(notaEscrita)] : groups.map(g => g.map(notaEscrita)) },
+        visual: { kind: 'staff', clef: clave(ctx), columns: dir === 'juntas' ? [alturas.map(notaEscrita)] : groups.map(g => g.map(notaEscrita)) },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[tonica]],
@@ -73,13 +124,36 @@ export const ouvidoIntervalo: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups },
           ],
         },
-        autoplay: false, reveal: semitoneName(d, ctx.conv),
+        autoplay: false, reveal: nome,
+      };
+    }
+
+    /**
+     * Respondendo **as notas**: a superfície acumula tantas alturas quantas soaram, e a conferência
+     * é o contorno (§4).
+     *
+     * `ordenada` segue a direção, e isso importa: num intervalo **harmônico** as notas soam juntas e
+     * a ordem dos cliques não é resposta nenhuma; num **melódico** a ordem é metade do que se ouviu
+     * — responder sol–dó onde soou dó–sol é outra coisa.
+     */
+    if (s.resposta === 'notas') {
+      const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
+      const faixa = { lo: Math.min(48, ...alturas), hi: Math.max(72, ...alturas) };
+      const superficie: Surface = onde === 'pauta'
+        ? { kind: 'staff', clef: clave(ctx), accidentals: true, quantas: alturas.length }
+        : onde === 'teclado' ? { kind: 'keyboard', ...faixa, quantas: alturas.length }
+        : { kind: 'fretboard', tuning: ctx.params.tuning, from: 0, to: 12, quantas: alturas.length };
+      return {
+        prompt: ctx.t('quiz.earIntervalNotes'), visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
+        surface: superficie,
+        expected: { kind: 'contorno', midis: dir === 'juntas' ? alturas : ordenadas, ordenada: dir !== 'juntas' },
+        sound: { groups }, autoplay: true, reveal: nome,
       };
     }
     return {
       prompt: ctx.t('quiz.earInterval'), visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
       surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: semitoneName(Number(i), ctx.conv) })) }, expected: { kind: 'option', id: String(d) },
-      sound: { groups }, autoplay: true, reveal: semitoneName(d, ctx.conv),
+      sound: { groups }, autoplay: true, reveal: nome,
     };
   },
 };

@@ -108,7 +108,7 @@ describe('a mesma instância em vários grupos', () => {
    * A lista é explícita de propósito: item novo que queira `superficie` tem de entrar aqui, e
    * entrar aqui obriga a responder "o estímulo deste item é som?".
    */
-  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido'];
+  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido', 'ouvido-intervalo'];
 
   it('a superfície só é parâmetro onde o estímulo é som', () => {
     for (const item of ITEMS) {
