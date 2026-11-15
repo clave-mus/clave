@@ -42,6 +42,36 @@ export function rotacoes(graus: readonly number[]): number[][] {
   return graus.map((_, i) => [...graus.slice(i), ...graus.slice(0, i)]);
 }
 
+/**
+ * **Todas as ordens dos graus** — e a razão de usar estas e não só as rotações é o espalhamento
+ * entre CORDAS, que foi o pedido do Paulo em 14/11: *"está condensado entre cordas, seria bom se
+ * tivesse mais espalhado"*.
+ *
+ * Eu havia recusado as permutações medindo a coisa errada (quantidade de desenhos). Medindo o que
+ * ele queria, com vão de 5 casas no violão: as rotações dão 585 desenhos com média de **2,99**
+ * cordas e só **12%** usando as quatro; as permutações dão 1290 com média **3,35** e **41%** nas
+ * quatro. No baixo, 1% → 18%.
+ *
+ * O custo é conceitual e ele o aceitou: 3-5-1-7 não é uma inversão, é um desenho — a fundamental
+ * fica no meio. O parâmetro segue chamado "graus do arpejo" por decisão dele, porque a palavra dá o
+ * referencial (graus *de que*), e a imprecisão incomoda menos que a confusão de tirá-la.
+ */
+export function permutacoes(graus: readonly number[]): number[][] {
+  if (graus.length <= 1) return [[...graus]];
+  return graus.flatMap((g, i) => permutacoes([...graus.slice(0, i), ...graus.slice(i + 1)]).map(resto => [g, ...resto]));
+}
+
+/** As combinações de `quantas` graus entre os sete do campo. */
+export function combinacoesDeGraus(quantas: number): number[][] {
+  const out: number[][] = [];
+  const rec = (inicio: number, atual: number[]) => {
+    if (atual.length === quantas) { out.push([...atual]); return; }
+    for (let g = inicio; g <= 7; g++) rec(g + 1, [...atual, g]);
+  };
+  rec(1, []);
+  return out;
+}
+
 export interface OpcoesDoMapa {
   /** A tônica do CAMPO, não do arpejo: o grau é escolhido dentro dela. */
   tonica: Note;
@@ -52,13 +82,29 @@ export interface OpcoesDoMapa {
   /** Vão máximo da mão em casas; corda solta não gasta dedo e não conta. */
   vao: number;
   maxCasa?: number;
+  /**
+   * Quantos graus sortear a cada arpejo, em vez de usar `graus` como está.
+   *
+   * É o pedido central do Paulo em 14/11: *"a ideia do exercicio nao é mentalizar os arpejos, mas
+   * sim usar os arpejos como motor pra pedir várias posições de notas"*. Medido, sortear a
+   * combinação multiplica o material por **35** — há 35 combinações de 3 ou 4 graus entre 7 —, e é
+   * de longe a maior fonte de variabilidade do item.
+   */
+  sorteados?: number;
+  /** Uma nota por corda: espalhamento máximo, ao custo de material (ver a nota em `permutacoes`). */
+  cordasDistintas?: boolean;
 }
 
 export interface ArpejoDoMapa {
   /** Grau do campo (1 a 7) sobre o qual o arpejo é construído. */
   grau: number;
-  /** Qual rotação dos graus saiu — 0 é a ordem base. */
-  rotacao: number;
+  /**
+   * Os graus desta rodada, **na ordem em que soam** — os escolhidos ou os sorteados, embaralhados.
+   *
+   * Substituiu um campo `rotacao` numérico: com as permutações entrando no lugar das rotações, "a
+   * ordem" deixou de ser um índice numa lista de quatro e passou a ser a própria sequência.
+   */
+  graus: readonly number[];
   janela: readonly [number, number];
   /** As posições na ordem de execução, subindo. */
   posicoes: Encaixe[];
@@ -71,6 +117,19 @@ export interface ArpejoDoMapa {
  * técnica: o `maxVaoCasas` do motor ignora corda solta porque ela não gasta dedo — correto para a
  * mão —, mas aqui o arpejo é uma **figura na tela**, e uma nota na casa 0 com as outras na 10ª não
  * é a "posição próxima" que o exercício mostra. O custo disso está medido na constante abaixo.
+ */
+/**
+ * **Por que não há cache aqui.**
+ *
+ * Minha primeira versão guardava as digitações de cada combinação, e o Paulo cortou o caminho:
+ * *"não tem porque gerar e guardar todas combinações e sortear uma. faça com que as combinações
+ * sejam geradas proceduralmente"*. Ele estava certo, e a medida foi dura — o processo de teste
+ * **morreu por memória**: com graus sorteados são 35 combinações × 24 ordens × 7 graus × 5 janelas,
+ * quase trinta mil listas de posições guardadas para usar uma.
+ *
+ * Agora nada se enumera: sorteia-se uma combinação, uma ordem e uma janela, e busca-se **só** essa.
+ * Se vier vazia, sorteia-se outra — amostragem com rejeição, o mesmo jeito que o resto do projeto
+ * usa. O trabalho por pergunta deixou de depender do tamanho do espaço.
  */
 export function digitacoesNaJanela(
   o: OpcoesDoMapa, grau: number, ordem: readonly number[], janela: readonly [number, number],
@@ -91,7 +150,7 @@ export function digitacoesNaJanela(
   const tons = tonsPorGraus(modo, grau, ordem);
   const todas = buscarDigitacoes(tons, {
     tipo: 'arpejo', tuning: o.tuning, maxCasa: Math.min(ate, o.maxCasa ?? 12),
-    maxVaoCasas: o.vao, contorno: 'subindo', limite: null,
+    maxVaoCasas: o.vao, contorno: 'subindo', cordasDistintas: o.cordasDistintas, limite: null,
   });
   return [...todas].filter(d => d.every(e => e.casa >= de && e.casa <= ate));
 }
@@ -99,14 +158,69 @@ export function digitacoesNaJanela(
 /** Quantos desenhos existem em cada janela — é o que deixa o item recusar o que não tem material. */
 export function materialDoMapa(o: OpcoesDoMapa): { janela: readonly [number, number]; grau: number; quantos: number }[] {
   const out: { janela: readonly [number, number]; grau: number; quantos: number }[] = [];
+  const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus]];
   for (const janela of JANELAS) {
     for (let grau = 1; grau <= 7; grau++) {
       let quantos = 0;
-      for (const ordem of rotacoes(o.graus)) quantos += digitacoesNaJanela(o, grau, ordem, janela).length;
+      for (const graus of combos) {
+        // Uma ordem por combinação: a contagem serve para saber SE há material, e permutar não
+        // cria desenho onde não havia nenhum — só reposiciona os que existem.
+        quantos += digitacoesNaJanela({ ...o, graus }, grau, [...graus], janela).length;
+      }
       out.push({ janela, grau, quantos });
     }
   }
   return out;
+}
+
+/**
+ * **O primeiro desenho que existe**, varrendo em ordem — o último recurso de quem sorteia.
+ *
+ * Custa até 1225 buscas (5 janelas × 7 graus × 35 combinações) e por isso só entra quando o sorteio
+ * já desistiu. Mas é ele que faz `temMaterial` e `sortearArpejo` **concordarem sempre**, e essa
+ * divergência foi um defeito de verdade: com `uma nota por corda` num baixo de quatro cordas
+ * existem só 41 desenhos entre as 1225 combinações possíveis, então o sorteio falhava em ~13% das
+ * perguntas enquanto a verificação dizia que havia material. O item prometia pergunta e entregava
+ * um braço vazio — e o guarda "toda pergunta tem conteúdo" pegou.
+ */
+function primeiroQueExiste(o: OpcoesDoMapa): ArpejoDoMapa | null {
+  const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus].sort((a, b) => a - b)];
+  for (const janela of JANELAS) {
+    for (let grau = 1; grau <= 7; grau++) {
+      for (const graus of combos) {
+        const achadas = digitacoesNaJanela({ ...o, graus }, grau, graus, janela);
+        if (achadas.length) return { grau, janela, graus, posicoes: achadas[0] };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * **Há desenho para esta configuração?** — o que o `problema()` do item precisa saber.
+ *
+ * Amostra primeiro, porque no caso normal a primeira tentativa acerta; só cai na varredura quando a
+ * amostra falha, e aí a resposta é exata. É a mesma ordem que `sortearArpejo` segue, de propósito:
+ * as duas respondem sobre o mesmo espaço.
+ */
+export function temMaterial(o: OpcoesDoMapa, rnd: () => number = Math.random): boolean {
+  for (let tentativa = 0; tentativa < 24; tentativa++) {
+    const graus = o.sorteados ? sortearGraus(o.sorteados, rnd) : [...o.graus];
+    const janela = JANELAS[Math.floor(rnd() * JANELAS.length)];
+    const grau = 1 + Math.floor(rnd() * 7);
+    if (digitacoesNaJanela({ ...o, graus }, grau, graus, janela).length) return true;
+  }
+  return primeiroQueExiste(o) !== null;
+}
+
+/** `quantas` graus distintos entre os sete, **já numa ordem sorteada** — a permutação sai de graça. */
+function sortearGraus(quantas: number, rnd: () => number): number[] {
+  const todos = [1, 2, 3, 4, 5, 6, 7];
+  for (let i = todos.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [todos[i], todos[j]] = [todos[j], todos[i]];
+  }
+  return todos.slice(0, quantas);
 }
 
 /**
@@ -125,29 +239,57 @@ export function sortearArpejo(
   rnd: () => number = Math.random,
   evitar: (a: ArpejoDoMapa) => boolean = () => false,
 ): ArpejoDoMapa | null {
-  const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(rnd() * xs.length)];
-  const comMaterial = JANELAS.filter(j => {
-    for (let g = 1; g <= 7; g++) for (const ordem of rotacoes(o.graus)) if (digitacoesNaJanela(o, g, ordem, j).length) return true;
-    return false;
-  });
-  if (!comMaterial.length) return null;
+  /**
+   * **Sorteia e tenta; não enumera.** Cada volta escolhe uma janela, um grau do campo, uma
+   * combinação de graus (já embaralhada, o que dá a permutação de graça) e pede as digitações **só**
+   * dessa escolha. Vazio? Outra volta.
+   *
+   * São duas passagens de tentativas: a primeira exige que o `evitar` aceite (anti-eco), e a
+   * segunda aceita qualquer coisa que exista — repetir é melhor que não ter pergunta, a mesma regra
+   * do resto do projeto.
+   */
   let ultimo: ArpejoDoMapa | null = null;
-  for (let tentativa = 0; tentativa < 12; tentativa++) {
-    const janela = pick(comMaterial);
-    const graus = [1, 2, 3, 4, 5, 6, 7].filter(g => rotacoes(o.graus).some(ordem => digitacoesNaJanela(o, g, ordem, janela).length));
-    if (!graus.length) continue;
-    const grau = pick(graus);
-    const ordens = rotacoes(o.graus).map((ordem, i) => ({ ordem, i })).filter(({ ordem }) => digitacoesNaJanela(o, grau, ordem, janela).length);
-    if (!ordens.length) continue;
-    const { ordem, i } = pick(ordens);
-    const posicoes = pick(digitacoesNaJanela(o, grau, ordem, janela));
-    const arpejo: ArpejoDoMapa = { grau, rotacao: i, janela, posicoes };
+  for (let tentativa = 0; tentativa < 60; tentativa++) {
+    const janela = JANELAS[Math.floor(rnd() * JANELAS.length)];
+    const grau = 1 + Math.floor(rnd() * 7);
+    /**
+     * **Nas últimas tentativas, a ordem crescente** — e isto alinha este sorteio com `temMaterial`.
+     *
+     * As duas funções divergiam, e o guarda de varredura pegou: `temMaterial` responde "há desenho"
+     * testando a ordem crescente, e aqui eu embaralhava sempre. Com muitos graus (sete, que a
+     * interface permite) **só** a crescente cabe numa janela — embaralhada, os saltos estouram o vão
+     * —, e a chance de sortear exatamente ela entre 5040 permutações é nula. O item então prometia
+     * pergunta e entregava vazio.
+     *
+     * Reservar o fim das tentativas para a ordem que a verificação garante fecha o buraco sem tirar
+     * o embaralhamento de onde ele funciona, que é o caso normal de três ou quatro graus.
+     */
+    const ordenado = tentativa >= 45;
+    const graus = o.sorteados
+      ? (ordenado ? sortearGraus(o.sorteados, rnd).sort((x, y) => x - y) : sortearGraus(o.sorteados, rnd))
+      : (ordenado ? [...o.graus].sort((x, y) => x - y) : embaralhar([...o.graus], rnd));
+    const achadas = digitacoesNaJanela({ ...o, graus }, grau, graus, janela);
+    if (!achadas.length) continue;
+    const arpejo: ArpejoDoMapa = {
+      grau, janela, graus, posicoes: achadas[Math.floor(rnd() * achadas.length)],
+    };
     ultimo = arpejo;
-    if (!evitar(arpejo)) return arpejo;
+    // Depois de metade das tentativas, deixa de recusar: o anti-eco é preferência, não exigência.
+    if (tentativa > 30 || !evitar(arpejo)) return arpejo;
   }
-  return ultimo;
+  // O sorteio desistiu: ou não existe nada, ou existe tão pouco que 60 tentativas não acharam.
+  return ultimo ?? primeiroQueExiste(o);
+}
+
+/** Embaralha no lugar e devolve — Fisher-Yates com o `rnd` injetado, para o teste ser determinístico. */
+function embaralhar(xs: number[], rnd: () => number): number[] {
+  for (let i = xs.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [xs[i], xs[j]] = [xs[j], xs[i]];
+  }
+  return xs;
 }
 
 /** A identidade de um arpejo para efeito de repetição: a região, o grau e as posições exatas. */
 export const assinaturaDoArpejo = (a: ArpejoDoMapa): string =>
-  `${a.janela[0]}-${a.janela[1]}|g${a.grau}|${a.posicoes.map(p => `${p.corda}.${p.casa}`).join(',')}`;
+  `${a.janela[0]}-${a.janela[1]}|g${a.grau}|${a.graus.join('')}|${a.posicoes.map(p => `${p.corda}.${p.casa}`).join(',')}`;

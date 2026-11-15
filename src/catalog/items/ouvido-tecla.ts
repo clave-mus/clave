@@ -263,7 +263,23 @@ export const ouvidoTecla: CatalogItem = {
   // `onde` fica FORA dos defaults estáticos: quem o resolve é `ondePadrao`, pelo perfil. Um valor
   // fixo aqui venceria o contexto em todo chamador que não seja o Player.
   defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [] },
-  defaultsDo: ctx => ({ onde: ondePadrao(ctx) }),
+  /**
+   * **A oitava da referência também sai do contexto**, e sem isto o chip não aparecia marcado.
+   *
+   * Varrendo o app em 14/11 achei que este parâmetro não tinha valor inicial nenhum: o `make` caía
+   * em dó4 por dentro, mas a tela não mostrava escolha — e no braço do baixo, onde só existem as
+   * oitavas 2 e 3, dó4 não é nem uma opção oferecida. É a mesma doença do "auto": um estado que a
+   * tela não sabe mostrar.
+   *
+   * O valor é a **mais grave que a superfície alcança** (decisão do Paulo em 14/11, cumprindo o
+   * pedido literal de 13/11: *"faça com que o padrão seja a 2. C2 por exemplo"* no braço do baixo).
+   * Assim a leitura é a mesma em qualquer instrumento — "a referência é a mais baixa disponível" —
+   * e o chip marcado é sempre um dos que estão na tela.
+   */
+  defaultsDo: ctx => ({
+    onde: ondePadrao(ctx),
+    oitavaDaReferencia: String(Math.min(...oitavasDaSuperficie(ctx, ondePadrao(ctx)))),
+  }),
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com

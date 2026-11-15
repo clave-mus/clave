@@ -223,6 +223,8 @@ const pt = {
     carouselHint: 'Arraste para o lado, ou toque numa lateral para trocar. A rotina do meio é a que está há mais tempo sem prática.',
   },
   presets: {
+    mapaSorteio4: 'Quatro graus sorteados',
+    mapaSorteio3: 'Três graus sorteados',
     mapaTriades: 'Tríades em dó maior',
     mapaTetrades: 'Tétrades',
     title: 'Atalhos',
@@ -830,6 +832,10 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    degreesRandom: '{n} graus sorteados',
+    degreesChosen: 'Escolher os graus',
+    whichDegrees: 'Quais graus',
+    oneNotePerString: 'Uma nota por corda',
     fieldMelodicMinor: 'Menor melódica',
     arpeggioDegrees: 'Graus do arpejo',
     fieldMajor: 'Maior',

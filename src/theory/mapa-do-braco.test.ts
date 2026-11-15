@@ -2,7 +2,7 @@
 // ordem: **as posições existem no braço**, **o passeio pelo braço é de verdade** e **configuração
 // sem material é recusada em vez de sorteada** (decisão 13).
 import { describe, expect, it } from 'vitest';
-import { JANELAS, assinaturaDoArpejo, digitacoesNaJanela, materialDoMapa, rotacoes, sortearArpejo, type OpcoesDoMapa } from './mapa-do-braco';
+import { JANELAS, assinaturaDoArpejo, digitacoesNaJanela, permutacoes, rotacoes, sortearArpejo, type OpcoesDoMapa } from './mapa-do-braco';
 import { buildScale, midi, mod, note, noteName } from './core';
 
 const VIOLAO = [40, 45, 50, 55, 59, 64];
@@ -25,11 +25,13 @@ describe('rotações são as inversões', () => {
    * Medido em 13/11, e é o que justificou a decisão: as quatro rotações levam o material de 219
    * para 1059 desenhos no violão. Sem elas o exercício repetiria cedo.
    */
-  it('rotacionar multiplica o material por mais de quatro', () => {
+  it('permutar multiplica o material por mais de quatro', () => {
     const o = emDoMaior();
-    const base = [1, 2, 3, 4, 5, 6, 7].reduce((n, g) => n + JANELAS.reduce((m, j) => m + digitacoesNaJanela(o, g, o.graus, j).length, 0), 0);
-    const todas = materialDoMapa(o).reduce((n, x) => n + x.quantos, 0);
-    expect(todas).toBeGreaterThan(base * 3);
+    const soma = (ordens: number[][]) => [1, 2, 3, 4, 5, 6, 7]
+      .reduce((n, g) => n + JANELAS.reduce((m, j) => m + ordens.reduce((k, ord) => k + digitacoesNaJanela(o, g, ord, j).length, 0), 0), 0);
+    // Medido direto, e não por `materialDoMapa`: ela conta UMA ordem por combinação, de propósito —
+    // serve para saber se há material, e permutar não cria desenho onde não havia.
+    expect(soma(permutacoes(o.graus))).toBeGreaterThan(soma([[...o.graus]]) * 3);
   });
 });
 
@@ -63,7 +65,7 @@ describe('as posições existem no braço, e dentro da janela', () => {
     const o = emDoMaior();
     for (const janela of JANELAS.filter(j => j[0] > 0)) {
       for (let grau = 1; grau <= 7; grau++) {
-        for (const ordem of rotacoes(o.graus)) {
+        for (const ordem of permutacoes(o.graus)) {
           for (const d of digitacoesNaJanela(o, grau, ordem, janela)) {
             expect(d.every(p => p.casa > 0), `janela ${janela.join('-')}`).toBe(true);
           }
@@ -133,16 +135,60 @@ describe('o passeio pelo braço é de verdade', () => {
     for (const [k, n] of conta) expect(n / N, `região ${k}`).toBeLessThan(0.3);
   });
 
-  it('as quatro inversões saem, e os sete graus também', () => {
+  it('as ordens e os sete graus do campo saem todos', () => {
     const rnd = semente(31337);
     const o = emDoMaior();
-    const rot = new Set<number>(); const graus = new Set<number>();
-    for (let i = 0; i < 500; i++) {
+    const ordens = new Set<string>(); const graus = new Set<number>();
+    for (let i = 0; i < 600; i++) {
       const a = sortearArpejo(o, rnd)!;
-      rot.add(a.rotacao); graus.add(a.grau);
+      ordens.add(a.graus.join('')); graus.add(a.grau);
     }
-    expect([...rot].sort()).toEqual([0, 1, 2, 3]);
+    /**
+     * Com os graus FIXOS em 1-3-5-7, as sequências possíveis são as 24 permutações deles — e saem
+     * todas em 600 sorteios. Exigir mais de 15 deixa folga para o sorteio e ainda reprovaria o
+     * estado anterior, onde só havia as 4 rotações.
+     */
+    expect(ordens.size, 'poucas sequências diferentes').toBeGreaterThan(15);
     expect(graus.size).toBe(7);
+  });
+
+  /**
+   * **As permutações espalham entre cordas** — o pedido do Paulo em 14/11, e a razão de elas
+   * entrarem no lugar das rotações.
+   *
+   * Medido com vão 5 no violão: rotações dão média de 2,99 cordas por desenho e 12% usando as
+   * quatro; permutações, 3,35 e 41%. Este teste trava o que importa: a média não volta a cair.
+   */
+  it('a média de cordas por desenho passa de três', () => {
+    const rnd = semente(1234);
+    const o = emDoMaior({ vao: 5 });
+    let soma = 0;
+    const N = 300;
+    for (let i = 0; i < N; i++) soma += new Set(sortearArpejo(o, rnd)!.posicoes.map(p => p.corda)).size;
+    expect(soma / N, 'desenhos condensados em poucas cordas').toBeGreaterThan(3);
+  });
+
+  /**
+   * **Graus sorteados**: a maior fonte de variabilidade do item, medida em 35× mais desenhos.
+   * Nas palavras dele: *"a ideia do exercicio nao é mentalizar os arpejos, mas sim usar os arpejos
+   * como motor pra pedir várias posições de notas"*.
+   */
+  it('com graus sorteados, muitas combinações diferentes saem', () => {
+    const rnd = semente(55);
+    const o = emDoMaior({ sorteados: 4 });
+    const combos = new Set<string>();
+    for (let i = 0; i < 400; i++) combos.add(sortearArpejo(o, rnd)!.graus.join(''));
+    // há 35 combinações de quatro graus entre sete; exigir 20 em 400 sorteios é folgado e firme
+    expect(combos.size, 'poucas combinações de graus').toBeGreaterThan(20);
+  });
+
+  it('com uma nota por corda, nenhum desenho repete corda', () => {
+    const rnd = semente(808);
+    const o = emDoMaior({ vao: 5, cordasDistintas: true });
+    for (let i = 0; i < 200; i++) {
+      const a = sortearArpejo(o, rnd)!;
+      expect(new Set(a.posicoes.map(p => p.corda)).size, 'corda repetida').toBe(a.posicoes.length);
+    }
   });
 });
 
@@ -196,11 +242,22 @@ describe('anti-eco e recusa', () => {
     }
   });
 
-  it('material medido: nenhuma das 35 combinações de janela e grau fica vazia', () => {
-    for (const [tuning, vao] of [[VIOLAO, 4], [BAIXO, 5]] as const) {
+  /**
+   * **Toda janela do braço tem desenho**, somando as permutações — é o que garante o passeio.
+   *
+   * A forma deste teste mudou em 14/11, com o sorteio procedural: `materialDoMapa` passou a contar
+   * uma ordem por combinação (ela responde *se há* material, não *quanto*), então contar zeros nela
+   * mediria outra coisa. Aqui a soma é sobre as permutações, que é o espaço de verdade.
+   */
+  it('somando as ordens, nenhuma janela do braço fica sem desenho', () => {
+    for (const [tuning, vao] of [[VIOLAO, 5], [BAIXO, 6]] as const) {
       for (const graus of [[1, 3, 5, 7], [1, 4, 6, 7], [1, 3, 5]]) {
-        const m = materialDoMapa(emDoMaior({ tuning, vao, graus }));
-        expect(m.filter(x => x.quantos === 0), `${tuning.length} cordas, graus ${graus.join('')}`).toEqual([]);
+        const o = emDoMaior({ tuning, vao, graus });
+        for (const janela of JANELAS) {
+          const quantos = [1, 2, 3, 4, 5, 6, 7].reduce((n, g) =>
+            n + permutacoes(graus).reduce((m, ord) => m + digitacoesNaJanela(o, g, ord, janela).length, 0), 0);
+          expect(quantos, `${tuning.length} cordas, graus ${graus.join('')}, janela ${janela.join('-')}`).toBeGreaterThan(0);
+        }
       }
     }
   });

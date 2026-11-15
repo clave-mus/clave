@@ -1,4 +1,4 @@
-import { assinaturaDoArpejo, materialDoMapa, sortearArpejo, type ArpejoDoMapa } from '../../theory/mapa-do-braco';
+import { assinaturaDoArpejo, sortearArpejo, temMaterial, type ArpejoDoMapa } from '../../theory/mapa-do-braco';
 import { getModo, notasDoModo } from '../../theory/digitacoes';
 import { arr, bracoDoPerfil, midi, mod, noteName, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Note, type Question } from '../helpers';
 import { RASCUNHO } from '../publicacao';
@@ -58,7 +58,23 @@ export const mapaDoBraco: CatalogItem = {
      * que a mão decora é *aquele* desenho, e trocar a receita a cada arpejo viraria leitura de
      * posições avulsas. O que muda entre arpejos é o grau do campo e a posição.
      */
-    { id: 'graus', label: ctx.t('settings.arpeggioDegrees'), type: 'multi', justify: true,
+    /**
+     * **Como os graus do arpejo são escolhidos** — e `sorteados` é o padrão desde 14/11.
+     *
+     * O Paulo: *"a ideia do exercicio nao é mentalizar os arpejos, mas sim usar os arpejos como
+     * motor pra pedir várias posições de notas"*. Com uma combinação fixa, o item tem ~584 desenhos
+     * no violão; sorteando a combinação, **20.454** — há 35 combinações de quatro graus entre sete,
+     * e é de longe a maior fonte de variabilidade do exercício.
+     *
+     * Escolher à mão continua existindo para quem quiser treinar um desenho específico.
+     */
+    { id: 'modoDosGraus', label: ctx.t('settings.arpeggioDegrees'), type: 'single', options: [
+      { id: 'sorteados3', label: ctx.t('settings.degreesRandom', { n: '3' }) },
+      { id: 'sorteados4', label: ctx.t('settings.degreesRandom', { n: '4' }) },
+      { id: 'escolhidos', label: ctx.t('settings.degreesChosen') },
+    ] },
+    { id: 'graus', label: ctx.t('settings.whichDegrees'), type: 'multi', justify: true,
+      quando: s => s.modoDosGraus === 'escolhidos',
       options: [1, 2, 3, 4, 5, 6, 7].map(g => ({ id: String(g), label: String(g) })) },
     { id: 'campo', label: ctx.t('settings.field'), type: 'single', options: [
       { id: 'maior', label: ctx.t('settings.fieldMajor') },
@@ -86,10 +102,18 @@ export const mapaDoBraco: CatalogItem = {
       { id: 'violao', label: ctx.t('settings.guitar') },
       { id: 'baixo', label: ctx.t('settings.bass') },
     ] },
+    /**
+     * **Uma nota por corda**: espalhamento máximo pelo braço, desligado por padrão.
+     *
+     * Medido com vão 5 no violão: as permutações já levam a média de 2,99 para 3,35 cordas por
+     * desenho, e isto leva a 4,00 — ao custo de material (1290 desenhos caem para 528; no baixo,
+     * 228 para 41). É a dose extra para quando se quer forçar o braço todo.
+     */
+    { id: 'cordasDistintas', label: ctx.t('settings.oneNotePerString'), type: 'toggle' },
     /** Ouvir o arpejo inteiro ao fechar. Começa **desligado**, a pedido dele. */
     { id: 'ouvirArpejo', label: ctx.t('settings.hearArpeggioAtEnd'), type: 'toggle' },
   ],
-  defaults: { graus: ['1', '3', '5', '7'], campo: 'maior', abertura: '4', ouvirArpejo: false },
+  defaults: { modoDosGraus: 'sorteados4', graus: ['1', '3', '5', '7'], campo: 'maior', cordasDistintas: false, ouvirArpejo: false },
   /**
    * **Os dois valores iniciais que dependem do perfil**, e nenhum deles é uma opção na lista.
    *
@@ -103,12 +127,16 @@ export const mapaDoBraco: CatalogItem = {
    */
   defaultsDo: ctx => ({
     instrumento: bracoDoPerfil(ctx),
-    abertura: bracoDoPerfil(ctx) === 'baixo' ? '5' : '4',
+    // 5 no violão e 6 no baixo (era 4 e 5): com graus sorteados as notas se espalham mais, e a
+    // abertura menor apertava — "está tudo muito condensado", 14/11.
+    abertura: bracoDoPerfil(ctx) === 'baixo' ? '6' : '5',
   }),
   /** Atalhos nomeados pelo conteúdo (decisão 100); o primeiro é a entrada do item. */
   presets: [
-    { id: 'triades', nome: 'presets.mapaTriades', settings: { graus: ['1', '3', '5'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
-    { id: 'tetrades', nome: 'presets.mapaTetrades', settings: { graus: ['1', '3', '5', '7'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
+    { id: 'sorteio4', nome: 'presets.mapaSorteio4', settings: { modoDosGraus: 'sorteados4', campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
+    { id: 'sorteio3', nome: 'presets.mapaSorteio3', settings: { modoDosGraus: 'sorteados3', campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
+    { id: 'triades', nome: 'presets.mapaTriades', settings: { modoDosGraus: 'escolhidos', graus: ['1', '3', '5'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
+    { id: 'tetrades', nome: 'presets.mapaTetrades', settings: { modoDosGraus: 'escolhidos', graus: ['1', '3', '5', '7'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
   ],
   /**
    * **O arpejo do fim tem de caber na pausa do Player.**
@@ -123,10 +151,11 @@ export const mapaDoBraco: CatalogItem = {
    */
   presentation: { gap: 0.18, dur: 0.9 },
   problema(s, ctx) {
+    const sorteados = quantosSorteados(s);
     const graus = arr(s.graus, []).map(Number).filter(g => g >= 1 && g <= 7);
-    if (graus.length < 2) return ctx.t('player.mapaPoucosGraus');
+    if (!sorteados && graus.length < 2) return ctx.t('player.mapaPoucosGraus');
     const o = opcoesDoMapa(s, ctx, graus);
-    return materialDoMapa(o).some(x => x.quantos > 0) ? null : ctx.t('player.mapaSemDesenho');
+    return temMaterial(o) ? null : ctx.t('player.mapaSemDesenho');
   },
   /**
    * A identidade da pergunta é a **posição**, não a resposta — ver `CatalogItem.assinatura`. Duas
@@ -138,7 +167,7 @@ export const mapaDoBraco: CatalogItem = {
     : String(q.expected.kind)),
   make(s, ctx): Question {
     const graus = arr(s.graus, ['1', '3', '5', '7']).map(Number).filter(g => g >= 1 && g <= 7).sort((a, b) => a - b);
-    const o = opcoesDoMapa(s, ctx, graus);
+    const o = opcoesDoMapa(s, ctx, graus.length >= 2 ? graus : [1, 3, 5, 7]);
     const arpejo = sortearArpejo(o);
     // `problema()` já garantiu que existe; o fallback é só para o tipo.
     const posicoes: PosicaoDoMapa[] = (arpejo?.posicoes ?? []).map(e => ({ corda: e.corda, casa: e.casa, midi: e.midi, pc: e.pc }));
@@ -227,9 +256,17 @@ function opcoesDoMapa(s: Record<string, unknown>, ctx: Ctx, graus: number[]) {
   const pcTonica = tonalidadeDoCampo(ctx);
   return {
     tonica: spellPc(pcTonica, 4),
-    familia: (String(s.campo ?? 'maior') as 'maior' | 'menor' | 'menor-harmonica'),
+    familia: (String(s.campo ?? 'maior') as 'maior' | 'menor' | 'menor-harmonica' | 'menor-melodica-jazz'),
     graus, tuning, vao: abertura, maxCasa: 12,
+    sorteados: quantosSorteados(s),
+    cordasDistintas: s.cordasDistintas === true,
   };
+}
+
+/** Quantos graus sortear, ou `undefined` quando a pessoa os escolheu à mão. */
+function quantosSorteados(s: Record<string, unknown>): number | undefined {
+  const modo = String(s.modoDosGraus ?? 'sorteados4');
+  return modo === 'sorteados3' ? 3 : modo === 'sorteados4' ? 4 : undefined;
 }
 
 export type { ArpejoDoMapa };

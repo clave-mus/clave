@@ -223,6 +223,8 @@ const en: Shape<typeof pt> = {
     carouselHint: 'Drag sideways, or tap a side card to switch. The one in the middle has gone longest without practice.',
   },
   presets: {
+    mapaSorteio4: 'Four random degrees',
+    mapaSorteio3: 'Three random degrees',
     mapaTriades: 'Triads in C major',
     mapaTetrades: 'Seventh chords',
     title: 'Shortcuts',
@@ -828,6 +830,10 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
+    degreesRandom: '{n} random degrees',
+    degreesChosen: 'Choose the degrees',
+    whichDegrees: 'Which degrees',
+    oneNotePerString: 'One note per string',
     fieldMelodicMinor: 'Melodic minor',
     arpeggioDegrees: 'Arpeggio degrees',
     fieldMajor: 'Major',
