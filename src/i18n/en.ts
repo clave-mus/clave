@@ -515,6 +515,8 @@ const en: Shape<typeof pt> = {
     sent: 'Link sent to {email}. Open the email and click to sign in.',
   },
   player: {
+    mapaGire: 'Turn your phone sideways — the whole neck does not fit upright.',
+    mapaSolfeje: 'Sing each note name before you tap. The app does not check — this is for your ear.',
     mapaProgresso: '{feitas} of {total} notes named',
     mapaPoucosGraus: 'Pick at least two degrees — one alone is not an arpeggio.',
     mapaSemDesenho: 'No hand position reaches these degrees. Widen the hand span.',
@@ -830,6 +832,7 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
+    fieldOf: '{tonica} {campo}',
     neckRegion: 'Neck region',
     neckRegionFree: 'Roam the neck',
     neckRegionFixed: 'Fix a region',

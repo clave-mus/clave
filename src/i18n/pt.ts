@@ -515,6 +515,8 @@ const pt = {
     sent: 'Link enviado para {email}. Abra o e-mail e clique para entrar.',
   },
   player: {
+    mapaGire: 'Vire o celular para o lado: o braço inteiro não cabe em pé.',
+    mapaSolfeje: 'Cante o nome de cada nota antes de tocar o botão. O app não confere — é para o seu ouvido.',
     mapaProgresso: '{feitas} de {total} notas nomeadas',
     mapaPoucosGraus: 'Escolha pelo menos dois graus: com um só não há arpejo.',
     mapaSemDesenho: 'Nenhuma posição de mão alcança estes graus. Aumente a abertura da mão.',
@@ -832,6 +834,7 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    fieldOf: '{tonica} {campo}',
     neckRegion: 'Região do braço',
     neckRegionFree: 'Passear pelo braço',
     neckRegionFixed: 'Fixar uma região',

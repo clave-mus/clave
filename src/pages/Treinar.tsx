@@ -236,8 +236,10 @@ export function ItemPage() {
   const area = moduleById[item.primaryModule];
 
   return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
+    // `pagina-do-item` existe para o modo de foco do `mapa-do-braco` poder apagar o que não é o
+    // exercício: sem isto o breadcrumb e o `gap` do grid somavam 37 px e a tela rolava.
+    <div className="pagina-do-item" style={{ display: 'grid', gap: 20 }}>
+      <div className="row voltar-ao-catalogo" style={{ justifyContent: 'space-between' }}>
         <Link to={`/catalogo#${item.primaryModule}`} className="eyebrow" style={{ textDecoration: 'none' }}>{t('train.back')}</Link>
       </div>
 

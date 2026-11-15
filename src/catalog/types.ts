@@ -182,6 +182,14 @@ export type Surface =
      * dela aparece apagado. Ver `Fretboard.foco` — nunca se recorta o braço.
      */
     foco?: readonly [number, number];
+    /**
+     * O **centro tonal em vigor**, em texto curto ("Dó maior").
+     *
+     * Vem do item porque só ele sabe: com tonalidade livre a tônica é sorteada por ele, e no modo de
+     * foco — onde a moldura do app desaparece — esta é a única pista do que está soando. Sem ela a
+     * pessoa nomearia graus de um campo que não sabe qual é.
+     */
+    rotulo?: string;
   };
 
 /** Uma posição do arpejo no braço, com a classe de altura que a responde. */

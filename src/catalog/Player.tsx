@@ -12,6 +12,7 @@ import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfide
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
 import { fromStep, keyAccidentals, mod, noteName, type Note } from '../theory/core';
 import Fretboard from '../components/music/Fretboard';
+import { useFocoDeTela, useTela } from '../components/useTela';
 import Keyboard from '../components/music/Keyboard';
 import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
@@ -395,7 +396,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
@@ -406,7 +407,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {phase === 'right' && <span className="muted">{t('player.right')}</span>}
           {phase === 'ask' && <span className="muted">{itemText(t, def.id, 'desc')}</span>}
         </div>
-        <div className="row">
+        <div className="row acoes-do-rodape">
           {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
         </div>
@@ -516,9 +517,12 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
-  onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void; naming: 'pt' | 'en';
+  onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
+  /** Só o `mapa` usa: no modo de foco a moldura do app desaparece, e o placar vem para a linha fina. */
+  placar: { correct: number; total: number; seguidas: number };
+  naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
   /** Alturas já postas, quando a superfície acumula (`Surface.quantas`). */
   juntadas: Junta[]; onJuntar: (j: Junta) => void; onDesfazer: () => void;
@@ -618,7 +622,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, n
     );
   }
   if (sf.kind === 'mapa') {
-    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} />;
+    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar} />;
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
@@ -829,12 +833,30 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }:
  * Erro não avança: a posição fica, o botão pisca vermelho, nada soa. É o que o exercício pede —
  * pular a nota errada ensinaria a desistir, e o braço inteiro está à vista para contar as casas.
  */
-function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos }: {
+function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
   sf: Extract<Surface, { kind: 'mapa' }>;
   phase: Phase; naming: 'pt' | 'en'; onAnswer: Submit;
   onTocarGrupos: (g: number[][]) => void;
+  placar: { correct: number; total: number; seguidas: number };
 }) {
   const t = useT();
+  /**
+   * **O modo de foco**, decidido com o Paulo em 13/11 e medido antes: o Player pede 951 px de altura
+   * e um celular deitado oferece 375. Braço (139) + fileira de botões (~56) + a linha fina (~32) são
+   * 227 px e cabem; o que não cabe é a moldura — cabeçalho, placar, pé e navegação somam 306.
+   *
+   * Então abaixo de 480 px de altura a moldura sai e o placar vem para a linha fina. Acima disso
+   * nada muda: no desktop o exercício é o mesmo, com a navegação no lugar. **A tela manda, não o
+   * rótulo do aparelho** — é o que evita um item que se comporta diferente "porque é celular".
+   */
+  const tela = useTela();
+  const emFoco = !tela.cabeAMoldura;
+  useFocoDeTela(emFoco);
+  /**
+   * O lembrete do solfejo abre na entrada e depois fica atrás de um ícone (decisão de 13/11): uma
+   * frase fixa ocupando linha permanente em 375 px é caro, e lembrete que está sempre lá não é lido.
+   */
+  const [lembrete, setLembrete] = useState(true);
   const [acertadas, setAcertadas] = useState(0);
   const [errado, setErrado] = useState<string | null>(null);
   /** O verde do acerto, pedido dele em 13/11: o certo também sinaliza, não só o errado. */
@@ -882,13 +904,49 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos }: {
     onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, chave);
   };
 
+  /**
+   * **Vire o celular** — e só aparece onde girar resolve: aparelho de toque, em retrato.
+   *
+   * Numa janela de desktop estreita não há o que girar, então não se pede nada: o braço desenha
+   * menor e a pessoa redimensiona se quiser. O Paulo pegou essa confusão quando eu havia amarrado as
+   * duas coisas ao mesmo número — *"isso significa que no computador vai pedir para rotacionar a
+   * tela? Porque isso soa meio difícil"*.
+   *
+   * O arpejo **não se perde**: este retorno mostra outra coisa, não remonta o componente, então ao
+   * voltar à horizontal a posição destacada é a mesma. Girar é acidente de bolso, não resposta errada.
+   */
+  if (!tela.cabeOBraco && tela.giravelAgora) {
+    return (
+      <div className="stage dark mapa mapa-gire" role="status">
+        <svg viewBox="0 0 48 48" aria-hidden="true" className="mapa-gire-icone">
+          <rect x="17" y="6" width="14" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M10,36 a14,14 0 0 0 28,0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M34,32 l4,4 l-4,4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <p>{t('player.mapaGire')}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="stage dark mapa">
+    <div className={`stage dark mapa ${emFoco ? 'em-foco' : ''}`}>
       <div className="mapa-linha">
+        {/* O campo em vigor: no foco, a única pista de que graus se trata. */}
+        {sf.rotulo && <span className="mapa-campo">{sf.rotulo}</span>}
         <span className="mapa-progresso" aria-label={t('player.mapaProgresso', { feitas: String(acertadas), total: String(sf.posicoes.length) })}>
           {sf.posicoes.map((_, i) => <i key={i} className={i < acertadas ? 'feito' : i === acertadas ? 'agora' : ''} />)}
         </span>
+        {/* O placar só entra no foco, onde a moldura do app (que o mostra) desapareceu. */}
+        {emFoco && <span className="mapa-placar">{placar.correct}/{placar.total}</span>}
+        <button type="button" className="mapa-dica" onClick={() => setLembrete(v => !v)}
+          aria-label={t('player.mapaSolfeje')} aria-expanded={lembrete}>♪</button>
       </div>
+      {lembrete && (
+        <p className="mapa-lembrete" role="note">
+          {t('player.mapaSolfeje')}
+          <button type="button" className="btn small ghost" onClick={() => setLembrete(false)}>{t('common.continue')}</button>
+        </p>
+      )}
       <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} naming={naming} foco={sf.foco} />
       <div className="answers mapa-nomes">
         {sf.opcoes.map(o => {

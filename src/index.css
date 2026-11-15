@@ -792,3 +792,88 @@ select.sel {
  */
 .answers.mapa-nomes { grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .answers.mapa-nomes .ans { min-height: 44px; padding: 8px 4px; font-size: 15px; }
+
+/* ---------------- o modo de foco do mapa do braço (14/11/2026) ---------------- */
+/*
+ * Abaixo de 480 px de altura a moldura do app sai de cena: medido, o Player pede 951 px e um celular
+ * deitado oferece 375. Quem liga a classe é `useFocoDeTela`, e ela sai ao deixar a tela.
+ *
+ * A classe mora na RAIZ e não no corpo do exercício porque o que precisa desaparecer — cabeçalho e
+ * navegação — é irmão dele, não filho.
+ */
+.foco-exercicio .topbar,
+.foco-exercicio .tabbar { display: none; }
+.foco-exercicio .page { padding: 0; }
+.foco-exercicio .review-banner { display: none; }
+/*
+ * **Dentro do player, só o palco** — e a regra é por exclusão de propósito.
+ *
+ * Caçar classe por classe (`player-head`, `player-foot`, o botão de salvar na rotina…) é frágil: o
+ * próximo pedaço que alguém acrescentar ao rodapé aparece de novo no foco, e ninguém vai lembrar
+ * desta regra. Medido antes de inverter: o banner de revisão sozinho empurrava o exercício 90 px e
+ * os botões de nome caíam fora da tela.
+ *
+ * **Configurar é tarefa de tela em pé.** Em retrato a moldura continua inteira (812 px de altura
+ * passa do limite de 480), então o aviso de girar convive com o botão de personalizar: em pé se
+ * configura, deitado se pratica. Nada fica inacessível.
+ */
+.foco-exercicio .player > *:not(.stage) { display: none; }
+/* O caminho de volta e o `gap` da página: 37 px que faziam a tela rolar por um fio. */
+.foco-exercicio .voltar-ao-catalogo { display: none; }
+.foco-exercicio .pagina-do-item { gap: 0; }
+/*
+ * **Altura real, não `100vh`.** No Safari de iPhone, `100vh` conta a barra de endereço que se
+ * esconde ao rolar, então um `100vh` deitado é maior que a tela e corta o rodapé — é o erro clássico
+ * de celular, e o Paulo só vai poder testar depois do deploy. `100dvh` mede o que está visível
+ * agora; o `100vh` antes dele é a reserva para navegador que não conheça `dvh`.
+ */
+.foco-exercicio .shell { min-height: 100vh; min-height: 100dvh; }
+.foco-exercicio .stage.mapa.em-foco {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /*
+   * `stretch`, e não o `center` que `.stage` herda: com `center` o grid dos sete botões encolhia
+   * para o tamanho do conteúdo — medido, 223 px numa tela de 667 — e a fileira ficava apertada no
+   * meio em vez de usar a largura que o braço usa.
+   */
+  align-items: stretch;
+  gap: 8px;
+  /*
+   * **As áreas seguras do aparelho.** Deitado, o notch e o indicador de gestos ficam nas LATERAIS, e
+   * sem isto a primeira casa do braço desaparece atrás do recorte da tela. É invisível no navegador
+   * de mesa e óbvio num iPhone — então entra por padrão, não depois do relato.
+   */
+  padding: 6px max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  border-radius: 0;
+}
+/* A linha fina: campo, progresso, placar e o ícone do lembrete. */
+.mapa-linha { gap: 10px; }
+.mapa-campo { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
+.mapa-placar { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mapa-dica {
+  background: none; border: 0; color: var(--muted); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 4px 6px; border-radius: 6px;
+}
+.mapa-dica:hover { color: var(--ink); }
+.mapa-lembrete {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin: 0; font-size: 13px; color: var(--muted); text-align: center;
+}
+/* Vire o celular. */
+.mapa-gire {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; min-height: 60vh; text-align: center; padding: 24px;
+}
+.mapa-gire-icone { width: 56px; height: 56px; color: var(--mu); }
+.mapa-gire p { margin: 0; max-width: 22ch; color: var(--cream); }
+/*
+ * Deitado, o braço ganha a largura e os botões encolhem a altura — são sete numa fileira, e 40 px
+ * continua sendo alvo confortável para o polegar.
+ */
+@media (max-height: 480px) {
+  .answers.mapa-nomes .ans { min-height: 40px; padding: 6px 2px; font-size: 14px; }
+  .mapa-lembrete { font-size: 12px; }
+}

@@ -217,6 +217,8 @@ export const mapaDoBraco: CatalogItem = {
         to: Math.max(12, o.janelaFixa?.[1] ?? 12),
         foco: o.janelaFixa,
         posicoes, opcoes, ouvirNoFim: s.ouvirArpejo === true,
+        // O campo em vigor, para a tela de foco poder dizer de que graus se trata.
+        rotulo: ctx.t('settings.fieldOf', { campo: nomeDoCampo(ctx, s), tonica: noteName(o.tonica, ctx.naming) }),
       },
       /**
        * O gabarito é o **contorno ordenado** das alturas: as classes saem das posições, e a ordem é
@@ -326,6 +328,15 @@ export function avisoDaAbertura(s: Record<string, unknown>): { pedida: number; e
   const pedida = Number(s.abertura ?? 4) || 4;
   const emVigor = Math.min(pedida, janela[1] - janela[0]);
   return emVigor < pedida ? { pedida, emVigor } : null;
+}
+
+/** O nome do campo para a tela: "maior", "menor harmônica"... */
+function nomeDoCampo(ctx: Ctx, s: Record<string, unknown>): string {
+  const id = String(s.campo ?? 'maior');
+  return ctx.t(id === 'menor' ? 'settings.fieldMinor'
+    : id === 'menor-harmonica' ? 'settings.fieldHarmonicMinor'
+    : id === 'menor-melodica-jazz' ? 'settings.fieldMelodicMinor'
+    : 'settings.fieldMajor').toLowerCase();
 }
 
 /** Quantos graus sortear, ou `undefined` quando a pessoa os escolheu à mão. */

@@ -115,12 +115,28 @@ gerador está testado; o que falta é o **seu ouvido e a sua mão**.
 |---|---|
 | `mapa-do-braco` | **se o exercício ensina o braço.** Quatro graus sorteados do campo aparecem numa posição de mão, uma posição destacada por vez, e você clica no nome. Confira: (1) se a **abertura padrão** — 5 casas no violão, 6 no baixo — dá desenhos que a mão alcança, principalmente na 1ª posição, onde os trastes são largos; (2) se o **passeio** pelo braço parece aleatório de fato (medido: as cinco regiões saem com frequência parecida, nenhuma acima de 30%); (3) se **sortear os graus** é melhor que escolhê-los, como você supôs — e se três graus não seria a entrada melhor que quatro; (4) se as **ordens embaralhadas** espalham o suficiente entre cordas (medido: média de 3,35 cordas por desenho, contra 2,99 só com inversões), ou se vale ligar *uma nota por corda* por padrão; (5) se **não anunciar os graus** na tela deixa o exercício difícil demais na entrada; (6) se **fixar uma região** (por exemplo 7 a 15, atravessando a 12ª casa) com o resto do braço apagado dá o contexto que você queria, ou se o véu incomoda |
 
-**Três pendências conhecidas, decididas com você e não resolvidas:** o vão da mão é um número só
+**O modo de foco existe desde 14/11**, e é a parte que você só vai conseguir testar no celular. O
+que ele faz: abaixo de 480 px de altura, a moldura do app sai (cabeçalho, placar, pé, navegação,
+banner de revisão e o caminho de volta), e o placar vem para a linha fina sobre o braço. Em pé, com
+o aparelho girável e menos de 560 px de largura, aparece "vire o celular" — **com o botão de
+personalizar disponível**, porque configurar é tarefa de tela em pé e praticar é de tela deitada.
+
+Conferido no navegador em quatro tamanhos (celular em pé e deitado, tablet em pé, desktop), e o que
+não dá para conferir ali está em teste: as regras de tela são função pura com seis casos, incluindo
+*janela de desktop estreita*, onde **não** se pede para girar nada. No celular deitado: 375 px de
+conteúdo em 375 px de tela, sem rolagem, braço de 645 px e botões de 87 px.
+
+Três cuidados que só falhariam no aparelho de verdade, e por isso entraram antes do relato:
+`100dvh` em vez de `100vh` (no Safari de iPhone o `vh` conta a barra de endereço e corta o rodapé),
+`env(safe-area-inset-*)` nas laterais (deitado, o notch fica na borda e comeria a primeira casa) e
+três fontes de evento para a rotação, porque o `orientationchange` do iOS dispara **antes** de as
+medidas mudarem.
+
+**Duas pendências conhecidas, decididas com você e não resolvidas:** o vão da mão é um número só
 para todo o braço, embora 6 casas seja impraticável na 1ª posição e confortável na 9ª (resolver isso
-é regra nova no motor, que melhoraria também o `acorde-no-instrumento`); o **modo de foco** em
-celular na horizontal — sem cabeçalho nem navegação — ainda não existe, então hoje o item só é
-confortável em tela larga; e o **motor sem arpejo** (sortear notas próximas quaisquer, sem lógica
-harmônica) ficou guardado em 14/11, para o caso de os graus sorteados ainda parecerem pouco.
+é regra nova no motor, que melhoraria também o `acorde-no-instrumento`); e o **motor sem arpejo**
+(sortear notas próximas quaisquer, sem lógica harmônica) ficou guardado em 14/11, para o caso de os
+graus sorteados ainda parecerem pouco.
 
 ### Mãos livres (`F6-1`)
 
