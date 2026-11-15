@@ -177,6 +177,11 @@ export type Surface =
      * acusa configuração que a tela oferece e ninguém lê.
      */
     ouvirNoFim?: boolean;
+    /**
+     * A região em jogo, quando ela é fixa: o braço inteiro continua desenhado e o que está fora
+     * dela aparece apagado. Ver `Fretboard.foco` — nunca se recorta o braço.
+     */
+    foco?: readonly [number, number];
   };
 
 /** Uma posição do arpejo no braço, com a classe de altura que a responde. */
@@ -288,6 +293,17 @@ export interface Setting {
    * este campo existe para impedir.
    */
   opcoesDe?: (s: Record<string, SettingValue>) => SettingOption[];
+  /**
+   * **Um aviso sob o controle**, quando o valor escolhido não é o que vale.
+   *
+   * Nasceu em 14/11 com a região do braço do `mapa-do-braco`: fixando as casas 5 a 10, uma abertura
+   * de mão de 6 casas não cabe, e o item a aperta. Apertar em silêncio é o defeito que o Paulo já
+   * apontou duas vezes ("mudei pra 2 e ele não muda"), então o chip continua mostrando a escolha
+   * dele e esta linha diz o que está em vigor.
+   *
+   * Devolve a mensagem já traduzida, ou `null` quando não há o que avisar.
+   */
+  aviso?: (s: Record<string, SettingValue>) => string | null;
   /** Para 'range': limites, passo e como mostrar o valor (ex.: v => `${v} s`). */
   min?: number;
   max?: number;

@@ -93,6 +93,16 @@ export interface OpcoesDoMapa {
   sorteados?: number;
   /** Uma nota por corda: espalhamento máximo, ao custo de material (ver a nota em `permutacoes`). */
   cordasDistintas?: boolean;
+  /**
+   * **Uma região fixa do braço**, em vez do passeio pelas cinco janelas (Paulo, 14/11: *"quero
+   * poder fixar uma região do braço, por exemplo entre as casas 5 e 10, ou até mesmo casas cruzando
+   * a casa 12, como entre 7 e 15"*).
+   *
+   * Com ela o exercício deixa de passear e vira treino de **uma** posição — e é por isso que o
+   * passeio desaparece de propósito quando ela está presente. Pode atravessar a 12ª casa: para o
+   * motor, casa é só um número somado à corda, e os inlays da 15 e da 17 já existem no desenho.
+   */
+  janelaFixa?: readonly [number, number];
 }
 
 export interface ArpejoDoMapa {
@@ -164,7 +174,7 @@ export function digitacoesNaJanela(
 export function materialDoMapa(o: OpcoesDoMapa): { janela: readonly [number, number]; grau: number; quantos: number }[] {
   const out: { janela: readonly [number, number]; grau: number; quantos: number }[] = [];
   const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus]];
-  for (const janela of JANELAS) {
+  for (const janela of janelasDe(o)) {
     for (let grau = 1; grau <= 7; grau++) {
       let quantos = 0;
       for (const graus of combos) {
@@ -194,7 +204,7 @@ function primeiroQueExiste(o: OpcoesDoMapa): ArpejoDoMapa | null {
   const quantas = o.sorteados ?? o.graus.length;
   if (o.cordasDistintas && quantas > o.tuning.length) return null;
   const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus]];
-  for (const janela of JANELAS) {
+  for (const janela of janelasDe(o)) {
     for (let grau = 1; grau <= 7; grau++) {
       for (const graus of combos) {
         /**
@@ -247,12 +257,17 @@ function primeiroQueExiste(o: OpcoesDoMapa): ArpejoDoMapa | null {
 export function temMaterial(o: OpcoesDoMapa, rnd: () => number = Math.random): boolean {
   for (let tentativa = 0; tentativa < 24; tentativa++) {
     const graus = o.sorteados ? sortearGraus(o.sorteados, rnd) : [...o.graus];
-    const janela = JANELAS[Math.floor(rnd() * JANELAS.length)];
+    const js = janelasDe(o);
+    const janela = js[Math.floor(rnd() * js.length)];
     const grau = 1 + Math.floor(rnd() * 7);
     if (digitacoesNaJanela({ ...o, graus }, grau, graus, janela).length) return true;
   }
   return primeiroQueExiste(o) !== null;
 }
+
+/** As janelas em jogo: a região fixa quando há uma, as cinco do passeio quando não. */
+const janelasDe = (o: OpcoesDoMapa): readonly (readonly [number, number])[] =>
+  (o.janelaFixa ? [o.janelaFixa] : JANELAS);
 
 /** `quantas` graus distintos entre os sete, **já numa ordem sorteada** — a permutação sai de graça. */
 function sortearGraus(quantas: number, rnd: () => number): number[] {
@@ -291,7 +306,8 @@ export function sortearArpejo(
    */
   let ultimo: ArpejoDoMapa | null = null;
   for (let tentativa = 0; tentativa < 60; tentativa++) {
-    const janela = JANELAS[Math.floor(rnd() * JANELAS.length)];
+    const js = janelasDe(o);
+    const janela = js[Math.floor(rnd() * js.length)];
     const grau = 1 + Math.floor(rnd() * 7);
     /**
      * **Nas últimas tentativas, a ordem crescente** — e isto alinha este sorteio com `temMaterial`.

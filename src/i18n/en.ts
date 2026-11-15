@@ -830,6 +830,12 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
+    neckRegion: 'Neck region',
+    neckRegionFree: 'Roam the neck',
+    neckRegionFixed: 'Fix a region',
+    fromFret: 'From fret',
+    toFret: 'To fret',
+    mapaAberturaApertada: 'Hand span reduced to {n} frets — the width of the region.',
     degreesRandom: '{n} random degrees',
     degreesChosen: 'Choose the degrees',
     whichDegrees: 'Which degrees',

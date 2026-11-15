@@ -832,6 +832,12 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    neckRegion: 'Região do braço',
+    neckRegionFree: 'Passear pelo braço',
+    neckRegionFixed: 'Fixar uma região',
+    fromFret: 'Da casa',
+    toFret: 'Até a casa',
+    mapaAberturaApertada: 'Abertura reduzida a {n} casas: é a largura da região.',
     degreesRandom: '{n} graus sorteados',
     degreesChosen: 'Escolher os graus',
     whichDegrees: 'Quais graus',

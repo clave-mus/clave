@@ -889,7 +889,7 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos }: {
           {sf.posicoes.map((_, i) => <i key={i} className={i < acertadas ? 'feito' : i === acertadas ? 'agora' : ''} />)}
         </span>
       </div>
-      <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} naming={naming} />
+      <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} naming={naming} foco={sf.foco} />
       <div className="answers mapa-nomes">
         {sf.opcoes.map(o => {
           const pc = Number(o.id);
@@ -1038,6 +1038,8 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, on
       {def.settings(ctx).filter(s => s.quando?.(values) ?? true).map(s => (
         <div className="field" key={s.id}>
           <span>{s.label}</span>
+          {/* O aviso de que o valor escolhido não é o que vale — ver `Setting.aviso`. */}
+          {s.aviso?.(values) && <span className="hint">{s.aviso(values)}</span>}
           {s.type === 'toggle' && (
             <label className="switch"><input type="checkbox" id={`set-${def.id}-${s.id}`} checked={!!values[s.id]} onChange={e => onChange({ ...values, [s.id]: e.target.checked })} />{t(values[s.id] ? 'common.yes' : 'common.no')}</label>
           )}

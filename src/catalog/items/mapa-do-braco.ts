@@ -41,6 +41,15 @@ import { randInt } from '../../theory/core';
  * ele mais serve (o Paulo estuda no ônibus), e o CLAUDE.md proíbe exercício que dependa de captar
  * som. Quem não pode cantar perde o lembrete, não o exercício.
  */
+/**
+ * Até a **17ª casa**, e não a 20ª ou a 24ª (decisão dele em 14/11).
+ *
+ * Os inlays de 15 e 17 já existiam no desenho do braço, e medi material de sobra lá — 633 a 948
+ * desenhos no violão, 100 a 180 no baixo. Acima da 17 o desenho passa de 1100 px de largura e, num
+ * violão de corpo solto, as casas finais quase não se tocam: oferecer seria oferecer o que não se usa.
+ */
+const CASA_MAX = 17;
+
 export const mapaDoBraco: CatalogItem = {
   id: 'mapa-do-braco',
   objetos: ['notas'], tarefas: ['nomear'],
@@ -91,12 +100,29 @@ export const mapaDoBraco: CatalogItem = {
      * baixo faz a mão cobrir *menos* casas, não mais — eu errei isso na conversa e o registro fica
      * aqui para não se repetir.)
      */
-    { id: 'abertura', label: ctx.t('settings.handSpan'), type: 'single', options: [
+    { id: 'abertura', label: ctx.t('settings.handSpan'), type: 'single',
+      // A região fixa pode apertar a mão — e aí a tela diz qual abertura está em vigor.
+      aviso: s => { const a = avisoDaAbertura(s); return a ? ctx.t('settings.mapaAberturaApertada', { n: String(a.emVigor) }) : null; },
+      options: [
       { id: '3', label: ctx.t('settings.handSpanFrets', { n: '3' }) },
       { id: '4', label: ctx.t('settings.handSpanFrets', { n: '4' }) },
       { id: '5', label: ctx.t('settings.handSpanFrets', { n: '5' }) },
       { id: '6', label: ctx.t('settings.handSpanFrets', { n: '6' }) },
     ] },
+    /**
+     * **A região do braço**: passear pelas cinco janelas, ou fixar uma posição.
+     *
+     * Pedido dele em 14/11. Fixando, o exercício deixa de passear de propósito — vira o treino de
+     * *uma* posição, que é outra coisa e é o ponto do parâmetro.
+     */
+    { id: 'regiao', label: ctx.t('settings.neckRegion'), type: 'single', options: [
+      { id: 'livre', label: ctx.t('settings.neckRegionFree') },
+      { id: 'fixa', label: ctx.t('settings.neckRegionFixed') },
+    ] },
+    { id: 'casaDe', label: ctx.t('settings.fromFret'), type: 'range', min: 0, max: CASA_MAX - 2, step: 1,
+      quando: s => s.regiao === 'fixa', format: v => String(v) },
+    { id: 'casaAte', label: ctx.t('settings.toFret'), type: 'range', min: 2, max: CASA_MAX, step: 1,
+      quando: s => s.regiao === 'fixa', format: v => String(v) },
     // Sem piano: o exercício é a geometria de um braço. `auto` cai no violão para perfil de teclado.
     { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', options: [
       { id: 'violao', label: ctx.t('settings.guitar') },
@@ -113,7 +139,7 @@ export const mapaDoBraco: CatalogItem = {
     /** Ouvir o arpejo inteiro ao fechar. Começa **desligado**, a pedido dele. */
     { id: 'ouvirArpejo', label: ctx.t('settings.hearArpeggioAtEnd'), type: 'toggle' },
   ],
-  defaults: { modoDosGraus: 'sorteados4', graus: ['1', '3', '5', '7'], campo: 'maior', cordasDistintas: false, ouvirArpejo: false },
+  defaults: { modoDosGraus: 'sorteados4', graus: ['1', '3', '5', '7'], campo: 'maior', regiao: 'livre', casaDe: 5, casaAte: 10, cordasDistintas: false, ouvirArpejo: false },
   /**
    * **Os dois valores iniciais que dependem do perfil**, e nenhum deles é uma opção na lista.
    *
@@ -184,7 +210,14 @@ export const mapaDoBraco: CatalogItem = {
     return {
       prompt: ctx.t('quiz.mapaPrompt'),
       visual: { kind: 'text', text: '' },
-      surface: { kind: 'mapa', tuning, from: 0, to: 12, posicoes, opcoes, ouvirNoFim: s.ouvirArpejo === true },
+      surface: {
+        kind: 'mapa', tuning, from: 0,
+        // O braço vai até o FIM da região, não até a 12: é isso que deixa uma região 7–15 existir
+        // sem recortar o braço, que era a preocupação dele.
+        to: Math.max(12, o.janelaFixa?.[1] ?? 12),
+        foco: o.janelaFixa,
+        posicoes, opcoes, ouvirNoFim: s.ouvirArpejo === true,
+      },
       /**
        * O gabarito é o **contorno ordenado** das alturas: as classes saem das posições, e a ordem é
        * a do arpejo. O Player confere posição por posição conforme a pessoa responde.
@@ -242,7 +275,17 @@ function opcoesDoMapa(s: Record<string, unknown>, ctx: Ctx, graus: number[]) {
    * morta na tela é o que ele existe para pegar. Ele me pegou na primeira rodada.
    */
   const tuning = tuningOf({ instrumento: s.instrumento === 'piano' ? 'violao' : s.instrumento } as never, ctx);
-  const abertura = Number(s.abertura ?? 4) || 4;
+  const janelaFixa = regiaoFixa(s);
+  /**
+   * **A abertura não passa da região**, e o Paulo avisou disto ao pedir a região: *"tem que cuidar
+   * aí com a abertura da mão — ela não pode ser maior que a região estipulada"*.
+   *
+   * Aperta em silêncio no motor e **com aviso na tela** (ver `avisoDaAbertura`): o chip continua
+   * mostrando a escolha dela, e uma linha diz a abertura em vigor quando ela foi reduzida. Mudança
+   * silenciosa de parâmetro é o defeito que ele já me apontou duas vezes.
+   */
+  const pedida = Number(s.abertura ?? 4) || 4;
+  const abertura = janelaFixa ? Math.min(pedida, janelaFixa[1] - janelaFixa[0]) : pedida;
   /**
    * **A tônica do motor e a dos botões são a mesma, e isto era um defeito.**
    *
@@ -257,10 +300,32 @@ function opcoesDoMapa(s: Record<string, unknown>, ctx: Ctx, graus: number[]) {
   return {
     tonica: spellPc(pcTonica, 4),
     familia: (String(s.campo ?? 'maior') as 'maior' | 'menor' | 'menor-harmonica' | 'menor-melodica-jazz'),
-    graus, tuning, vao: abertura, maxCasa: 12,
+    graus, tuning, vao: abertura,
+    maxCasa: janelaFixa ? janelaFixa[1] : 12,
+    janelaFixa,
     sorteados: quantosSorteados(s),
     cordasDistintas: s.cordasDistintas === true,
   };
+}
+
+/** A região fixa, normalizada: as pontas em ordem e com pelo menos duas casas de largura. */
+function regiaoFixa(s: Record<string, unknown>): readonly [number, number] | undefined {
+  if (s.regiao !== 'fixa') return undefined;
+  const a = Math.max(0, Math.min(CASA_MAX, Math.round(Number(s.casaDe ?? 5))));
+  const b = Math.max(0, Math.min(CASA_MAX, Math.round(Number(s.casaAte ?? 10))));
+  const de = Math.min(a, b);
+  const ate = Math.max(a, b);
+  // Duas casas é o mínimo para haver desenho; as pontas invertidas se ordenam em vez de recusar.
+  return [de, Math.max(ate, de + 2)];
+}
+
+/** A abertura em vigor e a pedida — a tela avisa quando a região apertou a mão. */
+export function avisoDaAbertura(s: Record<string, unknown>): { pedida: number; emVigor: number } | null {
+  const janela = regiaoFixa(s);
+  if (!janela) return null;
+  const pedida = Number(s.abertura ?? 4) || 4;
+  const emVigor = Math.min(pedida, janela[1] - janela[0]);
+  return emVigor < pedida ? { pedida, emVigor } : null;
 }
 
 /** Quantos graus sortear, ou `undefined` quando a pessoa os escolheu à mão. */

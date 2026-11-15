@@ -257,6 +257,40 @@ describe('a verificação e o sorteio olham o mesmo espaço', () => {
   });
 });
 
+describe('a região fixa do braço', () => {
+  /**
+   * Pedido do Paulo em 14/11: *"quero poder fixar uma região do braço (por exemplo, entre as casas
+   * 5 e 10) ou até mesmo casas cruzando a casa 12 — como entre 7 e 15"*.
+   */
+  it('todas as posições caem dentro da região pedida, inclusive atravessando a 12ª casa', () => {
+    const rnd = semente(2026);
+    for (const janelaFixa of [[0, 4], [5, 10], [7, 15], [12, 17], [10, 14]] as const) {
+      for (const [tuning, vao] of [[VIOLAO, 4], [BAIXO, 5]] as const) {
+        const o = emDoMaior({ tuning, vao, sorteados: 4, janelaFixa, maxCasa: janelaFixa[1] });
+        for (let i = 0; i < 60; i++) {
+          const a = sortearArpejo(o, rnd);
+          expect(a, `${tuning.length} cordas, casas ${janelaFixa.join('-')}`).not.toBeNull();
+          for (const p of a!.posicoes) {
+            expect(p.casa, `casa ${p.casa} fora de ${janelaFixa.join('-')}`).toBeGreaterThanOrEqual(janelaFixa[0]);
+            expect(p.casa).toBeLessThanOrEqual(janelaFixa[1]);
+          }
+          // Fixando a região, o passeio deixa de existir de propósito: é sempre ela.
+          expect(a!.janela).toEqual(janelaFixa);
+        }
+      }
+    }
+  });
+
+  /** Acima da 12ª casa a conta é a mesma: casa é um número somado à corda. */
+  it('a região alta soa as alturas certas', () => {
+    const rnd = semente(99);
+    const o = emDoMaior({ tuning: VIOLAO, vao: 5, sorteados: 4, janelaFixa: [12, 17], maxCasa: 17 });
+    for (let i = 0; i < 40; i++) {
+      for (const p of sortearArpejo(o, rnd)!.posicoes) expect(p.midi).toBe(VIOLAO[p.corda] + p.casa);
+    }
+  });
+});
+
 describe('anti-eco e recusa', () => {
   it('a mesma posição não sai duas vezes seguidas quando há alternativa', () => {
     const rnd = semente(5150);
