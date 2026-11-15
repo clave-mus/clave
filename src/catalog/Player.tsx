@@ -88,7 +88,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   settingsRef.current = settings;
   // `sortearSemEco` é o anti-repetição genérico (OR §3.1): o item gera uniforme, e perguntas cuja
   // RESPOSTA saiu há pouco são regeradas — nunca a mesma duas vezes seguidas, sem o item saber.
-  const make = useCallback(() => sortearSemEco(def.id, () => def.make(settingsRef.current, ctx)), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
+  const make = useCallback(() => sortearSemEco(def.id, () => def.make(settingsRef.current, ctx), Math.random, def.assinatura), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
   // Por que estas configurações não geram pergunta (decisão 13). Havendo motivo, `make` NUNCA é
   // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
   const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
@@ -199,6 +199,21 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     if (parte.id === 'resposta') setOuviuAResposta(true);
     pararTudo();
     const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
+    setPlaying(true);
+    atTime(now() + dur, () => setPlaying(false));
+  }, [presentationFor]);
+
+  /**
+   * Toca grupos de notas **sem contar como escuta** — para o `mapa-do-braco`, que soa a cada acerto.
+   *
+   * Separado de `play` e de `playParte` de propósito: ali o som é o enunciado (e entra no tempo de
+   * resposta) ou um pedaço de gabarito; aqui é a recompensa de um acerto, e somá-la à medida de
+   * escuta falsearia tudo — este exercício não é de ouvido.
+   */
+  const tocarGrupos = useCallback((question: Question, groups: number[][]) => {
+    if (!getState().sound || !groups.length) return;
+    pararTudo();
+    const dur = playContent({ groups, instrument: question.sound?.instrument }, presentationFor(question));
     setPlaying(true);
     atTime(now() + dur, () => setPlaying(false));
   }, [presentationFor]);
@@ -366,7 +381,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
@@ -487,9 +502,9 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
-  onPlayParte: (p: ParteDoSom) => void; naming: 'pt' | 'en';
+  onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void; naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
   /** Alturas já postas, quando a superfície acumula (`Surface.quantas`). */
   juntadas: Junta[]; onJuntar: (j: Junta) => void; onDesfazer: () => void;
@@ -587,6 +602,9 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
         {acoes}
       </div>
     );
+  }
+  if (sf.kind === 'mapa') {
+    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} />;
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
@@ -786,6 +804,93 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }:
 }
 
 // ---------------- área de resposta ----------------
+/**
+ * **O mapa do braço**: as posições do arpejo no braço, uma destacada, e os nomes em botões.
+ *
+ * O estado de dentro do arpejo vive aqui, e não no Player, e a razão é o fluxo que o Paulo
+ * desenhou: **uma pergunta é o arpejo inteiro**, mas a pessoa responde nota por nota e recebe
+ * resposta imediata a cada uma. O Player só precisa saber do fim — se tudo foi nomeado, a pergunta
+ * é um acerto. Pôr `acertadas` no Player faria o placar contar quatro perguntas onde há uma.
+ *
+ * Erro não avança: a posição fica, o botão pisca vermelho, nada soa. É o que o exercício pede —
+ * pular a nota errada ensinaria a desistir, e o braço inteiro está à vista para contar as casas.
+ */
+function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos }: {
+  sf: Extract<Surface, { kind: 'mapa' }>;
+  phase: Phase; naming: 'pt' | 'en'; onAnswer: Submit;
+  onTocarGrupos: (g: number[][]) => void;
+}) {
+  const t = useT();
+  const [acertadas, setAcertadas] = useState(0);
+  const [errado, setErrado] = useState<string | null>(null);
+  /** O verde do acerto, pedido dele em 13/11: o certo também sinaliza, não só o errado. */
+  const [acertou, setAcertou] = useState<string | null>(null);
+  const alvo = sf.posicoes[acertadas];
+  // Pergunta nova (outras posições) reinicia o progresso; a chave é a lista de posições.
+  const chave = sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(',');
+  const chaveAnterior = useRef(chave);
+  if (chaveAnterior.current !== chave) {
+    chaveAnterior.current = chave;
+    setAcertadas(0);
+    setErrado(null);
+    setAcertou(null);
+  }
+
+  /**
+   * Três intensidades da mesma cor, e elas são o exercício: **já foi** (apagado), **é esta agora**
+   * (acento) e **ainda não** (fraco). As acertadas não desaparecem — a pedido de que, ao fechar, se
+   * veja o desenho inteiro que acabou de ser nomeado.
+   */
+  const marks = sf.posicoes.map((p, i) => ({
+    s: p.corda, f: p.casa,
+    color: i < acertadas ? 'var(--accent-quiet)' : i === acertadas ? 'var(--mu)' : 'var(--line)',
+  }));
+
+  const responder = (pc: number, id: string) => {
+    if (phase !== 'ask' || !alvo) return;
+    if (mod(pc, 12) !== mod(alvo.pc, 12)) {
+      setErrado(id);
+      // o vermelho é um instante: o erro informa e sai, sem interromper o fluxo
+      window.setTimeout(() => setErrado(null), 420);
+      return;
+    }
+    setErrado(null);
+    setAcertou(id);
+    window.setTimeout(() => setAcertou(null), 420);
+    const n = acertadas + 1;
+    setAcertadas(n);
+    if (n < sf.posicoes.length) {
+      onTocarGrupos([[alvo.midi]]);
+      return;
+    }
+    // fechou: toca a última (ou o arpejo inteiro, se o item pediu) e entrega a pergunta ao Player
+    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.midi]) : [[alvo.midi]]);
+    onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, chave);
+  };
+
+  return (
+    <div className="stage dark mapa">
+      <div className="mapa-linha">
+        <span className="mapa-progresso" aria-label={t('player.mapaProgresso', { feitas: String(acertadas), total: String(sf.posicoes.length) })}>
+          {sf.posicoes.map((_, i) => <i key={i} className={i < acertadas ? 'feito' : i === acertadas ? 'agora' : ''} />)}
+        </span>
+      </div>
+      <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} naming={naming} />
+      <div className="answers mapa-nomes">
+        {sf.opcoes.map(o => {
+          const pc = Number(o.id);
+          return (
+            <button key={o.id} type="button" className={`ans compact ${errado === o.id ? 'wrong' : acertou === o.id ? 'right' : ''}`}
+              disabled={phase !== 'ask'} onClick={() => responder(pc, o.id)}>
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, ouviuAResposta }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
   /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */

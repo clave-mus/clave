@@ -105,6 +105,10 @@ const REGIAO_NAO_SE_APLICA = [
   // Acordes desenhados no braço: são posições reais — um Dó aberto é onde ele é.
   // O braço: a região é a FAIXA DE CASAS, não MIDI (ver o comentário acima).
   'acorde-no-instrumento',
+  // Mesma razão, e o item **declara**: `mapa-do-braco` respeita `key` e não `range`. As posições
+  // dele são casas de uma posição de mão sorteada; a região em MIDI não tem o que dizer ali, e no
+  // violão a corda mais grave (40) fica abaixo de qualquer região centrada no meio do braço.
+  'mapa-do-braco',
 ];
 
 /**

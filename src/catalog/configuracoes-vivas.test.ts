@@ -123,11 +123,33 @@ describe('presets', () => {
   });
 
   // Nome que classifica a pessoa ou afirma ordem é o que a decisão 9 proíbe.
+  it('a exceção dos graus não abre a porta para nível', () => {
+    const semGraus = (s: string) => s.replace(/\b[1-7](?:-[1-7])+\b/g, '');
+    const proibido = /n[íi]vel|level|\b[1-9]\b|b[áa]sico|avan[çc]ado|iniciante|f[áa]cil|dif[íi]cil|easy|hard|beginner|advanced/i;
+    // o que a exceção deixa passar
+    expect(semGraus('1-4-6-7')).not.toMatch(proibido);
+    expect(semGraus('Tríades 1-3-5')).not.toMatch(proibido);
+    // o que ela NÃO deixa passar
+    for (const nome of ['Nível 1', 'Fase 2', 'Level 3', 'Básico', 'Avançado', 'Etapa 1', '1']) {
+      expect(semGraus(nome), nome).toMatch(proibido);
+    }
+  });
+
   it('nenhum nome de preset é um número ou um nível', () => {
+    /**
+     * **Uma sequência de graus não é um nível**, e esta exceção é estreita de propósito.
+     *
+     * O guarda proíbe dígito solto para barrar "nível 1" e "fase 2". Em 13/11 ele acusou
+     * `1-4-6-7`, que é o conteúdo do atalho — os graus do arpejo — e justamente o que a decisão
+     * 100 **manda** usar: atalho nomeado pelo conteúdo. Então os dígitos ligados por hífen (dois ou
+     * mais) saem da conta antes do teste, e tudo o mais continua valendo: `1` sozinho reprova,
+     * `nível 1` reprova, `fase 2` reprova. A contraprova dos três está logo abaixo.
+     */
+    const semGraus = (s: string) => s.replace(/\b[1-7](?:-[1-7])+\b/g, '');
     for (const ex of comPresets) {
       for (const p of ex.presets ?? []) {
         for (const locale of ['pt', 'en'] as const) {
-          expect(translate(locale, p.nome), `${ex.id}/${p.id}`).not.toMatch(/n[íi]vel|level|\b[1-9]\b|b[áa]sico|avan[çc]ado|iniciante|f[áa]cil|dif[íi]cil|easy|hard|beginner|advanced/i);
+          expect(semGraus(translate(locale, p.nome)), `${ex.id}/${p.id}`).not.toMatch(/n[íi]vel|level|\b[1-9]\b|b[áa]sico|avan[çc]ado|iniciante|f[áa]cil|dif[íi]cil|easy|hard|beginner|advanced/i);
         }
       }
     }

@@ -40,6 +40,7 @@ describe('catálogo de exercícios', () => {
           const acumula = 'quantas' in sf && (sf.quantas ?? 1) > 1;
           if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(acumula ? ['contorno'] : ['pitch', 'pitchClass']).toContain(e.kind);
           if (sf.kind === 'sequence') expect(e.kind).toBe('option');
+          if (sf.kind === 'mapa') expect(e.kind).toBe('contorno');
           if (sf.kind === 'autoavaliacao') expect(e.kind).toBe('option');
           if (sf.kind === 'letters' || sf.kind === 'staff') expect(acumula ? ['contorno'] : ['spelled', 'pitchClass']).toContain(e.kind);
           if (e.kind === 'spelled') expect(Math.abs(e.acc)).toBeLessThanOrEqual(1);
@@ -66,6 +67,19 @@ describe('catálogo de exercícios', () => {
           const pedacos = e.kind === 'option' ? e.id.split(sep) : [];
           const paleta = new Set(sf.options.map(o => o.id));
           can = pedacos.length === sf.comprimento && pedacos.every(x => paleta.has(x));
+        }
+        /**
+         * `mapa`: a resposta são os **nomes**, um por posição, e dá para dar a certa se, e só se,
+         * **cada posição tiver um botão com a classe de altura dela**. É a invariante que o Paulo
+         * pediu ao desenhar o item ("os botões cobrem exatamente as notas que aparecem"): sem ela,
+         * uma posição com nota de fora do campo não teria botão nenhum e a pergunta ficaria sem
+         * resposta possível — a tela desenharia tudo e nenhum toque acertaria.
+         */
+        else if (sf.kind === 'mapa') {
+          const paleta = new Set(sf.opcoes.map(o => Number(o.id)));
+          can = sf.posicoes.length > 0
+            && sf.posicoes.every(p => paleta.has(((p.pc % 12) + 12) % 12))
+            && e.kind === 'contorno' && e.midis.length === sf.posicoes.length;
         }
         /**
          * Acumulando, a resposta é o conjunto de alturas: dá para dar a certa se, e só se, **toda**

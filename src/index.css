@@ -770,3 +770,25 @@ select.sel {
 .seq-conferido { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-family: var(--display); font-weight: 680; font-size: 21px; }
 .seq-conferido .right { color: var(--ok-strong); }
 .seq-conferido .wrong { color: var(--err-strong); text-decoration: line-through; }
+
+/* ---------------- mapa do braço (13/11/2026) ---------------- */
+/*
+ * O item foi desenhado para celular na horizontal, com o braço inteiro à vista o tempo todo. Aqui
+ * está só o que a superfície precisa; o **modo de foco** (esconder cabeçalho e navegação quando a
+ * altura aperta) é passo próprio e ainda não existe.
+ */
+.stage.mapa { gap: 10px; }
+/* A linha fina de cima: é onde cabem progresso e, no modo de foco, tonalidade e placar. */
+.mapa-linha { display: flex; align-items: center; justify-content: center; min-height: 14px; }
+/* Progresso em pontos: diz "2 de 4" sem gastar uma linha de texto. */
+.mapa-progresso { display: inline-flex; gap: 6px; }
+.mapa-progresso i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); display: block; }
+.mapa-progresso i.feito { background: var(--accent-quiet); }
+.mapa-progresso i.agora { background: var(--mu); transform: scale(1.25); }
+/*
+ * Os nomes numa fileira só, e **sem quebrar**: a posição de cada botão tem de ser a mesma em toda a
+ * rodada, porque a mão aprende onde ele fica e isso deixa de custar atenção. Com `auto-fill` eles
+ * se reorganizariam conforme a largura, que é o contrário do que o exercício quer.
+ */
+.answers.mapa-nomes { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.answers.mapa-nomes .ans { min-height: 44px; padding: 8px 4px; font-size: 15px; }

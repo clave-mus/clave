@@ -106,6 +106,21 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Mapa do braço (`13/11/2026`)
+
+Item novo, desenhado com você numa conversa inteira (36 perguntas) e construído na mesma noite. O
+gerador está testado; o que falta é o **seu ouvido e a sua mão**.
+
+| Id | O que só você confere |
+|---|---|
+| `mapa-do-braco` | **se o exercício ensina o braço.** Arpejos do campo aparecem numa posição de mão, uma posição destacada por vez, e você clica no nome. Confira: (1) se a **abertura padrão** — 4 casas no violão, 5 no baixo — dá desenhos que a mão alcança de verdade, principalmente na 1ª posição, onde os trastes são largos; (2) se o **passeio** pelo braço parece aleatório de fato (medido: as cinco regiões saem com frequência parecida, nenhuma acima de 30%); (3) se as **inversões** — o arpejo começando pela terça, pela quinta — rendem ou confundem; (4) se tocar **só a nota acertada** basta, ou se o arpejo inteiro no fim (parâmetro, desligado) deveria ser o padrão; (5) se **não anunciar os graus** na tela deixa o exercício difícil demais na entrada |
+
+**Duas pendências conhecidas, decididas com você e não resolvidas:** o vão da mão é um número só
+para todo o braço, embora 6 casas seja impraticável na 1ª posição e confortável na 9ª (resolver isso
+é regra nova no motor, que melhoraria também o `acorde-no-instrumento`); e o **modo de foco** em
+celular na horizontal — sem cabeçalho nem navegação — ainda não existe, então hoje o item só é
+confortável em tela larga.
+
 ### Mãos livres (`F6-1`)
 
 | Id | O que só você confere |

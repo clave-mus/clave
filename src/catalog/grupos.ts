@@ -55,8 +55,8 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
   },
   {
     id: 'o-braco', nome: 'grupos.o-braco',
-    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'intervalo-no-instrumento' },
-      { itemId: 'acorde-no-instrumento' }],
+    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'mapa-do-braco' },
+      { itemId: 'intervalo-no-instrumento' }, { itemId: 'acorde-no-instrumento' }],
   },
   {
     id: 'o-teclado', nome: 'grupos.o-teclado',

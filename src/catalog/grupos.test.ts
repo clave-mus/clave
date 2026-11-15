@@ -183,6 +183,8 @@ describe('o que está em rascunho nos grupos', () => {
     expect([...new Set(rascunhos)].sort()).toEqual([
       // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
       'acento-deslocado', 'deslocamento-ritmico',
+      // "O braço", desde 13/11: desenhado com ele numa conversa inteira, e espera a revisão musical
+      'mapa-do-braco',
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
       'melodia-de-ouvido',
       'ouvido-campo',

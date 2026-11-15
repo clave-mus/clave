@@ -51,6 +51,13 @@ function answer(q: Question, wantCorrect: boolean): Response {
     const erradas = certas.map((_, i) => certas.map((m, k) => (k === i ? m + 12 : m)));
     return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
   }
+  // `mapa`: a pessoa nomeia posição por posição, e o que chega ao Player no fim são as alturas das
+  // posições, na ordem. A errada troca a primeira por outra classe qualquer.
+  if (sf.kind === 'mapa') {
+    const certas = sf.posicoes.map(p => p.midi);
+    const erradas = [[...certas.slice(1), certas[0] + 1], certas.map(m => m + 1)];
+    return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
+  }
   const candidates: Response[] =
     sf.kind === 'choices' ? sf.options.map(optionResponse)
       : sf.kind === 'keyboard' ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.lo + k }) as Response)

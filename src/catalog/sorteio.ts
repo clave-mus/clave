@@ -56,15 +56,25 @@ export function esquecerSorteio(chave?: string) {
  * Gera uma pergunta evitando resposta recém-saída. `rnd` é injetável para o teste ser
  * determinístico, como em `amostrasDeCorda`.
  */
-export function sortearSemEco(chave: string, gerar: () => Question, rnd: () => number = Math.random): Question {
+export function sortearSemEco(
+  chave: string, gerar: () => Question, rnd: () => number = Math.random,
+  /**
+   * Como identificar a pergunta, quando a resposta não a identifica (`CatalogItem.assinatura`).
+   *
+   * Entrou em 13/11 com o `mapa-do-braco`: ali a resposta são as notas do arpejo e a **pergunta**
+   * são as posições no braço, então duas perguntas bem diferentes têm a mesma assinatura de
+   * resposta. Sem isto o item precisaria da sua própria memória, duplicando este mecanismo.
+   */
+  assinar: (q: Question) => string = q => assinatura(q.expected),
+): Question {
   const recentes = HISTORICO.get(chave) ?? [];
   let q = gerar();
   for (let t = 1; t < TENTATIVAS; t++) {
-    const pos = recentes.lastIndexOf(assinatura(q.expected));
+    const pos = recentes.lastIndexOf(assinar(q));
     const idade = pos === -1 ? null : recentes.length - pos;
     if (rnd() < pesoDaIdade(idade)) break;
     q = gerar();
   }
-  HISTORICO.set(chave, [...recentes, assinatura(q.expected)].slice(-MEMORIA));
+  HISTORICO.set(chave, [...recentes, assinar(q)].slice(-MEMORIA));
   return q;
 }

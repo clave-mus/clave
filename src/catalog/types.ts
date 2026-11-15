@@ -144,7 +144,49 @@ export type Surface =
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
    * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
    */
-  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio };
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio }
+  /**
+   * **O mapa do braço**: as posições de um arpejo desenhadas no braço, uma destacada por vez, e a
+   * resposta é o NOME da nota destacada — clica-se no botão, não no braço.
+   *
+   * É a oitava superfície, e a única peça nova do item (13/11/2026). Nenhuma das sete servia:
+   * `choices` responde uma vez e aqui são N em sequência; `sequence` responde N vezes mas não tem
+   * braço nem avanço sincronizado com o desenho; `fretboard` é para clicar **no** braço, e aqui o
+   * braço é o enunciado. O que falta é o cruzamento: braço mostrando posições em três estados
+   * (ainda não · é esta · já foi) e botões de nome fixos ao lado.
+   *
+   * O braço é desenhado pelo mesmo `Fretboard` dos outros (decisão 17 — uma implementação de braço
+   * virtual), e os botões usam o estilo de `choices`. A superfície nova é a coreografia, não o
+   * desenho.
+   */
+  | {
+    kind: 'mapa';
+    tuning: readonly number[];
+    from: number;
+    to: number;
+    /** As posições na ordem de execução; a de índice `respondidas` é a destacada. */
+    posicoes: readonly PosicaoDoMapa[];
+    /** Os botões de nome, fixos durante toda a rodada — as notas do campo em vigor. */
+    opcoes: ChoiceOption[];
+    /**
+     * Tocar o arpejo inteiro ao completar, em vez de só a última nota.
+     *
+     * Declarado aqui e não deduzido: o Player tentava inferir isto do som (`groups.length ===
+     * posicoes.length`), condição que é **sempre verdadeira** — então o parâmetro que o Paulo pediu
+     * desligado por padrão tocava sempre, e quem o pegou foi o guarda `configuracoes-vivas`, que
+     * acusa configuração que a tela oferece e ninguém lê.
+     */
+    ouvirNoFim?: boolean;
+  };
+
+/** Uma posição do arpejo no braço, com a classe de altura que a responde. */
+export interface PosicaoDoMapa {
+  corda: number;
+  casa: number;
+  midi: number;
+  /** A classe de altura: é ela que o botão de nome responde, em qualquer oitava. */
+  pc: number;
+}
 
 /**
  * **Notas de APOIO numa superfície de resposta**: dadas, não perguntadas.
@@ -419,6 +461,20 @@ export interface CatalogItem extends Classification {
   semTela?: true;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
   make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
+  /**
+   * **A identidade da pergunta para o anti-eco**, quando ela é mais rica que a resposta.
+   *
+   * O `sortearSemEco` do Player evita repetir a RESPOSTA, e isso serve para quase tudo: duas
+   * perguntas com a mesma resposta são a mesma pergunta. O `mapa-do-braco` é a exceção — ali duas
+   * perguntas podem pedir as mesmas quatro notas (a resposta) **em posições completamente
+   * diferentes do braço** (a pergunta), e é justamente variar a posição que o exercício existe para
+   * fazer. O Paulo foi explícito: *"cuidado pra nao fazer com que o arpejo de do maior comece
+   * sempre só na 3a casa da corda lá"*.
+   *
+   * Sem isto, a alternativa era o item manter memória própria e duplicar o mecanismo de rejeição
+   * por idade que já existe. Um campo opcional reusa o mecanismo inteiro.
+   */
+  assinatura?: (q: Question) => string;
   /**
    * Por que estas configurações não geram pergunta. Devolve a mensagem já traduzida, ou `null`.
    *
