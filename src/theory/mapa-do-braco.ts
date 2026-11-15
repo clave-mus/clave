@@ -133,6 +133,11 @@ export interface ArpejoDoMapa {
  */
 export function digitacoesNaJanela(
   o: OpcoesDoMapa, grau: number, ordem: readonly number[], janela: readonly [number, number],
+  /**
+   * `'qualquer'` responde **existe alguma atribuição destas notas a estas posições?**, sem olhar a
+   * direção — e é com ele que a verificação deixa de precisar das permutações. Ver `primeiroQueExiste`.
+   */
+  contorno: 'subindo' | 'qualquer' = 'subindo',
 ): Encaixe[][] {
   const [de, ate] = janela;
   /**
@@ -150,7 +155,7 @@ export function digitacoesNaJanela(
   const tons = tonsPorGraus(modo, grau, ordem);
   const todas = buscarDigitacoes(tons, {
     tipo: 'arpejo', tuning: o.tuning, maxCasa: Math.min(ate, o.maxCasa ?? 12),
-    maxVaoCasas: o.vao, contorno: 'subindo', cordasDistintas: o.cordasDistintas, limite: null,
+    maxVaoCasas: o.vao, contorno, cordasDistintas: o.cordasDistintas, limite: null,
   });
   return [...todas].filter(d => d.every(e => e.casa >= de && e.casa <= ate));
 }
@@ -184,12 +189,48 @@ export function materialDoMapa(o: OpcoesDoMapa): { janela: readonly [number, num
  * um braço vazio — e o guarda "toda pergunta tem conteúdo" pegou.
  */
 function primeiroQueExiste(o: OpcoesDoMapa): ArpejoDoMapa | null {
-  const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus].sort((a, b) => a - b)];
+  // Uma nota por corda com mais notas que cordas é impossível por contagem — recusar aqui custa
+  // nada e evita a varredura inteira. É o caso que media 3,9 s: sete graus num baixo de quatro.
+  const quantas = o.sorteados ?? o.graus.length;
+  if (o.cordasDistintas && quantas > o.tuning.length) return null;
+  const combos = o.sorteados ? combinacoesDeGraus(o.sorteados) : [[...o.graus]];
   for (const janela of JANELAS) {
     for (let grau = 1; grau <= 7; grau++) {
       for (const graus of combos) {
-        const achadas = digitacoesNaJanela({ ...o, graus }, grau, graus, janela);
-        if (achadas.length) return { grau, janela, graus, posicoes: achadas[0] };
+        /**
+         * **As permutações entram aqui, e não entravam** — era o defeito que o Paulo relatou em
+         * 14/11: *"Com estas configurações não há pergunta possível está aparecendo... curiosamente,
+         * nao aparece toda vez"*.
+         *
+         * Eu testava só a ordem crescente, e medindo o caso dele (Mi♭, menor melódica, baixo, 6
+         * casas, uma nota por corda) **a ordem crescente tem zero desenhos e as permutações têm
+         * 1176**: com uma nota por corda, os saltos de grau em ordem crescente não casam com os
+         * cinco semitons entre cordas dentro da janela. Então a verificação dizia "não existe" sobre
+         * um espaço de mil e cem desenhos, e quem decidia era o sorteio da amostragem — `temMaterial`
+         * devolvia `true` em 12 de 20 chamadas. Daí o "às vezes".
+         *
+         * É o espelho exato do defeito de ontem: lá o sorteio não achava o que a verificação
+         * prometia; aqui a verificação não achava o que o sorteio achava. A lição é a mesma — **as
+         * duas têm de olhar o mesmo espaço**, e agora olham.
+         */
+        /**
+         * **Uma busca em vez de 5040.**
+         *
+         * Varrer as permutações consertava a resposta e criava um problema pior: com sete graus são
+         * 5040 ordens × 35 combinações × 5 janelas, e medi **3,9 segundos** por chamada no caso
+         * impossível. O `problema()` roda no render, então isso congelaria a tela.
+         *
+         * O atalho é uma equivalência: existe permutação cujas notas **sobem** se e só se existe
+         * uma atribuição de posições **sem restrição de direção** — dado um conjunto de posições,
+         * ordená-lo por altura produz a sequência ascendente, e a ordem dos graus correspondente é
+         * exatamente a permutação que funciona. Então basta perguntar com `contorno: 'qualquer'` e
+         * ordenar o que vier.
+         */
+        const achadas = digitacoesNaJanela({ ...o, graus }, grau, graus, janela, 'qualquer');
+        if (achadas.length) {
+          const posicoes = [...achadas[0]].sort((x, y) => x.midi - y.midi);
+          return { grau, janela, graus: posicoes.map(p => Number(p.role)), posicoes };
+        }
       }
     }
   }

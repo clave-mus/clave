@@ -2,7 +2,7 @@
 // ordem: **as posições existem no braço**, **o passeio pelo braço é de verdade** e **configuração
 // sem material é recusada em vez de sorteada** (decisão 13).
 import { describe, expect, it } from 'vitest';
-import { JANELAS, assinaturaDoArpejo, digitacoesNaJanela, permutacoes, rotacoes, sortearArpejo, type OpcoesDoMapa } from './mapa-do-braco';
+import { JANELAS, assinaturaDoArpejo, digitacoesNaJanela, permutacoes, rotacoes, sortearArpejo, temMaterial, type OpcoesDoMapa } from './mapa-do-braco';
 import { buildScale, midi, mod, note, noteName } from './core';
 
 const VIOLAO = [40, 45, 50, 55, 59, 64];
@@ -189,6 +189,71 @@ describe('o passeio pelo braço é de verdade', () => {
       const a = sortearArpejo(o, rnd)!;
       expect(new Set(a.posicoes.map(p => p.corda)).size, 'corda repetida').toBe(a.posicoes.length);
     }
+  });
+});
+
+describe('a verificação e o sorteio olham o mesmo espaço', () => {
+  /**
+   * **A equivalência que faz a verificação ser rápida, medida por força bruta.**
+   *
+   * `primeiroQueExiste` pergunta com `contorno: 'qualquer'` e ordena o resultado, em vez de testar
+   * as permutações uma a uma — o que levava 3,9 s por chamada com sete graus. O argumento é que
+   * *existe permutação cujas notas sobem* se e só se *existe atribuição sem restrição de direção*,
+   * porque ordenar um conjunto de posições por altura produz a sequência ascendente.
+   *
+   * Argumento meu não vale sem medida: este teste compara as duas respostas em todas as
+   * combinações, janelas e graus de um espaço pequeno. Se a equivalência for falsa em algum caso,
+   * ele acusa.
+   */
+  it('existe ordem que sobe, se e só se existe atribuição sem direção', () => {
+    for (const [tuning, vao, distintas] of [[BAIXO, 5, false], [BAIXO, 6, true], [VIOLAO, 4, false]] as const) {
+      for (const graus of [[1, 3, 5], [1, 4, 6], [2, 4, 7]]) {
+        const o = emDoMaior({ tuning, vao, graus, cordasDistintas: distintas });
+        for (const janela of JANELAS) {
+          for (let grau = 1; grau <= 7; grau++) {
+            const porPermutacao = permutacoes(graus).some(ord => digitacoesNaJanela(o, grau, ord, janela).length > 0);
+            const semDirecao = digitacoesNaJanela(o, grau, graus, janela, 'qualquer').length > 0;
+            expect(semDirecao, `${tuning.length} cordas, vão ${vao}, graus ${graus.join('')}, janela ${janela.join('-')}, grau ${grau}`).toBe(porPermutacao);
+          }
+        }
+      }
+    }
+  });
+
+  /**
+   * **O caso que o Paulo relatou em 14/11**, e ele é a razão deste describe existir.
+   *
+   * Ele: *"Com estas configurações não há pergunta possível está aparecendo para Mib maior com 4
+   * graus, menor melódica, 6 casas, baixo, uma nota por corda... curiosamente, nao aparece toda
+   * vez. pra Fa# tambem aparece as vezes."*
+   *
+   * Medido: naquela configuração a ordem crescente tem **zero** desenhos e as permutações têm
+   * **1176** — e a verificação só olhava a crescente. Quem decidia era a amostragem, que acertava
+   * em 12 de 20 chamadas: daí o "às vezes". O espelho do defeito do dia anterior, onde o sorteio
+   * não achava o que a verificação prometia.
+   */
+  it('o caso relatado: a recusa nunca é intermitente', () => {
+    for (const tonica of [note(2, -1, 4), note(3, 1, 4)]) {
+      for (const familia of ['menor-melodica-jazz', 'maior'] as const) {
+        const o = emDoMaior({ tonica, familia, tuning: BAIXO, vao: 6, sorteados: 4, cordasDistintas: true });
+        // Vinte chamadas com o sorteio de verdade: a resposta tem de ser a MESMA todas as vezes.
+        const respostas = new Set(Array.from({ length: 20 }, () => temMaterial(o)));
+        expect(respostas.size, `${noteName(tonica, 'pt')} ${familia}: resposta intermitente`).toBe(1);
+        // E, havendo material, o sorteio entrega pergunta — não só a verificação promete.
+        if ([...respostas][0]) {
+          for (let i = 0; i < 20; i++) expect(sortearArpejo(o), `${noteName(tonica, 'pt')} ${familia}`).not.toBeNull();
+        }
+      }
+    }
+  });
+
+  /** A recusa por contagem é instantânea: mais notas que cordas, com uma por corda, não existe. */
+  it('mais notas que cordas, uma por corda: recusa sem varrer', () => {
+    const o = emDoMaior({ tuning: BAIXO, vao: 6, graus: [1, 2, 3, 4, 5], cordasDistintas: true });
+    const t0 = Date.now();
+    expect(temMaterial(o)).toBe(false);
+    // Varrendo as permutações isto levava segundos; por contagem, é imediato.
+    expect(Date.now() - t0, 'a recusa deveria ser instantânea').toBeLessThan(200);
   });
 });
 
