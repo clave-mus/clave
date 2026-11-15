@@ -71,7 +71,16 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
         .filter(([a, b]) => b > a)
         .map(([a, b]) => (
           <rect key={`veu${a}-${b}`} x={left + (a - from) * FW} y={top - 10} width={(b - a) * FW} height={(n - 1) * GAP + 20}
-            fill="var(--ground)" opacity="0.62" pointerEvents="none" />
+            /**
+             * **Preto fixo, nunca uma variável de tema** — e isto foi pego revisando antes do
+             * deploy. Escrevi `var(--ground)` primeiro, que é branco no tema claro: o véu
+             * CLAREARIA as casas fora do foco, destacando exatamente o que devia apagar.
+             *
+             * O braço é escuro em qualquer tema (`.stage.dark`), então a cor que o apaga também
+             * tem de ser. É a mesma lição de `--key-white`/`--key-black`, que o Paulo relatou em
+             * 12/11 como "cores das teclas do piano invertidas no modo claro".
+             */
+            fill="rgb(0 0 0)" opacity="0.6" pointerEvents="none" />
         ))}
       {12 > from && 12 <= to && [0.3, 0.7].map(k => <circle key={k} cx={left + (12 - from - 0.5) * FW} cy={top + (n - 1) * GAP * k} r="5" fill="var(--cream)" opacity="0.35" />)}
       {Array.from({ length: frets + 1 }, (_, i) => (

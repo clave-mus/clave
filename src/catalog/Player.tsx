@@ -416,7 +416,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
 
       {confidenceFor && (
-        <div className="panel" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+        <div className="panel painel-confianca" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>
           <span>{t('player.confidenceQuestion')}</span>
           <div className="row">
             {(['guess', 'unsure', 'sure'] as AttemptFeedback['confidence'][]).map(c => (
@@ -861,12 +861,36 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
   const [errado, setErrado] = useState<string | null>(null);
   /** O verde do acerto, pedido dele em 13/11: o certo também sinaliza, não só o errado. */
   const [acertou, setAcertou] = useState<string | null>(null);
+  /**
+   * Os avisos de cor duram 420 ms, e os temporizadores são **limpos ao sair**.
+   *
+   * Sem isto, responder e girar o celular (ou sair do exercício) deixava um `setState` marcado para
+   * um componente que não existe mais. No React não é erro visível, mas é vazamento — e aqui o giro
+   * de tela é parte do uso normal, não um caso de borda.
+   */
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+  const aviso = (fn: () => void) => { timers.current.push(window.setTimeout(fn, 420)); };
   const alvo = sf.posicoes[acertadas];
-  // Pergunta nova (outras posições) reinicia o progresso; a chave é a lista de posições.
-  const chave = sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(',');
-  const chaveAnterior = useRef(chave);
-  if (chaveAnterior.current !== chave) {
-    chaveAnterior.current = chave;
+  /**
+   * **Pergunta nova reinicia o progresso — e a identidade é o OBJETO, não as posições.**
+   *
+   * A primeira versão comparava a lista de casas, e isso travava o exercício num caso que a
+   * revisão antes do deploy encontrou: se o sorteio devolvesse **as mesmas posições** duas vezes
+   * seguidas, a chave não mudava, `acertadas` ficava cheio, nenhuma posição era destacada, `alvo`
+   * saía `undefined` e os botões paravam de responder — tela morta.
+   *
+   * E repetir não é hipótese remota: o anti-eco é preferência, não garantia (ele desiste depois de
+   * metade das tentativas), e com *uma nota por corda* num baixo existem só 41 desenhos.
+   *
+   * Comparar a identidade do objeto resolve de raiz: cada `make` produz uma superfície nova, então
+   * duas perguntas iguais em conteúdo continuam sendo duas perguntas. Ajustar estado durante o
+   * render é o padrão que o React documenta para isto — ele descarta o render e refaz antes de
+   * pintar, então não há quadro intermediário.
+   */
+  const superficieAnterior = useRef(sf);
+  if (superficieAnterior.current !== sf) {
+    superficieAnterior.current = sf;
     setAcertadas(0);
     setErrado(null);
     setAcertou(null);
@@ -887,12 +911,12 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
     if (mod(pc, 12) !== mod(alvo.pc, 12)) {
       setErrado(id);
       // o vermelho é um instante: o erro informa e sai, sem interromper o fluxo
-      window.setTimeout(() => setErrado(null), 420);
+      aviso(() => setErrado(null));
       return;
     }
     setErrado(null);
     setAcertou(id);
-    window.setTimeout(() => setAcertou(null), 420);
+    aviso(() => setAcertou(null));
     const n = acertadas + 1;
     setAcertadas(n);
     if (n < sf.posicoes.length) {
@@ -901,7 +925,8 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
     }
     // fechou: toca a última (ou o arpejo inteiro, se o item pediu) e entrega a pergunta ao Player
     onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.midi]) : [[alvo.midi]]);
-    onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, chave);
+    // O id da resposta é a lista de posições: é o que o histórico guarda como "o que foi clicado".
+    onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(','));
   };
 
   /**

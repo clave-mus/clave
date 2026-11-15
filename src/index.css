@@ -818,6 +818,26 @@ select.sel {
  * configura, deitado se pratica. Nada fica inacessível.
  */
 .foco-exercicio .player > *:not(.stage) { display: none; }
+/*
+ * **A pergunta de confiança é a exceção**, e achei isto revisando antes do deploy: ela é filha
+ * direta do player, então a regra acima a escondia — e ela aparece a cada dez respostas. O
+ * exercício não travava, mas o painel ficava invisível para sempre (ninguém pode responder o que não
+ * vê) e a coleta de confiança morria no celular.
+ *
+ * Sobreposta, e não no fluxo: em 375 px de altura ela empurraria o braço fora da tela. São três
+ * chips e um toque.
+ */
+.foco-exercicio .player > .painel-confianca {
+  display: grid;
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  margin: 0;
+  max-width: min(92vw, 420px);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+}
 /* O caminho de volta e o `gap` da página: 37 px que faziam a tela rolar por um fio. */
 .foco-exercicio .voltar-ao-catalogo { display: none; }
 .foco-exercicio .pagina-do-item { gap: 0; }
