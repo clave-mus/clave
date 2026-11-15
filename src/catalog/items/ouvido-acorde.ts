@@ -68,11 +68,12 @@ export const ouvidoAcorde: CatalogItem = {
     ] },
     { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', quando: s => s.resposta === 'desenhar' || s.estimulo === 'escrito',
       options: [
-        { id: 'auto', label: ctx.t('settings.myInstrument') },
+        // Sem "meu instrumento": o valor inicial vem do perfil (`defaultsDo`), e o chip diz qual é.
+        { id: 'braco', label: ctx.t('settings.onNeck') },
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
       ] }],
-  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', instrumento: 'auto' },
+  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas' },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -90,6 +91,8 @@ export const ouvidoAcorde: CatalogItem = {
     { id: 'livre', nome: 'presets.acordesLivre', settings: { tipos: ALL_CHORDS }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.45 },
+  // Sem perfil de piano, o desenho é no braço — ver `INST` em helpers sobre o fim do "auto".
+  defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : 'braco' }),
   /**
    * `sus2` e `sus4` são **o mesmo conjunto de notas** — {0, 2, 7}. Dósus2 tem Dó, Ré e Sol;
    * Solsus4 tem Sol, Dó e Ré. Em posição fundamental o baixo os separa, mas a segunda inversão de
@@ -133,7 +136,7 @@ export const ouvidoAcorde: CatalogItem = {
      */
     const noBracoDesenhado = (s.resposta === 'desenhar' || s.estimulo === 'escrito')
       && s.instrumento !== 'pauta'
-      && !(s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano'));
+      && s.instrumento !== 'piano';
     const extensao = Math.max(...CHORDS[type].degs.map(([, semi]) => semi)) + (s.inversoes ? 12 : 0);
     const alcance = faixaDoBraco(ctx.params.tuning, 0, 12);
     const janela = noBracoDesenhado
@@ -186,7 +189,7 @@ export const ouvidoAcorde: CatalogItem = {
      * de conferência. Mesma superfície do modo "desenhar", lida em vez de clicada.
      */
     if (s.estimulo === 'escrito') {
-      const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
+      const noPiano = s.instrumento === 'piano';
       const noBraco = !noPiano && s.instrumento !== 'pauta';
       const tuning = ctx.params.tuning;
       const visual: Question['visual'] = s.instrumento === 'pauta'
@@ -219,7 +222,7 @@ export const ouvidoAcorde: CatalogItem = {
      * Dó maior desenhado uma oitava abaixo é um Dó maior; com uma nota solta fora, não é.
      */
     if (s.resposta === 'desenhar') {
-      const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'piano');
+      const noPiano = s.instrumento === 'piano';
       const naPauta = s.instrumento === 'pauta';
       const clef = clave(ctx);
       const tuning = ctx.params.tuning;

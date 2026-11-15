@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, faixaQueCabe, notaGrafada, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Surface } from '../types';
 
@@ -36,7 +36,6 @@ export const ouvidoIntervalo: CatalogItem = {
     ] },
     { id: 'superficie', label: ctx.t('settings.answerSurface'), type: 'single', quando: s => s.resposta === 'notas',
       options: [
-        { id: 'auto', label: ctx.t('settings.myInstrument') },
         { id: 'teclado', label: ctx.t('settings.instrumentPiano') },
         { id: 'braco', label: ctx.t('settings.onNeck') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
@@ -59,7 +58,9 @@ export const ouvidoIntervalo: CatalogItem = {
     { id: 'comTonica', label: ctx.t('settings.fromTonic'), type: 'toggle' },
     GRAUS_ESCOLHIDOS(ctx)],
   defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
-    resposta: 'alternativas', superficie: 'auto', notas: '2', comTonica: false, grausEscolhidos: [] },
+    resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [] },
+  // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
+  defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   /**
    * O Paulo quis os doze intervalos e dó maior como entrada, e **melódicos e harmônicos como
    * etapas distintas** na rotina dele — daí os dois primeiros atalhos serem o mesmo conteúdo em
@@ -98,7 +99,7 @@ export const ouvidoIntervalo: CatalogItem = {
      * acima já tomava contra sair da região.
      */
     const ondeResponder = s.resposta === 'notas'
-      ? (s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie))
+      ? String(s.superficie ?? superficieDoPerfil(ctx))
       : null;
     const vaiNoBraco = ondeResponder !== null && ondeResponder !== 'pauta' && ondeResponder !== 'teclado';
     const alcance = faixaDoBraco(ctx.params.tuning, 0, 12);
@@ -190,7 +191,7 @@ export const ouvidoIntervalo: CatalogItem = {
      * — responder sol–dó onde soou dó–sol é outra coisa.
      */
     if (s.resposta === 'notas') {
-      const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
+      const onde = String(s.superficie ?? superficieDoPerfil(ctx));
       const noBraco = onde !== 'pauta' && onde !== 'teclado';
       const tuning = ctx.params.tuning;
       const superficie: Surface = onde === 'pauta'

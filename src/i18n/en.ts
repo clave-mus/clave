@@ -225,7 +225,6 @@ const en: Shape<typeof pt> = {
   presets: {
     mapaTriades: 'Triads in C major',
     mapaTetrades: 'Seventh chords',
-    mapaUmQuatroSeisSete: '1-4-6-7',
     title: 'Shortcuts',
     maiorMenor: 'Major and minor',
     triades: 'Triads only',
@@ -829,7 +828,7 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
-    handSpanAuto: 'From the instrument',
+    fieldMelodicMinor: 'Melodic minor',
     arpeggioDegrees: 'Arpeggio degrees',
     fieldMajor: 'Major',
     fieldMinor: 'Minor',
@@ -871,7 +870,6 @@ const en: Shape<typeof pt> = {
     writeIt: 'Write what is asked',
     accidentals: 'Sharps and flats',
     instrument: 'Instrument',
-    myInstrument: 'The one in my profile',
     guitar: 'Guitar',
     bass: 'Bass',
     piano: 'Piano',

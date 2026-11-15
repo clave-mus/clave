@@ -145,19 +145,19 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // O que entra segue o critério do Paulo (decisão 109): **trabalha a posição das notas no braço.**
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
-        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '0-5' })] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', casas: '0-5' })] },
       { minutos: 8, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
         instancias: [
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }),
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '5-9' }),
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-12' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '0-5' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '5-9' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '0-12' }),
         ] },
       // **Identificar e construir, em rodízio** — o Paulo pediu assim. São habilidades diferentes, e
       // alternar entre elas gasta metade do tempo que fazer as duas toda vez.
       { minutos: 6, politica: 'ordem', porque: 'o intervalo nas duas direções: reconhecer o desenho numa vez, construí-lo na outra',
         instancias: [
-          i('intervalo-no-instrumento', { direcao: 'identificar', instrumento: 'auto' }),
-          i('intervalo-no-instrumento', { direcao: 'construir', instrumento: 'auto' }),
+          i('intervalo-no-instrumento', { direcao: 'identificar' }),
+          i('intervalo-no-instrumento', { direcao: 'construir' }),
         ] },
       // Formas móveis, nas cinco primeiras casas: é a forma relativa que transfere, e não o
       // gavetão numa posição fixa. As tabelas à mão saíram em 09/11/2026 — o desenho vem do
@@ -207,9 +207,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 5, porque: 'primeiro o som da tonalidade: três notas dela, para a tônica virar referência',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
       { minutos: 5, porque: 'as notas dela no braço, só as diatônicas, na região de casa',
-        instancias: [i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'achar', casas: '0-5' }, DIATONICO)] },
       { minutos: 5, porque: 'a mesma tonalidade noutra região — é o que liga as partes do braço',
-        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', casas: '5-9' }, DIATONICO)] },
       { minutos: 5, porque: 'os acordes que nascem dela, de ouvido',
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'm7', '7M', '7'], arpejo: true, duracao: 2 })] },
       { minutos: 10, porque: 'fecha tocando dentro dela, com a harmonia rodando',

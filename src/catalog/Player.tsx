@@ -63,18 +63,24 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // tocada. (A primeira versão do link compartilhado deixava `initialSettings` mandar em tudo, e o
   // painel de configurações virava decoração: gravava num lugar que ninguém lia.)
   const [local, setLocal] = useState<Record<string, SettingValue> | null>(initialSettings ?? null);
-  const settings = useMemo(() => ({ ...def.defaults, ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, saved, local, entrada]);
   const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
+  const locale = useLocale();
+  const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
+  /**
+   * As configurações em vigor, nesta ordem: o que o item declara, o que o **contexto** resolve
+   * (`defaultsDo` — o instrumento do perfil), o que a etapa pediu, e o que a pessoa escolheu.
+   *
+   * `settings` desceu para cá em 14/11 só porque passou a depender de `ctx`.
+   */
+  const settings = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, ctx, saved, local, entrada]);
   /**
    * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
    * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
    */
   const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
-    guardarSettings({ ...def.defaults, ...p.settings });
+    guardarSettings({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...p.settings });
     if (p.params) mudar(p.params);
-  }, [def.defaults, guardarSettings, mudar]);
-  const locale = useLocale();
-  const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
+  }, [def, ctx, guardarSettings, mudar]);
   /**
    * Só o que muda a PERGUNTA. Mexer em "arpejar" ou na duração não sorteia um acorde novo — antes
    * sorteava, e a pessoa perdia o que estava tentando identificar.
@@ -274,7 +280,15 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
      */
     const resposta = q.surface.kind === 'autoavaliacao' ? q.sound?.partes?.find(p => p.id === 'resposta') : undefined;
     if (resposta && soundOn) playParte(q, resposta);
-    else if (!q.autoplay && soundOn) play(q);
+    /**
+     * **O `mapa` toca o seu próprio som, e por isso é exceção aqui.**
+     *
+     * A regra geral ("sem autoplay, ouça ao responder") serve a quem audia: o som é o gabarito, e
+     * ouvi-lo ao fim é conferir. No `mapa` o som já aconteceu — uma nota por acerto —, e ouvir
+     * `q.sound` inteiro de novo **tocava o arpejo completo mesmo com a opção desligada**, que foi o
+     * que o Paulo relatou em 14/11. O parâmetro dele estava certo; quem tocava era esta linha.
+     */
+    else if (!q.autoplay && soundOn && q.surface.kind !== 'mapa') play(q);
     // Uma vez só. Antes disparava a CADA resposta depois do alvo, porque a condição é `>=` e nada
     // guardava que já tinha avisado — com a correção de 10/11 (ficar na etapa depois de completá-la)
     // isso passaria a chamar `onDone` sem parar.

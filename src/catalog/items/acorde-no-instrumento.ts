@@ -39,7 +39,6 @@ export const acordeNoInstrumento: CatalogItem = {
      */
     // Piano entra junto, e o baixo não: ver o comentário do item.
     { ...INST(ctx), options: [
-      { id: 'auto', label: ctx.t('settings.myInstrument') },
       { id: 'violao', label: ctx.t('settings.guitar') },
       { id: 'piano', label: ctx.t('settings.instrumentPiano') },
     ] },
@@ -53,12 +52,18 @@ export const acordeNoInstrumento: CatalogItem = {
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true,
       present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
   ],
-  defaults: { instrumento: 'auto', tipos: ['maior', 'menor', 'dim', 'aum'],
+  defaults: { tipos: ['maior', 'menor', 'dim', 'aum'],
     pergunta: 'acorde', soltas: false, casas: '0-12', arpejo: false,
   },
+  /**
+   * O padrão é o instrumento do perfil, **ou o piano se o perfil for baixo** — a decisão dele de
+   * 09/11, que está explicada no alto do arquivo. Era isto que o valor `auto` escondia; agora o
+   * chip mostra "piano" para o baixista, que é a informação de que ele precisa.
+   */
+  defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'violao' ? 'violao' : 'piano' }),
   make(s, ctx) {
     /** `auto` com baixo cai no piano: as formas de violão não existem num baixo de quatro cordas. */
-    const noPiano = s.instrumento === 'piano' || (s.instrumento === 'auto' && ctx.params.instrument === 'baixo');
+    const noPiano = s.instrumento === 'piano';
 
     if (!noPiano) {
       // Chave por chave, nunca `{...s}`: há teste que proíbe espalhar, e com razão — espalhando não

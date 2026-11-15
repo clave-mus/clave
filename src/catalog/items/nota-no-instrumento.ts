@@ -1,5 +1,5 @@
 import {
-  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, alturaDoPc, arr, casaPermitida, fretRange, mod, nomeNaTonalidade,
+  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, bracoDoPerfil, alturaDoPc, arr, casaPermitida, fretRange, mod, nomeNaTonalidade,
   pcOptions, pcsDosGraus, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
@@ -104,7 +104,9 @@ export const notaNoInstrumento: CatalogItem = {
   ],
   // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
   // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
-  defaults: { direcao: 'identificar', instrumento: 'auto', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, oitavas: '2', grausEscolhidos: [] },
+  // O instrumento começa no do perfil — resolvido em `defaultsDo`, não por uma opção "auto".
+  defaults: { direcao: 'identificar', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, oitavas: '2', grausEscolhidos: [] },
+  defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : bracoDoPerfil(ctx) }),
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {
       const { lo, hi } = regiao(ctx, { lo: 48, hi: s.oitavas === '1' ? 59 : 71 });

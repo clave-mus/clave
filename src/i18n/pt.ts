@@ -225,7 +225,6 @@ const pt = {
   presets: {
     mapaTriades: 'Tríades em dó maior',
     mapaTetrades: 'Tétrades',
-    mapaUmQuatroSeisSete: '1-4-6-7',
     title: 'Atalhos',
     maiorMenor: 'Maior e menor',
     triades: 'Só tríades',
@@ -831,7 +830,7 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
-    handSpanAuto: 'Do instrumento',
+    fieldMelodicMinor: 'Menor melódica',
     arpeggioDegrees: 'Graus do arpejo',
     fieldMajor: 'Maior',
     fieldMinor: 'Menor',
@@ -873,7 +872,6 @@ const pt = {
     writeIt: 'Escrever o que foi pedido',
     accidentals: 'Sustenidos e bemóis',
     instrument: 'Instrumento',
-    myInstrument: 'O do meu perfil',
     guitar: 'Violão',
     bass: 'Baixo',
     piano: 'Piano',

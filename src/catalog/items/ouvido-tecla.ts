@@ -1,4 +1,4 @@
-import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -14,6 +14,9 @@ const FAIXA = { lo: 48, hi: 83 };
 
 /** Dó maior **e só as notas dela** — a lista de graus depende do material, então o atalho o leva. */
 const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico' } as const;
+
+/** A superfície padrão deste item: teclado para piano, o braço de quem toca para os outros. */
+const ondePadrao = (ctx: Ctx) => (ctx.params.instrument === 'piano' ? 'teclado' : bracoDoPerfil(ctx));
 
 /**
  * Uma altura da classe `pc` que **existe no braço** em vigor, casas 0–12, preferindo as que caem na
@@ -59,9 +62,7 @@ function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pc: number): number 
  */
 function oitavasDaSuperficie(ctx: Ctx, onde: string): number[] {
   const pcTonica = mod(tonalidade(ctx)?.tonic ?? 0, 12);
-  const resolvido = onde === 'auto'
-    ? (ctx.params.instrument === 'piano' ? 'teclado' : ctx.params.instrument === 'baixo' ? 'baixo' : 'violao')
-    : onde;
+  const resolvido = onde;
   const cabe = (m: number): boolean => {
     if (resolvido === 'baixo' || resolvido === 'violao') {
       const t = resolvido === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
@@ -233,7 +234,7 @@ export const ouvidoTecla: CatalogItem = {
       ],
       // ...e o recorte que a TELA oferece: só as oitavas que a superfície escolhida alcança.
       opcoesDe: valores => [
-        ...oitavasDaSuperficie(ctx, String(valores.onde ?? 'auto')).map(o => ({ id: String(o), label: String(o) })),
+        ...oitavasDaSuperficie(ctx, String(valores.onde ?? ondePadrao(ctx))).map(o => ({ id: String(o), label: String(o) })),
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
     /**
@@ -248,7 +249,6 @@ export const ouvidoTecla: CatalogItem = {
      * relaxa para classe de altura; nos outros três ela segue exata.
      */
     { id: 'onde', label: ctx.t('settings.answerWhere'), type: 'single', options: [
-      { id: 'auto', label: ctx.t('settings.myInstrument') },
       { id: 'teclado', label: ctx.t('settings.instrumentPiano') },
       // Dois braços, e não um "braço" genérico: o Paulo pediu em 13/11 — *"deveria ter a opção
       // braço da guitarra também"*. O baixo tem quatro cordas e o violão seis; a afinação muda o
@@ -260,7 +260,10 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
   ],
-  defaults: { estimulo: 'som', referencia: true, onde: 'auto', grausEscolhidos: [] },
+  // `onde` fica FORA dos defaults estáticos: quem o resolve é `ondePadrao`, pelo perfil. Um valor
+  // fixo aqui venceria o contexto em todo chamador que não seja o Player.
+  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [] },
+  defaultsDo: ctx => ({ onde: ondePadrao(ctx) }),
   /**
    * Os dois atalhos são as duas habilidades distintas que este item pode treinar, e é a
    * **referência** que as separa — foi a saída para a dúvida do Paulo sobre ele ser redundante com
@@ -291,7 +294,7 @@ export const ouvidoTecla: CatalogItem = {
     { id: 'graus-da-maior', nome: 'presets.teclaGrausDaMaior',
       settings: { estimulo: 'som', referencia: true, onde: 'teclado', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'no-meu-instrumento', nome: 'presets.teclaNoMeuInstrumento',
-      settings: { estimulo: 'som', referencia: true, onde: 'auto', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', referencia: true, grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'na-pauta', nome: 'presets.teclaNaPauta',
       settings: { estimulo: 'som', referencia: true, onde: 'pauta', grausEscolhidos: [] }, params: EM_DO_DIATONICO },
     { id: 'audiar-grau', nome: 'presets.teclaAudiarGrau',
@@ -311,9 +314,8 @@ export const ouvidoTecla: CatalogItem = {
   make(s, ctx): Question {
     const permitidas = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
     const p = pick(permitidas);
-    const onde = s.onde === 'auto'
-      ? (ctx.params.instrument === 'piano' ? 'teclado' : ctx.params.instrument === 'baixo' ? 'baixo' : 'violao')
-      : String(s.onde ?? 'teclado');
+    // Ausente quer dizer "a do perfil" — `ondePadrao`, a mesma função que o `defaultsDo` usa.
+    const onde = String(s.onde ?? ondePadrao(ctx));
     const noBraco = onde === 'baixo' || onde === 'violao';
     /** A afinação da superfície escolhida — não a do perfil, que pode ser outra. */
     const tuning = onde === 'baixo' ? TUNINGS.baixo : onde === 'violao' ? TUNINGS.violao : ctx.params.tuning;

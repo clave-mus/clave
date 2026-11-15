@@ -1,5 +1,6 @@
 import { assinaturaDoArpejo, materialDoMapa, sortearArpejo, type ArpejoDoMapa } from '../../theory/mapa-do-braco';
-import { arr, mod, nomeNaTonalidade, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Question } from '../helpers';
+import { getModo, notasDoModo } from '../../theory/digitacoes';
+import { arr, bracoDoPerfil, midi, mod, noteName, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Note, type Question } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, PosicaoDoMapa } from '../types';
 import { randInt } from '../../theory/core';
@@ -63,6 +64,8 @@ export const mapaDoBraco: CatalogItem = {
       { id: 'maior', label: ctx.t('settings.fieldMajor') },
       { id: 'menor', label: ctx.t('settings.fieldMinor') },
       { id: 'menor-harmonica', label: ctx.t('settings.fieldHarmonicMinor') },
+      // O motor sempre teve as quatro famílias; eu só havia oferecido três, sem razão nenhuma.
+      { id: 'menor-melodica-jazz', label: ctx.t('settings.fieldMelodicMinor') },
     ] },
     /**
      * A abertura da mão em casas — é o que separa "arpejo numa posição" de "notas espalhadas".
@@ -73,7 +76,6 @@ export const mapaDoBraco: CatalogItem = {
      * aqui para não se repetir.)
      */
     { id: 'abertura', label: ctx.t('settings.handSpan'), type: 'single', options: [
-      { id: 'auto', label: ctx.t('settings.handSpanAuto') },
       { id: '3', label: ctx.t('settings.handSpanFrets', { n: '3' }) },
       { id: '4', label: ctx.t('settings.handSpanFrets', { n: '4' }) },
       { id: '5', label: ctx.t('settings.handSpanFrets', { n: '5' }) },
@@ -81,19 +83,32 @@ export const mapaDoBraco: CatalogItem = {
     ] },
     // Sem piano: o exercício é a geometria de um braço. `auto` cai no violão para perfil de teclado.
     { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', options: [
-      { id: 'auto', label: ctx.t('settings.myInstrument') },
       { id: 'violao', label: ctx.t('settings.guitar') },
       { id: 'baixo', label: ctx.t('settings.bass') },
     ] },
     /** Ouvir o arpejo inteiro ao fechar. Começa **desligado**, a pedido dele. */
     { id: 'ouvirArpejo', label: ctx.t('settings.hearArpeggioAtEnd'), type: 'toggle' },
   ],
-  defaults: { graus: ['1', '3', '5', '7'], campo: 'maior', abertura: 'auto', instrumento: 'auto', ouvirArpejo: false },
+  defaults: { graus: ['1', '3', '5', '7'], campo: 'maior', abertura: '4', ouvirArpejo: false },
+  /**
+   * **Os dois valores iniciais que dependem do perfil**, e nenhum deles é uma opção na lista.
+   *
+   * O Paulo apontou os dois em 14/11: *"abertura da mão 'Do instrumento' não deveria ser uma opção.
+   * faça com que tenha apenas as opções com numeros de casas, e que por padrao comece onde deve
+   * começar"* — e o mesmo para o instrumento. Um chip que diz "do instrumento" obriga a pessoa a
+   * lembrar qual é; um chip que diz "5 casas" informa.
+   *
+   * A abertura padrão é 5 no baixo porque ele tem **4 cordas em vez de 6**, e as mesmas notas
+   * precisam se espalhar mais na horizontal — geometria, não alcance da mão.
+   */
+  defaultsDo: ctx => ({
+    instrumento: bracoDoPerfil(ctx),
+    abertura: bracoDoPerfil(ctx) === 'baixo' ? '5' : '4',
+  }),
   /** Atalhos nomeados pelo conteúdo (decisão 100); o primeiro é a entrada do item. */
   presets: [
     { id: 'triades', nome: 'presets.mapaTriades', settings: { graus: ['1', '3', '5'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
     { id: 'tetrades', nome: 'presets.mapaTetrades', settings: { graus: ['1', '3', '5', '7'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
-    { id: 'um-quatro-seis-sete', nome: 'presets.mapaUmQuatroSeisSete', settings: { graus: ['1', '4', '6', '7'], campo: 'maior' }, params: { key: { tonic: 0, mode: 'maior' } } },
   ],
   /**
    * **O arpejo do fim tem de caber na pausa do Player.**
@@ -134,8 +149,8 @@ export const mapaDoBraco: CatalogItem = {
      * dó menor harmônica o 7º é Si natural, e é esse que entra: o botão segue o campo, não a escala
      * natural.
      */
-    const opcoes = notasDoCampoEmOrdem(ctx, s).map(p => ({
-      id: String(p), label: nomeNaTonalidade(ctx, p), value: { kind: 'pitchClass' as const, pc: p },
+    const opcoes = notasDoCampo(o).map(n => ({
+      id: String(mod(midi(n), 12)), label: noteName(n, ctx.naming), value: { kind: 'pitchClass' as const, pc: mod(midi(n), 12) },
     }));
     return {
       prompt: ctx.t('quiz.mapaPrompt'),
@@ -148,22 +163,26 @@ export const mapaDoBraco: CatalogItem = {
       expected: { kind: 'contorno', midis: posicoes.map(p => p.midi), ordenada: true },
       sound: { groups: posicoes.map(p => [p.midi]), instrument: vozDoBraco(tuning) },
       autoplay: false,
-      reveal: posicoes.map(p => nomeNaTonalidade(ctx, p.pc)).join(' · '),
+      reveal: posicoes.map(p => noteName(notasDoCampo(o).find(n => mod(midi(n), 12) === mod(p.pc, 12)) ?? spellPc(p.pc), ctx.naming)).join(' · '),
     };
   },
 };
 
-/** As classes de altura do campo, da tônica para cima — a ordem dos botões. */
-function notasDoCampoEmOrdem(ctx: Ctx, s: Record<string, unknown>): number[] {
-  const tonica = tonalidadeDoCampo(ctx);
-  const familia = String(s.campo ?? 'maior');
-  // Os passos de cada família, em semitons a partir da tônica.
-  const PASSOS: Record<string, number[]> = {
-    maior: [0, 2, 4, 5, 7, 9, 11],
-    menor: [0, 2, 3, 5, 7, 8, 10],
-    'menor-harmonica': [0, 2, 3, 5, 7, 8, 11],
-  };
-  return (PASSOS[familia] ?? PASSOS.maior).map(semi => mod(tonica + semi, 12));
+/**
+ * **As sete notas do campo, uma letra de cada** — e isto era um defeito que o Paulo pegou em 14/11:
+ * *"na menor harmônica de dó, tem Ré e Ré# e Sol e Sol# — deveria ser mib e lab"*.
+ *
+ * A primeira versão montava os botões de classes de altura em semitons e pedia o nome a
+ * `nomeNaTonalidade`, que escolhe sustenido ou bemol pela **armadura**. Com tonalidade livre não há
+ * armadura, então tudo saía com sustenido: a classe 3 virava Ré♯ e a 8, Sol♯ — e os botões ficavam
+ * com *Ré, Ré♯, Sol, Sol♯*, duas vezes a mesma letra e nenhum Mi nem Lá. Uma escala não faz isso:
+ * ela tem uma letra de cada, e em dó menor harmônica são Dó Ré Mi♭ Fá Sol Lá♭ Si.
+ *
+ * O conserto é não calcular grafia nenhuma: `notasDoModo` já devolve as notas **grafadas
+ * diatonicamente** pelo motor, que é o que o CLAUDE.md manda usar em vez de contornar.
+ */
+function notasDoCampo(o: ReturnType<typeof opcoesDoMapa>): Note[] {
+  return notasDoModo(getModo(o.tonica, o.familia, 1));
 }
 
 /**
@@ -194,8 +213,7 @@ function opcoesDoMapa(s: Record<string, unknown>, ctx: Ctx, graus: number[]) {
    * morta na tela é o que ele existe para pegar. Ele me pegou na primeira rodada.
    */
   const tuning = tuningOf({ instrumento: s.instrumento === 'piano' ? 'violao' : s.instrumento } as never, ctx);
-  const pedida = String(s.abertura ?? 'auto');
-  const abertura = pedida === 'auto' ? (tuning.length === 4 ? 5 : 4) : Number(pedida);
+  const abertura = Number(s.abertura ?? 4) || 4;
   /**
    * **A tônica do motor e a dos botões são a mesma, e isto era um defeito.**
    *

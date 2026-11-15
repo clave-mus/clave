@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 
@@ -77,7 +77,6 @@ export const melodiaDeOuvido: CatalogItem = {
      * é informação do exercício e não enfeite.
      */
     { id: 'superficie', label: ctx.t('settings.answerWhere'), type: 'single', options: [
-      { id: 'auto', label: ctx.t('settings.myInstrument') },
       { id: 'teclado', label: ctx.t('settings.instrumentPiano') },
       { id: 'braco', label: ctx.t('settings.onNeck') },
       { id: 'pauta', label: ctx.t('settings.onStaff') },
@@ -93,7 +92,9 @@ export const melodiaDeOuvido: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.3, max: 2, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { estimulo: 'som', notas: 3, superficie: 'auto', grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
+  defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
     { id: 'tres', nome: 'presets.melodiaTres', settings: { estimulo: 'som', notas: 3, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'graus', nome: 'presets.melodiaGraus', settings: { estimulo: 'som', notas: 3, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
@@ -124,7 +125,7 @@ export const melodiaDeOuvido: CatalogItem = {
      * casa errada (era o que acontecia) ou não desenhar a nota. Sabendo a superfície antes, a
      * melodia nasce no alcance dela.
      */
-    const onde = s.superficie === 'auto' ? (ctx.params.instrument === 'piano' ? 'teclado' : 'braco') : String(s.superficie);
+    const onde = String(s.superficie ?? superficieDoPerfil(ctx));
     const noBraco = onde === 'braco';
     const tuning = ctx.params.tuning;
     const { lo, hi } = regiao(ctx);

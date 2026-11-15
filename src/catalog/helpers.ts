@@ -54,8 +54,25 @@ export const arr = (v: SettingValue | undefined, fallback: string[]) => (Array.i
 export const CLEFS = ({ t }: Ctx): Setting => ({ id: 'claves', label: t('settings.clefs'), type: 'multi', options: [{ id: 'sol', label: t('settings.clefSol') }, { id: 'fa', label: t('settings.clefFa') }] });
 export const EXT = ({ t }: Ctx): Setting => ({ id: 'extensao', label: t('settings.range'), type: 'single', options: [{ id: 'pauta', label: t('settings.rangeStaff'), tier: 1 }, { id: 'suplementares', label: t('settings.rangeLedger'), tier: 2 }] });
 export const ACC = ({ t }: Ctx): Setting => ({ id: 'acidentes', label: t('settings.accidentals'), type: 'toggle' });
+/**
+ * O instrumento do braço. **Sem a opção "meu instrumento"** desde 14/11: o valor inicial vem do
+ * perfil (`CatalogItem.defaultsDo`), e o chip mostra *violão* ou *baixo* — o que a pessoa precisa
+ * saber. Um chip marcado "meu instrumento" não diz qual é, e era a crítica do Paulo.
+ */
 export const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.instrument'), type: 'single', options: [
-  { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
+  { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
+/** O instrumento do perfil, reduzido ao que um item de braço aceita. */
+export const bracoDoPerfil = (ctx: Ctx) => (ctx.params.instrument === 'baixo' ? 'baixo' : 'violao');
+/**
+ * A superfície padrão: o teclado para quem toca piano, o braço para os outros.
+ *
+ * **Uma função, dois chamadores** — `defaultsDo` (para o chip da tela mostrar o valor certo) e o
+ * `make` (para quem chama o item sem passar pelo Player: testes, rotinas, links). Em 14/11 eu pus a
+ * regra só no `defaultsDo` e dois testes caíram na hora: o `make` chamado direto perdia o perfil, e
+ * o timbre do braço voltava a ser o do violão num perfil de baixo. Default estático que contradiz o
+ * contexto é pior que default ausente.
+ */
+export const superficieDoPerfil = (ctx: Ctx) => (ctx.params.instrument === 'piano' ? 'teclado' : 'braco');
 /**
  * **Restringir aos graus que a pessoa escolhe** — o `multi` que o rascunho do Paulo pede na Nota, na
  * Melodia e no Intervalo harmônico. Vazio é o padrão e quer dizer "sem restrição".

@@ -462,6 +462,24 @@ export interface CatalogItem extends Classification {
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
   make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
   /**
+   * **Valores iniciais que dependem do contexto** — hoje, do instrumento do perfil.
+   *
+   * Entrou em 14/11, quando o Paulo apontou uma indireção que o app repetia em sete itens: a opção
+   * *"Meu instrumento"*. Nas palavras dele: *"o parametro instrumento deve começar como sendo o do
+   * perfil, sim, por conveniencia. mas que fique marcado violão se o instrumento do perfil for
+   * violão. entende que não tem sentido ter essa configuração?"*
+   *
+   * Tem toda razão, e o problema é de informação: um chip marcado "Meu instrumento" **não diz qual
+   * é**. Quem abre a tela precisa saber o que vai acontecer, e "violão" diz; "meu instrumento"
+   * manda a pessoa lembrar de uma configuração que está em outra tela. O valor `auto` existia só
+   * para o item poder cair no perfil — e isso é trabalho do valor inicial, não de uma opção na
+   * lista.
+   *
+   * `defaults` segue sendo a declaração estática (os testes e os atalhos a usam); isto sobrepõe o
+   * que o contexto resolve.
+   */
+  defaultsDo?: (ctx: Ctx) => Record<string, SettingValue>;
+  /**
    * **A identidade da pergunta para o anti-eco**, quando ela é mais rica que a resposta.
    *
    * O `sortearSemEco` do Player evita repetir a RESPOSTA, e isso serve para quase tudo: duas
