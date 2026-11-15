@@ -77,3 +77,44 @@ describe('opções', () => {
     expect(validate({ kind: 'option', id: 'maior' }, { kind: 'option', id: 'menor' })).toBe(false);
   });
 });
+
+/**
+ * Contorno: a conferência do meio (`OR-ouvido-relativo.md`, §4). A regra, nas palavras do Paulo:
+ * *"não dá pro usuário ouvir uma nota, saber qual é, ouvir uma nota acima e dizer que estava
+ * abaixo"*. Certo se TODA nota está deslocada pelo MESMO número de oitavas.
+ */
+describe('contorno', () => {
+  const certa = (midis: number[], ordenada?: boolean) => ({ kind: 'contorno' as const, midis, ordenada });
+  const resp = (midis: number[]) => ({ kind: 'pitches' as const, midis });
+
+  it('os três exemplos do documento', () => {
+    expect(validate(certa([60, 64, 67]), resp([60, 64, 67]))).toBe(true);   // deslocamento 0
+    expect(validate(certa([60, 64, 67]), resp([48, 52, 55]))).toBe(true);   // −12 em TODAS
+    expect(validate(certa([60, 64, 67]), resp([60, 52, 67]))).toBe(false);  // a do meio desceu só
+  });
+
+  it('deslocamento tem de ser em oitavas inteiras: um tom acima em tudo é errado', () => {
+    expect(validate(certa([60, 64, 67]), resp([62, 66, 69]))).toBe(false);
+    expect(validate(certa([60, 64, 67]), resp([72, 76, 79]))).toBe(true);
+  });
+
+  it('a ordem é a resposta numa melodia, e não é num acorde desenhado', () => {
+    // melodia (padrão): subir e descer são respostas diferentes
+    expect(validate(certa([60, 64, 67]), resp([67, 64, 60]))).toBe(false);
+    // acorde: clicar as notas em qualquer ordem dá o mesmo acorde
+    expect(validate(certa([60, 64, 67], false), resp([67, 60, 64]))).toBe(true);
+    expect(validate(certa([60, 64, 67], false), resp([55, 48, 52]))).toBe(true);
+  });
+
+  it('quantidade diferente nunca passa, e nota repetida conta', () => {
+    expect(validate(certa([60, 64, 67]), resp([60, 64]))).toBe(false);
+    expect(validate(certa([60, 64, 67]), resp([60, 64, 67, 72]))).toBe(false);
+    expect(validate(certa([60, 60, 64]), resp([60, 60, 64]))).toBe(true);
+    expect(validate(certa([60, 60, 64]), resp([60, 64, 64]))).toBe(false);
+  });
+
+  it('só aceita resposta de várias alturas: uma altura solta não serve', () => {
+    expect(validate(certa([60]), { kind: 'pitch', midi: 60 })).toBe(false);
+    expect(validate(certa([60]), resp([60]))).toBe(true);
+  });
+});

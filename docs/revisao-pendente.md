@@ -66,6 +66,26 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 
 | Id | Modo | Etapas | O que só você confere |
 |---|---|---|---|
+### Modos e parâmetros novos de 13/11 — para a sua revisão musical
+
+Não são itens novos (nenhum nasceu rascunho por isso), são **parâmetros** de itens que já existiam.
+Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
+
+| onde                                                      | o quê                                                                  | confira                                                                                                                                    |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ouvido-intervalo`                                        | a resposta pode ser **as notas** (contorno), e elas podem ser **três** | se três notas empilhadas ainda é um exercício de intervalo ou já é acorde; e se `comTonica` (partir sempre da tônica) deveria ser o padrão |
+| `ouvido-tecla` · `melodia-de-ouvido` · `ouvido-intervalo` | **restringir às notas que você escolhe**                               | se a restrição deveria cruzar com a tonalidade (hoje cruza: escolher ré♭ em dó maior diatônico não o traz)                                 |
+| todos com som                                             | o **synth limpo** como timbre                                          | se ele soa bem no fone e se o nível bate com o piano (medi 1,18× — 1,4 dB acima)                                                           |
+| `ouvido-celulas`                                          | a **cadência como antessala**, ligada só no atalho `acorde-sorteado`   | se vale ligá-la também nos outros atalhos, ou se o acorde sozinho basta                                                                    |
+| `nota-no-instrumento`                                     | **todas as posições** da nota no braço                                 | se a conta de posições em casas 0–12 é exercício ou maratona (num violão, um Fá tem 4 ou 5 posições)                                       |
+| `ouvido-acorde`                                           | **fundamental fixa ou sorteada** (padrão fixa)                         | se sorteada deveria ser o padrão em algum atalho                                                                                           |
+|                                                           |                                                                        |                                                                                                                                            |
+
+---
+
+| `melodia-de-ouvido` | **a linha §3.2 e o molde do modelo novo** (12/11): o item é o objeto musical e o seu gerador; direção (ouvir/audiar) e superfície são parâmetros. Ouvindo, responde-se a melodia em ordem na superfície escolhida, com conferência por **contorno**; audiando, a melodia aparece escrita (pauta ou graus, tipo `1-5-4-3`), só o contexto toca e o gabarito fica num botão. Audiando no teclado ou no braço, a melodia aparece **animada**, nota por nota, com 900 ms em cada (pedido dele em 13/11) — e com `prefers-reduced-motion` as marcas vêm numeradas de uma vez, porque a ordem é informação e não enfeite. Confira o salto padrão (quinta justa), as 3 notas de padrão, e se audiar por graus é claro o bastante sem o nome das notas |
+| `notas-acordes-e-leitura` | **a rotina que o Paulo pediu para si** (10/11): notas e acordes no violão E no piano, depois a pauta — ler, correr e audiar. O instrumento de cada etapa é declarado, não `auto`, porque a rotina diz "nos dois". ⚠️ **Falta a terceira parte que ele pediu**: audiar uma melodia ESCRITA de poucas notas. Hoje só existe audiar uma nota; várias notas na pauta é outro objeto (melodia), e se isso é parâmetro ou item novo é decisão dele (decisão 15) |
+| `ouvido-campo` | graus do campo harmônico de ouvido (`OR-ouvido-relativo.md`, §3.5): cadência de contexto e um acorde — qual grau soou? Grau e qualidade numa pergunta só, pelo algarismo romano. Empréstimos modais opcionais: no maior o grupo do menor paralelo + ♭II; no menor V e vii° da harmônica, IV e ii do dórico, e ♭II (12/11/2026). Confira a cadência do menor sair da harmônica, e os rótulos romanos |
 | `reconhecer-padroes-escala` | a metade de adivinhar do par de padrões de escala (`PE-padroes-de-escala.md`). O motor é `theory/padrao-de-escala.ts`, escrito antes com 25 testes. As alternativas são TODAS as posições do padrão, não quatro — não há distrator a inventar nem como descartar por eliminação. A exploração com a escada clicável **não existe ainda**, e é com ela que vem o link do vídeo do ChicagoBassBuddy clicável; aqui o crédito está na descrição, em texto |
 | `percepcao-ritmica` | rotina nova, com o desenho do Paulo: ouvir o ritmo escrito e depois quatro etapas de leitura variando os recursos — pontuadas, quiálteras, as três juntas, e as nove células essenciais. O `ritmo-ouvido` veio da rotina do fone, onde era a única etapa não melódica |
 | `de-bolso` | livre | 4 | **o tempo de pensar de cada variação** (6, 10, 12 e 5 s) e se as quatro são os cortes certos dos seis objetos |
@@ -85,6 +105,38 @@ exercício ali, para a revisão não ter de reconstruir o raciocínio.
 > **braço inteiro** — porque com o instrumento na mão a pessoa acha a nota no braço de verdade e só
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
+
+### Mapa do braço (`13/11/2026`)
+
+Item novo, desenhado com você numa conversa inteira (36 perguntas) e construído na mesma noite. O
+gerador está testado; o que falta é o **seu ouvido e a sua mão**.
+
+| Id | O que só você confere |
+|---|---|
+| `mapa-do-braco` | **se o exercício ensina o braço.** Quatro graus sorteados do campo aparecem numa posição de mão, uma posição destacada por vez, e você clica no nome. Confira: (1) se a **abertura padrão** — 5 casas no violão, 6 no baixo — dá desenhos que a mão alcança, principalmente na 1ª posição, onde os trastes são largos; (2) se o **passeio** pelo braço parece aleatório de fato (medido: as cinco regiões saem com frequência parecida, nenhuma acima de 30%); (3) se **sortear os graus** é melhor que escolhê-los, como você supôs — e se três graus não seria a entrada melhor que quatro; (4) se as **ordens embaralhadas** espalham o suficiente entre cordas (medido: média de 3,35 cordas por desenho, contra 2,99 só com inversões), ou se vale ligar *uma nota por corda* por padrão; (5) se **não anunciar os graus** na tela deixa o exercício difícil demais na entrada; (6) se **fixar uma região** (por exemplo 7 a 15, atravessando a 12ª casa) com o resto do braço apagado dá o contexto que você queria, ou se o véu incomoda |
+
+**O modo de foco existe desde 14/11**, e é a parte que você só vai conseguir testar no celular. O
+que ele faz: abaixo de 480 px de altura, a moldura do app sai (cabeçalho, placar, pé, navegação,
+banner de revisão e o caminho de volta), e o placar vem para a linha fina sobre o braço. Em pé, com
+o aparelho girável e menos de 560 px de largura, aparece "vire o celular" — **com o botão de
+personalizar disponível**, porque configurar é tarefa de tela em pé e praticar é de tela deitada.
+
+Conferido no navegador em quatro tamanhos (celular em pé e deitado, tablet em pé, desktop), e o que
+não dá para conferir ali está em teste: as regras de tela são função pura com seis casos, incluindo
+*janela de desktop estreita*, onde **não** se pede para girar nada. No celular deitado: 375 px de
+conteúdo em 375 px de tela, sem rolagem, braço de 645 px e botões de 87 px.
+
+Três cuidados que só falhariam no aparelho de verdade, e por isso entraram antes do relato:
+`100dvh` em vez de `100vh` (no Safari de iPhone o `vh` conta a barra de endereço e corta o rodapé),
+`env(safe-area-inset-*)` nas laterais (deitado, o notch fica na borda e comeria a primeira casa) e
+três fontes de evento para a rotação, porque o `orientationchange` do iOS dispara **antes** de as
+medidas mudarem.
+
+**Duas pendências conhecidas, decididas com você e não resolvidas:** o vão da mão é um número só
+para todo o braço, embora 6 casas seja impraticável na 1ª posição e confortável na 9ª (resolver isso
+é regra nova no motor, que melhoraria também o `acorde-no-instrumento`); e o **motor sem arpejo**
+(sortear notas próximas quaisquer, sem lógica harmônica) ficou guardado em 14/11, para o caso de os
+graus sorteados ainda parecerem pouco.
 
 ### Mãos livres (`F6-1`)
 

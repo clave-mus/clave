@@ -15,10 +15,13 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 // (06/11), que moveu o modo "intervalo" de `ache-a-nota` para `faca-o-intervalo` — também sem
 // migração: o modo estava QUEBRADO (B4), então não havia resposta válida salva para preservar.
 const STABLE_IDS = [
-  'nota-na-pauta', 'nota-no-instrumento', 'intervalo-na-pauta', 'intervalo-no-instrumento', 'que-acorde-e-esse',
+  'nota-na-pauta', 'nota-no-instrumento', 'intervalo-na-pauta', 'intervalo-no-instrumento', 'acorde-na-pauta', 'acorde-no-instrumento',
   'pauta-armadura', 'pauta-escala',
   'teoria-intervalos',
-  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-escala', 'ouvido-celulas', 'reconhecer-padroes-escala', 'ritmo-ouvido',
+  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-campo',
+  // 13/11/2026: desenhado com o Paulo numa conversa inteira. Nasce rascunho.
+  'mapa-do-braco',
+  'melodia-de-ouvido', 'ouvido-escala', 'ouvido-celulas', 'reconhecer-padroes-escala', 'ritmo-ouvido',
 ];
 
 const assuntos: [string, Assunto][] = [

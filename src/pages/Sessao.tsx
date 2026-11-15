@@ -120,6 +120,10 @@ export default function Sessao() {
    * Fecha a etapa com um desfecho. No **guiado** avança para a próxima; no **livre** volta aos
    * cartões, porque ali não existe "próxima" — a ordem é de quem está praticando.
    */
+  /** O alvo da etapa foi batido? Habilita avançar, e **não** avança sozinho. */
+  const [alvoBatido, setAlvoBatido] = useState(false);
+  useEffect(() => { setAlvoBatido(false); }, [sessao?.etapaAtual]);
+
   const marcar = (d: Desfecho) => {
     if (rotina?.modo === 'livre') {
       setSessao(s => (s ? { ...s, desfechos: { ...s.desfechos, [s.etapaAtual]: d } } : s));
@@ -258,16 +262,37 @@ export default function Sessao() {
     const settings = { ...instancia.settings, ...rotacao.settings } as Record<string, SettingValue>;
     const params = { ...(rotacao.params as ParametrosDePratica), ...instancia.params };
     if (isSeries(item)) {
+      /**
+       * **Bater o alvo não tira mais a pessoa da etapa** (correção de 10/11/2026, pedido do Paulo:
+       * *"ao terminar o número X de exercícios de tal etapa, a gente não seja automaticamente
+       * retirado dela. Que tu possa ficar mais"*).
+       *
+       * Antes, `onDone` chamava `marcar('concluida')` direto — que no modo livre fecha a etapa e no
+       * guiado avança. Doze perguntas e você era ejetado no meio do que estava rendendo.
+       *
+       * Agora o alvo só **habilita** o avanço, como já era para as etapas de tela própria (que têm
+       * o botão "concluir etapa" desde sempre). A diferença entre série e tela própria era acidental.
+       */
       return (
-        <Player
-          key={`${etapa.id}:${instancia.itemId}:${sessao.resolvidas[etapa.id] ?? 0}`}
-          def={item}
-          initialSettings={settings}
-          initialParams={params}
-          target={PERGUNTAS_POR_ETAPA}
-          sessionId={sessao.sessaoId}
-          onDone={() => marcar('concluida')}
-        />
+        <>
+          <Player
+            key={`${etapa.id}:${instancia.itemId}:${sessao.resolvidas[etapa.id] ?? 0}`}
+            def={item}
+            initialSettings={settings}
+            initialParams={params}
+            target={PERGUNTAS_POR_ETAPA}
+            sessionId={sessao.sessaoId}
+            onDone={() => setAlvoBatido(true)}
+          />
+          {alvoBatido && (
+            <div className="panel" style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+              <span>{t('session.targetReached', { n: PERGUNTAS_POR_ETAPA })}</span>
+              <div className="row">
+                <Btn onClick={() => marcar('concluida')}>{t('session.finishStep')}</Btn>
+              </div>
+            </div>
+          )}
+        </>
       );
     }
     return (

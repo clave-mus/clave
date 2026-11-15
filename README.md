@@ -187,3 +187,10 @@ vai para o repositório nem para o navegador. O passo a passo está em
 [docs/supabase-setup.md](docs/supabase-setup.md).
 
 A sincronização do progresso local com a conta é a tarefa `F9-1` e **ainda não existe**.
+
+## Créditos de áudio
+
+O timbre de piano usa amostras do **[Salamander Grand Piano](https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html)**
+(Alexander Holm, licença CC-BY 3.0) — um subconjunto recodificado, detalhado em
+`public/amostras/piano/CREDITOS.txt`. Todos os outros timbres são sintetizados pelo
+próprio app (`src/audio/engine.ts`).

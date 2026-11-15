@@ -11,7 +11,7 @@ const etapa = (id: string, itens: string[], extra: Partial<Etapa> = {}): Etapa =
 });
 const rotina = (extra: Partial<Rotina> = {}): Rotina => ({
   formato: FORMATO_ROTINA, id: 'r1', nome: 'Manhã de braço', modo: 'guiado', embaralhar: false, params: {},
-  etapas: [etapa('a', ['que-nota-e-essa'], { segundosSugeridos: 300 }), etapa('b', ['ache-a-nota'])],
+  etapas: [etapa('a', ['nota-na-pauta'], { segundosSugeridos: 300 }), etapa('b', ['nota-no-instrumento'])],
   ...extra,
 });
 
@@ -23,7 +23,7 @@ describe('ida e volta', () => {
     expect(v.rotina.modo).toBe('livre');
     expect(v.rotina.embaralhar).toBe(true);
     expect(v.rotina.notas).toBe('devagar');
-    expect(v.rotina.etapas.map(e => e.instancias[0].itemId)).toEqual(['que-nota-e-essa', 'ache-a-nota']);
+    expect(v.rotina.etapas.map(e => e.instancias[0].itemId)).toEqual(['nota-na-pauta', 'nota-no-instrumento']);
     expect(v.rotina.etapas[0].segundosSugeridos).toBe(300);
   });
 
@@ -35,7 +35,7 @@ describe('ida e volta', () => {
   it('a configuração e os parâmetros de cada instância atravessam', () => {
     const r = rotina({ etapas: [{
       id: 'a', politica: 'ordem',
-      instancias: [{ itemId: 'que-nota-e-essa', settings: { superficie: 'braco', casas: '5-9' }, params: { key: { tonic: 7, mode: 'maior' }, material: 'diatonico' } }],
+      instancias: [{ itemId: 'nota-na-pauta', settings: { superficie: 'braco', casas: '5-9' }, params: { key: { tonic: 7, mode: 'maior' }, material: 'diatonico' } }],
     }] });
     const i = doLink(paraLink(r))!.rotina.etapas[0].instancias[0];
     expect(i.settings).toEqual({ superficie: 'braco', casas: '5-9' });
@@ -85,7 +85,7 @@ describe('adotar o que chegou', () => {
     const minha = copiarRotina(v.rotina, v.autor);
     expect(minha.id).not.toBe(v.rotina.id);
     expect(minha.origem?.autor).toBe('Paulo');
-    expect(minha.etapas[0].instancias[0].itemId).toBe('que-nota-e-essa');
+    expect(minha.etapas[0].instancias[0].itemId).toBe('nota-na-pauta');
   });
 });
 
@@ -96,7 +96,7 @@ describe('o tamanho', () => {
   });
 
   it('e uma rotina absurda não cabe — é informação para a tela, não erro', () => {
-    const gigante = rotina({ etapas: Array.from({ length: 60 }, (_, k) => etapa(`e${k}`, ['que-acorde-e-esse'], { segundosSugeridos: 300 })) });
+    const gigante = rotina({ etapas: Array.from({ length: 60 }, (_, k) => etapa(`e${k}`, ['acorde-no-instrumento'], { segundosSugeridos: 300 })) });
     expect(cabeNoLink(gigante, 'https://clave.app')).toBe(false);
     expect(linkDaRotina(gigante, 'https://clave.app').length).toBeGreaterThan(LIMITE_DO_LINK);
   });
@@ -128,7 +128,7 @@ describe('texto de fora nunca quebra o app', () => {
   });
 
   it('política desconhecida vira `ordem` em vez de quebrar', () => {
-    const esquisita = btoa(JSON.stringify({ v: FORMATO_ROTINA, n: 'X', m: 'g', p: [[99, 0, [['que-nota-e-essa', {}]]]] }))
+    const esquisita = btoa(JSON.stringify({ v: FORMATO_ROTINA, n: 'X', m: 'g', p: [[99, 0, [['nota-na-pauta', {}]]]] }))
       .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     expect(doLink(esquisita)!.rotina.etapas[0].politica).toBe('ordem');
   });

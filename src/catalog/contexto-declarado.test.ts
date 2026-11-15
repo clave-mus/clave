@@ -42,6 +42,33 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   notaNaPauta: ['range', 'key', 'material'],
   alturaDoPc: ['range'],
   notaGrafada: ['key'],
+  nomeNaTonalidade: ['key'],
+  // Entrou em 10/11/2026 com a direção `audiar`: lê a tonalidade para saber qual tônica tocar como
+  // contexto, e o piso da região para não botar o contexto fora dela.
+  tonicaDeContexto: ['key', 'range'],
+  // Entraram em 12/11/2026: a armadura da tonalidade em vigor (para desenhá-la na pauta) e a grafia
+  // que ela dita. Só tonalidade — nem região nem material passam por aqui.
+  quintasDaTonalidade: ['key'],
+  notaDaTonalidade: ['key'],
+  // Entrou em 12/11/2026 no lugar do parâmetro "extensão": os passos da pauta saem da REGIÃO.
+  passosDaRegiao: ['range'],
+  // Lê `params.clef`, que NÃO é parâmetro de prática (os três são key, range e material) — então
+  // chamá-la não obriga o item a declarar nada. Entrou na lista em 12/11 com "desenhar o acorde".
+  clave: [],
+  // Entraram em 12/11/2026 com os botões por grau: o grau é contado da tônica, e a lista de graus
+  // oferecidos sai do material.
+  grauDoPc: ['key'],
+  grausDaTonalidade: ['key', 'material'],
+  // Entrou em 13/11 com "restringir às notas que a pessoa escolhe": cruza a seleção dela com o que
+  // o material permite, então lê os mesmos dois parâmetros que `pcsPermitidas`.
+  pcsEscolhidas: ['key', 'material'],
+  // Entraram em 13/11 com "só estes graus": a lista de graus oferecidos e o cruzamento dela com o
+  // material. As duas contam o grau a partir da tônica, então leem tonalidade e material.
+  GRAUS_DO_MATERIAL: ['key', 'material'],
+  pcsDosGraus: ['key', 'material'],
+  // Entrou em 13/11: a faixa que uma clave lê sem linhas suplementares demais. Depende só da
+  // CLAVE, que não é parâmetro de prática — como `clave`.
+  faixaDaClave: [],
 };
 
 /**
@@ -51,11 +78,14 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
  * CASAS, que é outra unidade. Oferecer "região" nesses é prometer o que nenhuma das duas superfícies
  * aceita (ver contexto-musical.test.ts).
  *
- * `que-intervalo-e-esse` é o caso puro: as suas duas superfícies são pauta e braço, e nenhuma honra
- * uma faixa em MIDI. Já `que-nota-e-essa`, `ache-a-nota` e `que-acorde-e-esse` **têm** a superfície do
- * teclado, onde a região faz sentido de verdade — e por isso declaram `range`.
+ * `intervalo-na-pauta` **saiu desta lista em 10/11/2026**, e por um motivo que vale escrever: a
+ * direção `audiar` toca uma tônica de contexto, e `tonicaDeContexto` lê o piso da região para não
+ * botá-la fora dela. Então a região passou a fazer diferença ali — antes não fazia, porque pauta e
+ * braço não honram faixa em MIDI.
+ *
+ * Fica `pauta-escala`, que segue sendo o caso puro.
  */
-const REGIAO_NAO_SE_OFERECE = ['pauta-escala', 'intervalo-na-pauta'];
+const REGIAO_NAO_SE_OFERECE = ['pauta-escala'];
 
 /**
  * `ctx.params` espionado: acusa quem lê `key`, `range` ou `material` **direto**, sem passar pelas

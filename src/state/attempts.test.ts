@@ -42,10 +42,29 @@ describe('classificação do erro', () => {
 function answer(q: Question, wantCorrect: boolean): Response {
   const ok = (r: Response) => validate(q.expected, r) === wantCorrect;
   const sf = q.surface;
+  /**
+   * Superfície que **acumula** (`quantas > 1`): a resposta é o conjunto de alturas. A certa é o
+   * gabarito do contorno; as erradas deslocam UMA nota, que é o caso que o contorno recusa.
+   */
+  if ('quantas' in sf && (sf.quantas ?? 1) > 1 && q.expected.kind === 'contorno') {
+    const certas = q.expected.midis;
+    const erradas = certas.map((_, i) => certas.map((m, k) => (k === i ? m + 12 : m)));
+    return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
+  }
+  // `mapa`: a pessoa nomeia posição por posição, e o que chega ao Player no fim são as alturas das
+  // posições, na ordem. A errada troca a primeira por outra classe qualquer.
+  if (sf.kind === 'mapa') {
+    const certas = sf.posicoes.map(p => p.midi);
+    const erradas = [[...certas.slice(1), certas[0] + 1], certas.map(m => m + 1)];
+    return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
+  }
   const candidates: Response[] =
     sf.kind === 'choices' ? sf.options.map(optionResponse)
       : sf.kind === 'keyboard' ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.lo + k }) as Response)
-      : sf.kind === 'fretboard' ? Array.from({ length: sf.to - sf.from + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.tuning[sf.onlyString ?? 0] + sf.from + k }) as Response)
+      // Todas as cordas, não só a primeira: a resposta certa pode estar em qualquer uma, e com a
+      // superfície do `ouvido-tecla` virando parâmetro isso deixou de ser detalhe.
+      : sf.kind === 'fretboard' ? (sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i))
+        .flatMap(st => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => ({ kind: 'pitch', midi: sf.tuning[st] + sf.from + k }) as Response))
       : sf.kind === 'letters' ? [0, 1, 2, 3, 4, 5, 6].flatMap(l => [-1, 0, 1].map(acc => ({ kind: 'spelled', letter: l, acc }) as Response))
       // `sequence`: a resposta é a sequência montada, unida pelo separador. A certa, e algumas
       // erradas deslocando a paleta — mais de uma porque um deslocamento pode cair na certa.

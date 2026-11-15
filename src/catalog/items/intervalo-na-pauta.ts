@@ -1,4 +1,4 @@
-import { CLEFS, INTERVALS, arr, clefBottom, ivLabel, midi, notaNaPauta, noteName, pick, pickClef, semisFor, transpose } from '../helpers';
+import { CLEFS, INTERVALS, arr, clefBottom, ivLabel, midi, notaNaPauta, noteName, pick, pickClef, quintasDaTonalidade, semisFor, transpose } from '../helpers';
 import type { Note } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -32,12 +32,18 @@ export const intervaloNaPauta: CatalogItem = {
   skillTags: ['theory.interval_naming', 'notation.pitch_reading', 'notation.pitch_writing'],
   contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
-  respeita: ['key', 'material'],
+  // `range` entra porque `tonicaDeContexto` (direção `audiar`) lê o piso da região para não botar
+  // o contexto fora dela. O teste `contexto-declarado` pegou a omissão.
+  respeita: ['key', 'material', 'range'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'ler', label: ctx.t('settings.readIt') },
       { id: 'escrever', label: ctx.t('settings.writeIt') },
+      /**
+       * **O `audiar` saiu daqui em 12/11** e foi para a linha de ouvido correspondente: audiar é
+       * ouvido, e quem tem o gerador tem as duas direções (`OR-ouvido-relativo.md`, §2).
+       */
     ] },
     CLEFS(ctx),
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabel(i.id, ctx), tier: i.tier })) },
@@ -52,6 +58,8 @@ export const intervaloNaPauta: CatalogItem = {
     const id = pick(ids);
     const iv = INTERVALS.find(i => i.id === id) ?? INTERVALS[0];
     const b = clefBottom(clef);
+    // A armadura da tonalidade escolhida, na pergunta e na pauta de resposta (decisão D2, 12/11).
+    const fifths = quintasDaTonalidade(ctx) ?? undefined;
     let lower: Note, upper: Note;
     do {
       lower = notaNaPauta(ctx, [b - 1, b + 9 - (iv.num - 1)], () => (Math.random() < 0.25 ? pick([1, -1]) : 0));
@@ -61,8 +69,8 @@ export const intervaloNaPauta: CatalogItem = {
     if (s.direcao === 'escrever') {
       return {
         prompt: ctx.t('quiz.writeInterval', { interval: ivLabel(iv.id, ctx), note: `${noteName(lower, ctx.naming)}${lower.oct}` }),
-        visual: { kind: 'staff', clef, columns: [[lower]] },
-        surface: { kind: 'staff', clef, accidentals: true },
+        visual: { kind: 'staff', clef, fifths, columns: [[lower]] },
+        surface: { kind: 'staff', clef, accidentals: true, fifths },
         expected: { kind: 'spelled', letter: upper.letter, acc: upper.acc, oct: upper.oct },
         sound: { groups: [[midi(lower)], [midi(upper)]] },
         reveal: `${noteName(upper, ctx.naming)}${upper.oct}`,
@@ -70,7 +78,7 @@ export const intervaloNaPauta: CatalogItem = {
     }
     const harmonico = s.forma === 'ambas' ? Math.random() < 0.5 : s.forma === 'harmonico';
     return {
-      prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'staff', clef, columns: harmonico ? [[lower, upper]] : [[lower], [upper]] },
+      prompt: ctx.t('quiz.whatInterval'), visual: { kind: 'staff', clef, fifths, columns: harmonico ? [[lower, upper]] : [[lower], [upper]] },
       surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: ivLabel(i, ctx) })) }, expected: { kind: 'option', id },
       sound: { groups: harmonico ? [[midi(lower), midi(upper)]] : [[midi(lower)], [midi(upper)]] },
       reveal: ivLabel(id, ctx),

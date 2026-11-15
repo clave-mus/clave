@@ -27,19 +27,31 @@ const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0
  * etapa apareceria como "exercício que não existe mais" no executor. A superfície é a metade que não
  * pode ser esquecida: migrar `braco-nota` para `que-nota-e-essa` sem ela jogaria a pessoa na pauta.
  */
-const FUNDIDOS: Record<string, { id: string; superficie: string }> = {
-  'pauta-nota': { id: 'que-nota-e-essa', superficie: 'pauta' },
-  'teclado-nota': { id: 'que-nota-e-essa', superficie: 'teclado' },
-  'braco-nota': { id: 'que-nota-e-essa', superficie: 'braco' },
-  'pauta-construir': { id: 'ache-a-nota', superficie: 'pauta' },
-  'teclado-tecla': { id: 'ache-a-nota', superficie: 'teclado' },
-  'braco-ache': { id: 'ache-a-nota', superficie: 'braco' },
-  'pauta-intervalo': { id: 'que-intervalo-e-esse', superficie: 'pauta' },
-  'braco-intervalo': { id: 'que-intervalo-e-esse', superficie: 'braco' },
-  'pauta-acorde': { id: 'que-acorde-e-esse', superficie: 'pauta' },
-  'teclado-acorde': { id: 'que-acorde-e-esse', superficie: 'teclado' },
+/**
+ * Os ids de antes da fusão de 2026, e para onde eles vão hoje.
+ *
+ * ⚠️ **Reescrita em 10/11/2026.** A tabela apontava para `que-nota-e-essa`, `ache-a-nota`,
+ * `que-intervalo-e-esse` e `que-acorde-e-esse` — itens que **deixaram de existir** quando a
+ * reorganização trocou o eixo do catálogo. Uma rotina salva com um id antigo migraria para um item
+ * inexistente, e a etapa quebraria. O histórico o Paulo autorizou matar; a rotina dele, não.
+ *
+ * A superfície virou o item, então `superficie` sai e entra `direcao`: o par de cada família que
+ * **identificava** vai para a direção de ler/identificar, e o que **produzia** vai para
+ * escrever/achar. É a mesma informação, no eixo novo.
+ */
+const FUNDIDOS: Record<string, { id: string; settings: Record<string, string> }> = {
+  'pauta-nota': { id: 'nota-na-pauta', settings: { direcao: 'ler' } },
+  'teclado-nota': { id: 'nota-no-instrumento', settings: { direcao: 'identificar', instrumento: 'piano' } },
+  'braco-nota': { id: 'nota-no-instrumento', settings: { direcao: 'identificar' } },
+  'pauta-construir': { id: 'nota-na-pauta', settings: { direcao: 'escrever' } },
+  'teclado-tecla': { id: 'nota-no-instrumento', settings: { direcao: 'achar', instrumento: 'piano' } },
+  'braco-ache': { id: 'nota-no-instrumento', settings: { direcao: 'achar' } },
+  'pauta-intervalo': { id: 'intervalo-na-pauta', settings: { direcao: 'ler' } },
+  'braco-intervalo': { id: 'intervalo-no-instrumento', settings: { direcao: 'identificar' } },
+  'pauta-acorde': { id: 'acorde-na-pauta', settings: { direcao: 'ler' } },
+  'teclado-acorde': { id: 'acorde-no-instrumento', settings: { direcao: 'identificar', instrumento: 'piano' } },
   // `acorde-visual` tinha a superfície na configuração `onde` (violão ou piano), não no id.
-  'acorde-visual': { id: 'que-acorde-e-esse', superficie: 'braco' },
+  'acorde-visual': { id: 'acorde-no-instrumento', settings: { direcao: 'identificar' } },
 };
 
 /**
@@ -88,9 +100,9 @@ export function settingsFundidos(id: string, settings: Obj): { id: string; setti
     return { id, settings };
   }
   const { onde, ...resto } = settings;
-  // `acorde-visual` com `onde: 'piano'` era o teclado, não o braço
-  const superficie = id === 'acorde-visual' && onde === 'piano' ? 'teclado' : f.superficie;
-  return { id: f.id, settings: { ...resto, superficie } };
+  // `acorde-visual` com `onde: 'piano'` era o teclado; no eixo novo isso é o INSTRUMENTO piano.
+  const doPiano = id === 'acorde-visual' && onde === 'piano' ? { instrumento: 'piano' } : {};
+  return { id: f.id, settings: { ...resto, ...f.settings, ...doPiano } };
 }
 
 /** Tira do estado salvo os campos que saíram e converte `area` em `module` no histórico. */

@@ -1,4 +1,4 @@
-import { INST, arr, mod, paresNoBraco, pcNameUm, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
+import { INST, arr, bracoDoPerfil, mod, nomeNaTonalidade, paresNoBraco, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
 import { INTERVALS } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -48,17 +48,24 @@ export const intervaloNoInstrumento: CatalogItem = {
    * de dó maior (30%), e **nenhum tamanho zera** — o mais magro fica com 4. E onde afina, a magreza
    * é verdadeira: o semitom em dó maior existe só em Mi→Fá e Si→Dó, e o trítono só em Fá→Si.
    */
+  // `range` saiu em 12/11 com o `audiar`: era `tonicaDeContexto` que o lia, e ela foi para a
+  // linha de ouvido. `contexto-declarado` mede as chamadas reais e cobrou na hora.
   respeita: ['key', 'material'],
   publicacao: LEGADO,
   settings: ctx => [
     { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
       { id: 'identificar', label: ctx.t('settings.nameIt') },
       { id: 'construir', label: ctx.t('settings.buildIt') },
+      /**
+       * **O `audiar` saiu daqui em 12/11** e foi para a linha de ouvido correspondente: audiar é
+       * ouvido, e quem tem o gerador tem as duas direções (`OR-ouvido-relativo.md`, §2).
+       */
     ] },
     INST(ctx),
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabelSemis(i.id, ctx), tier: i.tier })) },
   ],
-  defaults: { direcao: 'identificar', instrumento: 'auto', intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'] },
+  defaults: { direcao: 'identificar', intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'] },
+  defaultsDo: ctx => ({ instrumento: bracoDoPerfil(ctx) }),
   make(s, ctx) {
     const tuning = tuningOf(s, ctx);
     const querSemis = new Set(arr(s.intervalos, ['M3']).map(semisDoIntervalo));
@@ -81,7 +88,7 @@ export const intervaloNoInstrumento: CatalogItem = {
         visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: par.s1, f: par.f1, label: '1' }] },
         surface: { kind: 'fretboard', tuning, from: 0, to: 9 }, expected: { kind: 'pitchClass', pc: alvoPc },
         sound: { groups: [[lo]], instrument: vozDoBraco(tuning) },
-        reveal: pcNameUm(alvoPc, ctx.naming, Math.random() < 0.5),
+        reveal: nomeNaTonalidade(ctx, alvoPc, Math.random() < 0.5),
       };
     }
     return {

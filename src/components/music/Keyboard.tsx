@@ -12,13 +12,15 @@ interface Props {
   lo: number;
   hi: number;
   marks?: Record<number, string>;
+  /** Texto curto sobre uma tecla marcada — a ordem numa melodia, por exemplo. */
+  marcasComTexto?: Record<number, string>;
   onPress?: (midi: number) => void;
   labels?: 'none' | 'do' | 'all';
   naming?: Naming;
   label?: string;
 }
 
-export default function Keyboard({ lo, hi, marks = {}, onPress, labels = 'do', naming = 'pt', label }: Props) {
+export default function Keyboard({ lo, hi, marks = {}, marcasComTexto = {}, onPress, labels = 'do', naming = 'pt', label }: Props) {
   const t = useT();
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!BLACK.has(m % 12)) whites.push(m);
@@ -41,14 +43,25 @@ export default function Keyboard({ lo, hi, marks = {}, onPress, labels = 'do', n
         const showLabel = labels === 'all' || (labels === 'do' && m % 12 === 0);
         return (
           <g key={m} onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }}>
-            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--cream)'} className={interactive ? 'key white' : undefined} />
-            {showLabel && <text x={x + WW / 2 - 0.75} y={WH - 9} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--bk)" fontFamily="var(--body)">{pcName(m, naming, false)}{m % 12 === 0 && labels === 'do' ? Math.floor(m / 12) - 1 : ''}</text>}
+            {/* O contorno não é enfeite: sem ele a tecla branca desaparece no fundo claro — o
+                Paulo relatou em 13/11 que elas ficavam "da mesma cor do fundo, se tornando
+                transparentes". `--key-white` é #f7f3ec e o papel do tema claro é #fbf8f4: quase a
+                mesma cor. Um piano de verdade também tem a borda entre as teclas. */}
+            <rect x={x} y={0} width={WW - 1.5} height={WH} fill={mark ?? 'var(--key-white)'}
+              stroke="var(--key-black)" strokeWidth="0.9" strokeOpacity="0.45"
+              className={interactive ? 'key white' : undefined} />
+            {showLabel && <text x={x + WW / 2 - 0.75} y={WH - 9} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--key-black)" fontFamily="var(--body)">{pcName(m, naming, false)}{m % 12 === 0 && labels === 'do' ? Math.floor(m / 12) - 1 : ''}</text>}
+            {marcasComTexto[m] && <text x={x + WW / 2 - 0.75} y={WH - 34} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--key-black)" fontFamily="var(--display)">{marcasComTexto[m]}</text>}
           </g>
         );
       })}
       {blacks.map(({ m, x }) => (
-        <rect key={m} x={x} y={0} width={BW} height={BH} fill={marks[m] ?? 'var(--bk)'} stroke="var(--bk)" strokeWidth="1.5"
-          onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }} className={interactive ? 'key black' : undefined} />
+        <g key={m}>
+          <rect x={x} y={0} width={BW} height={BH} fill={marks[m] ?? 'var(--key-black)'} stroke="var(--key-black)" strokeWidth="1.5"
+            onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }} className={interactive ? 'key black' : undefined} />
+          {/* Nas pretas o número fica em cor clara: a tecla marcada é escura por baixo. */}
+          {marcasComTexto[m] && <text x={x + BW / 2} y={BH - 10} textAnchor="middle" fontSize="12" fontWeight="800" fill="var(--key-white)" fontFamily="var(--display)">{marcasComTexto[m]}</text>}
+        </g>
       ))}
     </svg>
   );

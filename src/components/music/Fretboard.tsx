@@ -28,12 +28,22 @@ interface Props {
   showNames?: boolean;
   naming?: Naming;
   label?: string;
+  /**
+   * **A região em foco**: as casas fora dela aparecem apagadas, e nada é recortado.
+   *
+   * Entrou em 14/11 para o `mapa-do-braco` poder fixar uma posição sem perder o braço de vista —
+   * foi a preocupação do Paulo ao pedir a região: *"acho que seria ruim [desenhar só a região], pois
+   * perderia o contexto de ver o braço completo"*. Ele também queria regiões que atravessam a 12ª
+   * casa (7 a 15), e desenhar o braço inteiro até o fim da região resolve as duas coisas de uma vez:
+   * o contexto fica e não há recorte nenhum.
+   */
+  foco?: readonly [number, number];
 }
 
 const FW = 52;
 const GAP = 22;
 
-export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label }: Props) {
+export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco }: Props) {
   const t = useT();
   const n = tuning.length;
   const left = 50;  // espaço para o nome da corda à esquerda
@@ -51,6 +61,27 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
     <svg className="fret-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label ?? t('music.neck')}>
       <rect x={left} y={top - 8} width={frets * FW} height={(n - 1) * GAP + 16} fill="#3b2418" />
       {inlays.map(f => <circle key={f} cx={left + (f - from - 0.5) * FW} cy={top + ((n - 1) * GAP) / 2} r="5" fill="var(--cream)" opacity="0.35" />)}
+      {/**
+        * O véu sobre o que está FORA do foco — um retângulo de cada lado, na cor do papel.
+        *
+        * Escurecer o fora em vez de recortar mantém o braço inteiro legível como referência: vê-se
+        * que a posição em jogo é a quinta casa, e não um braço qualquer que começa ali.
+        */}
+      {foco && [[from, Math.max(from, foco[0] - 1)] as const, [Math.min(to, foco[1]), to] as const]
+        .filter(([a, b]) => b > a)
+        .map(([a, b]) => (
+          <rect key={`veu${a}-${b}`} x={left + (a - from) * FW} y={top - 10} width={(b - a) * FW} height={(n - 1) * GAP + 20}
+            /**
+             * **Preto fixo, nunca uma variável de tema** — e isto foi pego revisando antes do
+             * deploy. Escrevi `var(--ground)` primeiro, que é branco no tema claro: o véu
+             * CLAREARIA as casas fora do foco, destacando exatamente o que devia apagar.
+             *
+             * O braço é escuro em qualquer tema (`.stage.dark`), então a cor que o apaga também
+             * tem de ser. É a mesma lição de `--key-white`/`--key-black`, que o Paulo relatou em
+             * 12/11 como "cores das teclas do piano invertidas no modo claro".
+             */
+            fill="rgb(0 0 0)" opacity="0.6" pointerEvents="none" />
+        ))}
       {12 > from && 12 <= to && [0.3, 0.7].map(k => <circle key={k} cx={left + (12 - from - 0.5) * FW} cy={top + (n - 1) * GAP * k} r="5" fill="var(--cream)" opacity="0.35" />)}
       {Array.from({ length: frets + 1 }, (_, i) => (
         <path key={i} d={`M${left + i * FW},${top - 8} V${top + (n - 1) * GAP + 8}`} stroke={i === 0 && from === 0 ? 'var(--cream)' : '#a99f8c'} strokeWidth={i === 0 && from === 0 ? 6 : 2} />

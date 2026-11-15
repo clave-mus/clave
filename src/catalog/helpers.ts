@@ -9,12 +9,12 @@
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
 import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
 import { digitacoesDaReceita } from '../theory/digitacoes';
-import { pcPermitido } from './contexto-musical';
+import { pcPermitido, regiao } from './contexto-musical';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
 import { TUNINGS } from '../components/music/Fretboard';
 import type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
-import { clave, pcsPermitidas } from './contexto-musical';
+import { clave, GRAUS_DO_MATERIAL, pcsPermitidas } from './contexto-musical';
 
 // Reexportado para o item declarar **um import só**. Sem isto, cada `items/<id>.ts` abriria com cinco
 // linhas de import de quatro módulos, e a declaração — que é o que se lê — ficaria enterrada.
@@ -28,7 +28,7 @@ export { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/
 export { CELLS, RHYTHM_PRESETS, randomBars } from '../theory/rhythm';
 export type { CellId } from '../theory/rhythm';
 export { TUNINGS } from '../components/music/Fretboard';
-export { alturaDoPc, alturaNaRegiao, clave, notaNaPauta, pcPermitida, pcPermitido, pcsPermitidas, regiao, tonicaNaRegiao } from './contexto-musical';
+export { alturaDoPc, alturaNaRegiao, clave, faixaDaClave, tonalidade, GRAUS_DO_MATERIAL, grauDoPc, grausDaTonalidade, nomeNaTonalidade, notaDaTonalidade, notaGrafada, pcsDosGraus, pcsEscolhidas, notaNaPauta, passosDaRegiao, pcPermitida, pcPermitido, pcsPermitidas, quintasDaTonalidade, regiao, tonicaNaRegiao } from './contexto-musical';
 export type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 export type { MessageKey } from '../i18n';
 
@@ -54,48 +54,56 @@ export const arr = (v: SettingValue | undefined, fallback: string[]) => (Array.i
 export const CLEFS = ({ t }: Ctx): Setting => ({ id: 'claves', label: t('settings.clefs'), type: 'multi', options: [{ id: 'sol', label: t('settings.clefSol') }, { id: 'fa', label: t('settings.clefFa') }] });
 export const EXT = ({ t }: Ctx): Setting => ({ id: 'extensao', label: t('settings.range'), type: 'single', options: [{ id: 'pauta', label: t('settings.rangeStaff'), tier: 1 }, { id: 'suplementares', label: t('settings.rangeLedger'), tier: 2 }] });
 export const ACC = ({ t }: Ctx): Setting => ({ id: 'acidentes', label: t('settings.accidentals'), type: 'toggle' });
+/**
+ * O instrumento do braço. **Sem a opção "meu instrumento"** desde 14/11: o valor inicial vem do
+ * perfil (`CatalogItem.defaultsDo`), e o chip mostra *violão* ou *baixo* — o que a pessoa precisa
+ * saber. Um chip marcado "meu instrumento" não diz qual é, e era a crítica do Paulo.
+ */
 export const INST = ({ t }: Ctx): Setting => ({ id: 'instrumento', label: t('settings.instrument'), type: 'single', options: [
-  { id: 'auto', label: t('settings.myInstrument') }, { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
+  { id: 'violao', label: t('settings.guitar') }, { id: 'baixo', label: t('settings.bass') }] });
+/** O instrumento do perfil, reduzido ao que um item de braço aceita. */
+export const bracoDoPerfil = (ctx: Ctx) => (ctx.params.instrument === 'baixo' ? 'baixo' : 'violao');
+/**
+ * A superfície padrão: o teclado para quem toca piano, o braço para os outros.
+ *
+ * **Uma função, dois chamadores** — `defaultsDo` (para o chip da tela mostrar o valor certo) e o
+ * `make` (para quem chama o item sem passar pelo Player: testes, rotinas, links). Em 14/11 eu pus a
+ * regra só no `defaultsDo` e dois testes caíram na hora: o `make` chamado direto perdia o perfil, e
+ * o timbre do braço voltava a ser o do violão num perfil de baixo. Default estático que contradiz o
+ * contexto é pior que default ausente.
+ */
+export const superficieDoPerfil = (ctx: Ctx) => (ctx.params.instrument === 'piano' ? 'teclado' : 'braco');
+/**
+ * **Restringir aos graus que a pessoa escolhe** — o `multi` que o rascunho do Paulo pede na Nota, na
+ * Melodia e no Intervalo harmônico. Vazio é o padrão e quer dizer "sem restrição".
+ *
+ * **Grau, e não nome de nota** (decisão dele em 13/11): a lista segue o material, então com "só a
+ * tonalidade" ela mostra os graus daquela tonalidade e nada mais — em dó maior sem ♭3, em dó menor
+ * com ele. E a seleção sobrevive à troca de tonalidade, porque o id é a distância da tônica.
+ *
+ * É `podeVazio` porque vazio aqui é estado legítimo, não configuração pela metade.
+ */
+export const GRAUS_ESCOLHIDOS = (ctx: Ctx): Setting => ({
+  id: 'grausEscolhidos', label: ctx.t('settings.onlyTheseDegrees'), type: 'multi', justify: true, podeVazio: true,
+  options: GRAUS_DO_MATERIAL(ctx),
+});
+
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 /** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */
-/**
- * O seletor de superfície (decisão 16). **A superfície é parâmetro, não exercício** — e o que muda
- * com ela não é só o desenho: é o que a pergunta consegue cobrar.
- *
- * `present` existe porque o arpejo depende da superfície: um acorde de violão soa dedilhado, um de
- * pauta quase em bloco, e um de teclado em bloco.
- */
-export const SUPERFICIES = { pauta: 'settings.surfaceStaff', teclado: 'settings.surfaceKeyboard', braco: 'settings.surfaceFretboard' } as const;
-export type SuperficieId = keyof typeof SUPERFICIES;
-export const SUP = ({ t }: Ctx, quais: SuperficieId[], present?: Setting['present']): Setting => ({
-  id: 'superficie', label: t('settings.surface'), type: 'single',
-  options: quais.map(id => ({ id, label: t(SUPERFICIES[id]) })),
-  ...(present ? { present } : {}),
-});
-
-/**
- * As configurações de cada superfície, cada uma visível só quando a sua está ativa.
- *
- * **A extensão não se unifica, de propósito.** `pauta / suplementares`, `1 / 2 oitavas` e faixas de
- * casa são três unidades incomparáveis: um parâmetro só precisaria de três listas de opções, o que é
- * três parâmetros com um nome em comum.
- */
-export function porSuperficie(ctx: Ctx, opts: { semOitavas?: boolean } = {}): Setting[] {
-  const naPauta = (s: S) => s.superficie === 'pauta' || s.superficie === undefined;
-  return [
-    { ...CLEFS(ctx), quando: naPauta },
-    { ...EXT(ctx), quando: naPauta },
-    { ...ACC(ctx), quando: naPauta },
-    { id: 'pretas', label: ctx.t('settings.blackKeys'), type: 'toggle', quando: s => s.superficie === 'teclado' },
-    ...(opts.semOitavas ? [] : [{
-      id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single' as const, quando: (s: S) => s.superficie === 'teclado',
-      options: [{ id: '1', label: '1' }, { id: '2', label: '2' }],
-    }]),
-    { ...INST(ctx), quando: s => s.superficie === 'braco' },
-    { ...FRETS(ctx), quando: s => s.superficie === 'braco' },
-  ];
-}
+// ---------------- a fusão por superfície, e por que ela não existe mais ----------------
+//
+// `SUP` e `porSuperficie` moravam aqui: montavam o seletor de superfície e as configurações que
+// apareciam e desapareciam com ele. Saíram em 10/11/2026, **sem chamador nenhum**, quando a
+// reorganização terminou de trocar o eixo do catálogo.
+//
+// O que elas resolviam era um problema que deixou de existir: doze itens eram quatro perguntas
+// repetidas em três superfícies, e a fusão de 2026 as juntou com a superfície como parâmetro. O
+// Paulo viu que estava invertido — a validação, a extensão e as habilidades mudam com a
+// SUPERFÍCIE, e não com a direção —, e agora são seis itens, um por superfície, com a direção
+// como parâmetro. Ninguém mais precisa esconder configuração de ninguém com `Setting.quando`.
+//
+// Ver `docs/tarefas/OR-ouvido-relativo.md` e os comentários em `items/nota-na-pauta.ts`.
 
 /** As teclas pretas, por classe de altura. */
 export const PRETAS = [1, 3, 6, 8, 10];
@@ -114,6 +122,98 @@ export function alturaDeTeclado(ctx: Ctx, s: S, lo: number, hi: number): number 
 
 /** Quatro cordas é baixo; seis é violão. */
 export const vozDoBraco = (tuning: readonly number[]) => (tuning.length === 4 ? 'baixo' as const : 'violao' as const);
+
+/**
+ * A faixa de teclado que **cabe** estas notas, de dó a dó e com pelo menos `minimo` semitons.
+ *
+ * Existe porque faixa fixa com nota variável é resposta impossível: `ouvido-acorde` desenhava o
+ * teclado de resposta em 48–72 enquanto a fundamental saía da região de quem usa e as inversões
+ * somavam até 19 semitons — medido, o acorde chegava a MIDI 83 com a região padrão, e a tecla para
+ * clicar a resposta **não existia na tela**. Quem erra assim não errou de música.
+ *
+ * Alinhar nos dós é para o teclado não começar no meio de um grupo de teclas pretas, que é onde o
+ * desenho fica ilegível.
+ */
+export function faixaQueCabe(ms: readonly number[], minimo = 24): { lo: number; hi: number } {
+  const piso = Math.min(...ms), teto = Math.max(...ms);
+  let lo = Math.floor(piso / 12) * 12;
+  let hi = Math.ceil((teto + 1) / 12) * 12;
+  // alarga em oitavas, de baixo e de cima alternadamente, até a largura mínima
+  while (hi - lo < minimo) { if (lo >= 12) lo -= 12; if (hi - lo < minimo) hi += 12; }
+  return { lo, hi };
+}
+
+/**
+ * Uma altura que **existe no braço** e tem uma das classes pedidas — `null` quando não há nenhuma.
+ *
+ * Enumerar e sortear, em vez de calcular uma oitava: é a diferença entre esta função e
+ * `alturaDoPc`, e foi ela que custou duas rodadas de conserto em 13/11.
+ *
+ * `alturaDoPc` promete "uma altura desta classe na faixa", e quando **nenhuma** cabe ela cai num
+ * fallback (`lo + mod(pc − lo, 12)`) que pode **passar do teto**. Com a janela estreita que o braço
+ * de um baixo impõe — quatro semitons, às vezes — isso acontece para oito das doze classes, e aí a
+ * resposta certa caía fora do braço desenhado: medido, MIDI 57 num instrumento cuja última casa dá
+ * 55, em `ouvido-acorde` e `ouvido-intervalo`. O guarda de varredura só pegou na quinta rodada,
+ * porque depende do sorteio.
+ *
+ * Aqui não há como estourar: a lista é de alturas reais do braço. A `preferida` (a região de quem
+ * usa) filtra quando dá, e é descartada quando não dá — sair da região é melhor que sair do
+ * instrumento.
+ *
+ * Havia uma quarta cópia desta conta, local em `ouvido-tecla`; esta é a dela, generalizada para
+ * várias classes e uma janela.
+ */
+export function alturaNoBraco(
+  tuning: readonly number[], pcs: readonly number[],
+  preferida?: { lo: number; hi: number }, from = 0, to = 12,
+): number | null {
+  const doBraco: number[] = [];
+  for (const corda of tuning) for (let f = from; f <= to; f++) if (pcs.includes(mod(corda + f, 12))) doBraco.push(corda + f);
+  if (!doBraco.length) return null;
+  const naFaixa = preferida ? doBraco.filter(m => m >= preferida.lo && m <= preferida.hi) : [];
+  return pick(naFaixa.length ? naFaixa : doBraco);
+}
+
+/**
+ * As alturas que um braço alcança entre duas casas — da corda mais grave solta ao topo da mais aguda.
+ *
+ * Serve para o sorteio não produzir nota que o braço não tem. É a mesma regra que o `ouvido-tecla`
+ * aprendeu em 13/11 depois de três relatos do Paulo: **não ofereça o que aquela tela não entrega.**
+ * Sem isto, uma melodia sorteada na região global podia pedir um Si5 num baixo de quatro cordas, e
+ * aí só havia escolha entre desenhar a casa errada ou não desenhar a nota.
+ */
+export function faixaDoBraco(tuning: readonly number[], from = 0, to = 12): { lo: number; hi: number } {
+  return { lo: Math.min(...tuning) + from, hi: Math.max(...tuning) + to };
+}
+
+/**
+ * **Todas** as casas do braço que dão exatamente esta altura — vazio quando nenhuma alcança.
+ *
+ * A mesma altura vive em várias cordas, e o braço só vira mapa quando se vê que o dó da casa 8 da
+ * quarta corda é o mesmo dó da casa 3 da segunda. Foi o pedido do Paulo em 13/11: *"no baixo a nota
+ * de referência se mostra apenas em uma das suas posições. mostre ela em todas."*
+ */
+export function casasDaAltura(tuning: readonly number[], m: number, from = 0, to = 12): { s: number; f: number }[] {
+  const out: { s: number; f: number }[] = [];
+  for (let s = 0; s < tuning.length; s++) {
+    const f = m - tuning[s];
+    if (f >= from && f <= to) out.push({ s, f });
+  }
+  return out;
+}
+/**
+ * Uma casa que dá esta altura, preferindo a corda mais grave — **`null` quando o braço não alcança**.
+ *
+ * Havia três cópias desta função, e elas **divergiam no caso que importa**: a de `ouvido-tecla`
+ * devolvia `null`, e as de `ouvido-acorde` e `melodia-de-ouvido` devolviam `{ s: 0, f: 0 }` — a casa
+ * 0 da corda mais grave, que é **uma nota diferente da pedida**. Um acorde com uma nota fora do
+ * braço era desenhado com um Mi2 no lugar dela, calado, e a pessoa estudava um acorde que não é o
+ * acorde. O próprio Player já tinha aprendido a regra e a escreve: *"marca na casa errada é pior que
+ * marca nenhuma"*.
+ */
+export function casaDaAltura(tuning: readonly number[], m: number, from = 0, to = 12): { s: number; f: number } | null {
+  return casasDaAltura(tuning, m, from, to)[0] ?? null;
+}
 
 /** Como a pergunta chama a corda. No violão as duas Mi se distinguem por grave e aguda. */
 export function nomeDaCorda(tuning: readonly number[], str: number, ctx: Ctx): string {
@@ -245,6 +345,45 @@ export const semiOptions = (ctx: Ctx): ChoiceOption[] => Array.from({ length: 12
  * atalho pôs — ele só não mexe. Para voltar ao sorteio é preciso dizer `key: null`.
  */
 export const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
+
+/**
+ * A tônica que serve de **contexto** para audiar, numa região escolhida.
+ *
+ * Não é `tonicaNaRegiao`: aquela sorteia uma altura qualquer quando não há tonalidade fixa, e uma
+ * altura qualquer **não é um centro tonal** — tocá-la como contexto de uma nota gerada à parte não
+ * estabelece nada. Aqui, sem tonalidade, cai em dó.
+ *
+ * Existe porque os quatro itens com a direção `audiar` precisavam dela e **dois deles erraram
+ * sozinhos**: um cravou dó3 ignorando a tonalidade, e o outro tocou a corda mais grave do
+ * instrumento como se fosse tônica.
+ */
+export function tonicaDeContexto(ctx: Ctx, abaixoDe: number): number {
+  /**
+   * **Com tonalidade livre, o centro é SORTEADO** (decisão do Paulo em 13/11), e não dó.
+   *
+   * O raciocínio dele, e ele está certo: centro fixo deixa a altura absoluta substituir o ouvido
+   * relativo — se o contexto é sempre dó, depois de uma semana a pessoa reconhece o ré por lembrar
+   * da frequência, não por ouvir a relação. Sorteando, a única coisa estável entre rodadas é o
+   * intervalo, que é o que o exercício mede. É o mesmo motivo pelo qual `reconhecer-padroes-escala`
+   * sorteia a tônica desde que nasceu.
+   *
+   * Antes disto, duas linhas de ouvido fixavam dó e três sorteavam. Agora as cinco sorteiam.
+   */
+  const pcTonica = ctx.params.key?.tonic ?? randInt(0, 11);
+  let m = abaixoDe - mod(abaixoDe - pcTonica, 12);
+  while (m > abaixoDe - 2) m -= 12;
+  /**
+   * **E não sai da região.** O teste `contexto-musical` pegou: numa faixa estreita não há oitava
+   * livre abaixo do material, e o contexto saía por baixo do piso que a pessoa configurou.
+   *
+   * Quando não cabe, ele sobe e **aceita ficar junto** do que se audia. É a mesma troca de
+   * `acomodarMelodiaEAcorde`: âncora dentro da região serve ao exercício, âncora fora da região
+   * quebra a promessa da região.
+   */
+  const { lo } = regiao(ctx);
+  while (m < lo) m += 12;
+  return m;
+}
 export const TONALIDADE_LIVRE = { key: null } as const;
 
 /** Os doze intervalos, do uníssono à oitava, como os ids que `semiOptions` usa. */
@@ -283,18 +422,35 @@ export function randAcc(on: SettingValue | undefined) {
  * casas** (`casas`), que a pessoa escolhe. A região em MIDI foi feita para ouvido e pauta ("quero
  * praticar no grave"), e sobrepô-la ao braço mede a mesma coisa duas vezes com unidades diferentes.
  */
-export function casaPermitida(tuning: readonly number[], from: number, to: number, ctx: Ctx) {
-  const permitidas = pcsPermitidas(ctx);
+export function casaPermitida(
+  tuning: readonly number[], from: number, to: number, ctx: Ctx,
+  /**
+   * Quais cordas podem sair, pela numeração de quem toca (1ª é a mais AGUDA). Sem a lista, todas.
+   *
+   * `tuning` vai da grave para a aguda, então a 1ª corda é o último índice: a conversão é
+   * `tuning.length - n`. Corda que não existe na afinação em vigor é ignorada — marcar a 6ª num
+   * baixo de quatro não deixa o exercício sem pergunta.
+   */
+  cordas?: readonly string[],
+  /** As classes de altura que podem sair. Sem a lista, o que o material permite. */
+  classes?: readonly number[],
+) {
+  const permitidas = classes?.length ? classes : pcsPermitidas(ctx);
   const lo = from === 0 ? 0 : from + 1;
+  const indices = cordas?.length
+    ? new Set(cordas.map(n => tuning.length - Number(n)).filter(i => i >= 0 && i < tuning.length))
+    : null;
   const todas: { str: number; f: number; m: number }[] = [];
   for (let str = 0; str < tuning.length; str++) {
+    if (indices && !indices.has(str)) continue;
     for (let f = lo; f <= to; f++) {
       const m = tuning[str] + f;
       if (permitidas.includes(mod(m, 12))) todas.push({ str, f, m });
     }
   }
   if (todas.length) return pick(todas);
-  const str = randInt(0, tuning.length - 1), f = randInt(lo, to);
+  const possiveis = indices?.size ? [...indices] : tuning.map((_, i) => i);
+  const str = pick(possiveis), f = randInt(lo, to);
   return { str, f, m: tuning[str] + f };
 }
 
@@ -601,7 +757,21 @@ export function theoryQuestion(topic: string, ctx: Ctx): Question {
 export function chordOptions(root: Note, type: ChordId, conv: Ctx['conv'], emJogo?: ChordId[]) {
   const sym = chordSymbol(root, type, conv);
   const types: ChordId[] = emJogo?.length ? emJogo : ['maior', 'menor', '7', 'm7', '7M'];
-  const pool = [...types.map(t => chordSymbol(root, t, conv)), ...shuffle(ROOTS).slice(0, 5).map(r => chordSymbol(r, type, conv))];
+  /**
+   * Os distratores de fundamental **excluem a enarmônica da resposta**, e não só a string igual.
+   *
+   * A conferência de acorde compara **classe de altura** da fundamental (`chordExpected`), então
+   * "Ré♭m" e "Dó♯m" são a mesma resposta certa — e duas respostas certas é o que a decisão 13
+   * proíbe. Passava escondido porque a fundamental vinha da própria lista `ROOTS`: a string saía
+   * idêntica e o `Set` a engolia. Em 13/11 a fundamental passou a ser grafada pela tonalidade, a
+   * string deixou de coincidir, e o teste de "exatamente uma alternativa certa" caiu na hora.
+   *
+   * Filtrar por classe de altura é o conserto de verdade — a string igual era coincidência, não
+   * proteção.
+   */
+  const pcDaResposta = pc({ ...root, oct: 4 });
+  const outrasFundamentais = shuffle(ROOTS.filter(r => pc({ ...r, oct: 4 }) !== pcDaResposta)).slice(0, 5);
+  const pool = [...types.map(t => chordSymbol(root, t, conv)), ...outrasFundamentais.map(r => chordSymbol(r, type, conv))];
   return { sym, options: optionsWith(sym, [...new Set(pool)], 6).map(chordOption), expected: chordExpected(root, type) };
 }
 /**

@@ -337,6 +337,16 @@ const CAMPOS: Record<ModoDoCampo, { triades: ChordId[]; tetrades: ChordId[]; bem
   },
 };
 
+/** A cauda de qualidade de um algarismo romano (`ii` + `ø` = `iiø`). A caixa do romano é de quem
+ *  chama; isto aqui só sabe o sufixo — e é um só lugar para `campo-harmonico.ts` rotular os
+ *  empréstimos com a MESMA convenção dos graus diatônicos. */
+export function romanSuffix(chord: ChordId, conv: Convention = 'pt'): string {
+  return chord === 'dim' ? '°' : chord === 'dim7' ? '°7' : chord === 'm7b5' ? 'ø'
+    : chord === 'aum' ? '+' : chord === '7M#5' ? '+' + (conv === 'pt' ? '7M' : 'maj7')
+    : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7'
+    : chord === 'm7M' ? (conv === 'pt' ? '(7M)' : '(maj7)') : '';
+}
+
 export function harmonicField(tonic: Note, mode: ModoDoCampo, tetrads = false, conv: Convention = 'pt'): Degree[] {
   const campo = CAMPOS[mode];
   const scale = buildScale(tonic, mode);
@@ -347,11 +357,7 @@ export function harmonicField(tonic: Note, mode: ModoDoCampo, tetrads = false, c
     let roman = ROMAN[i];
     if (minorish) roman = roman.toLowerCase();
     if (campo.bemol.includes(i)) roman = '♭' + roman;
-    const suffix = chord === 'dim' ? '°' : chord === 'dim7' ? '°7' : chord === 'm7b5' ? 'ø'
-      : chord === 'aum' ? '+' : chord === '7M#5' ? '+' + (conv === 'pt' ? '7M' : 'maj7')
-      : chord === '7M' ? (conv === 'pt' ? '7M' : 'maj7') : chord === '7' ? '7' : chord === 'm7' ? '7'
-      : chord === 'm7M' ? (conv === 'pt' ? '(7M)' : '(maj7)') : '';
-    return { degree: i + 1, root, chord, roman: roman + suffix, symbol: chordSymbol(root, chord, conv) };
+    return { degree: i + 1, root, chord, roman: roman + romanSuffix(chord, conv), symbol: chordSymbol(root, chord, conv) };
   });
 }
 

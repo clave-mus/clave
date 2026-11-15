@@ -8,6 +8,14 @@ import { estadoDe, visivel } from './publicacao';
 import pt from '../i18n/pt';
 import en from '../i18n/en';
 
+import { resolveParams } from './params';
+
+/**
+ * Contexto de sonda com `params` de verdade: desde 13/11 `settings(ctx)` lê tonalidade e
+ * material (a lista de "só estes graus" depende deles), e um contexto de mentira quebra ali.
+ */
+const ctxDeSonda = { t: (k: string) => k, naming: 'latin', conv: 'pt', params: resolveParams('violao') };
+
 const sempre = () => true;
 const chave = (m: MembroDeGrupo) => `${m.itemId}|${JSON.stringify(m.settings ?? {})}`;
 const inst = (itemId: string, settings?: Record<string, unknown>): MembroDeGrupo => ({ itemId, settings });
@@ -44,7 +52,7 @@ describe('a lista', () => {
   it('todo membro de um grupo de superfície declara a superfície', () => {
     for (const g of GRUPOS.filter(x => ['leitura-pauta', 'o-braco', 'o-teclado'].includes(x.id))) {
       for (const m of g.itens) {
-        const multisuperficie = (ITEMS.find(i => i.id === m.itemId)?.settings?.({ t: (k: string) => k } as never) ?? []).some(s => s.id === 'superficie');
+        const multisuperficie = (ITEMS.find(i => i.id === m.itemId)?.settings?.(ctxDeSonda as never) ?? []).some(s => s.id === 'superficie');
         if (multisuperficie) expect(m.settings?.superficie, `${g.id} → ${m.itemId}`).toBeTruthy();
       }
     }
@@ -86,15 +94,36 @@ describe('a mesma instância em vários grupos', () => {
   });
 
   /**
-   * A guarda vale para quem AINDA é multissuperfície — `que-acorde-e-esse` e os de intervalo, até a
-   * reorganização chegar neles. Sem a configuração, o membro casaria com qualquer superfície e
-   * ofereceria pauta dentro do grupo do braço.
+   * **Não há mais item multissuperfície.** A reorganização terminou em 10/11/2026: nenhum item do
+   * catálogo tem a configuração `superficie`, porque a superfície virou o item.
    *
-   * Os itens de nota saíram desta regra em 09/11/2026 porque deixaram de ter superfície: a pauta e o
-   * instrumento são dois itens, e cada um cai no seu grupo sem precisar de configuração nenhuma.
+   * A guarda que existia aqui — "sem a configuração, o membro casaria com qualquer superfície e
+   * ofereceria pauta dentro do grupo do braço" — perdeu o assunto. O que este teste passa a afirmar
+   * é o fato que a substituiu, e que é mais forte: o eixo saiu do catálogo.
    */
-  it('um item multissuperfície sem configuração não cai em grupo de superfície nenhum', () => {
-    expect(gruposDaInstancia(inst('que-acorde-e-esse'))).toEqual([]);
+  /**
+   * A superfície é o ITEM onde ela é o estímulo; é PARÂMETRO onde o estímulo é som.
+   *
+   * Em 09–10/11 este teste dizia "nenhum item declara `superficie`", e estava certo para o catálogo
+   * daquele dia: em `nota-na-pauta` você lê uma pauta e em `nota-no-instrumento` olha um braço — ali
+   * a superfície é o conteúdo, e a validação e a unidade de extensão mudam com ela.
+   *
+   * Em 12/11 o Paulo fechou o modelo das linhas de ouvido: **o item é o objeto musical e o seu
+   * gerador; direção e superfície são parâmetros.** Num exercício de ouvido não há superfície de
+   * estímulo — o estímulo é som —, então onde a pessoa responde (e, audiando, onde a melodia aparece
+   * escrita) é escolha dela.
+   *
+   * A lista é explícita de propósito: item novo que queira `superficie` tem de entrar aqui, e
+   * entrar aqui obriga a responder "o estímulo deste item é som?".
+   */
+  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido', 'ouvido-intervalo'];
+
+  it('a superfície só é parâmetro onde o estímulo é som', () => {
+    for (const item of ITEMS) {
+      const ids = (item.settings?.(ctxDeSonda as never) ?? []).map(st => st.id);
+      if (SUPERFICIE_E_PARAMETRO.includes(item.id)) continue;
+      expect(ids, `${item.id} ainda tem seletor de superfície`).not.toContain('superficie');
+    }
   });
 });
 
@@ -105,7 +134,7 @@ describe('companheirosDe', () => {
     expect(c.map(chave)).not.toContain(chave(eu));
     expect(c.map(chave).sort()).toEqual([
       chave(inst('pauta-escala')),
-      chave(inst('que-acorde-e-esse', { superficie: 'pauta' })),
+      chave(inst('acorde-na-pauta', {})),
       chave(inst('intervalo-na-pauta', {})),
     ].sort());
   });
@@ -113,9 +142,11 @@ describe('companheirosDe', () => {
   it('e os companheiros vêm com a superfície certa, nunca com a configuração do outro grupo', () => {
     // Só os que AINDA têm superfície precisam vir com ela. Os itens já reorganizados — nota e
     // intervalo — não têm superfície nenhuma: a superfície virou o item.
-    for (const m of companheirosDe(inst('que-acorde-e-esse', { superficie: 'braco' }), sempre)) {
-      if (m.itemId.endsWith('-no-instrumento') || m.itemId.endsWith('-na-pauta')) continue;
-      expect(m.settings?.superficie, m.itemId).toBe('braco');
+    // Sobrou um caso de configuração em membro de grupo: o piano, que é INSTRUMENTO e não
+    // superfície. É o que distingue "acorde no piano" de "acorde no braço" dentro do mesmo item.
+    for (const m of companheirosDe(inst('nota-no-instrumento', {}), sempre)) {
+      if (m.settings?.instrumento === undefined) continue;
+      expect(['piano', 'violao', 'baixo', 'auto'], m.itemId).toContain(String(m.settings.instrumento));
     }
   });
 
@@ -152,7 +183,11 @@ describe('o que está em rascunho nos grupos', () => {
     expect([...new Set(rascunhos)].sort()).toEqual([
       // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
       'acento-deslocado', 'deslocamento-ritmico',
+      // "O braço", desde 13/11: desenhado com ele numa conversa inteira, e espera a revisão musical
+      'mapa-do-braco',
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
+      'melodia-de-ouvido',
+      'ouvido-campo',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',
     ]);

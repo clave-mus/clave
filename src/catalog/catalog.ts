@@ -10,13 +10,17 @@ import { notaNaPautaItem } from './items/nota-na-pauta';
 import { notaNoInstrumento } from './items/nota-no-instrumento';
 import { intervaloNaPauta } from './items/intervalo-na-pauta';
 import { intervaloNoInstrumento } from './items/intervalo-no-instrumento';
-import { queAcordeEEsse } from './items/que-acorde-e-esse';
+import { acordeNaPauta } from './items/acorde-na-pauta';
+import { acordeNoInstrumento } from './items/acorde-no-instrumento';
 import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
 import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
 import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
+import { ouvidoCampo } from './items/ouvido-campo';
+import { mapaDoBraco } from './items/mapa-do-braco';
+import { melodiaDeOuvido } from './items/melodia-de-ouvido';
 import { ouvidoEscala } from './items/ouvido-escala';
 import { ouvidoCelulas } from './items/ouvido-celulas';
 import { reconhecerPadroesEscala } from './items/reconhecer-padroes-escala';
@@ -28,13 +32,17 @@ export const EXERCISES: CatalogItem[] = [
   notaNoInstrumento,
   intervaloNaPauta,
   intervaloNoInstrumento,
-  queAcordeEEsse,
+  acordeNaPauta,
+  acordeNoInstrumento,
   pautaArmadura,
   pautaEscala,
   teoriaIntervalos,
   ouvidoTecla,
   ouvidoIntervalo,
   ouvidoAcorde,
+  ouvidoCampo,
+  mapaDoBraco,
+  melodiaDeOuvido,
   ouvidoEscala,
   ouvidoCelulas,
   reconhecerPadroesEscala,

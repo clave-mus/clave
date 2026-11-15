@@ -72,5 +72,16 @@ export function validate(expected: Expected, r: Response): boolean {
       const c = parseChordSymbol(r.text);
       return !!c && c.root === expected.root && c.quality === expected.quality;
     }
+    case 'contorno': {
+      if (r.kind !== 'pitches') return false;
+      if (r.midis.length !== expected.midis.length) return false;
+      // Acorde desenhado: a ordem dos cliques não é a resposta, o conjunto é.
+      const minhas = expected.ordenada === false ? [...r.midis].sort((a, b) => a - b) : r.midis;
+      const certas = expected.ordenada === false ? [...expected.midis].sort((a, b) => a - b) : expected.midis;
+      const desloc = minhas[0] - certas[0];
+      // Deslocamento tem de ser em OITAVAS inteiras, e o MESMO para todas (a regra do §4).
+      if (mod(desloc, 12) !== 0) return false;
+      return minhas.every((m, i) => m - certas[i] === desloc);
+    }
   }
 }

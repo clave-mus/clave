@@ -8,12 +8,17 @@ import { ehDataIso, estadoDe, visivel } from '../catalog/publicacao';
 import { translate } from '../i18n';
 import type { MessageKey } from '../i18n';
 import { ROTINAS_DO_TIME, rotinaDoTimePorId, rotinasDoTime } from './doTime';
-import { PARAMETROS_DE_PRATICA } from '../catalog/params';
+import { PARAMETROS_DE_PRATICA, resolveParams } from '../catalog/params';
 import doc from '../../docs/revisao-pendente.md?raw';
 
 const t = (k: MessageKey, v?: Record<string, string | number>) => translate('pt', k, v);
 const itens = Object.fromEntries([...EXERCISES, ...AMBIENTES].map(i => [i.id, i])) as Record<string, CatalogItem>;
-const ctx = { t, naming: 'latin' as const, conv: 'pt' as const, params: undefined as never };
+/**
+ * Contexto com `params` de VERDADE. Era `params: undefined as never`, e desde 13/11 isso quebra:
+ * `settings(ctx)` legitimamente lê a tonalidade e o material, porque a lista de "só estes graus"
+ * depende deles. Sonda que mente sobre o contexto só funciona enquanto ninguém o usa.
+ */
+const ctx = { t, naming: 'latin' as const, conv: 'pt' as const, params: resolveParams('violao') };
 const settingsDe = (item: CatalogItem): Setting[] => item.settings?.(ctx as never) ?? [];
 const instancias = ROTINAS_DO_TIME.flatMap(r => r.etapas.flatMap(e => e.instancias.map(x => ({ r: r.id, ...x }))));
 

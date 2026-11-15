@@ -6,11 +6,13 @@ import { atTime, now, pararTudo } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
 import { useContent } from '../data/localized';
 import { getState, recordAnswer, saveSettings, useStore } from '../state/store';
+import { sortearSemEco } from './sorteio';
 import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
-import { fromStep, mod, noteName, type Note } from '../theory/core';
+import { fromStep, keyAccidentals, mod, noteName, type Note } from '../theory/core';
 import Fretboard from '../components/music/Fretboard';
+import { useFocoDeTela, useTela } from '../components/useTela';
 import Keyboard from '../components/music/Keyboard';
 import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
@@ -62,18 +64,24 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // tocada. (A primeira versão do link compartilhado deixava `initialSettings` mandar em tudo, e o
   // painel de configurações virava decoração: gravava num lugar que ninguém lia.)
   const [local, setLocal] = useState<Record<string, SettingValue> | null>(initialSettings ?? null);
-  const settings = useMemo(() => ({ ...def.defaults, ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, saved, local, entrada]);
   const guardarSettings = useCallback((v: Record<string, SettingValue>) => (local ? setLocal(v) : saveSettings(def.id, v)), [local, def.id]);
+  const locale = useLocale();
+  const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
+  /**
+   * As configurações em vigor, nesta ordem: o que o item declara, o que o **contexto** resolve
+   * (`defaultsDo` — o instrumento do perfil), o que a etapa pediu, e o que a pessoa escolheu.
+   *
+   * `settings` desceu para cá em 14/11 só porque passou a depender de `ctx`.
+   */
+  const settings = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, ctx, saved, local, entrada]);
   /**
    * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
    * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
    */
   const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
-    guardarSettings({ ...def.defaults, ...p.settings });
+    guardarSettings({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...p.settings });
     if (p.params) mudar(p.params);
-  }, [def.defaults, guardarSettings, mudar]);
-  const locale = useLocale();
-  const ctx: Ctx = useMemo(() => ({ naming, conv: locale, t, params }), [naming, locale, t, params]);
+  }, [def, ctx, guardarSettings, mudar]);
   /**
    * Só o que muda a PERGUNTA. Mexer em "arpejar" ou na duração não sorteia um acorde novo — antes
    * sorteava, e a pessoa perdia o que estava tentando identificar.
@@ -85,7 +93,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   // `settings` é lido pela ref, para a pergunta não ser refeita quando só a apresentação muda
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
-  const make = useCallback(() => def.make(settingsRef.current, ctx), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
+  // `sortearSemEco` é o anti-repetição genérico (OR §3.1): o item gera uniforme, e perguntas cuja
+  // RESPOSTA saiu há pouco são regeradas — nunca a mesma duas vezes seguidas, sem o item saber.
+  const make = useCallback(() => sortearSemEco(def.id, () => def.make(settingsRef.current, ctx), Math.random, def.assinatura), [def, ctx, chaveDaPergunta]); // eslint-disable-line react-hooks/exhaustive-deps
   // Por que estas configurações não geram pergunta (decisão 13). Havendo motivo, `make` NUNCA é
   // chamado: o certo é recusar e explicar, não sortear uma pergunta impossível de responder.
   const problema = useMemo(() => def.problema?.(settings, ctx) ?? null, [def, settings, ctx]);
@@ -94,9 +104,38 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     (acc, s) => (s.present && settings[s.id] !== undefined ? { ...acc, ...s.present(settings[s.id]) } : acc), {}), [def, ctx, settings]);
 
   const [q, setQ] = useState<Question | null>(() => (def.problema?.(settings, ctx) ? null : make()));
+  /**
+   * A pergunta é respondida (ou mostrada) num BRAÇO? É o que diz se a região em MIDI se aplica —
+   * ver o comentário em `PracticePanel`. Sai da pergunta em vigor, não de uma lista de itens: assim
+   * vale para qualquer item que algum dia responda no braço, sem ninguém manter tabela.
+   */
+  const respondeNoBraco = q?.surface.kind === 'fretboard' || q?.visual.kind === 'fretboard';
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [acc, setAcc] = useState(0);
+  /**
+   * A resposta que está sendo **montada pelo teclado físico** (decidido com o Paulo em 12/11).
+   *
+   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `+` ou `3`
+   * para sustenido, `-` para bemol —, porque é assim que se fala ("sol sustenido"). `Enter`
+   * confirma, `Esc` limpa. Nada é enviado antes do `Enter`, e o que está montado aparece na tela:
+   * ele pediu *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"*.
+   *
+   * `Ctrl` ficou fora de propósito: `Ctrl+G` é atalho do navegador e não chega até a página.
+   */
+  const [montada, setMontada] = useState<{ letter: number; acc: number } | null>(null);
+  /**
+   * As alturas já postas numa superfície que **acumula** (`Surface.quantas`): um acorde sendo
+   * desenhado, uma melodia sendo tocada de volta. Nada é enviado antes de estar cheia, e dá para
+   * desfazer o último toque — a mesma regra do `sequence`, por um motivo que já está escrita lá:
+   * meia resposta não é resposta, e enviar sozinho ao completar tira a chance de corrigir.
+   */
+  const [juntadas, setJuntadas] = useState<Junta[]>([]);
+  /**
+   * Já ouviu o pedaço `resposta` desta pergunta? A autoavaliação espera por isso — ver o comentário
+   * em `autoavaliacao`, na área de resposta.
+   */
+  const [ouviuAResposta, setOuviuAResposta] = useState(false);
   // `seguidas` é a contagem DENTRO da série. Não confundir com dias seguidos praticados, que
   // saiu de propósito (decisão 11): aquilo é cobrança, isto é informação útil — e é o gatilho da
   // sugestão de variação (F7-1), que dispara em acertos seguidos, não em taxa.
@@ -105,6 +144,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   const [heard, setHeard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const started = useRef(Date.now());
+  /** Já avisamos que o alvo da etapa foi batido? `onDone` é uma vez por etapa, não por resposta. */
+  const avisouDoAlvo = useRef(false);
   const scoreRef = useRef(score);
   scoreRef.current = score;
   // registro da tentativa (C2): sessão, quando dava para responder e quantas vezes ouviu
@@ -160,8 +201,26 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const playParte = useCallback((question: Question, parte: ParteDoSom) => {
     if (!getState().sound) return;
+    // Ouvir o pedaço `resposta` é o que libera a autoavaliação: julgar antes de conferir é julgar
+    // no vácuo (ver `autoavaliacao`, na área de resposta).
+    if (parte.id === 'resposta') setOuviuAResposta(true);
     pararTudo();
     const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
+    setPlaying(true);
+    atTime(now() + dur, () => setPlaying(false));
+  }, [presentationFor]);
+
+  /**
+   * Toca grupos de notas **sem contar como escuta** — para o `mapa-do-braco`, que soa a cada acerto.
+   *
+   * Separado de `play` e de `playParte` de propósito: ali o som é o enunciado (e entra no tempo de
+   * resposta) ou um pedaço de gabarito; aqui é a recompensa de um acerto, e somá-la à medida de
+   * escuta falsearia tudo — este exercício não é de ouvido.
+   */
+  const tocarGrupos = useCallback((question: Question, groups: number[][]) => {
+    if (!getState().sound || !groups.length) return;
+    pararTudo();
+    const dur = playContent({ groups, instrument: question.sound?.instrument }, presentationFor(question));
     setPlaying(true);
     atTime(now() + dur, () => setPlaying(false));
   }, [presentationFor]);
@@ -174,7 +233,20 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     setPicked(null);
     setAcc(0);
     if (nq.autoplay && heard) window.setTimeout(() => play(nq, true), 250);
-  }, [make, heard, play, problema]);
+    /**
+     * **Audiando, o contexto soa sozinho na pergunta nova** (Paulo, 13/11: *"faça com que o contexto
+     * soe automaticamente quando passa de fase"*).
+     *
+     * A pergunta de audiação tem `autoplay: false` de propósito — o GABARITO não pode soar sozinho,
+     * senão o exercício vira ouvir e comparar. Mas o contexto não é o gabarito: é o que situa a
+     * audiação, e ouvi-lo é obrigatório antes de qualquer coisa. Tocá-lo é poupar um clique por
+     * rodada em quem vai clicá-lo sempre.
+     *
+     * Só depois do primeiro gesto (`heard`), porque o navegador não toca antes dele.
+     */
+    const contexto = nq.surface.kind === 'autoavaliacao' ? nq.sound?.partes?.find(p => p.id === 'contexto') : undefined;
+    if (contexto && heard) window.setTimeout(() => playParte(nq, contexto), 250);
+  }, [make, heard, play, playParte, problema]);
 
   // configurações mudaram: recomeça
   useEffect(() => { setQ(problema ? null : make()); setPhase('ask'); setPicked(null); }, [make, problema]);
@@ -199,21 +271,65 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       if (shouldAskConfidence(series.current.length)) setConfidenceFor(series.current);
       series.current = [];
     }
-    if (!q.autoplay && soundOn) play(q);
-    if (target && ns.total >= target) {
+    /**
+     * Ao responder, o que soa.
+     *
+     * No `audiar` tocava `q.sound`, que ali é **só a tônica de contexto** — e o Paulo relatou
+     * exatamente isso em 12/11: *"a cada vez que clico em consegui ou não consegui, ele toca o
+     * mesmo dó. está confuso."* Ele estava certo: depois de dizer como foi, o que a pessoa quer
+     * ouvir é **o que ela audiou**, que é o pedaço `resposta`. Conferir é isso.
+     */
+    const resposta = q.surface.kind === 'autoavaliacao' ? q.sound?.partes?.find(p => p.id === 'resposta') : undefined;
+    if (resposta && soundOn) playParte(q, resposta);
+    /**
+     * **O `mapa` toca o seu próprio som, e por isso é exceção aqui.**
+     *
+     * A regra geral ("sem autoplay, ouça ao responder") serve a quem audia: o som é o gabarito, e
+     * ouvi-lo ao fim é conferir. No `mapa` o som já aconteceu — uma nota por acerto —, e ouvir
+     * `q.sound` inteiro de novo **tocava o arpejo completo mesmo com a opção desligada**, que foi o
+     * que o Paulo relatou em 14/11. O parâmetro dele estava certo; quem tocava era esta linha.
+     */
+    else if (!q.autoplay && soundOn && q.surface.kind !== 'mapa') play(q);
+    // Uma vez só. Antes disparava a CADA resposta depois do alvo, porque a condição é `>=` e nada
+    // guardava que já tinha avisado — com a correção de 10/11 (ficar na etapa depois de completá-la)
+    // isso passaria a chamar `onDone` sem parar.
+    if (target && ns.total >= target && !avisouDoAlvo.current) {
+      avisouDoAlvo.current = true;
       window.setTimeout(() => onDone?.({ correct: ns.correct, total: ns.total, seconds: Math.round((Date.now() - started.current) / 1000) }), ok ? 900 : 1800);
       return;
     }
     if (ok) window.setTimeout(next, 850);
-  }, [phase, score, def, q, soundOn, play, presentationFor, locale, settings, params, target, onDone, next]);
+  }, [phase, score, def, q, soundOn, play, playParte, presentationFor, locale, settings, params, target, onDone, next]);
 
-  // atalhos de teclado: 1-9 para opções, Enter para seguir, espaço para ouvir de novo
+  // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       if (!q) return;
-      if (e.key === 'Enter' && phase === 'wrong') { e.preventDefault(); next(); }
       if (e.key === ' ' && q.sound && q.autoplay) { e.preventDefault(); play(q, true); }
+      /**
+       * Responder pelo teclado onde a resposta é uma NOTA (superfície `letters`). A letra monta, o
+       * acidente modifica, `Enter` confirma — ver o comentário de `montada`.
+       *
+       * Os índices do app são diatônicos a partir do dó (0 = Dó … 6 = Si), e as teclas são os nomes
+       * em inglês, que é o que está gravado no teclado de quem usa.
+       */
+      if (q.surface.kind === 'letters' && phase === 'ask') {
+        const daLetra = 'CDEFGAB'.indexOf(e.key.toUpperCase());
+        if (daLetra >= 0) { e.preventDefault(); setMontada({ letter: daLetra, acc: 0 }); return; }
+        if (montada) {
+          if (e.key === '+' || e.key === '3') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
+          if (e.key === '-') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
+          if (e.key === 'Escape') { e.preventDefault(); setMontada(null); return; }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            setMontada(null);
+            submit({ kind: 'spelled', letter: montada.letter, acc: montada.acc }, `${montada.letter}:${montada.acc}`);
+            return;
+          }
+        }
+      }
+      if (e.key === 'Enter' && phase === 'wrong') { e.preventDefault(); next(); }
       const n = Number(e.key);
       if (q.surface.kind === 'choices' && n >= 1 && n <= q.surface.options.length && phase === 'ask') {
         const o = q.surface.options[n - 1];
@@ -222,7 +338,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, q, next, play, submit]);
+  }, [phase, q, next, play, submit, montada]);
+  // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
+  useEffect(() => { setMontada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -249,7 +367,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           </div>
         </div>
         {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+          /**
+           * O painel de prática vem **antes** das configurações do item (pedido do Paulo em 13/11):
+           * *"quero que pra todos exercicios que sigam esse padrao, o botão de só a tonalidade fique
+           * acima do Só estes graus. Que fique na ordem: tonalidade, material, so estes graus."*
+           *
+           * A ordem importa porque a lista de graus **depende** do material: ver os graus mudarem
+           * ao trocar de material só ensina se o material estiver logo acima deles.
+           */
+          antes={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="tonal" /> : null}
+          depois={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="regiao" /> : null}
           onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
       </div>
     );
@@ -267,11 +394,12 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {score.seguidas > 1 && <div><b className="num">{score.seguidas}</b><span>{t('player.inARow')}</span></div>}
         </div>
       </div>
-      {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${(score.total / target) * 100}%` }} /></div>}
+      {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} naming={naming} picked={picked} acc={acc} onAnswer={submit} />
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+        juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
-      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} />
+      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
 
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
@@ -279,7 +407,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {phase === 'right' && <span className="muted">{t('player.right')}</span>}
           {phase === 'ask' && <span className="muted">{itemText(t, def.id, 'desc')}</span>}
         </div>
-        <div className="row">
+        <div className="row acoes-do-rodape">
           {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
         </div>
@@ -288,7 +416,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       {!emRotina && <SalvarNaRotina itemId={def.id} settings={settings} params={pratica} />}
 
       {confidenceFor && (
-        <div className="panel" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+        <div className="panel painel-confianca" role="group" aria-label={t('player.confidenceQuestion')} style={{ display: 'grid', gap: 10, marginTop: 12 }}>
           <span>{t('player.confidenceQuestion')}</span>
           <div className="row">
             {(['guess', 'unsure', 'sure'] as AttemptFeedback['confidence'][]).map(c => (
@@ -300,63 +428,258 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       )}
 
       {showSettings && <SettingsPanel def={def} ctx={ctx} values={settings} onChange={guardarSettings} onPreset={aplicarPreset}
-          extra={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} /> : null}
+          /**
+           * O painel de prática vem **antes** das configurações do item (pedido do Paulo em 13/11):
+           * *"quero que pra todos exercicios que sigam esse padrao, o botão de só a tonalidade fique
+           * acima do Só estes graus. Que fique na ordem: tonalidade, material, so estes graus."*
+           *
+           * A ordem importa porque a lista de graus **depende** do material: ver os graus mudarem
+           * ao trocar de material só ensina se o material estiver logo acima deles.
+           */
+          antes={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="tonal" /> : null}
+          depois={def.respeita?.length ? <PracticePanel respeita={def.respeita} params={params} onChange={mudar} instrumentoDeBraco={respondeNoBraco} parte="regiao" /> : null}
         onReset={() => { guardarSettings({ ...def.defaults }); limpar(); }} />}
     </div>
   );
 }
 
 // ---------------- palco: o que é perguntado ----------------
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, acc, onAnswer }: {
+/**
+ * **Quase um segundo por nota** (pedido do Paulo em 13/11: *"deixe ela lenta, com quase um segundo
+ * por nota"*). É o tempo de olhar a casa, reconhecê-la e imaginar o som — correr aqui tornaria a
+ * animação decorativa.
+ */
+const MS_POR_NOTA = 900;
+
+/**
+ * Percorre uma sequência de marcas, acendendo uma por vez.
+ *
+ * Devolve o índice da marca em foco e um jeito de recomeçar. As anteriores continuam marcadas, mais
+ * fracas: ao fim da volta a melodia inteira está à vista, e o caminho dela também.
+ *
+ * Com `prefers-reduced-motion` ele **não anima** — devolve tudo aceso de uma vez, e quem desenha
+ * numera as marcas. A ordem é informação do exercício, não enfeite: tirá-la junto com o movimento
+ * seria tirar a pergunta.
+ */
+function useSequenciaAnimada(quantas: number, ativo: boolean, chave: unknown) {
+  const semMovimento = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  const [foco, setFoco] = useState(0);
+  const [volta, setVolta] = useState(0);
+
+  useEffect(() => { setFoco(0); }, [chave, volta]);
+  useEffect(() => {
+    if (!ativo || semMovimento || quantas < 2) return;
+    if (foco >= quantas - 1) return;
+    const t = window.setTimeout(() => setFoco(f => f + 1), MS_POR_NOTA);
+    return () => window.clearTimeout(t);
+  }, [ativo, semMovimento, quantas, foco]);
+
+  return {
+    /** Até qual marca mostrar. Sem movimento, todas. */
+    ate: semMovimento ? quantas - 1 : foco,
+    semMovimento,
+    recomecar: () => setVolta(v => v + 1),
+  };
+}
+
+/**
+ * Uma altura posta numa superfície que acumula. No braço vem com a POSIÇÃO: duas cordas dão a mesma
+ * nota, e marcar a altura sem saber onde ela foi tocada acenderia várias casas de uma vez.
+ */
+interface Junta { m: number; s?: number; f?: number }
+
+/**
+ * Esta altura faz parte do gabarito de um `contorno`? Serve para a REVELAÇÃO numa superfície que
+ * acumula: errando um acorde desenhado, a pessoa precisa ver quais notas eram.
+ *
+ * Compara por classe de altura de propósito — o contorno aceita o conjunto deslocado por oitavas,
+ * então marcar só uma oitava mentiria sobre o que era aceito.
+ */
+function alturaEsperada(e: Question['expected'], m: number): boolean {
+  return e.kind === 'contorno' && e.midis.some(x => mod(x, 12) === mod(m, 12));
+}
+
+/**
+ * A nota escrita de uma altura, na grafia com sustenido — para desenhar na pauta um gabarito que
+ * veio como ALTURA, não como grafia. Dó♯ e Ré♭ soam igual, e a pauta precisa escolher uma.
+ */
+const notaDeAltura = (m: number): Note => ({
+  letter: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][mod(m, 12)] as 0,
+  acc: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][mod(m, 12)],
+  oct: Math.floor(m / 12) - 1,
+});
+
+/** O nome de uma altura, com a oitava — a casa tem de dizer qual altura entrou, não só a nota. */
+const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
+  `${noteName(fromStep(stepDePc(mod(m, 12)), accDePc(mod(m, 12))), naming)}${Math.floor(m / 12) - 1}`;
+/** Passo diatônico e acidente de uma classe de altura, na grafia com sustenido. */
+const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
+const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
+
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
-  onPlayParte: (p: ParteDoSom) => void; naming: 'pt' | 'en';
+  onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
+  /** Só o `mapa` usa: no modo de foco a moldura do app desaparece, e o placar vem para a linha fina. */
+  placar: { correct: number; total: number; seguidas: number };
+  naming: 'pt' | 'en';
   picked: string | null; acc: number; onAnswer: Submit;
+  /** Alturas já postas, quando a superfície acumula (`Surface.quantas`). */
+  juntadas: Junta[]; onJuntar: (j: Junta) => void; onDesfazer: () => void;
 }) {
   const t = useT();
   const v = q.visual;
   const sf = q.surface;
+  /**
+   * Quantas alturas a superfície espera antes de valer. `1` (ou ausente) é o caminho de sempre:
+   * um toque é a resposta.
+   */
+  const quantas = 'quantas' in sf ? (sf.quantas ?? 1) : 1;
+  const acumula = quantas > 1;
+  const cheia = juntadas.length >= quantas;
+  /** Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte. */
+  /**
+   * Um toque numa superfície que acumula: junta, nunca envia. O envio é botão à parte.
+   *
+   * ⚠️ **O id da resposta carrega a POSIÇÃO quando ela existe** (`corda:casa`), e não só a altura.
+   * O braço desenha a marca a partir desse id, e eu quebrei isto em 12/11 ao unificar o toque das
+   * três superfícies: passei a mandar sempre `String(j.m)`, o `picked.split(':')` virou `NaN` e a
+   * marca do que a pessoa clicou **deixou de aparecer**. Foi o que o Paulo relatou em 13/11 —
+   * *"ainda não está tendo indicação visual da nota que tocou"* —, e a causa era minha refatoração.
+   *
+   * Duas cordas dão a mesma altura: a altura não diz onde se tocou, e é onde que a marca precisa.
+   */
+  const tocar = (j: Junta) => (acumula
+    ? onJuntar(j)
+    : onAnswer({ kind: 'pitch', midi: j.m }, j.s !== undefined ? `${j.s}:${j.f}` : String(j.m)));
+  const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
+  /**
+   * **O controle de ouvir, em qualquer superfície.**
+   *
+   * Ele existia só no ramo do teclado, e o Paulo relatou a consequência em 13/11: no braço e na
+   * pauta *"não tem na interface um botão pra ouvir nada. só toca quando clico em próxima"* e *"na
+   * primeira vez que abre, nao soa nada e tenho que chutar qualquer posicao"*.
+   *
+   * A causa é a mesma das duas frases: o navegador não toca som antes de um gesto da pessoa, então
+   * a PRIMEIRA pergunta nunca soa sozinha — ela espera o botão. Sem botão, a única coisa que gerava
+   * som era passar de pergunta, e aí o exercício virava chute.
+   *
+   * A condição é o visual ser de ouvido, não a superfície: quem pergunta pelo som põe `visual.ear`,
+   * e é isso que diz que há o que ouvir.
+   */
+  const ouvir = v.kind === 'ear'
+    ? <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />
+    : null;
+
+  /** As casas e os botões de desfazer/enviar, só quando a superfície acumula. */
+  const acoes = acumula && phase === 'ask' ? (
+    <div className="sequencia" style={{ marginTop: 12 }}>
+      <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
+        {Array.from({ length: quantas }, (_, i) => (
+          <span key={i} className={`seq-casa ${juntadas[i] !== undefined ? 'cheia' : ''}`}>
+            {juntadas[i] !== undefined ? nomeDaAltura(juntadas[i].m, naming) : ''}
+          </span>
+        ))}
+      </div>
+      <div className="row seq-acoes">
+        <Btn small tone="ghost" disabled={!juntadas.length} onClick={onDesfazer}>{t('player.undoLast')}</Btn>
+        <Btn disabled={!cheia} onClick={enviar}>{t('player.submitAnswer')}</Btn>
+      </div>
+    </div>
+  ) : null;
   const ok = (r: Response) => validate(q.expected, r);
   const fb = phase === 'right' ? <div className="feedback ok">{t('player.feedbackRight')}</div> : phase === 'wrong' ? <div className="feedback bad">{t('player.feedbackWrong')}</div> : null;
   const isText = v.kind === 'text' && v.text;
+  /**
+   * A sequência animada do visual, quando ele pede (`animar`): as marcas acendem uma a uma, na
+   * ordem, com quase um segundo em cada. A chave da animação é o enunciado — pergunta nova
+   * recomeça do zero.
+   */
+  const animando = (v.kind === 'keyboard' || v.kind === 'fretboard') && v.animar === true;
+  const seq = useSequenciaAnimada(animando ? v.marks.length : 0, animando, q.prompt);
 
   // superfícies que ficam no próprio palco (teclado, braço, pauta)
   if (sf.kind === 'keyboard') {
     const marks: Record<number, string> = {};
-    if (picked) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
-    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m })) marks[m] = 'var(--ok)';
+    // **O apoio primeiro**, para que uma resposta sobre a mesma tecla o sobreponha e não o contrário.
+    for (const m of sf.apoio?.midis ?? []) marks[m] = 'var(--accent-quiet)';
+    // As que já foram postas aparecem no acento: a pessoa precisa ver o acorde que está montando.
+    for (const j of juntadas) marks[j.m] = 'var(--mu)';
+    if (picked && !acumula) marks[Number(picked)] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
+    if (acumula && phase !== 'ask') for (const j of juntadas) marks[j.m] = phase === 'right' ? 'var(--ok)' : 'var(--err)';
+    if (phase === 'wrong') for (let m = sf.lo; m <= sf.hi; m++) if (ok({ kind: 'pitch', midi: m }) || (acumula && alturaEsperada(q.expected, m))) marks[m] = 'var(--ok)';
     return (
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        {v.kind === 'ear' && <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />}
+        {ouvir}
         <div style={{ width: '100%', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} naming={naming} onPress={m => phase === 'ask' && onAnswer({ kind: 'pitch', midi: m }, String(m))} labels="do" />
+          <Keyboard lo={sf.lo} hi={sf.hi} marks={marks} marcasComTexto={sf.apoio?.rotulos ?? {}} naming={naming}
+            onPress={m => phase === 'ask' && tocar({ m })} labels="do" />
         </div>
+        {acoes}
       </div>
     );
   }
+  if (sf.kind === 'mapa') {
+    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar} />;
+  }
   if (sf.kind === 'fretboard') {
     const marks = [];
-    if (picked) {
+    /**
+     * O apoio no braço, em **todas as posições** em que aquela altura existe — pedido do Paulo em
+     * 13/11: *"no baixo agora a nota de referencia se mostra apenas em uma das suas posicoes. mostre
+     * ela em todas."*
+     *
+     * Ele está certo, e a razão é do instrumento: a mesma altura vive em várias cordas, e o braço só
+     * vira mapa quando se vê que o dó da casa 8 da quarta corda é o mesmo dó da casa 3 da terceira.
+     * Mostrar uma posição só ensina um ponto; mostrar todas ensina o braço.
+     *
+     * Se nenhuma casa alcança, nada é desenhado — marca na casa errada é pior que marca nenhuma.
+     */
+    for (const m of sf.apoio?.midis ?? []) {
+      for (let st = 0; st < sf.tuning.length; st++) {
+        const casa = m - sf.tuning[st];
+        if (casa >= sf.from && casa <= sf.to) {
+          marks.push({ s: st, f: casa, color: 'var(--accent-quiet)', label: sf.apoio?.rotulos?.[m] });
+        }
+      }
+    }
+    // Acumulando, a posição clicada é guardada pelo índice da corda e da casa — duas cordas podem
+    // dar a mesma altura, e desenhar um acorde é escolher ONDE, não só qual nota.
+    for (const j of juntadas) if (j.s !== undefined && j.f !== undefined) marks.push({ s: j.s, f: j.f, color: phase === 'ask' ? 'var(--mu)' : phase === 'right' ? 'var(--ok)' : 'var(--err)' });
+    if (picked && !acumula) {
       const [s, f] = picked.split(':').map(Number);
       marks.push({ s, f, color: phase === 'right' ? 'var(--ok)' : 'var(--err)', label: phase === 'right' ? '✓' : undefined });
     }
     if (phase === 'wrong') {
       const strings = sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i);
-      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f })) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
+      for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f }) || (acumula && alturaEsperada(q.expected, sf.tuning[s] + f))) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
     }
     return (
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
+        {ouvir}
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
-          onPick={(s, f) => phase === 'ask' && onAnswer({ kind: 'pitch', midi: sf.tuning[s] + f }, `${s}:${f}`)} />
+          onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
+        {acoes}
       </div>
     );
   }
   if (sf.kind === 'staff') {
     const e = q.expected;
-    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct } : null;
+    /**
+     * A nota certa, para a revelação.
+     *
+     * Era só o caso `spelled` com oitava — e o Paulo relatou o furo em 13/11: *"não está aparecendo
+     * a posição certa. eu estou errando tudo e só aparece um vermelho onde cliquei."* Quando o
+     * exercício pergunta por ALTURA (é o caso do `ouvido-tecla` respondendo na pauta), o gabarito é
+     * `pitch`, e aí nada era desenhado: a pessoa errava sem nunca ver o que era.
+     */
+    const certa: Note | null = e.kind === 'spelled' && e.oct !== undefined
+      ? { letter: mod(e.letter, 7) as 0, acc: e.acc, oct: e.oct }
+      : e.kind === 'pitch' ? notaDeAltura(e.midi) : null;
     const minha = picked ? fromStep(Number(picked.split(':')[0]), Number(picked.split(':')[1])) : null;
     const mesmaNota = !!minha && !!certa && minha.letter === certa.letter && minha.acc === certa.acc && minha.oct === certa.oct;
     /**
@@ -378,8 +701,27 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       <div className="stage">
         {fb}
         <div className="prompt">{q.prompt}</div>
-        <Staff clef={sf.clef} columns={[{ notes: notas }]} colWidth={64} ghostAcc={acc}
-          onPick={phase === 'ask' ? s => onAnswer({ kind: 'spelled', letter: mod(s, 7), acc, oct: Math.floor(s / 7) }, `${s}:${acc}`) : undefined} />
+        {ouvir}
+        <Staff clef={sf.clef} fifths={sf.fifths} colWidth={64} ghostAcc={acc}
+          /**
+           * O apoio ganha **coluna própria, antes da resposta**: na pauta duas notas na mesma coluna
+           * seriam um acorde, e a referência não é parte da resposta. Lado a lado, lê-se "daqui para
+           * aquela", que é o que o exercício pede.
+           */
+          columns={[
+            ...(sf.apoio?.midis ?? []).map(m => ({ notes: [{ note: notaDeAltura(m), color: 'var(--accent-quiet)' }] })),
+            { notes: notas },
+          ]}
+          /**
+           * O acidente da resposta: o que a pessoa escolheu à mão (`acc`), ou — se ela não escolheu
+           * nenhum — **o que a armadura manda** (`fifths`). Em Sol maior, clicar a linha do fá dá
+           * Fá♯ sem precisar ligar sustenido, que era a queixa do Paulo em 12/11.
+           */
+          onPick={phase === 'ask' ? s => {
+            const daArmadura = sf.fifths === undefined ? 0 : keyAccidentals(sf.fifths)[mod(s, 7)] ?? 0;
+            const a = acc !== 0 ? acc : daArmadura;
+            onAnswer({ kind: 'spelled', letter: mod(s, 7), acc: a, oct: Math.floor(s / 7) }, `${s}:${a}`);
+          } : undefined} />
         <div className="hint">{phase === 'wrong' && notas.length > 1 ? t('player.staffYoursAndRight') : t('player.tapStaff')}</div>
       </div>
     );
@@ -390,22 +732,77 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, naming, picked, 
       {fb}
       {isText ? <div className="prompt text">{q.prompt}</div> : <div className="prompt">{q.prompt}</div>}
       {v.kind === 'staff' && <Staff clef={v.clef} fifths={v.fifths} columns={v.columns.map(c => ({ notes: c.map(n => ({ note: n })) }))} colWidth={v.columns.length > 4 ? 44 : 64} />}
-      {v.kind === 'keyboard' && <Keyboard lo={v.lo} hi={v.hi} marks={Object.fromEntries(v.marks.map(m => [m, 'var(--mu)']))} naming={naming} />}
-      {v.kind === 'fretboard' && <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />}
+      {v.kind === 'keyboard' && (
+        v.animar
+          ? <Keyboard lo={v.lo} hi={v.hi} naming={naming}
+              marks={Object.fromEntries(v.marks.slice(0, seq.ate + 1).map((m, i) => [m, i === seq.ate ? 'var(--mu)' : 'var(--accent-quiet)']))}
+              marcasComTexto={seq.semMovimento ? Object.fromEntries(v.marks.map((m, i) => [m, String(i + 1)])) : {}} />
+          : <Keyboard lo={v.lo} hi={v.hi} naming={naming}
+              marks={Object.fromEntries(v.marks.map(m => [m, v.marcasFracas?.includes(m) ? 'var(--accent-quiet)' : 'var(--mu)']))}
+              marcasComTexto={v.rotulos ?? {}} />
+      )}
+      {v.kind === 'fretboard' && (
+        v.animar
+          ? <Fretboard tuning={v.tuning} from={v.from} to={v.to} muted={v.muted} naming={naming}
+              marks={v.marks.slice(0, seq.ate + 1).map((mk, i) => ({
+                ...mk,
+                color: i === seq.ate ? 'var(--mu)' : 'var(--accent-quiet)',
+                // Sem movimento, a ordem vira número na própria marca.
+                label: seq.semMovimento ? String(i + 1) : mk.label,
+              }))} />
+          : <Fretboard tuning={v.tuning} from={v.from} to={v.to} marks={v.marks} muted={v.muted} naming={naming} />
+      )}
+      {/* Ver de novo: a animação roda uma vez, e audiar costuma pedir mais de uma olhada. */}
+      {animando && !seq.semMovimento && (
+        <div className="row" style={{ marginTop: 10 }}>
+          <Btn small tone="ghost" onClick={seq.recomecar}>{t('player.verDeNovo')}</Btn>
+        </div>
+      )}
       {v.kind === 'ear' && <><Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound?.partes} onPlayParte={onPlayParte} />{v.hint && <div className="hint">{v.hint}</div>}</>}
+      {/**
+        * **Os pedaços também fora do visual de ouvido**, e isto conserta um defeito que o Paulo
+        * relatou em 12/11: *"em nota na pauta, em audiar, não tem botão pra tocar o contexto. nem
+        * pra ouvir a resposta"*.
+        *
+        * Ele estava certo, e o próprio comentário de `autoavaliacao` assumia um botão que não
+        * existia — *"o gabarito mora em `sound.partes` e é tocado pelo botão de pedaço"*. Só que o
+        * `Listen` só renderizava com `visual.kind === 'ear'`, e nas quatro direções `audiar` o
+        * visual é a pauta ou o braço: a nota está ESCRITA, e o som é o que se confere depois.
+        *
+        * A condição é `partes`, não a superfície: pedaços são opt-in do item (ver `SoundContent`),
+        * então quem os declara quer os botões, e nenhuma outra tela ganha controle que não pediu.
+        *
+        * ⚠️ **Depois do desenho, e não antes** — o Paulo relatou em 13/11 que eles ficavam *"meio
+        * por cima do teclado, numa posicao estranha"*. Estavam renderizando entre o enunciado e o
+        * teclado, o que empurrava o desenho para baixo e punha o controle no meio da leitura.
+        * Audiando, o gesto é **olhar primeiro, ouvir depois**: a ordem na tela é a ordem do gesto.
+        */}
+      {v.kind !== 'ear' && !!q.sound?.partes?.length && (
+        <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
+      )}
     </div>
   );
 }
 
-function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
+function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }: {
   playing: boolean; heard: boolean; onPlay: () => void;
   partes?: ParteDoSom[]; onPlayParte?: (p: ParteDoSom) => void;
+  /**
+   * Esconde o botão grande de "ouvir tudo", deixando só os pedaços.
+   *
+   * É o caso do `audiar`: o estímulo é a nota ESCRITA, e o botão grande tocaria o contexto como se
+   * fosse a pergunta. Ali os dois pedaços — contexto e resposta — são o que existe para ouvir, e
+   * cada um é uma escolha diferente de quem estuda.
+   */
+  semBotaoGrande?: boolean;
 }) {
   const t = useT();
   return (
     <>
-      <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
-      <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      {!semBotaoGrande && <>
+        <button type="button" className={`listen ${playing ? 'playing' : ''}`} onClick={onPlay} aria-label={t(heard ? 'player.listenAgain' : 'player.listen')}><PlayIcon /></button>
+        <div className="hint">{t(heard ? 'player.hintAgain' : 'player.hintFirst')}</div>
+      </>}
       {/* Os pedaços só aparecem onde o item os declarou — ver `SoundContent.partes`. Ficam abaixo
           do botão grande e menores que ele: repetir tudo continua sendo o gesto principal. O rótulo
           em cima entrou com o pedido do Paulo de deixá-los mais visíveis: sem ele, botões soltos
@@ -425,8 +822,178 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte }: {
 }
 
 // ---------------- área de resposta ----------------
-function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
+/**
+ * **O mapa do braço**: as posições do arpejo no braço, uma destacada, e os nomes em botões.
+ *
+ * O estado de dentro do arpejo vive aqui, e não no Player, e a razão é o fluxo que o Paulo
+ * desenhou: **uma pergunta é o arpejo inteiro**, mas a pessoa responde nota por nota e recebe
+ * resposta imediata a cada uma. O Player só precisa saber do fim — se tudo foi nomeado, a pergunta
+ * é um acerto. Pôr `acertadas` no Player faria o placar contar quatro perguntas onde há uma.
+ *
+ * Erro não avança: a posição fica, o botão pisca vermelho, nada soa. É o que o exercício pede —
+ * pular a nota errada ensinaria a desistir, e o braço inteiro está à vista para contar as casas.
+ */
+function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
+  sf: Extract<Surface, { kind: 'mapa' }>;
+  phase: Phase; naming: 'pt' | 'en'; onAnswer: Submit;
+  onTocarGrupos: (g: number[][]) => void;
+  placar: { correct: number; total: number; seguidas: number };
+}) {
+  const t = useT();
+  /**
+   * **O modo de foco**, decidido com o Paulo em 13/11 e medido antes: o Player pede 951 px de altura
+   * e um celular deitado oferece 375. Braço (139) + fileira de botões (~56) + a linha fina (~32) são
+   * 227 px e cabem; o que não cabe é a moldura — cabeçalho, placar, pé e navegação somam 306.
+   *
+   * Então abaixo de 480 px de altura a moldura sai e o placar vem para a linha fina. Acima disso
+   * nada muda: no desktop o exercício é o mesmo, com a navegação no lugar. **A tela manda, não o
+   * rótulo do aparelho** — é o que evita um item que se comporta diferente "porque é celular".
+   */
+  const tela = useTela();
+  const emFoco = !tela.cabeAMoldura;
+  useFocoDeTela(emFoco);
+  /**
+   * O lembrete do solfejo abre na entrada e depois fica atrás de um ícone (decisão de 13/11): uma
+   * frase fixa ocupando linha permanente em 375 px é caro, e lembrete que está sempre lá não é lido.
+   */
+  const [lembrete, setLembrete] = useState(true);
+  const [acertadas, setAcertadas] = useState(0);
+  const [errado, setErrado] = useState<string | null>(null);
+  /** O verde do acerto, pedido dele em 13/11: o certo também sinaliza, não só o errado. */
+  const [acertou, setAcertou] = useState<string | null>(null);
+  /**
+   * Os avisos de cor duram 420 ms, e os temporizadores são **limpos ao sair**.
+   *
+   * Sem isto, responder e girar o celular (ou sair do exercício) deixava um `setState` marcado para
+   * um componente que não existe mais. No React não é erro visível, mas é vazamento — e aqui o giro
+   * de tela é parte do uso normal, não um caso de borda.
+   */
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+  const aviso = (fn: () => void) => { timers.current.push(window.setTimeout(fn, 420)); };
+  const alvo = sf.posicoes[acertadas];
+  /**
+   * **Pergunta nova reinicia o progresso — e a identidade é o OBJETO, não as posições.**
+   *
+   * A primeira versão comparava a lista de casas, e isso travava o exercício num caso que a
+   * revisão antes do deploy encontrou: se o sorteio devolvesse **as mesmas posições** duas vezes
+   * seguidas, a chave não mudava, `acertadas` ficava cheio, nenhuma posição era destacada, `alvo`
+   * saía `undefined` e os botões paravam de responder — tela morta.
+   *
+   * E repetir não é hipótese remota: o anti-eco é preferência, não garantia (ele desiste depois de
+   * metade das tentativas), e com *uma nota por corda* num baixo existem só 41 desenhos.
+   *
+   * Comparar a identidade do objeto resolve de raiz: cada `make` produz uma superfície nova, então
+   * duas perguntas iguais em conteúdo continuam sendo duas perguntas. Ajustar estado durante o
+   * render é o padrão que o React documenta para isto — ele descarta o render e refaz antes de
+   * pintar, então não há quadro intermediário.
+   */
+  const superficieAnterior = useRef(sf);
+  if (superficieAnterior.current !== sf) {
+    superficieAnterior.current = sf;
+    setAcertadas(0);
+    setErrado(null);
+    setAcertou(null);
+  }
+
+  /**
+   * Três intensidades da mesma cor, e elas são o exercício: **já foi** (apagado), **é esta agora**
+   * (acento) e **ainda não** (fraco). As acertadas não desaparecem — a pedido de que, ao fechar, se
+   * veja o desenho inteiro que acabou de ser nomeado.
+   */
+  const marks = sf.posicoes.map((p, i) => ({
+    s: p.corda, f: p.casa,
+    color: i < acertadas ? 'var(--accent-quiet)' : i === acertadas ? 'var(--mu)' : 'var(--line)',
+  }));
+
+  const responder = (pc: number, id: string) => {
+    if (phase !== 'ask' || !alvo) return;
+    if (mod(pc, 12) !== mod(alvo.pc, 12)) {
+      setErrado(id);
+      // o vermelho é um instante: o erro informa e sai, sem interromper o fluxo
+      aviso(() => setErrado(null));
+      return;
+    }
+    setErrado(null);
+    setAcertou(id);
+    aviso(() => setAcertou(null));
+    const n = acertadas + 1;
+    setAcertadas(n);
+    if (n < sf.posicoes.length) {
+      onTocarGrupos([[alvo.midi]]);
+      return;
+    }
+    // fechou: toca a última (ou o arpejo inteiro, se o item pediu) e entrega a pergunta ao Player
+    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.midi]) : [[alvo.midi]]);
+    // O id da resposta é a lista de posições: é o que o histórico guarda como "o que foi clicado".
+    onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(','));
+  };
+
+  /**
+   * **Vire o celular** — e só aparece onde girar resolve: aparelho de toque, em retrato.
+   *
+   * Numa janela de desktop estreita não há o que girar, então não se pede nada: o braço desenha
+   * menor e a pessoa redimensiona se quiser. O Paulo pegou essa confusão quando eu havia amarrado as
+   * duas coisas ao mesmo número — *"isso significa que no computador vai pedir para rotacionar a
+   * tela? Porque isso soa meio difícil"*.
+   *
+   * O arpejo **não se perde**: este retorno mostra outra coisa, não remonta o componente, então ao
+   * voltar à horizontal a posição destacada é a mesma. Girar é acidente de bolso, não resposta errada.
+   */
+  if (!tela.cabeOBraco && tela.giravelAgora) {
+    return (
+      <div className="stage dark mapa mapa-gire" role="status">
+        <svg viewBox="0 0 48 48" aria-hidden="true" className="mapa-gire-icone">
+          <rect x="17" y="6" width="14" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M10,36 a14,14 0 0 0 28,0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M34,32 l4,4 l-4,4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <p>{t('player.mapaGire')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`stage dark mapa ${emFoco ? 'em-foco' : ''}`}>
+      <div className="mapa-linha">
+        {/* O campo em vigor: no foco, a única pista de que graus se trata. */}
+        {sf.rotulo && <span className="mapa-campo">{sf.rotulo}</span>}
+        <span className="mapa-progresso" aria-label={t('player.mapaProgresso', { feitas: String(acertadas), total: String(sf.posicoes.length) })}>
+          {sf.posicoes.map((_, i) => <i key={i} className={i < acertadas ? 'feito' : i === acertadas ? 'agora' : ''} />)}
+        </span>
+        {/* O placar só entra no foco, onde a moldura do app (que o mostra) desapareceu. */}
+        {emFoco && <span className="mapa-placar">{placar.correct}/{placar.total}</span>}
+        <button type="button" className="mapa-dica" onClick={() => setLembrete(v => !v)}
+          aria-label={t('player.mapaSolfeje')} aria-expanded={lembrete}>♪</button>
+      </div>
+      {lembrete && (
+        <p className="mapa-lembrete" role="note">
+          {t('player.mapaSolfeje')}
+          <button type="button" className="btn small ghost" onClick={() => setLembrete(false)}>{t('common.continue')}</button>
+        </p>
+      )}
+      <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} naming={naming} foco={sf.foco} />
+      <div className="answers mapa-nomes">
+        {sf.opcoes.map(o => {
+          const pc = Number(o.id);
+          return (
+            <button key={o.id} type="button" className={`ans compact ${errado === o.id ? 'wrong' : acertou === o.id ? 'right' : ''}`}
+              disabled={phase !== 'ask'} onClick={() => responder(pc, o.id)}>
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, ouviuAResposta }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
+  /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */
+  montada?: { letter: number; acc: number } | null;
+  /** Já ouviu o pedaço `resposta`? A autoavaliação espera por isso. */
+  ouviuAResposta?: boolean;
 }) {
   const t = useT();
   const sf = q.surface;
@@ -446,6 +1013,45 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
       </div>
     );
   }
+  if (sf.kind === 'autoavaliacao') {
+    /**
+     * Audiar e conferir. Não há resposta a conferir — a pessoa diz como foi.
+     *
+     * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
+     * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
+     *
+     * O gabarito mora em `sound.partes` e é tocado pelo botão de pedaço — não aqui. Audiar **antes**
+     * de ouvir é o exercício, e um botão de resposta nesta fileira convidaria a ouvir primeiro.
+     */
+    const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
+    if (phase !== 'ask') return <div className="answers compact" />;
+    /**
+     * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
+     * só apareçam depois que tu ouvir a resposta"*).
+     *
+     * E a razão é a do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
+     * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela agora segue essa ordem em vez de
+     * oferecer as três coisas de uma vez.
+     *
+     * Até ouvir, o que aparece é o convite a conferir — o botão do pedaço `resposta` já está logo
+     * acima, e esta linha diz o que fazer com ele.
+     */
+    if (!ouviuAResposta) {
+      return (
+        <div className="auto-aval-espera" role="status">
+          <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
+        </div>
+      );
+    }
+    return (
+      <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
+        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+      </div>
+    );
+  }
+
   if (sf.kind === 'sequence') {
     return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;
   }
@@ -460,13 +1066,26 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
     return (
       <div>
         {accRow(sf.accidentals)}
+        {/**
+          * O eco do teclado físico: o que está montado, grande, antes de valer. Ele pediu em 12/11
+          * *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"* —
+          * então o estado parcial é visível, e diz o que falta fazer para enviar.
+          */}
+        {montada && phase === 'ask' && (
+          <div className="montada" role="status">
+            <b>{noteName({ letter: montada.letter as 0, acc: montada.acc }, naming)}</b>
+            <span className="muted">{t('player.montadaDica')}</span>
+          </div>
+        )}
         <div className="letters">
           {[0, 1, 2, 3, 4, 5, 6].map(l => {
             const right = ok({ kind: 'spelled', letter: l, acc: revealAcc });
+            const noTeclado = montada?.letter === l && phase === 'ask';
             return (
-              <button key={l} type="button" className={`ans ${phase === 'ask' ? '' : right ? 'right' : picked?.startsWith(`${l}:`) ? 'wrong' : ''}`}
+              <button key={l} type="button" className={`ans ${noTeclado ? 'montando' : ''} ${phase === 'ask' ? '' : right ? 'right' : picked?.startsWith(`${l}:`) ? 'wrong' : ''}`}
                 disabled={phase !== 'ask'} onClick={() => onAnswer({ kind: 'spelled', letter: l, acc }, `${l}:${acc}`)}>
-                {noteName({ letter: l as 0, acc: phase !== 'ask' && right ? revealAcc : acc }, naming)}
+                {noteName({ letter: l as 0, acc: noTeclado ? montada.acc : phase !== 'ask' && right ? revealAcc : acc }, naming)}
+                <span className="k">{'CDEFGAB'[l]}</span>
               </button>
             );
           })}
@@ -479,7 +1098,7 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming }: {
 }
 
 // ---------------- personalizar ----------------
-function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; extra?: ReactNode; onReset: () => void }) {
+function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; antes?: ReactNode; depois?: ReactNode; onReset: () => void }) {
   const t = useT();
   return (
     <div className="settings">
@@ -498,22 +1117,27 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
           </div>
         </div>
       ) : null}
+      {antes}
       {def.settings(ctx).filter(s => s.quando?.(values) ?? true).map(s => (
         <div className="field" key={s.id}>
           <span>{s.label}</span>
+          {/* O aviso de que o valor escolhido não é o que vale — ver `Setting.aviso`. */}
+          {s.aviso?.(values) && <span className="hint">{s.aviso(values)}</span>}
           {s.type === 'toggle' && (
             <label className="switch"><input type="checkbox" id={`set-${def.id}-${s.id}`} checked={!!values[s.id]} onChange={e => onChange({ ...values, [s.id]: e.target.checked })} />{t(values[s.id] ? 'common.yes' : 'common.no')}</label>
           )}
           {s.type === 'single' && (
-            <div className="row">{s.options!.map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
+            // `opcoesDe` manda quando existe: é o recorte que faz sentido com as outras escolhas.
+            <div className="row">{(s.opcoesDe?.(values) ?? s.options ?? []).map(o => <Chip key={o.id} on={values[s.id] === o.id} onClick={() => onChange({ ...values, [s.id]: o.id })}>{o.label}</Chip>)}</div>
           )}
           {s.type === 'multi' && (
-            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{s.options!.map(o => {
+            <div className={`row ${s.justify ? 'row-justify' : ''}`}>{(s.opcoesDe?.(values) ?? s.options ?? []).map(o => {
               const cur = (values[s.id] as string[]) ?? [];
               const on = cur.includes(o.id);
               return <Chip key={o.id} on={on} onClick={() => {
                 const nextV = on ? cur.filter(x => x !== o.id) : [...cur, o.id];
-                if (nextV.length) onChange({ ...values, [s.id]: nextV });
+                // Lista vazia só onde o item declarou que vazio é estado legítimo (`podeVazio`).
+                if (nextV.length || s.podeVazio) onChange({ ...values, [s.id]: nextV });
               }}>{o.label}</Chip>;
             })}</div>
           )}
@@ -529,7 +1153,7 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, extra, onReset }:
           })()}
         </div>
       ))}
-      {extra}
+      {depois}
       {/* UM botão só: antes o painel de prática trazia o seu, e apareciam dois lado a lado. */}
       <div className="row"><Btn small tone="ghost" onClick={onReset}>{t('player.resetDefaults')}</Btn></div>
     </div>

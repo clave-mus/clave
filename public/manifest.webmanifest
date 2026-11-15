@@ -1,0 +1,16 @@
+{
+  "name": "Clave",
+  "short_name": "Clave",
+  "description": "Monte a sua rotina de estudo musical e execute.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbf8f4",
+  "theme_color": "#fbf8f4",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

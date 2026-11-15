@@ -2,7 +2,8 @@ import { ALL_SCALES, plain, regiao, scaleName, shuffle, tonicaNaRegiao } from '.
 import type { ScaleId } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem } from '../types';
-import { acordeDoCampo, lerPadrao, posicoesDoPadrao, rotulo, sortearPadrao } from '../../theory/padrao-de-escala';
+import { acordeDoCampo, escalaDoCampo, lerPadrao, posicoesDoPadrao, rotulo, sortearPadrao } from '../../theory/padrao-de-escala';
+import { CADENCIAS, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 
 /**
  * Reconhecer padrões pela escala — a metade de adivinhar do par que o Paulo desenhou em
@@ -48,14 +49,22 @@ export const reconhecerPadroesEscala: CatalogItem = {
     { id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
     { id: 'tamanho', label: ctx.t('settings.patternSize'), type: 'single',
       options: ['3', '4', '5', '6'].map(n => ({ id: n, label: n })) },
+    /**
+     * A **cadência** é o contexto mais forte, e é por isso que ela é o padrão (decisão do Paulo em
+     * 10/11/2026): uma nota dá a altura e não dá o modo — dó serve a dó maior e a lá menor —, uma
+     * tríade dá o modo e não dá a função, e a cadência dá as duas. É o que a música usa para dizer
+     * onde você está.
+     */
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single', options: [
+      { id: 'ii-V-I', label: ctx.t('settings.contextIIVI') },
+      { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
       { id: 'triade', label: ctx.t('settings.contextTriad') },
       { id: 'tetrade', label: ctx.t('settings.contextTetrade') },
       { id: 'nota', label: ctx.t('settings.contextTonic') },
     ] },
   ],
   // Pentatônica como padrão, decisão do Paulo.
-  defaults: { escala: 'penta-maior', tamanho: '4', contexto: 'triade' },
+  defaults: { escala: 'penta-maior', tamanho: '4', contexto: 'ii-V-I' },
   presets: [
     { id: 'penta-tres', nome: 'presets.padraoPentaTres', settings: { escala: 'penta-maior', tamanho: '3', contexto: 'triade' } },
     { id: 'penta-quatro', nome: 'presets.padraoPentaQuatro', settings: { escala: 'penta-maior', tamanho: '4', contexto: 'triade' } },
@@ -70,9 +79,16 @@ export const reconhecerPadroesEscala: CatalogItem = {
     const certa = posicoes[Math.floor(Math.random() * posicoes.length)];
     const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
 
-    // O contexto estabelece a tônica; sem ele não há como situar o padrão.
-    const contexto = s.contexto === 'nota' ? [tonic]
-      : acordeDoCampo(escala, 1, s.contexto === 'tetrade').map(semi => tonic + semi);
+    /**
+     * O contexto estabelece a tônica; sem ele não há como situar o padrão.
+     *
+     * A cadência soa como **vários** grupos em sequência, a tônica e a tríade como um só — e por
+     * isso `contexto` é uma lista de grupos, não um grupo.
+     */
+    const cadencia = CADENCIAS.find(c => c === s.contexto);
+    const contexto: number[][] = cadencia
+      ? cadenciaHarmonica(cadencia, tonic, escalaDoCampo(escala), s.tetrade === true)
+      : [s.contexto === 'nota' ? [tonic] : acordeDoCampo(escala, 1, s.contexto === 'tetrade').map(semi => tonic + semi)];
     /**
      * O padrão pode **descer** abaixo da tônica (decisão do Paulo: "o padrao pode repetir grau e
      * descer"), e aí a nota mais grave cai fora da região. O teste `contexto-musical` pegou: com a
@@ -94,11 +110,11 @@ export const reconhecerPadroesEscala: CatalogItem = {
       surface: { kind: 'choices', options: shuffle(posicoes.map(p => rotulo(p))).map(plain), wide: true },
       expected: { kind: 'option', id: rotulo(certa) },
       sound: {
-        groups: [contexto, ...notas.map(m => [m])],
+        groups: [...contexto, ...notas.map(m => [m])],
         // Ouvir em pedaços: o contexto sozinho e cada nota. Separar aqui AJUDA e não entrega — o
         // grau de uma nota só existe contra a tônica.
         partes: [
-          { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [contexto] },
+          { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
           ...notas.map((m, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[m]] })),
         ],
       },

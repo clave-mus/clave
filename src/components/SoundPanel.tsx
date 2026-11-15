@@ -8,7 +8,7 @@ import { useT, type MessageKey } from '../i18n';
 import { setParams, setState, useStore } from '../state/store';
 import { Btn, Chip, SecTitle } from './ui';
 
-const VOICES: Voice[] = ['piano', 'pad', 'violao', 'baixo', 'orgao'];
+const VOICES: Voice[] = ['piano', 'limpo', 'pad', 'violao', 'baixo', 'orgao'];
 
 export default function SoundPanel() {
   const t = useT();

@@ -41,22 +41,50 @@ export function resolvePresentation(layers: (Partial<Presentation> | undefined)[
 export function schedule(content: SoundContent, p: Presentation): { notes: [number, number][]; length: number } {
   const notes: [number, number][] = [];
   let t = 0;
-  for (const group of content.groups) {
-    if (group.length > 1 && p.chord !== 'block') {
+  content.groups.forEach((group, g) => {
+    /**
+     * Um grupo VAZIO é um respiro: nada toca, e o relógio anda um `gap`.
+     *
+     * Serve ao pedido do Paulo em 12/11 — *"em graus do campo harmônico, precisa de um tempo maior
+     * entre o contexto e o acorde"* —, e serve a qualquer item que precise separar duas partes do
+     * estímulo sem inventar parâmetro de tempo novo.
+     */
+    if (!group.length) { t += p.gap; return; }
+    /**
+     * `arpejaveis` restringe o arpejo a certos grupos (Paulo, 12/11: *"ao selecionar arpejar antes,
+     * acho que isso deve se aplicar apenas ao acorde solicitado, não ao contexto"*). Sem a lista,
+     * vale para todos — que é como sempre foi.
+     */
+    const arpeja = p.chord !== 'block' && (content.arpejaveis?.includes(g) ?? true);
+    if (group.length > 1 && arpeja) {
       group.forEach((m, i) => notes.push([m, t + i * p.gap]));
       t += group.length * p.gap;
-      if (p.chord === 'arpeggio') continue;
+      if (p.chord === 'arpeggio') return;
     }
     group.forEach((m, i) => notes.push([m, t + i * p.arp]));
     t += p.gap;
-  }
+  });
   return { notes, length: t };
 }
 
 /** Ajuste de nível de cada timbre, para que todos soem igualmente altos no mesmo volume. Medido fora
  *  do tempo real, a 2,0 e em tríade (e em nota solta): o violão saía ~6 dB abaixo do piano, o baixo ~4
- *  dB e o órgão ~7 dB acima. Sem isso, trocar de timbre no Perfil mudaria o volume sem querer. */
-export const VOICE_LEVEL: Record<Voice, number> = { piano: 1, pad: 1, violao: 1.8, baixo: 0.6, orgao: 0.45 };
+ *  dB e o órgão ~7 dB acima. Sem isso, trocar de timbre no Perfil mudaria o volume sem querer.
+ *
+ *  `limpo` entrou em 13/11, medido num `OfflineAudioContext` contra o **piano amostrado** (o que a
+ *  pessoa ouve desde 12/11): crus, a 0,7 de velocidade e na média de três alturas, limpo dá RMS
+ *  0,0674 e piano 0,0513 — daí 0,76.
+ *
+ *  **Três valores antes deste, e cada erro ensinou algo.** Escrevi 1 por analogia com o piano, e ele
+ *  soava 1,79× mais alto. Calibrei contra o piano SINTETIZADO, que é só o reserva de quando as
+ *  amostras não chegaram — a referência tinha de ser o som real. E medi uma altura só, em passadas
+ *  separadas, com as amostras em estados de carga diferentes: a razão dançava entre 0,66 e 1. Medir
+ *  os dois na MESMA passada, em três alturas, é o que deu número estável.
+ *
+ *  Com 0,76 a razão medida fica em 1,18 — 1,4 dB acima do piano, que o ouvido não registra como
+ *  salto. O resto da variação vem da normalização por pico de cada amostra do piano, e persegui-la
+ *  com mais casas decimais seria perseguir ruído. */
+export const VOICE_LEVEL: Record<Voice, number> = { piano: 1, pad: 1, violao: 1.8, baixo: 0.6, orgao: 0.45, limpo: 0.76 };
 
 /** Reforço dos tambores em relação às notas, para o mesmo volume. O aro é ruído de banda estreita e
  *  soa muito mais baixo que uma nota (pico −29 dBFS contra −21 a 0,7); o clique da contagem é agudo e

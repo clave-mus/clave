@@ -5,6 +5,12 @@ import { resolveParams } from './params';
 import { majorTonic, mod, noteName, pc, relativeMinor } from '../theory/core';
 import { translate, type MessageKey, type Vars } from '../i18n';
 
+/**
+ * Contexto de sonda com `params` de verdade: desde 13/11 `settings(ctx)` lê tonalidade e
+ * material (a lista de "só estes graus" depende deles), e um contexto de mentira quebra ali.
+ */
+const ctxDeSonda = { t: (k: string) => k, naming: 'latin', conv: 'pt', params: resolveParams('violao') };
+
 // A decisão 53 criou quatro itens de teoria, um por tópico, pra `quiz-teoria` (que acumulava
 // quatro objetos) deixar de existir. A revisão de 04/11 (`P7`) tirou os quatro itens de novo — só
 // ficou `teoria-intervalos`, que usa um dos tópicos (`intervalo-nomeado`). Os TÓPICOS continuam:
@@ -87,7 +93,7 @@ describe('os tópicos novos de teoria', () => {
 
   // Decisão 13: item ambíguo não pode gerar "erro do usuário". É por isso que estes dois ficaram fora.
   it('os tópicos declarados são só os de resposta única — função e cadência não entraram', () => {
-    const declarados = EXERCISES.flatMap(e => (e.settings?.({ t: (k: string) => k } as never) ?? []))
+    const declarados = EXERCISES.flatMap(e => (e.settings?.(ctxDeSonda as never) ?? []))
       .filter(s => s.id === 'temas').flatMap(s => s.options?.map(o => o.id) ?? []);
     for (const proibido of ['funcao', 'cadencia']) expect([...new Set(declarados)]).not.toContain(proibido);
   });

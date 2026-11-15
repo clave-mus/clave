@@ -182,10 +182,17 @@ export function buildAttempt(i: AttemptInput): Attempt {
       ...(presentation ? { presentation } : {}),
     },
     response: i.response,
-    // todo o catálogo atual confere automaticamente; autoavaliação e "sem nota" chegam com os
-    // exercícios de instrumento
     outcome: i.correct ? 'correct' : 'incorrect',
-    validation_type: 'deterministic',
+    /**
+     * **Deduzido da forma da pergunta**, nunca declarado — é a mesma regra que o teste
+     * `context.test.ts` chama de "os deduzidos saem da forma da pergunta, não de declaração".
+     *
+     * Era cravado em `'deterministic'`, com um comentário dizendo que autoavaliação chegaria com os
+     * exercícios de instrumento. Chegou em 10/11/2026, com a direção `audiar`: ali quem julga é a
+     * pessoa, e gravar como `deterministic` diria no histórico que o app conferiu quando ele não
+     * conferiu nada.
+     */
+    validation_type: q.surface.kind === 'autoavaliacao' ? 'self_report' : 'deterministic',
     error_code: i.correct ? null : classifyError(q.expected, i.response),
     response_time_ms: Math.max(0, Math.round(i.responseTimeMs)),
     hints: 0,

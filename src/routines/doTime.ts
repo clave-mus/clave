@@ -99,7 +99,7 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     etapas: [
       // Primeiro porque é a porta: uma nota, com dó de referência, respondida no teclado.
       { porque: 'ouvir uma nota contra o dó e achá-la no teclado: a porta de entrada do ouvido',
-        instancias: [i('ouvido-tecla', { referencia: true, pretas: true }, EM_DO)] },
+        instancias: [i('ouvido-tecla', { referencia: true }, EM_DO)] },
       // Melódicos e harmônicos SEPARADOS, a pedido dele: são dois ouvidos. O harmônico não tem
       // ordem no tempo para se apoiar, e por isso é bem mais difícil que o melódico.
       { porque: 'intervalos melódicos, subindo: a unidade de tudo',
@@ -108,6 +108,11 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
         instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, EM_DO)] },
       { porque: 'todas as qualidades de acorde, sobre a mesma fundamental: sobra a cor',
         instancias: [i('ouvido-acorde', { tipos: ALL_CHORDS, arpejo: true, duracao: 2 }, EM_DO)] },
+      // Entrou em 12/11/2026, a pedido dele ("não tínhamos um exercício de reconhecer graus do
+      // campo harmônico?"). Vem colada na de qualidades porque é a mesma pergunta mudando de eixo:
+      // ali a cor sobre a mesma fundamental, aqui o LUGAR dentro de um campo, depois da cadência.
+      { porque: 'os mesmos acordes, agora dentro de um campo: a pergunta deixa de ser a cor e vira a função',
+        instancias: [i('ouvido-campo', { campo: 'maior', tetrades: true, contexto: 'ii-V-I' }, EM_DO)] },
       { porque: 'todas as escalas, subindo e descendo — é descendo que as duas melódicas se separam',
         instancias: [i('ouvido-escala', { tipos: ALL_SCALES, direcao: 'ambos' }, EM_DO)] },
       // Duas etapas do mesmo item, a pedido dele: uma nota e três notas. Sem alternativas nas
@@ -140,25 +145,25 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
     // O que entra segue o critério do Paulo (decisão 109): **trabalha a posição das notas no braço.**
     etapas: [
       { minutos: 5, porque: 'reconhecer a casa que o app aponta: mais fácil que achar, e aquece a vista',
-        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '0-5' })] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', casas: '0-5' })] },
       { minutos: 8, politica: 'ordem', porque: 'achar a nota, rodiziando a região: casa, meio do braço, braço inteiro',
         instancias: [
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }),
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '5-9' }),
-          i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-12' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '0-5' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '5-9' }),
+          i('nota-no-instrumento', { direcao: 'achar', casas: '0-12' }),
         ] },
       // **Identificar e construir, em rodízio** — o Paulo pediu assim. São habilidades diferentes, e
       // alternar entre elas gasta metade do tempo que fazer as duas toda vez.
       { minutos: 6, politica: 'ordem', porque: 'o intervalo nas duas direções: reconhecer o desenho numa vez, construí-lo na outra',
         instancias: [
-          i('intervalo-no-instrumento', { direcao: 'identificar', instrumento: 'auto' }),
-          i('intervalo-no-instrumento', { direcao: 'construir', instrumento: 'auto' }),
+          i('intervalo-no-instrumento', { direcao: 'identificar' }),
+          i('intervalo-no-instrumento', { direcao: 'construir' }),
         ] },
       // Formas móveis, nas cinco primeiras casas: é a forma relativa que transfere, e não o
       // gavetão numa posição fixa. As tabelas à mão saíram em 09/11/2026 — o desenho vem do
       // gerador de `theory/digitacoes.ts`.
       { minutos: 5, porque: 'desenho de acorde no braço, formas móveis',
-        instancias: [i('que-acorde-e-esse', { superficie: 'braco', soltas: false, casas: '0-5' })] },
+        instancias: [i('acorde-no-instrumento', { instrumento: 'violao', soltas: false, casas: '0-5' })] },
       // A única que pede o instrumento de verdade. Quem está na rua pula; quem está em casa tem aqui
       // a parte que a tela não faz.
       { minutos: 6, porque: 'achar a nota no braço de verdade: a única etapa que a tela não consegue fazer por você',
@@ -202,9 +207,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { minutos: 5, porque: 'primeiro o som da tonalidade: três notas dela, para a tônica virar referência',
         instancias: [i('ouvido-celulas', { escala: 'maior', tamanho: '3' })] },
       { minutos: 5, porque: 'as notas dela no braço, só as diatônicas, na região de casa',
-        instancias: [i('nota-no-instrumento', { direcao: 'achar', instrumento: 'auto', casas: '0-5' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'achar', casas: '0-5' }, DIATONICO)] },
       { minutos: 5, porque: 'a mesma tonalidade noutra região — é o que liga as partes do braço',
-        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'auto', casas: '5-9' }, DIATONICO)] },
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', casas: '5-9' }, DIATONICO)] },
       { minutos: 5, porque: 'os acordes que nascem dela, de ouvido',
         instancias: [i('ouvido-acorde', { tipos: ['maior', 'menor', 'm7', '7M', '7'], arpejo: true, duracao: 2 })] },
       { minutos: 10, porque: 'fecha tocando dentro dela, com a harmonia rodando',
@@ -213,13 +218,52 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
   },
 
   // ---------------------------------------------------------------------------------------------
+  /**
+   * A rotina que o Paulo pediu para si, em 10/11/2026: *"eu vou querer incluir isso em uma rotina
+   * minha: Reconhecer notas e acordes no violão e no piano · Leitura de partitura · Melodia na
+   * pauta (audiar uma melodia de poucas notas)"*.
+   *
+   * ⚠️ **A terceira parte não existe ainda** e é decisão dele: audiar uma melodia ESCRITA de poucas
+   * notas. Hoje `nota-na-pauta` audia **uma** nota; várias notas na pauta é outro objeto (melodia,
+   * não nota), e pela decisão 15 a pergunta é se isso é parâmetro de um item ou item novo — produto,
+   * não implementação. Enquanto ele não decide, a rotina fecha com a nota solta audiada, que é a
+   * parte verdadeira do que ele pediu.
+   *
+   * O instrumento de cada etapa é **declarado**, não `auto`: a rotina diz "no violão e no piano",
+   * então ela fixa os dois em etapas próprias em vez de seguir o perfil.
+   */
+  {
+    id: 'notas-acordes-e-leitura', nome: 'doTime.notasAcordes.nome', sobre: 'doTime.notasAcordes.sobre',
+    modo: 'guiado', publicacao: RASCUNHO,
+    etapas: [
+      { minutos: 4, porque: 'as notas no braço, o instrumento dele: o mapa antes da harmonia',
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'violao', casas: '0-12' })] },
+      { minutos: 4, porque: 'as mesmas notas no piano, onde a oitava é visível e o braço não ajuda',
+        instancias: [i('nota-no-instrumento', { direcao: 'identificar', instrumento: 'piano', oitavas: '2' })] },
+      { minutos: 5, porque: 'os acordes no braço, pelas formas que se tocam de verdade',
+        instancias: [i('acorde-no-instrumento', { instrumento: 'violao', tipos: ['maior', 'menor', 'dim', 'aum'], casas: '0-12' })] },
+      { minutos: 5, porque: 'os mesmos acordes no piano: a mesma harmonia com outra geometria',
+        instancias: [i('acorde-no-instrumento', { instrumento: 'piano', tipos: ['maior', 'menor', 'dim', 'aum'] })] },
+      { minutos: 5, porque: 'ler altura na pauta, sem ritmo para dividir a atenção',
+        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], acidentes: false })] },
+      { minutos: 5, porque: 'a leitura corrida, onde altura e ritmo voltam a andar juntos',
+        instancias: [i('leitura')] },
+      /**
+       * A terceira parte do pedido dele — *"melodia na pauta (audiar uma melodia de poucas notas)"* —
+       * **passou a existir em 12/11**, com `melodia-de-ouvido` e o estímulo `escrito`. Era a ponta
+       * que esta rotina deixava aberta.
+       */
+      { minutos: 4, porque: 'audiar uma melodia escrita: ouvir por dentro antes de conferir',
+        instancias: [i('melodia-de-ouvido', { estimulo: 'escrito', superficie: 'pauta', notas: 3, salto: 7, contexto: 'ii-V-I' }, EM_DO)] },
+    ],
+  },
   {
     id: 'leitura-diaria', nome: 'doTime.leitura.nome', sobre: 'doTime.leitura.sobre',
     modo: 'guiado', publicacao: RASCUNHO,
     // Altura e ritmo SEPARADOS, que é como se aprende a ler: juntar os dois cedo demais trava os dois.
     etapas: [
       { minutos: 5, porque: 'altura só, numa clave só, sem acidentes',
-        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], extensao: 'pauta', acidentes: false })] },
+        instancias: [i('nota-na-pauta', { direcao: 'ler', claves: ['sol'], acidentes: false })] },
       { minutos: 5, porque: 'ritmo só, no nível de entrada (semínima e colcheias)',
         instancias: [i('ritmo-ouvido', { figuras: ['basico'] })] },
       { minutos: 5, porque: 'os dois juntos, no ambiente de leitura corrida',

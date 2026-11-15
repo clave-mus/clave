@@ -22,10 +22,17 @@ describe('playContent', () => {
       expect(vel).toBeCloseTo(1.5 * VOICE_LEVEL[voice]);
     }
   });
+  /**
+   * A lista de vozes e a de níveis vivem em arquivos diferentes e precisam concordar. Voz sem nível
+   * tocaria com `undefined × volume` — NaN no ganho, e NaN que passa pelo `master` compartilhado
+   * silencia **tudo o que tocar depois**. Foi o estrago do bug da corda, em 09/11.
+   */
   it('todo timbre tem ajuste de nível, e o piano é a referência', () => {
-    expect(Object.keys(VOICE_LEVEL).sort()).toEqual(['baixo', 'orgao', 'pad', 'piano', 'violao']);
+    // `limpo` entrou em 13/11, com nível medido contra o piano amostrado (ver `VOICE_LEVEL`).
+    expect(Object.keys(VOICE_LEVEL).sort()).toEqual(['baixo', 'limpo', 'orgao', 'pad', 'piano', 'violao']);
     expect(VOICE_LEVEL.piano).toBe(1);
     Object.values(VOICE_LEVEL).forEach(v => expect(v).toBeGreaterThan(0));
+    Object.entries(VOICE_LEVEL).forEach(([voz, v]) => expect(Number.isFinite(v), `${voz} com nível não finito`).toBe(true));
   });
   it('no volume padrão, as notas do piano saem na intensidade padrão', () => {
     playContent({ groups: [[60, 64, 67]] }, resolvePresentation([]));

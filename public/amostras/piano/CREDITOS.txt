@@ -1,0 +1,7 @@
+Salamander Grand Piano v3 — Yamaha C5 gravado por Alexander Holm
+Licença: Creative Commons Attribution 3.0 (CC-BY 3.0)
+https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html
+
+Subconjunto usado pelo Clave: 17 amostras (C2 a C6, uma a cada três semitons),
+recodificadas para mono MP3 64 kbps com 5 s de duração, via o espelho do Tone.js
+(https://tonejs.github.io/audio/salamander/).

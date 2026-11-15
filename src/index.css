@@ -77,6 +77,14 @@
 
   /* --- nomes antigos, mapeados para os novos.
          Há estilo em linha nos .tsx que ainda os usa; a limpeza é a F4-4. --- */
+  /* --- o teclado é um objeto físico, não um tema ---
+     Tecla branca é branca no modo claro e no escuro; tecla preta é preta nos dois. Estas cores
+     ficam FORA dos blocos de tema de propósito. O defeito que isto conserta (Paulo, 12/11): o
+     teclado usava `--cream`/`--bk`, que são apelidos de `--ink`/`--ground` e INVERTEM com o tema —
+     no modo claro as brancas saíam escuras e as pretas claras. */
+  --key-white: #f7f3ec;
+  --key-black: #211e1c;
+
   --bk: var(--ground);
   --bk-2: var(--surface);
   --bk-3: var(--raised);
@@ -504,6 +512,31 @@ select.sel {
 .ans.right { background: var(--ok); border-color: var(--ok); color: var(--ok-ink); font-weight: 650; }
 .ans.right .k { color: var(--ok-ink); opacity: .7; }
 .ans.right::before { content: '✓'; position: absolute; right: 8px; top: 5px; font-size: 13px; }
+
+/* O acerto PULSA uma vez, 280 ms. Pedido do Paulo em 12/11: "o aviso de que eu acertei é pouco
+   perceptível, é um textinho no canto — precisamos de algo mais visível, talvez uma animação rápida
+   e não exagerada". Então é um pulso só, na cor que já marcava o acerto: nada de confete nem de
+   comemoração, que a visão do produto proíbe. Só o olho achando a resposta sem procurar. */
+@keyframes pulso-acerto {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.055); }
+  100% { transform: scale(1); }
+}
+.ans.right { animation: pulso-acerto 280ms ease-out 1; }
+
+/* O eco do teclado físico: o que foi montado e ainda não valeu (ver `montada`, no Player). */
+/* A autoavaliação centralizada, e o convite a conferir no lugar dela antes de ouvir. O Paulo pediu
+   em 13/11: "centralize os botoes de consegui com esforço nao consegui e tal". */
+.answers.auto-aval { grid-template-columns: repeat(auto-fit, minmax(96px, max-content)); justify-content: center; }
+.auto-aval-espera { display: flex; justify-content: center; padding: 14px 0 6px; text-align: center; }
+
+.montada { display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; }
+.montada b { font-family: var(--display); font-size: 26px; font-weight: 800; color: var(--accent); }
+.montada .muted { font-size: 12px; }
+.ans.montando { border-color: var(--accent); background: var(--accent-quiet); }
+@media (prefers-reduced-motion: reduce) {
+  .ans.right { animation: none; }
+}
 .ans.wrong { border-color: var(--err); background: var(--err-quiet); color: var(--err-strong); text-decoration: line-through; }
 .ans:disabled { cursor: default; }
 .ans.rhythm { padding: 10px 12px; }
@@ -737,3 +770,130 @@ select.sel {
 .seq-conferido { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; font-family: var(--display); font-weight: 680; font-size: 21px; }
 .seq-conferido .right { color: var(--ok-strong); }
 .seq-conferido .wrong { color: var(--err-strong); text-decoration: line-through; }
+
+/* ---------------- mapa do braço (13/11/2026) ---------------- */
+/*
+ * O item foi desenhado para celular na horizontal, com o braço inteiro à vista o tempo todo. Aqui
+ * está só o que a superfície precisa; o **modo de foco** (esconder cabeçalho e navegação quando a
+ * altura aperta) é passo próprio e ainda não existe.
+ */
+.stage.mapa { gap: 10px; }
+/* A linha fina de cima: é onde cabem progresso e, no modo de foco, tonalidade e placar. */
+.mapa-linha { display: flex; align-items: center; justify-content: center; min-height: 14px; }
+/* Progresso em pontos: diz "2 de 4" sem gastar uma linha de texto. */
+.mapa-progresso { display: inline-flex; gap: 6px; }
+.mapa-progresso i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); display: block; }
+.mapa-progresso i.feito { background: var(--accent-quiet); }
+.mapa-progresso i.agora { background: var(--mu); transform: scale(1.25); }
+/*
+ * Os nomes numa fileira só, e **sem quebrar**: a posição de cada botão tem de ser a mesma em toda a
+ * rodada, porque a mão aprende onde ele fica e isso deixa de custar atenção. Com `auto-fill` eles
+ * se reorganizariam conforme a largura, que é o contrário do que o exercício quer.
+ */
+.answers.mapa-nomes { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.answers.mapa-nomes .ans { min-height: 44px; padding: 8px 4px; font-size: 15px; }
+
+/* ---------------- o modo de foco do mapa do braço (14/11/2026) ---------------- */
+/*
+ * Abaixo de 480 px de altura a moldura do app sai de cena: medido, o Player pede 951 px e um celular
+ * deitado oferece 375. Quem liga a classe é `useFocoDeTela`, e ela sai ao deixar a tela.
+ *
+ * A classe mora na RAIZ e não no corpo do exercício porque o que precisa desaparecer — cabeçalho e
+ * navegação — é irmão dele, não filho.
+ */
+.foco-exercicio .topbar,
+.foco-exercicio .tabbar { display: none; }
+.foco-exercicio .page { padding: 0; }
+.foco-exercicio .review-banner { display: none; }
+/*
+ * **Dentro do player, só o palco** — e a regra é por exclusão de propósito.
+ *
+ * Caçar classe por classe (`player-head`, `player-foot`, o botão de salvar na rotina…) é frágil: o
+ * próximo pedaço que alguém acrescentar ao rodapé aparece de novo no foco, e ninguém vai lembrar
+ * desta regra. Medido antes de inverter: o banner de revisão sozinho empurrava o exercício 90 px e
+ * os botões de nome caíam fora da tela.
+ *
+ * **Configurar é tarefa de tela em pé.** Em retrato a moldura continua inteira (812 px de altura
+ * passa do limite de 480), então o aviso de girar convive com o botão de personalizar: em pé se
+ * configura, deitado se pratica. Nada fica inacessível.
+ */
+.foco-exercicio .player > *:not(.stage) { display: none; }
+/*
+ * **A pergunta de confiança é a exceção**, e achei isto revisando antes do deploy: ela é filha
+ * direta do player, então a regra acima a escondia — e ela aparece a cada dez respostas. O
+ * exercício não travava, mas o painel ficava invisível para sempre (ninguém pode responder o que não
+ * vê) e a coleta de confiança morria no celular.
+ *
+ * Sobreposta, e não no fluxo: em 375 px de altura ela empurraria o braço fora da tela. São três
+ * chips e um toque.
+ */
+.foco-exercicio .player > .painel-confianca {
+  display: grid;
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  margin: 0;
+  max-width: min(92vw, 420px);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+}
+/* O caminho de volta e o `gap` da página: 37 px que faziam a tela rolar por um fio. */
+.foco-exercicio .voltar-ao-catalogo { display: none; }
+.foco-exercicio .pagina-do-item { gap: 0; }
+/*
+ * **Altura real, não `100vh`.** No Safari de iPhone, `100vh` conta a barra de endereço que se
+ * esconde ao rolar, então um `100vh` deitado é maior que a tela e corta o rodapé — é o erro clássico
+ * de celular, e o Paulo só vai poder testar depois do deploy. `100dvh` mede o que está visível
+ * agora; o `100vh` antes dele é a reserva para navegador que não conheça `dvh`.
+ */
+.foco-exercicio .shell { min-height: 100vh; min-height: 100dvh; }
+.foco-exercicio .stage.mapa.em-foco {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /*
+   * `stretch`, e não o `center` que `.stage` herda: com `center` o grid dos sete botões encolhia
+   * para o tamanho do conteúdo — medido, 223 px numa tela de 667 — e a fileira ficava apertada no
+   * meio em vez de usar a largura que o braço usa.
+   */
+  align-items: stretch;
+  gap: 8px;
+  /*
+   * **As áreas seguras do aparelho.** Deitado, o notch e o indicador de gestos ficam nas LATERAIS, e
+   * sem isto a primeira casa do braço desaparece atrás do recorte da tela. É invisível no navegador
+   * de mesa e óbvio num iPhone — então entra por padrão, não depois do relato.
+   */
+  padding: 6px max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  border-radius: 0;
+}
+/* A linha fina: campo, progresso, placar e o ícone do lembrete. */
+.mapa-linha { gap: 10px; }
+.mapa-campo { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
+.mapa-placar { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mapa-dica {
+  background: none; border: 0; color: var(--muted); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 4px 6px; border-radius: 6px;
+}
+.mapa-dica:hover { color: var(--ink); }
+.mapa-lembrete {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin: 0; font-size: 13px; color: var(--muted); text-align: center;
+}
+/* Vire o celular. */
+.mapa-gire {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; min-height: 60vh; text-align: center; padding: 24px;
+}
+.mapa-gire-icone { width: 56px; height: 56px; color: var(--mu); }
+.mapa-gire p { margin: 0; max-width: 22ch; color: var(--cream); }
+/*
+ * Deitado, o braço ganha a largura e os botões encolhem a altura — são sete numa fileira, e 40 px
+ * continua sendo alvo confortável para o polegar.
+ */
+@media (max-height: 480px) {
+  .answers.mapa-nomes .ans { min-height: 40px; padding: 6px 2px; font-size: 14px; }
+  .mapa-lembrete { font-size: 12px; }
+}

@@ -38,7 +38,7 @@ export default function Layout() {
         </div>
       </header>
       {revisao && (
-        <div role="status" className="row" style={{ justifyContent: 'center', gap: 12, padding: '8px 16px', background: 'var(--accent-quiet)', color: 'var(--ink)' }}>
+        <div role="status" className="row review-banner" style={{ justifyContent: 'center', gap: 12, padding: '8px 16px', background: 'var(--accent-quiet)', color: 'var(--ink)' }}>
           <span>{t('review.banner')}</span>
           <button type="button" className="btn small ghost" onClick={() => setRevisao(false)}><span>{t('review.exit')}</span></button>
         </div>

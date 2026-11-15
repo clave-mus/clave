@@ -1,7 +1,11 @@
-// Motor de som do Clave: tudo sintetizado com Web Audio, sem arquivos de áudio.
+// Motor de som do Clave: Web Audio, quase tudo sintetizado. A exceção é o piano, que desde 12/11
+// toca amostras (Salamander, ver `piano-amostras.ts`) com o sintetizado de reserva enquanto elas
+// não chegam — o som nunca espera a rede.
 // O navegador só libera som depois de um toque do usuário, então o contexto é criado sob demanda.
 
-export type Voice = 'piano' | 'violao' | 'pad' | 'baixo' | 'orgao';
+import { amostraDePiano } from './piano-amostras';
+
+export type Voice = 'piano' | 'violao' | 'pad' | 'baixo' | 'orgao' | 'limpo';
 export type Drum = 'bumbo' | 'caixa' | 'chimbal' | 'aro' | 'clique' | 'clique-forte';
 
 let ctx: BaseAudioContext | null = null;
@@ -160,20 +164,123 @@ export function amostrasDeCorda(
    * Um dedo ou palheta real injeta muito menos agudo, e é o mesmo passa-baixa do laço que modela
    * isso. Aplicado duas vezes, para a queda ser mais firme que a de uma volta só.
    */
-  // O estouro dura uma volta da corda, **mas no máximo 6 ms**: o tempo de contato de um dedo não
-  // cresce porque a nota é grave. Sem o teto, no Si0 ele durava 32 ms, e filtrado virava uma rampa
-  // quase contínua que excitava mal o modo — a altura media 18 cents fora.
-  const exc = Math.max(2, Math.min(Math.round(sr / f), Math.round(sr * 0.006)));
+  /**
+   * O estouro dura **uma volta inteira da corda** — e isto conserta o bug que o Paulo achou em
+   * 12/11: *"o fá da casa 3 da corda ré soou mais grave que o si da corda lá casa 2"*.
+   *
+   * Havia aqui um teto de 6 ms, posto para o ataque não virar uma rampa longa nas graves. Mas o
+   * laço de uma nota grave dura 16–24 ms: com 6 ms, só um terço do atraso recebia energia, e **a
+   * amplitude da fundamental passava a ser o que o ruído aleatório tivesse somado naquele pedaço**
+   * — sorte. Medido: o período sai certo em toda a extensão (0–3 cents), mas a fundamental saía
+   * mais fraca que o 2º harmônico em notas sorteadas, e aí a nota soa uma oitava acima. Como isso
+   * acontecia com umas notas e não com outras, **a ordem entre duas posições invertia** — foi
+   * exatamente o que ele ouviu.
+   *
+   * Encher o atraso todo é o Karplus-Strong clássico, e o 2º harmônico deixa de ganhar por acaso.
+   * Só muda abaixo de ~167 Hz (onde uma volta já passava de 6 ms); acima disso o ataque é o mesmo.
+   */
+  const exc = Math.max(2, Math.round(sr / f));
+  /**
+   * A forma do estouro é um **triângulo com ruído por cima**, não ruído puro.
+   *
+   * Ruído puro é o Karplus-Strong de manual, e foi o que escondia o bug: a amplitude de cada
+   * harmônico é o que o sorteio deu, então em metade das notas o 2º harmônico vencia a
+   * fundamental e a nota soava uma oitava acima — medido, 56 de 120 casos.
+   *
+   * Uma corda pulsada de verdade parte de um **deslocamento triangular**: o dedo puxa num ponto e
+   * solta. Esse formato tem fundamental forte e harmônicos caindo com 1/k², o que é também o que
+   * se ouve. O ruído entra com peso menor, para o ataque continuar tendo o "dedo" e as notas não
+   * saírem idênticas umas às outras.
+   *
+   * O pico fica a 1/5 do comprimento porque é por ali que se pulsa uma corda — mais perto da
+   * ponte, mais harmônico; no meio exato, os pares desaparecem.
+   */
+  const PONTO = 0.2;
+  const PESO_DO_RUIDO = 0.35;
+  /**
+   * **O estouro entra de nada, não de um degrau** — e isto é o conserto do som percussivo que o
+   * Paulo relatou duas vezes (09/11 e 13/11: *"ainda está com um som percussivo bem estranho no
+   * começo"*).
+   *
+   * Medido antes: na janela do ataque, a banda de 2 a 8 kHz estava **6,2× mais forte** que no regime
+   * permanente, e a amplitude batia 0,9 em 2,8 ms. A causa é geometria, não timbre: a primeira
+   * amostra saía de zero para um valor alto, e um salto assim é um degrau — e degrau tem energia em
+   * toda a banda. É o mesmo "tsc" metálico de antes, por outro caminho.
+   *
+   * A entrada agora é um quarto de cosseno levantado sobre o primeiro quinto do estouro: começa em
+   * zero com derivada zero, que é o que não produz clique. O resto do estouro é o mesmo triângulo.
+   */
+  const ENTRADA = 0.2;
+  /**
+   * **O ruído do dedo dura milissegundos, não um período da corda** — e esta é a causa de verdade do
+   * som percussivo que o Paulo relatou duas vezes.
+   *
+   * Ele durava `exc`, o laço inteiro: 3 ms no Mi4 do violão (onde soa como o "chiff" de uma palheta,
+   * certo) e **24 ms no Mi1 do baixo**, onde vira um "shhh" audível antes da nota. Um contato de
+   * dedo não cresce porque a corda é grave.
+   *
+   * São duas escalas de tempo diferentes no mesmo estouro, e separá-las é o conserto: o **triângulo**
+   * ocupa o laço todo, porque é ele que dá a fundamental (a corda parte deslocada em toda a sua
+   * extensão); o **ruído** ocupa os primeiros milissegundos, porque é o dedo.
+   *
+   * Medido: a banda de 2–8 kHz no ataque caiu de 9,2× para 6,4× do regime permanente no Mi1, e de
+   * 6,9× para 5,7× no Sol1, **sem** enfraquecer a fundamental (a razão fundamental/2º harmônico ficou
+   * em 2,89, igual). O que sobra é a física do modelo: corda pulsada é mais brilhante no ataque.
+   */
+  const MS_DO_DEDO = 3;
+  const nRuido = Math.min(exc, Math.round((sr * MS_DO_DEDO) / 1000));
+  /**
+   * **O dedo tem banda própria, e ela não acompanha a nota** — terceiro e último capítulo do som
+   * percussivo (13/11: *"pode remover ainda mais o agudo percussivo dos dedos, ou deixar ele mais
+   * sutil"*).
+   *
+   * Até aqui o ruído do dedo só era filtrado pelo filtro do laço, cujo corte acompanha a
+   * fundamental (`max(corteBase, f × CORTE_MINIMO_EM_FUNDAMENTAIS)`). O efeito disso é
+   * fisicamente errado: **quanto mais aguda a corda, mais agudo o dedo**, como se a polpa mudasse
+   * de material ao trocar de corda. Medido, a contribuição do dedo na banda de 2–8 kHz em relação
+   * ao que a corda produz sozinha: 0,02–0,06 nas graves do baixo e **1,38 no Mi4 do violão** — ali
+   * o dedo acrescentava mais agudo que a corda inteira, e é exatamente onde ele ouvia metal.
+   *
+   * Agora o ruído passa por um passa-baixa **de corte fixo** antes de entrar no estouro, porque o
+   * contato dura o mesmo milissegundo em qualquer corda. O ganho compensa a energia que o filtro
+   * come (`√(k/(2−k))` é o RMS de um polo sobre ruído branco), para `PESO_DO_RUIDO` continuar
+   * significando a mesma coisa se o corte mudar.
+   */
+  const CORTE_DO_DEDO = 900;
+  const GANHO_DO_DEDO = 2.5;
+  const kDedo = 1 - Math.exp((-2 * Math.PI * CORTE_DO_DEDO) / sr);
   let ataque = 0;
+  let ruido = 0;
+  let ruido2 = 0;
   let pico = 0;
+  let soma = 0;
   for (let i = 0; i < exc; i++) {
-    ataque += k * (rnd() * (1 - i / exc) - ataque);
+    const u = i / exc;
+    const triangulo = u < PONTO ? u / PONTO : (1 - u) / (1 - PONTO);
+    const entrada = u < ENTRADA ? 0.5 - 0.5 * Math.cos((Math.PI * u) / ENTRADA) : 1;
+    ruido += kDedo * ((i < nRuido ? rnd() * (1 - i / nRuido) : 0) - ruido);
+    ruido2 += kDedo * (ruido - ruido2);
+    const dedo = PESO_DO_RUIDO * GANHO_DO_DEDO * ruido2;
+    ataque += k * (entrada * triangulo + dedo - ataque);
     x[i] = ataque;
-    pico = Math.max(pico, Math.abs(ataque));
+    soma += ataque;
+  }
+  // Tira o valor médio: DC não é altura nenhuma, só um baque — e empurra o laço para um lado.
+  const media = soma / exc;
+  for (let i = 0; i < exc; i++) {
+    x[i] -= media;
+    pico = Math.max(pico, Math.abs(x[i]));
   }
   // O filtro tira energia, e quanto ela cai depende da nota. Normalizar o pico devolve o volume
   // sem número mágico — a primeira tentativa multiplicava por 2,2 e estourava amplitude 1.
-  if (pico > 0) for (let i = 0; i < exc; i++) x[i] = (x[i] / pico) * 0.9;
+  /**
+   * O estouro é normalizado a **0,7**, não a 0,9.
+   *
+   * Com 0,9 o ataque era o momento mais alto da nota por larga margem, e isso soma ao clique: ouve-se
+   * o transiente antes de ouvir a corda. Uma corda pulsada de verdade também tem pico no ataque, mas
+   * não um pico que domina o resto — e o laço reconstrói a amplitude nas primeiras voltas.
+   */
+  if (pico > 0) for (let i = 0; i < exc; i++) x[i] = (x[i] / pico) * 0.7;
   // o laço: passa-baixa de um polo come os agudos a cada volta, que é o que uma corda real faz
   let estado = 0;
   for (let i = N + 1; i < total; i++) {
@@ -202,11 +309,38 @@ function cordaPulsada(m: number, t: number, dur: number, vel: number, corda: typ
   registrar(out, [fonte], t + total / sr);
 }
 
+/**
+ * Piano amostrado: a amostra mais próxima, transposta por `playbackRate` e normalizada pelo pico
+ * para soar no nível do sintetizado (que toca a ~0,3·vel de amplitude). O ataque é o da gravação;
+ * o release em `t + dur` é o abafador — sem ele, toda nota duraria os 5 s da cauda da amostra.
+ */
+function pianoAmostrado(t: number, dur: number, vel: number, a: { buffer: AudioBuffer; pico: number; taxa: number }) {
+  const c = audio();
+  const fonte = c.createBufferSource();
+  fonte.buffer = a.buffer;
+  fonte.playbackRate.value = a.taxa;
+  const out = c.createGain();
+  const ganho = (0.3 * vel) / a.pico;
+  out.gain.setValueAtTime(ganho, t);
+  out.gain.setTargetAtTime(0.0001, t + dur, 0.12);
+  fonte.connect(out).connect(master);
+  const fim = Math.min(t + dur + 0.7, t + a.buffer.duration / a.taxa);
+  fonte.start(t);
+  fonte.stop(fim);
+  registrar(out, [fonte], fim);
+}
+
 /** Toca uma altura MIDI. `t` é o tempo absoluto do contexto (use now() + atraso). */
 export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel = 0.7) {
   // violão e baixo são cordas: a síntese por osciladores não dá o timbre delas
   if (voice === 'baixo') return cordaPulsada(m, t, dur, CORDAS.baixo.vel * vel, CORDAS.baixo);
   if (voice === 'violao') return cordaPulsada(m, t, dur, CORDAS.violao.vel * vel, CORDAS.violao);
+  if (voice === 'piano') {
+    // A primeira chamada dispara o carregamento; até a amostra desta nota decodificar, o
+    // sintetizado logo abaixo cobre — o exercício nunca começa em silêncio (§7).
+    const amostra = amostraDePiano(m, audio());
+    if (amostra) return pianoAmostrado(t, dur, vel, amostra);
+  }
   const c = audio();
   const out = c.createGain();
   const f = c.createBiquadFilter();
@@ -230,6 +364,30 @@ export function tone(m: number, t: number, dur = 1, voice: Voice = 'piano', vel 
     f.frequency.exponentialRampToValueAtTime(900, t + Math.max(0.4, dur));
     env(out, t, 0.32 * vel, 0.006, Math.max(0.6, dur * 1.4));
     stop = t + Math.max(0.6, dur * 1.4) + 0.05;
+  } else if (voice === 'limpo') {
+    /**
+     * **Synth limpo, de sustain longo** — o que o Paulo pediu em três linhas do rascunho: *"ter o
+     * synth como opção"*, e para o intervalo harmônico, *"synths de timbre limpo e bom sustain pra
+     * segurar o intervalo um pouco"*.
+     *
+     * Três diferenças em relação ao `piano` sintetizado, e cada uma atende metade do pedido:
+     *
+     * - **só senoides**, com os harmônicos pares em proporção suave. O triângulo do piano tem
+     *   energia em harmônicos ímpares altos, que é o que soa "duro" numa nota longa;
+     * - **ataque mais lento** (30 ms contra 6): sem a batida do martelo, o que sobra é a nota;
+     * - **sustain de verdade**: o nível se mantém até `dur` e só então cai, em vez de decair desde o
+     *   ataque. É isto que faz um intervalo ainda estar soando dois segundos depois — o teste mede.
+     *
+     * O corte do filtro acompanha a nota em vez de ser fixo: corte fixo come o fundamental das
+     * agudas (a lição de `CORTE_MINIMO_EM_FUNDAMENTAIS`, nas cordas).
+     */
+    add('sine', 1, 0.6); add('sine', 2, 0.18); add('sine', 3, 0.07); add('sine', 4, 0.03);
+    f.frequency.value = Math.max(2000, hz(m) * 8);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(0.22 * vel, t + 0.03);
+    out.gain.setValueAtTime(0.22 * vel, t + Math.max(0.3, dur));
+    out.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.3, dur) + 0.35);
+    stop = t + Math.max(0.3, dur) + 0.4;
   } else if (voice === 'pad') {
     add('sawtooth', 1, 0.3, -7); add('sawtooth', 1, 0.3, 7); add('sine', 0.5, 0.3);
     f.frequency.value = 1100;

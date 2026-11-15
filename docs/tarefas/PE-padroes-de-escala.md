@@ -125,8 +125,7 @@ seletor de tonalidade pelo ciclo das quintas, o `drone` com `Carater`, o registr
 
 ### O texto de abertura
 
-Do Paulo, no mesmo espírito do que ele escreveu para o Relações. **A frase final é dele** 👤 —
-proponho:
+Aprovado pelo Paulo em 10/11/2026:
 
 > Um desenho de poucas notas, subindo grau por grau pela escala. O desenho não muda; o que muda é
 > onde ele começa — e é isso que faz cada posição soar diferente.

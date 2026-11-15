@@ -1,4 +1,5 @@
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, arr, chordName, chordTypes, pick, porComplexidade, randInt, tonicaNaRegiao } from '../helpers';
+import { caberNaFaixa } from '../../theory/cadencia-harmonica';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -11,7 +12,18 @@ export const ouvidoAcorde: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
   publicacao: LEGADO,
-  settings: ctx => [{ id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
+  settings: ctx => [
+    /**
+     * **De onde vem a pergunta** (modelo de 12/11). `escrito` é o oposto desta linha, nas palavras
+     * dele: *"ler um acorde na pauta, piano ou violão e audiar o arpejo. ouvir a tônica pra ter
+     * contexto. ouvir o gabarito como conferência."* A superfície do desenho (`instrumento`) serve
+     * de estímulo sem nada novo — num acorde a ordem não importa, então as três servem.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
+    { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true, present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1, format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
     // Inversão aqui **não é a pergunta, é a dificuldade** (desenhado com o Paulo em 09/11). Um
@@ -20,8 +32,48 @@ export const ouvidoAcorde: CatalogItem = {
     //
     // "Qual inversão" como PERGUNTA é outro exercício, o do campo harmônico: lá a inversão
     // distingue um I de um V com a terça no baixo, e aqui distinguiria nada.
-    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' }],
-  defaults: { tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false },
+    /**
+     * **A fundamental é sempre a mesma?** (rascunho dele: *"se a tônica do acorde é sempre a mesma
+     * (padrão: sim, dó)"*.)
+     *
+     * Era implícito: `tonicaNaRegiao` devolve a tônica da tonalidade quando há uma, e sorteia
+     * quando ela é livre — então a resposta dependia de um parâmetro de PRÁTICA, não de uma escolha
+     * sobre o exercício. Agora é explícito, e os dois convivem: com `sorteada` a fundamental muda a
+     * cada rodada mesmo em dó maior.
+     *
+     * ⚠️ **Fundamental fixa muda a pergunta** (§3.4, aprendido no acorde do braço em 10/11): com
+     * ela, "que acorde é" tem uma resposta só — a qualidade. Isso é desejado aqui, porque a
+     * pergunta DESTE item é a qualidade; prender a fundamental tira a variação de altura e deixa só
+     * a cor. Com `sorteada`, some a muleta de ouvir tudo sobre a mesma nota.
+     */
+    { id: 'fundamental', label: ctx.t('settings.chordRoot'), type: 'single', options: [
+      { id: 'fixa', label: ctx.t('settings.rootFixed') },
+      { id: 'sorteada', label: ctx.t('settings.rootRandom') },
+    ] },
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
+    /**
+     * **Onde se responde** (`OR-ouvido-relativo.md`, §3.4: *"dois modos: alternativas com a
+     * descrição, ou desenhar o acorde na pauta, no piano ou no violão"*).
+     *
+     * Desenhar é outra habilidade: nas alternativas você reconhece a cor e aponta o nome; desenhando
+     * você tem de saber **quais notas** formam aquela cor. É o mesmo estímulo com resposta mais
+     * exigente — e é por isso que a superfície é parâmetro e não item novo (decisão 15).
+     *
+     * `instrumento` é a superfície do desenho, e o padrão é o do perfil: o item passa a responder no
+     * instrumento de quem usa, que é o pedido do §3.1.
+     */
+    { id: 'resposta', label: ctx.t('settings.answerWhere'), type: 'single', options: [
+      { id: 'alternativas', label: ctx.t('settings.answerOptions') },
+      { id: 'desenhar', label: ctx.t('settings.answerDraw') },
+    ] },
+    { id: 'instrumento', label: ctx.t('settings.instrument'), type: 'single', quando: s => s.resposta === 'desenhar' || s.estimulo === 'escrito',
+      options: [
+        // Sem "meu instrumento": o valor inicial vem do perfil (`defaultsDo`), e o chip diz qual é.
+        { id: 'braco', label: ctx.t('settings.onNeck') },
+        { id: 'piano', label: ctx.t('settings.instrumentPiano') },
+        { id: 'pauta', label: ctx.t('settings.onStaff') },
+      ] }],
+  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas' },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -39,6 +91,8 @@ export const ouvidoAcorde: CatalogItem = {
     { id: 'livre', nome: 'presets.acordesLivre', settings: { tipos: ALL_CHORDS }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.45 },
+  // Sem perfil de piano, o desenho é no braço — ver `INST` em helpers sobre o fim do "auto".
+  defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : 'braco' }),
   /**
    * `sus2` e `sus4` são **o mesmo conjunto de notas** — {0, 2, 7}. Dósus2 tem Dó, Ré e Sol;
    * Solsus4 tem Sol, Dó e Ré. Em posição fundamental o baixo os separa, mas a segunda inversão de
@@ -59,13 +113,134 @@ export const ouvidoAcorde: CatalogItem = {
   make(s, ctx): Question {
     const types = arr(s.tipos, ['maior', 'menor']) as ChordId[];
     const type = pick(types);
-    const root = tonicaNaRegiao(ctx, { lo: 53, hi: 64 });
+    /**
+     * A fundamental: a tônica em vigor (fixa), ou uma classe de altura sorteada a cada rodada.
+     *
+     * **Fixa cai em dó quando a tonalidade é livre**, que é o que o rascunho pede ("padrão: sim,
+     * dó"). `tonicaNaRegiao` não serve aqui: sem tonalidade ela SORTEIA a altura, e medindo saiu
+     * doze fundamentais diferentes com a opção chamada "sempre a mesma" — uma opção que não fazia
+     * o que o nome dela diz.
+     */
+    // Pela função de contexto, não por `ctx.params` direto: é a regra do projeto, e a sonda de
+    // `contexto-declarado` mede as chamadas — ler direto faz o item declarar o que não se vê.
+    const pcDaFundamental = s.fundamental === 'sorteada' ? randInt(0, 11) : tonalidade(ctx)?.tonic ?? 0;
+    /**
+     * **Desenhando no braço, o acorde tem de caber no braço.**
+     *
+     * A janela da fundamental era 53–64 fixa, e o acorde cresce dela: onze semitons de tétrade mais
+     * até oito de inversão. Num baixo de quatro cordas (casas 0–12 vão do Mi1 ao Mi4, 28 a 55) isso
+     * sai do instrumento, e aí não havia casa para clicar a resposta — defeito que a varredura de
+     * 13/11 achou junto com o gêmeo em `ouvido-intervalo`.
+     *
+     * O desconto é a extensão do que vai soar, para a nota mais aguda caber também.
+     */
+    const noBracoDesenhado = (s.resposta === 'desenhar' || s.estimulo === 'escrito')
+      && s.instrumento !== 'pauta'
+      && s.instrumento !== 'piano';
+    const extensao = Math.max(...CHORDS[type].degs.map(([, semi]) => semi)) + (s.inversoes ? 12 : 0);
+    const alcance = faixaDoBraco(ctx.params.tuning, 0, 12);
+    const janela = noBracoDesenhado
+      ? { lo: alcance.lo, hi: Math.max(alcance.lo, Math.min(64, alcance.hi - extensao)) }
+      : { lo: 53, hi: 64 };
+    let root = alturaDoPc(ctx, pcDaFundamental, janela);
     const ms = CHORDS[type].degs.map(([, semi]) => root + semi);
     // Inverter é levar a nota mais grave uma oitava acima, tantas vezes quanto a inversão. Em
     // MIDI direto, como o resto do item — `buildChord` faz o mesmo sobre `Note`, e aqui não há
     // grafia para preservar.
     if (s.inversoes) {
       for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
+    }
+    /**
+     * **E, no braço, o acorde inteiro é empurrado para dentro dele** — por oitavas, com
+     * `caberNaFaixa`, o mesmo motor que a cadência usa.
+     *
+     * Descontar a extensão da janela da fundamental (acima) resolve a maioria dos casos, mas não
+     * todos: `alturaDoPc` cruza a janela com a região de quem usa, e quando nenhuma oitava daquela
+     * classe cabe na interseção ela cai num fallback que **passa do teto**. Medido pelo guarda de
+     * varredura, e só na quinta rodada, porque depende do sorteio: MIDI 57 num braço cuja última
+     * casa dá 55.
+     *
+     * Deslocar o conjunto por oitavas não muda a pergunta — a qualidade do acorde é a mesma e as
+     * classes de altura também —, e é a única operação que garante o acorde dentro do instrumento
+     * sem mexer no que foi sorteado.
+     */
+    /**
+     * **A fundamental acompanha o deslocamento** — e esquecê-la foi um defeito que eu introduzi
+     * aqui mesmo, pego pelo teste `direcao-audiar` na mesma rodada.
+     *
+     * `root` é o que toca como **contexto** ("a tônica, para fixar o centro"). Deslocando só `ms`,
+     * o contexto soava numa oitava e o acorde desenhado estava noutra: a referência que deveria
+     * ancorar o ouvido apontava para fora do que se vê. Um deslocamento, nas duas coisas.
+     */
+    if (noBracoDesenhado) {
+      /**
+       * A **cópia** é obrigatória: `caberNaFaixa` devolve os mesmos arrays quando o deslocamento é
+       * zero, e sem copiar o `ms.length = 0` abaixo zerava a própria fonte — o acorde saía **vazio**,
+       * sem marca no braço e sem som. Peguei pelo teste `direcao-audiar`, não pela varredura: ela
+       * conferia que a resposta cabe na superfície, e uma resposta vazia cabe em qualquer lugar.
+       */
+      const dentro = [...caberNaFaixa([ms], alcance.lo, alcance.hi)[0]];
+      root += dentro[0] - ms[0];
+      ms.length = 0;
+      ms.push(...dentro);
+    }
+    /**
+     * **Audiar**: o acorde aparece desenhado, a tônica toca como contexto, e o arpejo fica no botão
+     * de conferência. Mesma superfície do modo "desenhar", lida em vez de clicada.
+     */
+    if (s.estimulo === 'escrito') {
+      const noPiano = s.instrumento === 'piano';
+      const noBraco = !noPiano && s.instrumento !== 'pauta';
+      const tuning = ctx.params.tuning;
+      const visual: Question['visual'] = s.instrumento === 'pauta'
+        ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: ms.map(m => [notaGrafada(ctx, m)]) }
+        : noPiano ? { kind: 'keyboard', ...faixaQueCabe(ms), marks: ms }
+        // **Só as notas que o braço alcança são desenhadas.** `casaDaAltura` devolvia a casa 0 da
+        // corda mais grave quando não achava — um Mi2 no lugar da nota pedida, calado. O acorde
+        // desenhado não era o acorde, e a pessoa audiava outra coisa.
+        : { kind: 'fretboard', tuning, from: 0, to: 12, marks: ms.map(m => casaDaAltura(tuning, m)).filter((c): c is { s: number; f: number } => c !== null) };
+      return {
+        prompt: ctx.t(s.instrumento === 'pauta' ? 'quiz.audiateChord' : 'quiz.audiateChordOnInstrument'), visual,
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[root]],
+          // O timbre segue o desenho: um acorde mostrado no braço soava de piano, que foi queixa
+          // dele em 13/11 no `audiar` do braço.
+          instrument: noBraco ? vozDoBraco(tuning) : undefined,
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[root]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
+          ],
+        },
+        autoplay: false, reveal: chordName(ctx.t, type),
+      };
+    }
+
+    /**
+     * Desenhando, o gabarito é **contorno não ordenada**: as notas que formam o acorde, em qualquer
+     * ordem de clique e em qualquer oitava — desde que TODAS deslocadas junto (a regra do §4). Um
+     * Dó maior desenhado uma oitava abaixo é um Dó maior; com uma nota solta fora, não é.
+     */
+    if (s.resposta === 'desenhar') {
+      const noPiano = s.instrumento === 'piano';
+      const naPauta = s.instrumento === 'pauta';
+      const clef = clave(ctx);
+      const tuning = ctx.params.tuning;
+      const superficie = naPauta
+        ? { kind: 'staff' as const, clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: ms.length }
+        : noPiano
+          // **A faixa cabe o acorde.** Era 48–72 fixo, e o acorde não: a fundamental sai da região
+          // de quem usa e as inversões somam até 19 semitons. Com a região padrão o acorde chegava
+          // a MIDI 83 — onze semitons acima da última tecla desenhada —, e não havia onde clicar a
+          // resposta. Erro de configuração aparecendo como erro da pessoa.
+          ? { kind: 'keyboard' as const, ...faixaQueCabe(ms), quantas: ms.length }
+          : { kind: 'fretboard' as const, tuning, from: 0, to: 12, quantas: ms.length };
+      return {
+        prompt: ctx.t('quiz.drawChord', { chord: chordName(ctx.t, type) }), visual: { kind: 'ear' },
+        surface: superficie, expected: { kind: 'contorno', midis: ms, ordenada: false },
+        sound: { groups: [ms], instrument: !naPauta && !noPiano ? vozDoBraco(tuning) : undefined },
+        autoplay: true, reveal: chordName(ctx.t, type),
+      };
     }
     return {
       prompt: ctx.t('quiz.earChord'), visual: { kind: 'ear' },

@@ -19,8 +19,25 @@ import type { FretMark } from '../components/music/Fretboard';
 
 export type Visual =
   | { kind: 'staff'; clef: Clef; fifths?: number; columns: Note[][] }
-  | { kind: 'keyboard'; lo: number; hi: number; marks: number[] }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[] }
+  /**
+   * `animar` acende as marcas **uma a uma, na ordem da lista**, com quase um segundo em cada
+   * (pedido do Paulo em 13/11).
+   *
+   * Existe porque num braço ou teclado três notas são três pontos acesos, e **nada diz qual é a
+   * primeira** — `● ● ●` não é melodia. A alternativa era numerar as marcas; ele escolheu a
+   * animação, que mostra a ordem no tempo em vez de pedir que se leia um número.
+   *
+   * Com `prefers-reduced-motion` a animação não roda, e aí as marcas aparecem **numeradas** de uma
+   * vez: a ordem é informação do exercício, não enfeite, e some junto com o movimento seria perder
+   * a pergunta.
+   */
+  /**
+   * `marcasFracas` são marcas de APOIO, não a pergunta: a nota de referência num exercício de
+   * audiação, por exemplo. Elas aparecem na cor fraca e com o nome escrito, e a pergunta fica no
+   * acento — sem isso as duas eram iguais e a pessoa não sabia qual audiar.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; marks: number[]; marcasFracas?: number[]; rotulos?: Record<number, string>; animar?: boolean }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; marks: FretMark[]; muted?: number[]; animar?: boolean }
   | { kind: 'ear'; hint?: string }
   | { kind: 'text'; text: string };
 
@@ -34,7 +51,13 @@ export type Response =
   /** Uma nota escrita (letras, pauta); oct só quando a superfície define a oitava. */
   | { kind: 'spelled'; letter: number; acc: number; oct?: number }
   /** Uma cifra digitada, em qualquer convenção. */
-  | { kind: 'chord'; text: string };
+  | { kind: 'chord'; text: string }
+  /**
+   * **Várias alturas**, montadas numa superfície de instrumento ou pauta — um acorde desenhado, uma
+   * melodia tocada de volta. A ordem é a de quem respondeu; se ela importa, quem decide é o
+   * `Expected` (ver `contorno`).
+   */
+  | { kind: 'pitches'; midis: number[] };
 
 /** O que está certo, em termos musicais. */
 export type Expected =
@@ -46,7 +69,22 @@ export type Expected =
   /** Grafia exata: letra e acidente (e oitava, se dada). Aqui Dó♯ ≠ Ré♭. */
   | { kind: 'spelled'; letter: number; acc: number; oct?: number }
   /** Acorde: classe de altura da fundamental e qualidade. */
-  | { kind: 'chord'; root: number; quality: ChordId };
+  | { kind: 'chord'; root: number; quality: ChordId }
+  /**
+   * **Contorno**: a conferência do meio, que o Paulo pediu e definiu (`OR-ouvido-relativo.md`, §4).
+   *
+   * As duas que existiam não serviam a melodia: `pitchClass` é frouxa (acerta na oitava errada — foi
+   * o que escondeu o bug do teclado) e `pitch` é rígida (exigiria a oitava absoluta de cada nota).
+   * Nas palavras dele: *"não dá pro usuário ouvir uma nota, saber qual é, ouvir uma nota acima e
+   * dizer que estava abaixo"*.
+   *
+   * **A regra:** certo se TODA nota da resposta está deslocada da esperada pelo MESMO número de
+   * oitavas. O conjunto inteiro pode subir ou descer junto; nota solta, não.
+   *
+   * `ordenada` é `true` para melodia (a ordem é a resposta) e `false` para acorde desenhado, onde
+   * a pessoa clica as notas em qualquer ordem e o que importa é o conjunto.
+   */
+  | { kind: 'contorno'; midis: number[]; ordenada?: boolean };
 
 export interface ChoiceOption {
   id: string;
@@ -73,10 +111,114 @@ export type Surface =
    * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
    */
   | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
+  /**
+   * **Audiar e conferir**: não há resposta a conferir, só a pessoa dizendo como foi.
+   *
+   * É a superfície da direção `audiar` — a terceira ao lado de ler e escrever, e o que faz a coluna
+   * "oposto" do desenho do Paulo (`OR-ouvido-relativo.md`) deixar de ser cinco exercícios novos.
+   *
+   * O gabarito **não toca sozinho**: fica atrás de um botão, porque audiar antes de ouvir é o
+   * exercício. Declare-o em `sound.partes` e deixe `autoplay: false`.
+   *
+   * `expected` é `{ kind: 'option', id: 'facil' }` — "consegui" é o acerto, e o resto da máquina
+   * funciona sem caso novo. O que muda é o `validation_type` da tentativa, **deduzido** desta
+   * superfície: autoavaliação não é medida, e o histórico não pode dizer que foi.
+   */
+  | { kind: 'autoavaliacao' }
   | { kind: 'letters'; accidentals: boolean }
-  | { kind: 'keyboard'; lo: number; hi: number }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number }
-  | { kind: 'staff'; clef: Clef; accidentals: boolean };
+  /**
+   * `quantas` transforma teclado, braço e pauta em **superfície que acumula**: a pessoa põe N notas
+   * e envia de uma vez, e a resposta sai como `{ kind: 'pitches' }`.
+   *
+   * Não é uma quarta superfície de propósito. Desenhar um acorde no piano é clicar nas mesmas
+   * teclas de sempre — o que muda é quantas respostas entram antes de valer. Uma superfície nova
+   * duplicaria o teclado, o braço e a pauta, e motor duplicado é proibido.
+   *
+   * Mesma regra do `sequence`: nada é enviado antes de estar cheia, e a pessoa pode desfazer o
+   * último toque. Meia resposta não é resposta.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; quantas?: number; apoio?: Apoio }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number; apoio?: Apoio }
+  /**
+   * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
+   * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
+   * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
+   */
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio }
+  /**
+   * **O mapa do braço**: as posições de um arpejo desenhadas no braço, uma destacada por vez, e a
+   * resposta é o NOME da nota destacada — clica-se no botão, não no braço.
+   *
+   * É a oitava superfície, e a única peça nova do item (13/11/2026). Nenhuma das sete servia:
+   * `choices` responde uma vez e aqui são N em sequência; `sequence` responde N vezes mas não tem
+   * braço nem avanço sincronizado com o desenho; `fretboard` é para clicar **no** braço, e aqui o
+   * braço é o enunciado. O que falta é o cruzamento: braço mostrando posições em três estados
+   * (ainda não · é esta · já foi) e botões de nome fixos ao lado.
+   *
+   * O braço é desenhado pelo mesmo `Fretboard` dos outros (decisão 17 — uma implementação de braço
+   * virtual), e os botões usam o estilo de `choices`. A superfície nova é a coreografia, não o
+   * desenho.
+   */
+  | {
+    kind: 'mapa';
+    tuning: readonly number[];
+    from: number;
+    to: number;
+    /** As posições na ordem de execução; a de índice `respondidas` é a destacada. */
+    posicoes: readonly PosicaoDoMapa[];
+    /** Os botões de nome, fixos durante toda a rodada — as notas do campo em vigor. */
+    opcoes: ChoiceOption[];
+    /**
+     * Tocar o arpejo inteiro ao completar, em vez de só a última nota.
+     *
+     * Declarado aqui e não deduzido: o Player tentava inferir isto do som (`groups.length ===
+     * posicoes.length`), condição que é **sempre verdadeira** — então o parâmetro que o Paulo pediu
+     * desligado por padrão tocava sempre, e quem o pegou foi o guarda `configuracoes-vivas`, que
+     * acusa configuração que a tela oferece e ninguém lê.
+     */
+    ouvirNoFim?: boolean;
+    /**
+     * A região em jogo, quando ela é fixa: o braço inteiro continua desenhado e o que está fora
+     * dela aparece apagado. Ver `Fretboard.foco` — nunca se recorta o braço.
+     */
+    foco?: readonly [number, number];
+    /**
+     * O **centro tonal em vigor**, em texto curto ("Dó maior").
+     *
+     * Vem do item porque só ele sabe: com tonalidade livre a tônica é sorteada por ele, e no modo de
+     * foco — onde a moldura do app desaparece — esta é a única pista do que está soando. Sem ela a
+     * pessoa nomearia graus de um campo que não sabe qual é.
+     */
+    rotulo?: string;
+  };
+
+/** Uma posição do arpejo no braço, com a classe de altura que a responde. */
+export interface PosicaoDoMapa {
+  corda: number;
+  casa: number;
+  midi: number;
+  /** A classe de altura: é ela que o botão de nome responde, em qualquer oitava. */
+  pc: number;
+}
+
+/**
+ * **Notas de APOIO numa superfície de resposta**: dadas, não perguntadas.
+ *
+ * É a nota de referência de um exercício de ouvido, por exemplo. Ela soa antes da pergunta e a
+ * pessoa precisa **ver onde ela está** — num braço, saber que o dó de referência é a casa 8 da
+ * terceira corda é metade do trabalho de achar o resto. O Paulo pediu isto em 13/11, em três telas:
+ * *"no braço do baixo, ainda tem que ter alguma indicação visual de qual nota tocou como
+ * referencia"* e *"na pauta tambem ainda precisa mostrar a nota de referencia"*.
+ *
+ * Aparece na cor fraca, com o nome escrito, e **nunca conta como resposta**: a conferência não a
+ * conhece. Quem desenha é o Player, que já sabe a afinação e a clave da superfície.
+ */
+export interface Apoio {
+  /** As alturas a mostrar. */
+  midis: number[];
+  /** O nome de cada uma, para a marca não ser um ponto misterioso. */
+  rotulos?: Record<number, string>;
+}
 
 /** Conteúdo sonoro: só as notas. Como elas soam fica com a apresentação. */
 export interface SoundContent {
@@ -96,6 +238,14 @@ export interface SoundContent {
    * sabe se separar ajuda ou estraga é o item.
    */
   partes?: ParteDoSom[];
+  /**
+   * Índices de `groups` que o arpejo alcança. Sem a lista, o arpejo vale para todos.
+   *
+   * Existe porque arpejar o CONTEXTO estraga o contexto: ele é uma cadência que deve soar como
+   * harmonia, e quebrá-la em notas soltas tira dela exatamente o que ela estabelece. Quem arpeja é
+   * o acorde da pergunta (Paulo, 12/11/2026).
+   */
+  arpejaveis?: number[];
 }
 
 /** Um pedaço do som que a pessoa pode repetir sozinho. */
@@ -137,6 +287,31 @@ export interface Setting {
   label: string;
   type: 'single' | 'multi' | 'toggle' | 'range';
   options?: SettingOption[];
+  /**
+   * As opções que a TELA oferece, quando elas dependem de outras configurações.
+   *
+   * `options` é a lista completa — o que existe e o que os atalhos podem declarar, e é contra ela que
+   * os testes validam. `opcoesDe` é o recorte que faz sentido **agora**, dadas as outras escolhas.
+   *
+   * Nasceu de um defeito que o Paulo relatou três vezes seguidas, cada vez de um ângulo: a oitava da
+   * referência em `ouvido-tecla` dependia da superfície de resposta, e `options` não conhecia a
+   * superfície. Primeiro a lista saía do instrumento do PERFIL (e faltava dó2 no braço do baixo);
+   * depois virou a união de todos os alcances (e aí sobravam dó4 e dó5 no braço do baixo, que ao
+   * serem clicados não mudavam nada). As duas versões ofereciam o que não acontecia — e é isso que
+   * este campo existe para impedir.
+   */
+  opcoesDe?: (s: Record<string, SettingValue>) => SettingOption[];
+  /**
+   * **Um aviso sob o controle**, quando o valor escolhido não é o que vale.
+   *
+   * Nasceu em 14/11 com a região do braço do `mapa-do-braco`: fixando as casas 5 a 10, uma abertura
+   * de mão de 6 casas não cabe, e o item a aperta. Apertar em silêncio é o defeito que o Paulo já
+   * apontou duas vezes ("mudei pra 2 e ele não muda"), então o chip continua mostrando a escolha
+   * dele e esta linha diz o que está em vigor.
+   *
+   * Devolve a mensagem já traduzida, ou `null` quando não há o que avisar.
+   */
+  aviso?: (s: Record<string, SettingValue>) => string | null;
   /** Para 'range': limites, passo e como mostrar o valor (ex.: v => `${v} s`). */
   min?: number;
   max?: number;
@@ -175,6 +350,13 @@ export interface Setting {
    * longo também pode ficar pior.
    */
   justify?: true;
+  /**
+   * Um `multi` que pode ficar VAZIO. O Player bloqueia desligar o último chip porque na maioria
+   * das listas (tipos de acorde, graus) vazio = nenhuma pergunta possível. Mas há listas de
+   * ACRÉSCIMO, onde vazio é o padrão e um estado legítimo — os empréstimos modais de
+   * `ouvido-campo`: sem isto, quem ligasse um empréstimo nunca mais conseguiria desligar o último.
+   */
+  podeVazio?: true;
 }
 /** O que um exercício precisa saber para montar a pergunta no idioma e no contexto da pessoa. */
 export interface Ctx {
@@ -303,6 +485,38 @@ export interface CatalogItem extends Classification {
   semTela?: true;
   /** Só em `kind: 'serie'`: sorteia a pergunta. Quem renderiza e corrige é o Player. */
   make?: (s: Record<string, SettingValue>, ctx: Ctx) => Question;
+  /**
+   * **Valores iniciais que dependem do contexto** — hoje, do instrumento do perfil.
+   *
+   * Entrou em 14/11, quando o Paulo apontou uma indireção que o app repetia em sete itens: a opção
+   * *"Meu instrumento"*. Nas palavras dele: *"o parametro instrumento deve começar como sendo o do
+   * perfil, sim, por conveniencia. mas que fique marcado violão se o instrumento do perfil for
+   * violão. entende que não tem sentido ter essa configuração?"*
+   *
+   * Tem toda razão, e o problema é de informação: um chip marcado "Meu instrumento" **não diz qual
+   * é**. Quem abre a tela precisa saber o que vai acontecer, e "violão" diz; "meu instrumento"
+   * manda a pessoa lembrar de uma configuração que está em outra tela. O valor `auto` existia só
+   * para o item poder cair no perfil — e isso é trabalho do valor inicial, não de uma opção na
+   * lista.
+   *
+   * `defaults` segue sendo a declaração estática (os testes e os atalhos a usam); isto sobrepõe o
+   * que o contexto resolve.
+   */
+  defaultsDo?: (ctx: Ctx) => Record<string, SettingValue>;
+  /**
+   * **A identidade da pergunta para o anti-eco**, quando ela é mais rica que a resposta.
+   *
+   * O `sortearSemEco` do Player evita repetir a RESPOSTA, e isso serve para quase tudo: duas
+   * perguntas com a mesma resposta são a mesma pergunta. O `mapa-do-braco` é a exceção — ali duas
+   * perguntas podem pedir as mesmas quatro notas (a resposta) **em posições completamente
+   * diferentes do braço** (a pergunta), e é justamente variar a posição que o exercício existe para
+   * fazer. O Paulo foi explícito: *"cuidado pra nao fazer com que o arpejo de do maior comece
+   * sempre só na 3a casa da corda lá"*.
+   *
+   * Sem isto, a alternativa era o item manter memória própria e duplicar o mecanismo de rejeição
+   * por idade que já existe. Um campo opcional reusa o mecanismo inteiro.
+   */
+  assinatura?: (q: Question) => string;
   /**
    * Por que estas configurações não geram pergunta. Devolve a mensagem já traduzida, ou `null`.
    *

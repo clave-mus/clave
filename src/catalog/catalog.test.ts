@@ -32,9 +32,17 @@ describe('catálogo de exercícios', () => {
             expect(sf.options.filter(o => validate(e, optionResponse(o))).length).toBe(1);
           }
           // a superfície consegue produzir uma resposta que a conferência entende
-          if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(['pitch', 'pitchClass']).toContain(e.kind);
+          /**
+           * Superfície que **acumula** (`quantas > 1`) responde com várias alturas, e a conferência
+           * dela é o `contorno` (ver `OR-ouvido-relativo.md`, §4). Um toque só continua sendo
+           * `pitch`/`pitchClass`: o que muda com `quantas` é quantas respostas entram antes de valer.
+           */
+          const acumula = 'quantas' in sf && (sf.quantas ?? 1) > 1;
+          if (sf.kind === 'keyboard' || sf.kind === 'fretboard') expect(acumula ? ['contorno'] : ['pitch', 'pitchClass']).toContain(e.kind);
           if (sf.kind === 'sequence') expect(e.kind).toBe('option');
-          if (sf.kind === 'letters' || sf.kind === 'staff') expect(['spelled', 'pitchClass']).toContain(e.kind);
+          if (sf.kind === 'mapa') expect(e.kind).toBe('contorno');
+          if (sf.kind === 'autoavaliacao') expect(e.kind).toBe('option');
+          if (sf.kind === 'letters' || sf.kind === 'staff') expect(acumula ? ['contorno'] : ['spelled', 'pitchClass']).toContain(e.kind);
           if (e.kind === 'spelled') expect(Math.abs(e.acc)).toBeLessThanOrEqual(1);
         }
       }
@@ -47,6 +55,9 @@ describe('catálogo de exercícios', () => {
         const sf = q.surface, e = q.expected;
         let can = false;
         if (sf.kind === 'choices') can = sf.options.some(o => validate(e, optionResponse(o)));
+        // Autoavaliação não tem resposta a conferir: quem julga é a pessoa. O que o teste exige é
+        // que o esperado seja a opção que a superfície de fato oferece ("consegui").
+        else if (sf.kind === 'autoavaliacao') can = e.kind === 'option' && e.id === 'facil';
         // `sequence` monta a resposta com `comprimento` escolhas em ordem, entre as opções. Dá
         // para dar a certa se, e só se, cada pedaço dela estiver na paleta — e se o tamanho
         // combinar. Sem isto, uma paleta incompleta deixaria a pergunta sem resposta possível e
@@ -56,6 +67,33 @@ describe('catálogo de exercícios', () => {
           const pedacos = e.kind === 'option' ? e.id.split(sep) : [];
           const paleta = new Set(sf.options.map(o => o.id));
           can = pedacos.length === sf.comprimento && pedacos.every(x => paleta.has(x));
+        }
+        /**
+         * `mapa`: a resposta são os **nomes**, um por posição, e dá para dar a certa se, e só se,
+         * **cada posição tiver um botão com a classe de altura dela**. É a invariante que o Paulo
+         * pediu ao desenhar o item ("os botões cobrem exatamente as notas que aparecem"): sem ela,
+         * uma posição com nota de fora do campo não teria botão nenhum e a pergunta ficaria sem
+         * resposta possível — a tela desenharia tudo e nenhum toque acertaria.
+         */
+        else if (sf.kind === 'mapa') {
+          const paleta = new Set(sf.opcoes.map(o => Number(o.id)));
+          can = sf.posicoes.length > 0
+            && sf.posicoes.every(p => paleta.has(((p.pc % 12) + 12) % 12))
+            && e.kind === 'contorno' && e.midis.length === sf.posicoes.length;
+        }
+        /**
+         * Acumulando, a resposta é o conjunto de alturas: dá para dar a certa se, e só se, **toda**
+         * altura do gabarito existir na superfície. Sem isto, um acorde com uma nota fora do
+         * teclado desenhado ficaria sem resposta possível e ninguém veria.
+         */
+        else if ('quantas' in sf && (sf.quantas ?? 1) > 1 && e.kind === 'contorno') {
+          const alcance = sf.kind === 'keyboard'
+            ? Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => sf.lo + k)
+            : sf.kind === 'fretboard'
+              ? sf.tuning.flatMap(t => Array.from({ length: sf.to - sf.from + 1 }, (_, k) => t + sf.from + k))
+              // Pauta: a pessoa escolhe a linha, então qualquer altura da clave é alcançável.
+              : e.midis;
+          can = e.midis.length === (sf.quantas ?? 1) && e.midis.every(m => alcance.includes(m));
         }
         else if (sf.kind === 'keyboard') can = Array.from({ length: sf.hi - sf.lo + 1 }, (_, k) => sf.lo + k).some(m => validate(e, { kind: 'pitch', midi: m }));
         else if (sf.kind === 'fretboard') {
@@ -103,11 +141,19 @@ describe('catálogo de exercícios', () => {
       ['nota-no-instrumento', { instrumento: 'piano' }, { ...base }],
       ['intervalo-na-pauta', {}, { ...base }],
       // o arpejo acompanha a SUPERFÍCIE: na pauta quase em bloco, no violão dedilhado, no teclado em bloco
-      ['que-acorde-e-esse', { superficie: 'pauta' }, { ...base, arp: 0.08 }],
-      ['que-acorde-e-esse', { superficie: 'teclado' }, { ...base }],
-      ['que-acorde-e-esse', { superficie: 'braco' }, { ...base, voice: 'violao', arp: 0.04 }],
+      // Depois da reorganização, o arpejo acompanha o ITEM: a pauta arpeja quase em bloco e vem do
+      // `presentation` do item; o braço dedilha e vem do gerador; o piano é em bloco.
+      ['acorde-na-pauta', {}, { ...base, arp: 0.08 }],
+      ['acorde-no-instrumento', { instrumento: 'piano' }, { ...base }],
       ['pauta-escala', {}, { ...base, gap: 0.32 }],
-      ['ouvido-tecla', {}, { ...base, gap: 0.9 }],
+      /**
+       * `ouvido-tecla` passou a soar **no timbre da superfície** em 13/11, a pedido do Paulo: *"o
+       * som está como o som do piano. deveria ser o som do baixo. som de piano é confuso demais e
+       * não chega nos graves"*. Com o perfil de violão e `onde: auto`, a resposta é no braço do
+       * violão — então o som é de violão. Respondendo no teclado, volta a ser piano.
+       */
+      ['ouvido-tecla', {}, { ...base, gap: 0.9, voice: 'violao' }],
+      ['ouvido-tecla', { onde: 'teclado' }, { ...base, gap: 0.9 }],
       ['ouvido-intervalo', {}, { ...base }],
       ['ouvido-escala', {}, { ...base, gap: 0.3 }],
       ['ouvido-celulas', {}, { ...base, gap: 0.55 }],
@@ -150,5 +196,65 @@ describe('catálogo de exercícios', () => {
       expect(itemText(t, id, 'title')).not.toMatch(/^(exercises|tools)\./);
       expect(itemText(t, id, 'desc')).not.toMatch(/^(exercises|tools)\./);
     }
+  });
+});
+
+/**
+ * `pauta-escala`: a tônica não pode entregar a resposta.
+ *
+ * Paulo, 12/11: *"é muito fácil saber a resposta só vendo qual é a nota inicial, pois as
+ * alternativas têm isso no nome"*. Estava certo — e com um tipo só marcado (o padrão) a resposta era
+ * a única alternativa com a tônica certa.
+ */
+describe('pauta-escala: a nota inicial não entrega a escala', () => {
+  const item = EXERCISES.find(e => e.id === 'pauta-escala')!;
+
+  // A primeira palavra do rótulo é a tônica ("Dó maior (jônio)" → "Dó").
+  const tonicaDo = (label: string) => label.split(' ')[0];
+
+  it.each([['um tipo só', ['maior']], ['dois tipos', ['maior', 'dorico']], ['todos', undefined]])(
+    'com %s, todas as alternativas têm a mesma tônica', (_, tipos) => {
+      const ctx = ctxFor('pt');
+      const s = { ...item.defaults, ...(tipos ? { tipos } : {}) };
+      for (let i = 0; i < 80; i++) {
+        const q = item.make!(s, ctx);
+        const opcoes = (q.surface as { kind: 'choices'; options: { label: string }[] }).options;
+        const tonicas = new Set(opcoes.map(o => tonicaDo(o.label)));
+        expect(tonicas.size, `rodada ${i}: ${[...tonicas].join(', ')}`).toBe(1);
+        // E há de fato escolha a fazer: pelo menos quatro alternativas distintas.
+        expect(new Set(opcoes.map(o => o.label)).size).toBeGreaterThanOrEqual(4);
+      }
+    },
+  );
+});
+
+/**
+ * A fundamental do acorde: fixa ou sorteada (rascunho do Paulo — *"se a tônica do acorde é sempre a
+ * mesma (padrão: sim, dó)"*).
+ *
+ * O teste existe por causa de um furo achado medindo: a opção chamada "sempre a mesma" dava **doze**
+ * fundamentais diferentes quando a tonalidade era livre, porque `tonicaNaRegiao` sorteia nesse caso.
+ * Uma opção que não faz o que o nome dela diz é pior que não ter a opção.
+ */
+describe('ouvido-acorde: a fundamental', () => {
+  const item = EXERCISES.find(e => e.id === 'ouvido-acorde')!;
+  const raizes = (key: { tonic: number; mode: 'maior' | 'menor' } | null, fundamental: string) => {
+    const ctx = { ...ctxFor('pt'), params: { ...resolveParams('violao', key ? { key } : {}), key } };
+    const vistas = new Set<number>();
+    for (let i = 0; i < 40; i++) {
+      const q = item.make!({ ...item.defaults, fundamental } as never, ctx);
+      vistas.add(((Math.min(...q.sound!.groups[0]) % 12) + 12) % 12);
+    }
+    return [...vistas];
+  };
+
+  it('fixa é a tônica em vigor — e dó quando a tonalidade é livre', () => {
+    expect(raizes({ tonic: 0, mode: 'maior' }, 'fixa')).toEqual([0]);
+    expect(raizes({ tonic: 7, mode: 'maior' }, 'fixa')).toEqual([7]);
+    expect(raizes(null, 'fixa'), 'sem tonalidade, cai em dó').toEqual([0]);
+  });
+
+  it('sorteada varia mesmo com a tonalidade fixa', () => {
+    expect(raizes({ tonic: 0, mode: 'maior' }, 'sorteada').length).toBeGreaterThan(6);
   });
 });

@@ -31,7 +31,6 @@ export interface GrupoDeRodizio {
   itens: readonly MembroDeGrupo[];
 }
 
-const na = (itemId: string, superficie: string): MembroDeGrupo => ({ itemId, settings: { superficie } });
 
 export const GRUPOS: readonly GrupoDeRodizio[] = [
   {
@@ -43,7 +42,7 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     // justificativa que existia aqui — "entra mesmo sendo escrever, não ler" — deixou de ser
     // necessária. Era remendo da estrutura antiga.
     id: 'leitura-pauta', nome: 'grupos.leitura-pauta',
-    itens: [{ itemId: 'nota-na-pauta' }, { itemId: 'intervalo-na-pauta' }, na('que-acorde-e-esse', 'pauta'),
+    itens: [{ itemId: 'nota-na-pauta' }, { itemId: 'intervalo-na-pauta' }, { itemId: 'acorde-na-pauta' },
       { itemId: 'pauta-escala' }],
   },
   {
@@ -51,17 +50,17 @@ export const GRUPOS: readonly GrupoDeRodizio[] = [
     id: 'ouvido', nome: 'grupos.ouvido',
     // `relacoes-melodia-harmonia` entrou em 09/11, aprovado pelo Paulo: combina na mesma etapa que
     // os outros de ouvido, que é o critério do grupo (e não "treina a mesma habilidade").
-    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' },
+    itens: [{ itemId: 'ouvido-intervalo' }, { itemId: 'ouvido-acorde' }, { itemId: 'ouvido-campo' }, { itemId: 'melodia-de-ouvido' }, { itemId: 'ouvido-escala' }, { itemId: 'ouvido-celulas' },
       { itemId: 'relacoes-melodia-harmonia' }],
   },
   {
     id: 'o-braco', nome: 'grupos.o-braco',
-    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'intervalo-no-instrumento' },
-      na('que-acorde-e-esse', 'braco')],
+    itens: [{ itemId: 'nota-no-instrumento' }, { itemId: 'mapa-do-braco' },
+      { itemId: 'intervalo-no-instrumento' }, { itemId: 'acorde-no-instrumento' }],
   },
   {
     id: 'o-teclado', nome: 'grupos.o-teclado',
-    itens: [{ itemId: 'nota-no-instrumento', settings: { instrumento: 'piano' } }, na('que-acorde-e-esse', 'teclado'),
+    itens: [{ itemId: 'nota-no-instrumento', settings: { instrumento: 'piano' } }, { itemId: 'acorde-no-instrumento', settings: { instrumento: 'piano' } },
       { itemId: 'ouvido-tecla' }],
   },
 ];
