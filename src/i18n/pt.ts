@@ -834,6 +834,7 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    phoneSpeakerRange: 'Som na faixa do celular',
     fieldOf: '{tonica} {campo}',
     neckRegion: 'Região do braço',
     neckRegionFree: 'Passear pelo braço',

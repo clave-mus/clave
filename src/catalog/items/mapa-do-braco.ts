@@ -1,6 +1,7 @@
 import { assinaturaDoArpejo, sortearArpejo, temMaterial, type ArpejoDoMapa } from '../../theory/mapa-do-braco';
+import { caberNaFaixa } from '../../theory/cadencia-harmonica';
 import { getModo, notasDoModo } from '../../theory/digitacoes';
-import { arr, bracoDoPerfil, midi, mod, noteName, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Note, type Question } from '../helpers';
+import { PISO_AUDIVEL, arr, bracoDoPerfil, midi, mod, noteName, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Note, type Question } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, PosicaoDoMapa } from '../types';
 import { randInt } from '../../theory/core';
@@ -136,10 +137,24 @@ export const mapaDoBraco: CatalogItem = {
      * 228 para 41). É a dose extra para quando se quer forçar o braço todo.
      */
     { id: 'cordasDistintas', label: ctx.t('settings.oneNotePerString'), type: 'toggle' },
+    /**
+     * **Soar na faixa que um alto-falante de celular reproduz** (Paulo, 15/11, sem fone: *"o som
+     * está meio bugado... está dando umas craqueladas"*).
+     *
+     * Medido: num Mi1, **0%** da energia passa de 300 Hz, que é onde esses alto-falantes começam —
+     * o cone se move sem produzir som, e o craquelado é esse esforço. Mi4 (330 Hz) dá 100%.
+     *
+     * Sobe o arpejo **inteiro** por oitavas, preservando o contorno: o desenho melódico continua o
+     * mesmo, uma oitava acima. E o braço não muda — a casa é a casa.
+     *
+     * **Ligado por padrão no baixo**, onde todas as notas do braço caem abaixo dos 300 Hz; no
+     * violão, desligado, porque a metade de cima do braço já soa bem e com fone o grave está certo.
+     */
+    { id: 'somAudivel', label: ctx.t('settings.phoneSpeakerRange'), type: 'toggle' },
     /** Ouvir o arpejo inteiro ao fechar. Começa **desligado**, a pedido dele. */
     { id: 'ouvirArpejo', label: ctx.t('settings.hearArpeggioAtEnd'), type: 'toggle' },
   ],
-  defaults: { modoDosGraus: 'sorteados4', graus: ['1', '3', '5', '7'], campo: 'maior', regiao: 'livre', casaDe: 5, casaAte: 10, cordasDistintas: false, ouvirArpejo: false },
+  defaults: { modoDosGraus: 'sorteados4', graus: ['1', '3', '5', '7'], campo: 'maior', regiao: 'livre', casaDe: 5, casaAte: 10, cordasDistintas: false, somAudivel: false, ouvirArpejo: false },
   /**
    * **Os dois valores iniciais que dependem do perfil**, e nenhum deles é uma opção na lista.
    *
@@ -153,6 +168,8 @@ export const mapaDoBraco: CatalogItem = {
    */
   defaultsDo: ctx => ({
     instrumento: bracoDoPerfil(ctx),
+    // Ligado no baixo: lá o braço inteiro fica abaixo dos 300 Hz. Ver `PISO_AUDIVEL`.
+    somAudivel: bracoDoPerfil(ctx) === 'baixo',
     // 5 no violão e 6 no baixo (era 4 e 5): com graus sorteados as notas se espalham mais, e a
     // abertura menor apertava — "está tudo muito condensado", 14/11.
     abertura: bracoDoPerfil(ctx) === 'baixo' ? '6' : '5',
@@ -196,7 +213,24 @@ export const mapaDoBraco: CatalogItem = {
     const o = opcoesDoMapa(s, ctx, graus.length >= 2 ? graus : [1, 3, 5, 7]);
     const arpejo = sortearArpejo(o);
     // `problema()` já garantiu que existe; o fallback é só para o tipo.
-    const posicoes: PosicaoDoMapa[] = (arpejo?.posicoes ?? []).map(e => ({ corda: e.corda, casa: e.casa, midi: e.midi, pc: e.pc }));
+    const reais = (arpejo?.posicoes ?? []).map(e => ({ corda: e.corda, casa: e.casa, midi: e.midi, pc: e.pc }));
+    /**
+     * **As alturas que soam**, deslocadas por oitavas quando o parâmetro pede.
+     *
+     * `caberNaFaixa` é o motor que já faz isto na cadência — deslocar um conjunto por oitavas até
+     * caber numa faixa — e reusá-lo mantém o **contorno**: o arpejo sobe inteiro, com o mesmo
+     * desenho melódico. Achatar cada nota na mesma oitava seria mais simples e embaralharia o
+     * arpejo, que é justamente o que o exercício mostra.
+     */
+    const soam = s.somAudivel === true && reais.length
+      /**
+       * O teto é **duas oitavas** acima do piso, e não três: com três, arpejos largos do violão
+       * chegavam a 2637 Hz (Mi7), agudo sem necessidade. Um arpejo de quatro notas cabe em 19
+       * semitons, então 24 bastam — medido, nenhum estoura.
+       */
+      ? caberNaFaixa([reais.map(p => p.midi)], PISO_AUDIVEL, PISO_AUDIVEL + 24)[0]
+      : reais.map(p => p.midi);
+    const posicoes: PosicaoDoMapa[] = reais.map((p, i) => ({ ...p, soa: soam[i] ?? p.midi }));
     const tuning = o.tuning;
     /**
      * Os sete botões são as notas **do campo**, com a grafia da tonalidade, em ordem de escala e
@@ -225,7 +259,8 @@ export const mapaDoBraco: CatalogItem = {
        * a do arpejo. O Player confere posição por posição conforme a pessoa responde.
        */
       expected: { kind: 'contorno', midis: posicoes.map(p => p.midi), ordenada: true },
-      sound: { groups: posicoes.map(p => [p.midi]), instrument: vozDoBraco(tuning) },
+      // O que soa é `soa`, não `midi`: no celular sem fone o grave real não sai do alto-falante.
+      sound: { groups: posicoes.map(p => [p.soa]), instrument: vozDoBraco(tuning) },
       autoplay: false,
       reveal: posicoes.map(p => noteName(notasDoCampo(o).find(n => mod(midi(n), 12) === mod(p.pc, 12)) ?? spellPc(p.pc), ctx.naming)).join(' · '),
     };

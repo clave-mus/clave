@@ -832,6 +832,7 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
+    phoneSpeakerRange: 'Phone-speaker range',
     fieldOf: '{tonica} {campo}',
     neckRegion: 'Neck region',
     neckRegionFree: 'Roam the neck',

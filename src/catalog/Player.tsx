@@ -920,11 +920,11 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
     const n = acertadas + 1;
     setAcertadas(n);
     if (n < sf.posicoes.length) {
-      onTocarGrupos([[alvo.midi]]);
+      onTocarGrupos([[alvo.soa]]);
       return;
     }
     // fechou: toca a última (ou o arpejo inteiro, se o item pediu) e entrega a pergunta ao Player
-    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.midi]) : [[alvo.midi]]);
+    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.soa]) : [[alvo.soa]]);
     // O id da resposta é a lista de posições: é o que o histórico guarda como "o que foi clicado".
     onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(','));
   };
