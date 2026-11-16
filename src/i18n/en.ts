@@ -538,7 +538,7 @@ const en: Shape<typeof pt> = {
     right: 'Right!',
     next: 'Next ↵',
     verDeNovo: 'Show again',
-    montadaDica: 'Enter confirms · + sharp · − flat · Esc clears',
+    montadaDica: 'Enter confirms · ↑ or + sharp · ↓ or − flat · Esc clears',
     close: 'Close',
     customize: 'Customize',
     feedbackRight: 'Right',

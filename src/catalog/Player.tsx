@@ -18,6 +18,7 @@ import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
+import { chavesDisputadas, settingsDoAtalho } from './atalhos';
 import { optionResponse, validate } from './validate';
 import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
@@ -75,13 +76,29 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const settings = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, ctx, saved, local, entrada]);
   /**
-   * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
-   * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
+   * **Um atalho muda o que os atalhos deste item discordam entre si — e mais nada** (pedido do
+   * Paulo em 16/11: *"ao clicar no atalho de tétrades, isso só mude os graus — e não os outros
+   * parâmetros, como tonalidade, som do celular, etc"*).
+   *
+   * A primeira versão zerava tudo e aplicava o atalho por cima. O efeito no `mapa-do-braco` era o
+   * que ele relatou: clicar em "tétrades" devolvia o som do alto-falante, a abertura, a região e a
+   * tonalidade ao padrão. Essas escolhas são **da pessoa**, não da variante do exercício.
+   *
+   * E não bastava preservar o que o atalho não menciona: a configuração que **só um** atalho
+   * menciona tem de voltar ao padrão nos outros — senão "extensões" ficaria ligada depois de
+   * clicar no atalho simples, que é o defeito oposto. Daí a conta ser por **discordância**, com
+   * cada atalho resolvido contra os padrões: o que todos os atalhos dizem igual não é assunto
+   * deles, e fica como está.
+   *
+   * O mesmo vale para a tonalidade (`params`): os quatro atalhos do mapa pediam dó maior, então
+   * clicar num deles não mexe na tonalidade — mas **abrir** o item ainda cai em dó maior, porque
+   * ali o primeiro atalho é a entrada e não há escolha da pessoa para preservar.
    */
   const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
-    guardarSettings({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...p.settings });
-    if (p.params) mudar(p.params);
-  }, [def, ctx, guardarSettings, mudar]);
+    const base = { ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}) };
+    guardarSettings(settingsDoAtalho(def, p, settings, base));
+    if (p.params && chavesDisputadas(def).params) mudar(p.params);
+  }, [def, ctx, settings, guardarSettings, mudar]);
   /**
    * Só o que muda a PERGUNTA. Mexer em "arpejar" ou na duração não sorteia um acorde novo — antes
    * sorteava, e a pessoa perdia o que estava tentando identificar.
@@ -116,8 +133,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   /**
    * A resposta que está sendo **montada pelo teclado físico** (decidido com o Paulo em 12/11).
    *
-   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `+` ou `3`
-   * para sustenido, `-` para bemol —, porque é assim que se fala ("sol sustenido"). `Enter`
+   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `↑`, `+`
+   * ou `3` para sustenido, `↓` ou `-` para bemol —, porque é assim que se fala ("sol
+   * sustenido"). `Enter`
    * confirma, `Esc` limpa. Nada é enviado antes do `Enter`, e o que está montado aparece na tela:
    * ele pediu *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"*.
    *
@@ -334,11 +352,23 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
        */
       const montaNota = (q.surface.kind === 'letters' || q.surface.kind === 'mapa') && phase === 'ask';
       if (montaNota) {
-        const daLetra = 'CDEFGAB'.indexOf(e.key.toUpperCase());
+        /**
+         * `length === 1` **não é zelo**: `''.indexOf` de string vazia devolve 0, e tecla que chega
+         * com `key` vazia (composição de IME, tecla morta) montava um Dó do nada. Apareceu medindo
+         * as setas no navegador, com um evento sintético de `key: ''`.
+         */
+        const daLetra = e.key.length === 1 ? 'CDEFGAB'.indexOf(e.key.toUpperCase()) : -1;
         if (daLetra >= 0) { e.preventDefault(); setMontada({ letter: daLetra, acc: 0 }); return; }
         if (montada) {
-          if (e.key === '+' || e.key === '3') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
-          if (e.key === '-') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
+          /**
+           * **As setas também alteram** (pedido dele em 16/11): ↑ sustenido, ↓ bemol. É a direção
+           * que o acidente tem no som e na pauta, e não exige procurar o `+` no teclado — que em
+           * teclado ABNT fica em outro lugar que no americano.
+           *
+           * Só valem com uma letra montada, então nada aqui atrapalha rolar a página.
+           */
+          if (e.key === '+' || e.key === '3' || e.key === 'ArrowUp') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
+          if (e.key === '-' || e.key === 'ArrowDown') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
           if (e.key === 'Escape') { e.preventDefault(); setMontada(null); return; }
           if (e.key === 'Enter') {
             e.preventDefault();

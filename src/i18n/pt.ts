@@ -538,7 +538,7 @@ const pt = {
     right: 'Certo!',
     next: 'Próxima ↵',
     verDeNovo: 'Ver de novo',
-    montadaDica: 'Enter confirma · + sustenido · − bemol · Esc limpa',
+    montadaDica: 'Enter confirma · ↑ ou + sustenido · ↓ ou − bemol · Esc limpa',
     close: 'Fechar',
     customize: 'Personalizar',
     feedbackRight: 'Certo',
