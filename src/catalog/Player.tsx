@@ -396,10 +396,10 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} ouviuAResposta={ouviuAResposta} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
-      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
+      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
@@ -517,9 +517,11 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
   onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
+  /** Já ouviu o pedaço `resposta`? A autoavaliação, que mora no palco, espera por isso. */
+  ouviuAResposta?: boolean;
   /** Só o `mapa` usa: no modo de foco a moldura do app desaparece, e o placar vem para a linha fina. */
   placar: { correct: number; total: number; seguidas: number };
   naming: 'pt' | 'en';
@@ -780,6 +782,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       {v.kind !== 'ear' && !!q.sound?.partes?.length && (
         <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
       )}
+      {/**
+        * **A autoavaliação fica aqui, junto do botão que a libera** — conserto do que o Paulo
+        * relatou em 15/11: *"está contraintuitivo o lugar das respostas de como foi"*.
+        *
+        * Ela renderizava na área de resposta, **fora** do palco: medido na tela, sobravam 65 px de
+        * vazio entre o botão "ouvir a resposta" e a linha que mandava ouvi-lo. Clicava-se em cima e
+        * o julgamento aparecia embaixo, separado do gesto que o habilita.
+        *
+        * O fluxo é ouvir o acorde → cantar → ouvir a resposta → julgar, e os dois últimos passos
+        * agora ficam no mesmo bloco. Vale para **todo** item de audiar: `melodia-de-ouvido` e o
+        * `ouvido-acorde` escrito ganham a mesma vizinhança.
+        */}
+      {q.surface.kind === 'autoavaliacao' && (
+        <AutoAvaliacao phase={phase} onAnswer={onAnswer} ouviuAResposta={ouviuAResposta} />
+      )}
     </div>
   );
 }
@@ -988,12 +1005,49 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
   );
 }
 
-function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, ouviuAResposta }: {
+/**
+ * **Audiar e conferir**: não há resposta a validar, a pessoa diz como foi.
+ *
+ * Virou componente próprio em 15/11 para poder ficar **dentro do palco**, junto do botão que a
+ * libera — o Paulo: *"está contraintuitivo o lugar das respostas de como foi"*. Antes vivia na área
+ * de resposta, a 65 px de vazio do controle de ouvir.
+ *
+ * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
+ * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
+ */
+function AutoAvaliacao({ phase, onAnswer, ouviuAResposta }: {
+  phase: Phase; onAnswer: Submit; ouviuAResposta?: boolean;
+}) {
+  const t = useT();
+  const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
+  if (phase !== 'ask') return <div className="answers compact" />;
+  /**
+   * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
+   * só apareçam depois que tu ouvir a resposta"*).
+   *
+   * E a razão é do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
+   * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela segue essa ordem.
+   */
+  if (!ouviuAResposta) {
+    return (
+      <div className="auto-aval-espera" role="status">
+        <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
+      <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
+      <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
+      <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+    </div>
+  );
+}
+
+function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
   /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */
   montada?: { letter: number; acc: number } | null;
-  /** Já ouviu o pedaço `resposta`? A autoavaliação espera por isso. */
-  ouviuAResposta?: boolean;
 }) {
   const t = useT();
   const sf = q.surface;
@@ -1013,44 +1067,8 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, 
       </div>
     );
   }
-  if (sf.kind === 'autoavaliacao') {
-    /**
-     * Audiar e conferir. Não há resposta a conferir — a pessoa diz como foi.
-     *
-     * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
-     * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
-     *
-     * O gabarito mora em `sound.partes` e é tocado pelo botão de pedaço — não aqui. Audiar **antes**
-     * de ouvir é o exercício, e um botão de resposta nesta fileira convidaria a ouvir primeiro.
-     */
-    const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
-    if (phase !== 'ask') return <div className="answers compact" />;
-    /**
-     * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
-     * só apareçam depois que tu ouvir a resposta"*).
-     *
-     * E a razão é a do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
-     * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela agora segue essa ordem em vez de
-     * oferecer as três coisas de uma vez.
-     *
-     * Até ouvir, o que aparece é o convite a conferir — o botão do pedaço `resposta` já está logo
-     * acima, e esta linha diz o que fazer com ele.
-     */
-    if (!ouviuAResposta) {
-      return (
-        <div className="auto-aval-espera" role="status">
-          <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
-        </div>
-      );
-    }
-    return (
-      <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
-        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
-        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
-        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
-      </div>
-    );
-  }
+  // A autoavaliação mora no PALCO desde 15/11, junto do botão que a libera — ver `AutoAvaliacao`.
+  if (sf.kind === 'autoavaliacao') return null;
 
   if (sf.kind === 'sequence') {
     return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;

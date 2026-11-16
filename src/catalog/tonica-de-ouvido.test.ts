@@ -92,3 +92,72 @@ describe('qualidade livre: o degrau opcional', () => {
     expect(tonicaDeOuvido.defaults?.qualidadeLivre).toBe(false);
   });
 });
+
+describe('a tônica cabe na voz', () => {
+  /**
+   * **O relato dele em 15/11**: *"as vezes a tonica fica aguda demais... tente achar a range que
+   * fica mais natural pra voz humana"*.
+   *
+   * Medido antes: a tônica soava uma oitava acima da nota mais grave do voicing, e **47% delas
+   * passavam do Dó5** (523 Hz), com o pior caso em Dó6. A altura da tônica não precisa ter relação
+   * com a do acorde — o que importa é caber na voz de quem canta.
+   */
+  it.each([['grave', 48, 59], ['media', 60, 71], ['aguda', 72, 83]] as const)(
+    'na faixa %s, a tônica fica entre %i e %i', (faixa, lo, hi) => {
+      const ctx = ctxEm(0, 'maior');
+      for (let i = 0; i < 120; i++) {
+        const q = tonicaDeOuvido.make!({ ...tonicaDeOuvido.defaults, faixaDaVoz: faixa } as never, ctx);
+        const m = q.sound!.partes!.find(p => p.id === 'resposta')!.groups.flat()[0];
+        expect(m, `${faixa}: tônica em ${m}`).toBeGreaterThanOrEqual(lo);
+        expect(m).toBeLessThanOrEqual(hi);
+      }
+    },
+  );
+
+  it('a faixa do meio é o padrão, e nela nada passa do Dó5', () => {
+    expect(tonicaDeOuvido.defaults?.faixaDaVoz).toBe('media');
+    const ctx = ctxEm(0, 'maior');
+    for (let i = 0; i < 150; i++) {
+      const q = tonicaDeOuvido.make!({ ...tonicaDeOuvido.defaults } as never, ctx);
+      expect(q.sound!.partes!.find(p => p.id === 'resposta')!.groups.flat()[0]).toBeLessThan(72);
+    }
+  });
+
+  /** A tônica é a classe da fundamental do acorde — mudar a oitava não pode mudar a nota. */
+  it('a tônica é a fundamental do acorde, em qualquer faixa', () => {
+    const ctx = ctxEm(0, 'maior');
+    for (const faixa of ['grave', 'media', 'aguda']) {
+      for (let i = 0; i < 60; i++) {
+        const q = tonicaDeOuvido.make!({ ...tonicaDeOuvido.defaults, faixaDaVoz: faixa } as never, ctx);
+        const tonica = q.sound!.partes!.find(p => p.id === 'resposta')!.groups.flat()[0];
+        const acorde = q.sound!.partes!.find(p => p.id === 'acorde')!.groups.flat();
+        // a cifra revela a fundamental; aqui basta que a classe da tônica esteja no acorde OU que
+        // o acorde esteja sem fundamental (parâmetro desligado por padrão, então ela está lá)
+        expect(acorde.some(m => ((m % 12) + 12) % 12 === ((tonica % 12) + 12) % 12), `${faixa}`).toBe(true);
+      }
+    }
+  });
+});
+
+describe('tonalidade livre é o padrão', () => {
+  /** Pedido dele em 15/11: *"faça com que tonalidade livre seja o padrão"*. */
+  it('nenhum atalho fixa tonalidade', () => {
+    for (const p of tonicaDeOuvido.presets ?? []) {
+      expect(p.params?.key, `${p.id} fixa tonalidade`).toBeNull();
+    }
+  });
+
+  it('sem tonalidade, o campo é sorteado e se mantém na rodada', () => {
+    const ctx: Ctx = {
+      naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
+      params: resolveParams('piano', { key: null }),
+    };
+    const raizes = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      const q = tonicaDeOuvido.make!({ ...tonicaDeOuvido.defaults } as never, ctx);
+      raizes.add((q.reveal ?? '').slice(0, 2));
+    }
+    // o campo é um só: as raízes vêm dos sete graus dele, não das doze tonalidades
+    expect(raizes.size, 'o campo mudou no meio da rodada').toBeLessThanOrEqual(7);
+  });
+});

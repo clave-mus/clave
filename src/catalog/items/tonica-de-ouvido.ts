@@ -1,6 +1,6 @@
 import { voicingsDe, type Voicing } from '../../theory/voicings';
 import {
-  ALTERADOS, EXTENSOES, SEVENTHS, TRIADS, arr, chordSymbol, comMesmoNucleo, harmonicField, midi, mod, notaGrafada,
+  ALTERADOS, EXTENSOES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, comMesmoNucleo, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
 } from '../helpers';
 import { RASCUNHO } from '../publicacao';
@@ -90,18 +90,35 @@ export const tonicaDeOuvido: CatalogItem = {
     { id: 'qualidadeLivre', label: ctx.t('settings.freeQuality'), type: 'toggle' },
     /** Mostrar o nome do acorde **antes** de responder. Padrão: mostrar (decisão dele). */
     { id: 'mostrarNome', label: ctx.t('settings.showChordName'), type: 'toggle' },
+    /**
+     * **A faixa em que a tônica soa, para caber na voz** (Paulo, 15/11: *"as vezes a tonica fica
+     * aguda demais... tente achar a range que fica mais natural pra voz humana"*).
+     *
+     * Medido antes: a tônica saía uma oitava acima da nota mais grave do voicing, e **47% delas
+     * passavam do Dó5** (523 Hz), chegando ao Dó6 — fora do alcance confortável de quase todo
+     * mundo. A mediana era Si4, já alta.
+     *
+     * As três faixas são oitavas inteiras, nomeadas pelas notas e não por tipo de voz: o app não
+     * afirma nada sobre quem usa, e "Dó3 a Si3" diz mais do que um rótulo diria. O padrão é a do
+     * meio, que é a região de quem fala cantando.
+     */
+    { id: 'faixaDaVoz', label: ctx.t('settings.voiceRange'), type: 'single', options: [
+      { id: 'grave', label: ctx.t('settings.voiceLow') },
+      { id: 'media', label: ctx.t('settings.voiceMid') },
+      { id: 'aguda', label: ctx.t('settings.voiceHigh') },
+    ] },
     /** Subir tudo para a faixa que um alto-falante de celular reproduz — ver `PISO_AUDIVEL`. */
     { id: 'somAudivel', label: ctx.t('settings.phoneSpeakerRange'), type: 'toggle' },
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, qualidadeLivre: false, mostrarNome: true, somAudivel: false,
+    semFundamental: false, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false,
   },
   presets: [
-    { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: { key: { tonic: 0, mode: 'maior' } } },
-    { id: 'triades', nome: 'presets.tonicaTriades', settings: { familias: ['triades'], mostrarNome: true }, params: { key: { tonic: 0, mode: 'maior' } } },
-    { id: 'coloridos', nome: 'presets.tonicaColoridos', settings: { familias: ['extensoes', 'alterados'], mostrarNome: true }, params: { key: { tonic: 0, mode: 'maior' } } },
-    { id: 'sem-raiz', nome: 'presets.tonicaSemRaiz', settings: { familias: ['tetrades', 'extensoes'], semFundamental: true, mostrarNome: false }, params: { key: { tonic: 0, mode: 'maior' } } },
+    { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
+    { id: 'triades', nome: 'presets.tonicaTriades', settings: { familias: ['triades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
+    { id: 'coloridos', nome: 'presets.tonicaColoridos', settings: { familias: ['extensoes', 'alterados'], mostrarNome: true }, params: TONALIDADE_LIVRE },
+    { id: 'sem-raiz', nome: 'presets.tonicaSemRaiz', settings: { familias: ['tetrades', 'extensoes'], semFundamental: true, mostrarNome: false }, params: TONALIDADE_LIVRE },
   ],
   presentation: { gap: 0.6, dur: 2.4 },
   problema(s, ctx) {
@@ -149,7 +166,7 @@ export const tonicaDeOuvido: CatalogItem = {
         partes: [
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [notas.map(midi)] },
           // A tônica é o gabarito: ouvi-la é o que libera a autoavaliação.
-          { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[alturaDaTonica(notas, grau.root)]] },
+          { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[alturaDaTonica(grau.root, String(s.faixaDaVoz ?? 'media'))]] },
         ],
       },
       autoplay: true,
@@ -208,16 +225,30 @@ const SORTEADA = new Map<string, number>();
 const modoDoCampo = (ctx: Ctx) => (tonalidade(ctx)?.mode === 'menor' ? 'menor' as const : 'maior' as const);
 
 /**
- * A altura em que o gabarito da tônica soa: a classe da fundamental, **uma oitava acima da nota mais
- * grave** do voicing.
+ * As três faixas de voz, em oitavas inteiras.
  *
- * Não é a fundamental na oitava dela por duas razões: com `semFundamental` ela não está no acorde, e
- * a pessoa cantou numa oitava confortável, não na do baixo. Acima do grave é onde a voz mora.
+ * Nomeadas pelas notas de propósito: nomear por tipo de voz faria o app afirmar algo sobre quem
+ * usa, e isso é o que a lista do "o que nunca entra" proíbe. Dó4–Si4 é a região de quem fala
+ * cantando, e por isso é o padrão.
  */
-function alturaDaTonica(notas: readonly Note[], root: Note): number {
+const FAIXAS_DA_VOZ: Record<string, { lo: number; hi: number }> = {
+  grave: { lo: 48, hi: 59 },
+  media: { lo: 60, hi: 71 },
+  aguda: { lo: 72, hi: 83 },
+};
+
+/**
+ * A altura em que o gabarito da tônica soa: a classe da fundamental, **na faixa de voz escolhida**.
+ *
+ * Antes era "uma oitava acima da nota mais grave do voicing", e isso deixava a tônica subir com o
+ * acorde: medido, 47% passavam do Dó5 e o pior caso era Dó6. A altura da tônica não precisa ter
+ * relação com a do voicing — o que importa é ela caber na voz de quem vai cantar.
+ */
+function alturaDaTonica(root: Note, faixa: string): number {
+  const { lo, hi } = FAIXAS_DA_VOZ[faixa] ?? FAIXAS_DA_VOZ.media;
   const pc = mod(midi({ ...root, oct: 4 }), 12);
-  const base = notas.length ? midi(notas[0]) : 60;
-  let m = base + 12;
-  while (mod(m, 12) !== pc) m += 1;
+  let m = lo + mod(pc - lo, 12);
+  // `lo + mod(...)` já cai na oitava da faixa; o ajuste é só a trava contra faixa mal declarada.
+  if (m > hi) m -= 12;
   return m;
 }

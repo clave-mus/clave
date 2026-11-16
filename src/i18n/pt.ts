@@ -842,6 +842,10 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    voiceRange: 'Faixa da tônica',
+    voiceLow: 'Dó3 a Si3 (grave)',
+    voiceMid: 'Dó4 a Si4 (média)',
+    voiceHigh: 'Dó5 a Si5 (aguda)',
     freeQuality: 'Qualidade livre (sai do campo)',
     triads: 'Tríades',
     extensions: 'Extensões (9, 11, 13)',
