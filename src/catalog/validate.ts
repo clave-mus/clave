@@ -11,7 +11,16 @@ const pcOf = (letter: number, acc: number) => mod(NATURAL[mod(letter, 7)] + acc,
 // Sufixos aceitos para cada qualidade, nas convenções brasileira e americana e nas grafias comuns.
 // Comparação exata depois de tirar espaços e trocar ♯/♭ por #/b: M (maior) e m (menor) continuam
 // diferentes, porque mudam o acorde.
-const SUFFIXES: Record<ChordId, string[]> = {
+/**
+ * **Parcial de propósito** desde 15/11, quando as extensões e alterações entraram no motor.
+ *
+ * Isto mapeia o que a pessoa DIGITA, e só dois itens pedem cifra digitada — nenhum deles oferece
+ * as qualidades novas. Exigir aqui as doze grafias de `7(♯11)`, `m7(♭5)(9)` e companhia seria
+ * escrever um dicionário que ninguém lê, e cada entrada não lida é uma chance de erro silencioso.
+ *
+ * Quem pedir uma qualidade nova numa resposta digitada vai achar esta nota e acrescentar a sua.
+ */
+const SUFFIXES: Partial<Record<ChordId, string[]>> = {
   maior: ['', 'M', 'maj'],
   menor: ['m', 'min', '-'],
   aum: ['+', 'aug', '(#5)', '#5', '+5'],

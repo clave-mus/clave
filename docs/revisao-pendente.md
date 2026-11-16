@@ -106,6 +106,20 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Tônica de ouvido (`15/11/2026`)
+
+Item novo, com o **motor de voicings de piano** que não existia. Ideia dele: *"tocar um acorde
+qualquer e ter que cantar/audiar a tônica"*.
+
+| Id | O que só você confere |
+|---|---|
+| `tonica-de-ouvido` | **se os voicings soam como música.** São 787 por fundamental (~9.400 com as doze), montados por regra de mão e não por tabela: qual grau vai ao baixo, em que oitava, o que sai (a quinta, nas extensões) e em que ordem as de cima se empilham. Confira: (1) se algum voicing soa **errado** — nenhuma regra impede um empilhamento feio, e o projeto não põe juízo onde pode pôr fato; (2) a nomenclatura das **doze qualidades novas** (9, 11, 13, ♭9, ♯9, ♯11, ♭13 e o m7♭5 com nona) — você disse que não queria revisar a minúcia, e mesmo assim ela aparece na tela; (3) se o gabarito da tônica soa na **oitava certa** para cantar (hoje uma oitava acima da nota mais grave do voicing); (4) se *sem a fundamental* é difícil demais ou é o degrau certo; (5) se a tarefa fica clara sem o teclado desenhado — não desenho de propósito, porque ver as notas entregaria a resposta |
+
+**Sobre o encaixe no catálogo**, que foi a sua pergunta: ficou **item novo** e não modo do
+`ouvido-acorde`, pelo critério do seu próprio modelo — o objeto não é "um acorde", é um acorde **num
+voicing**, e esse gerador não existia. O motor nasceu compartilhado em `theory/voicings.ts` para
+que o `ouvido-acorde` possa usá-lo depois, como você pediu, sem motor duplicado.
+
 ### Mapa do braço (`13/11/2026`)
 
 Item novo, desenhado com você numa conversa inteira (36 perguntas) e construído na mesma noite. O

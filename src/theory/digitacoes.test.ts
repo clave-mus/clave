@@ -61,7 +61,9 @@ describe('construção do acorde', () => {
   });
 
   it('as dez receitas cromáticas que o app já tem', () => {
-    const esperado: Record<ChordId, number[]> = {
+    // `Partial`: em 15/11 entraram doze qualidades com extensão e alteração, que não faziam parte
+    // da lista doada que este teste confere. Elas têm o seu próprio teste.
+    const esperado: Partial<Record<ChordId, number[]>> = {
       maior: [0, 4, 7], menor: [0, 3, 7], dim: [0, 3, 6], aum: [0, 4, 8],
       '7M': [0, 4, 7, 11], '7': [0, 4, 7, 10], m7: [0, 3, 7, 10], m7b5: [0, 3, 6, 10],
       dim7: [0, 3, 6, 9], m7M: [0, 3, 7, 11],
