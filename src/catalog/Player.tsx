@@ -1035,11 +1035,21 @@ function AutoAvaliacao({ phase, onAnswer, ouviuAResposta }: {
       </div>
     );
   }
+  /**
+   * **"Como foi?" visível, e não só como rótulo de leitor de tela.**
+   *
+   * Na foto que o Paulo mandou em 15/11, os três botões de julgamento tinham o mesmo peso dos dois
+   * de ouvir, empilhados logo abaixo: a tela parecia uma lista de cinco ações iguais. Faltava dizer
+   * que ali começa **outra coisa** — ouvir é estudo, julgar é a resposta.
+   */
   return (
-    <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
-      <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
-      <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
-      <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+    <div className="auto-aval-bloco" role="group" aria-label={t('session.howWasIt')}>
+      <span className="auto-aval-titulo">{t('session.howWasIt')}</span>
+      <div className="answers compact auto-aval">
+        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+      </div>
     </div>
   );
 }
