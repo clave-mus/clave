@@ -842,6 +842,7 @@ const pt = {
     'deslocamento-ritmico': { title: 'Deslocamento de padrão', desc: 'Um padrão de um tempo, tocado em cada um dos seus modos: da primeira subdivisão, depois da segunda, e assim por diante.' },
   },
   settings: {
+    freeQuality: 'Qualidade livre (sai do campo)',
     triads: 'Tríades',
     extensions: 'Extensões (9, 11, 13)',
     altered: 'Alterados (♭9, ♯9, ♯11, ♭13)',

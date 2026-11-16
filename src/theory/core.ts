@@ -269,6 +269,23 @@ export const CHORDS = {
 export type ChordId = keyof typeof CHORDS;
 export const TRIADS: ChordId[] = ['maior', 'menor', 'aum', 'dim'];
 export const SEVENTHS: ChordId[] = ['7M', '7', 'm7', 'm7b5', 'dim7'];
+/**
+ * **As qualidades que são a mesma função com enfeite** — o mesmo núcleo de 1, 3, 5 e 7.
+ *
+ * Existe para o `tonica-de-ouvido` poder enfeitar o acorde **do grau** em vez de trocá-lo. Em dó
+ * maior o V é Sol7, e enfeitá-lo dá Sol7(9), Sol7(♭9), Sol7(♯11)… — que é como as alterações
+ * aparecem na música de verdade, sobre o dominante. Trocar a qualidade daria Mim7(♭5) no grau III,
+ * um acorde que aquele campo não tem.
+ *
+ * O núcleo é comparado por grau e semitom, então a conta é de fato musical e não uma tabela escrita
+ * à mão que alguém teria de manter em sincronia com `CHORDS`.
+ */
+export function comMesmoNucleo(base: ChordId): ChordId[] {
+  const nucleo = (id: ChordId) => CHORDS[id].degs.filter(([num]) => num <= 7).map(([num, semi]) => `${num}:${semi}`).join(',');
+  const alvo = nucleo(base);
+  return (Object.keys(CHORDS) as ChordId[]).filter(id => id !== base && nucleo(id) === alvo);
+}
+
 /** As extensões diatônicas: nona, décima primeira e décima terceira sem alteração. */
 export const EXTENSOES: ChordId[] = ['7(9)', '7(13)', '7M(9)', '7M(13)', 'm7(9)', 'm7(11)'];
 /** O vocabulário alterado, mais o meio-diminuto com nona. */

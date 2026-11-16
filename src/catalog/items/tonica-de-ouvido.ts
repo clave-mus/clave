@@ -1,6 +1,6 @@
 import { voicingsDe, type Voicing } from '../../theory/voicings';
 import {
-  ALTERADOS, EXTENSOES, SEVENTHS, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
+  ALTERADOS, EXTENSOES, SEVENTHS, TRIADS, arr, chordSymbol, comMesmoNucleo, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
 } from '../helpers';
 import { RASCUNHO } from '../publicacao';
@@ -76,6 +76,18 @@ export const tonicaDeOuvido: CatalogItem = {
      * tônica que não está tocando é o que se faz tocando em grupo, e é outra habilidade.
      */
     { id: 'semFundamental', label: ctx.t('settings.withoutRoot'), type: 'toggle' },
+    /**
+     * **Soltar a qualidade da função do grau** — desligado por padrão, decisão dele em 15/11.
+     *
+     * Desligado, o acorde é **o do grau**: em dó maior o III é Mim7, e as extensões que a pessoa
+     * pediu entram como enfeite daquele acorde (o V vira Sol7(♭9), que é onde a alteração de fato
+     * aparece na música). Ligado, a fundamental continua vindo do grau mas a qualidade é sorteada
+     * livremente — mais variedade, ao custo de acordes que aquela tonalidade não tem.
+     *
+     * Eu havia implementado só o ligado, e por descuido: em dó maior saía `Mim7(♭5)` no grau III, e
+     * ele havia dito "quis dizer os graus do campo harmônico". O padrão agora é o que ele pediu.
+     */
+    { id: 'qualidadeLivre', label: ctx.t('settings.freeQuality'), type: 'toggle' },
     /** Mostrar o nome do acorde **antes** de responder. Padrão: mostrar (decisão dele). */
     { id: 'mostrarNome', label: ctx.t('settings.showChordName'), type: 'toggle' },
     /** Subir tudo para a faixa que um alto-falante de celular reproduz — ver `PISO_AUDIVEL`. */
@@ -83,7 +95,7 @@ export const tonicaDeOuvido: CatalogItem = {
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, mostrarNome: true, somAudivel: false,
+    semFundamental: false, qualidadeLivre: false, mostrarNome: true, somAudivel: false,
   },
   presets: [
     { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: { key: { tonic: 0, mode: 'maior' } } },
@@ -102,16 +114,12 @@ export const tonicaDeOuvido: CatalogItem = {
     return null;
   },
   make(s, ctx): Question {
-    const campo = harmonicField(notaGrafada(ctx, (3 + 1) * 12 + pcDaTonica(ctx)), modoDoCampo(ctx), true, ctx.conv);
+    const fams = arr(s.familias as never, ['tetrades']);
+    // Tríades só se a pessoa pediu tríades e nada mais: pedir tétrade manda no campo.
+    const soTriades = fams.length === 1 && fams[0] === 'triades';
+    const campo = harmonicField(notaGrafada(ctx, (3 + 1) * 12 + pcDaTonica(ctx)), modoDoCampo(ctx), !soTriades, ctx.conv);
     const grau = campo[pick(grausEscolhidos(s)) - 1] ?? campo[0];
-    const qualidade = pick(qualidades(s));
-    /**
-     * A **fundamental** vem do grau do campo; a **qualidade**, da seleção.
-     *
-     * Elas não se condicionam de propósito: acorde alterado não é diatônico, e exigir que a
-     * qualidade saísse do campo tornaria as alterações — que ele pediu — impossíveis. O item não
-     * finge fazer análise harmônica: ele toca um acorde cuja raiz pertence à tonalidade.
-     */
+    const qualidade = s.qualidadeLivre === true ? pick(qualidades(s)) : qualidadeDoGrau(grau.chord, fams);
     const escolhidos = voicingsDe(grau.root, qualidade, {
       semFundamental: s.semFundamental === true,
       ...(s.somAudivel === true ? { piso: 60, teto: 96 } : {}),
@@ -149,6 +157,27 @@ export const tonicaDeOuvido: CatalogItem = {
     };
   },
 };
+
+/**
+ * **A qualidade do acorde daquele grau**, enfeitada se a pessoa pediu extensões ou alterações.
+ *
+ * O acorde do grau vem do campo (`harmonicField`), e `comMesmoNucleo` diz quais qualidades são o
+ * mesmo acorde com nona, décima terceira ou alteração — um fato calculado do motor, não uma tabela.
+ * Então o V de dó maior (Sol7) pode sair Sol7(♭9), e o III (Mim7) pode sair Mim7(9): a função não
+ * muda, a cor muda.
+ *
+ * Graus que não têm enfeite na família pedida ficam como são. `dim7` é o caso: nenhuma das doze
+ * qualidades novas tem o núcleo dele, e inventar uma seria conteúdo que ninguém revisou.
+ */
+function qualidadeDoGrau(base: ChordId, familias: readonly string[]): ChordId {
+  const permitidas: ChordId[] = [
+    ...(familias.includes('extensoes') ? EXTENSOES : []),
+    ...(familias.includes('alterados') ? ALTERADOS : []),
+  ];
+  const enfeites = comMesmoNucleo(base).filter(id => permitidas.includes(id));
+  // A base continua no sorteio: pedir extensões não quer dizer que todo acorde venha enfeitado.
+  return pick([base, ...enfeites]);
+}
 
 /** As qualidades em jogo, somando as famílias que a pessoa marcou. */
 function qualidades(s: Record<string, unknown>): ChordId[] {

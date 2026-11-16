@@ -120,6 +120,13 @@ qualquer e ter que cantar/audiar a tônica"*.
 voicing**, e esse gerador não existia. O motor nasceu compartilhado em `theory/voicings.ts` para
 que o `ouvido-acorde` possa usá-lo depois, como você pediu, sem motor duplicado.
 
+**O acorde é o do grau**, e isso foi uma correção sua: eu havia feito a fundamental vir do grau e a
+qualidade vir da seleção, o que produzia `Mim7(♭5)` no grau III de dó maior — acorde que o campo não
+tem. Agora o padrão dá as sete cifras do campo (C7M, Dm7, Em7, F7M, G7, Am7, Bm7♭5), e as extensões
+e alterações entram como **enfeite do mesmo grau**: o V vira Sol7(♭9), que é onde a alteração
+aparece na música de verdade. Soltar a qualidade ficou como parâmetro desligado, como você decidiu —
+ligado, são 35 cifras em vez de 7, ao custo de sair da tonalidade.
+
 ### Mapa do braço (`13/11/2026`)
 
 Item novo, desenhado com você numa conversa inteira (36 perguntas) e construído na mesma noite. O

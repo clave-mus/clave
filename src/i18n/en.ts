@@ -840,6 +840,7 @@ const en: Shape<typeof pt> = {
     'deslocamento-ritmico': { title: 'Pattern shift', desc: 'A one-beat pattern played in each of its modes: from the first subdivision, then the second, and so on.' },
   },
   settings: {
+    freeQuality: 'Free quality (leaves the key)',
     triads: 'Triads',
     extensions: 'Extensions (9, 11, 13)',
     altered: 'Altered (♭9, ♯9, ♯11, ♭13)',

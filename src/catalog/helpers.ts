@@ -21,7 +21,7 @@ import { clave, GRAUS_DO_MATERIAL, pcsPermitidas } from './contexto-musical';
 export {
   buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, SHARP_ORDER,
   scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pcNameUm, pick, randInt, relativeMinor,
-  TRIADS, SEVENTHS, EXTENSOES, ALTERADOS,
+  TRIADS, SEVENTHS, EXTENSOES, ALTERADOS, comMesmoNucleo,
   SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
 } from '../theory/core';
 export type { ChordId, Clef, Direcao, Note, Quality, ScaleId } from '../theory/core';
