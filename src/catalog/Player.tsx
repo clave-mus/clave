@@ -125,6 +125,13 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const [montada, setMontada] = useState<{ letter: number; acc: number } | null>(null);
   /**
+   * A nota que o teclado físico **confirmou** (Enter), para o `mapa` consumir.
+   *
+   * Vai e volta pelo Player porque é ele quem escuta o teclado — a escuta é de janela, não de
+   * componente. O `MapaArea` a lê, responde e avisa que consumiu.
+   */
+  const [confirmada, setConfirmada] = useState<{ letter: number; acc: number } | null>(null);
+  /**
    * As alturas já postas numa superfície que **acumula** (`Surface.quantas`): um acorde sendo
    * desenhado, uma melodia sendo tocada de volta. Nada é enviado antes de estar cheia, e dá para
    * desfazer o último toque — a mesma regra do `sequence`, por um motivo que já está escrita lá:
@@ -314,7 +321,19 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
        * Os índices do app são diatônicos a partir do dó (0 = Dó … 6 = Si), e as teclas são os nomes
        * em inglês, que é o que está gravado no teclado de quem usa.
        */
-      if (q.surface.kind === 'letters' && phase === 'ask') {
+      /**
+       * **Também no `mapa`**, a pedido dele em 15/11: *"queria que desse pra dizer o nome das notas
+       * por letras no teclado"*.
+       *
+       * O mecanismo é o mesmo de `letters` — uma montagem só, e não uma segunda cópia: nesta mesma
+       * sessão eu recolhi cinco cópias de uma função de grafia, e abrir a sexta aqui seria piada.
+       * O que muda é só o que se envia no fim, e isso o `MapaArea` resolve lendo a nota montada.
+       *
+       * ⚠️ **`b` não pode ser bemol**: `b` é a letra do Si. Daí `-`, que é tecla direta em qualquer
+       * layout; e `+` com `3` de alternativa, porque `#` é Shift+3 no teclado americano.
+       */
+      const montaNota = (q.surface.kind === 'letters' || q.surface.kind === 'mapa') && phase === 'ask';
+      if (montaNota) {
         const daLetra = 'CDEFGAB'.indexOf(e.key.toUpperCase());
         if (daLetra >= 0) { e.preventDefault(); setMontada({ letter: daLetra, acc: 0 }); return; }
         if (montada) {
@@ -323,6 +342,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           if (e.key === 'Escape') { e.preventDefault(); setMontada(null); return; }
           if (e.key === 'Enter') {
             e.preventDefault();
+            // No `mapa` quem envia é o próprio componente, que sabe qual posição está em jogo.
+            if (q.surface.kind === 'mapa') { setConfirmada(montada); setMontada(null); return; }
             setMontada(null);
             submit({ kind: 'spelled', letter: montada.letter, acc: montada.acc }, `${montada.letter}:${montada.acc}`);
             return;
@@ -340,7 +361,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, q, next, play, submit, montada]);
   // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
-  useEffect(() => { setMontada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
+  useEffect(() => { setMontada(null); setConfirmada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -396,7 +417,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} ouviuAResposta={ouviuAResposta} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} ouviuAResposta={ouviuAResposta} montada={montada} confirmada={confirmada} aoConsumir={() => setConfirmada(null)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
@@ -517,11 +538,15 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta, montada, confirmada, aoConsumir }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
   onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
   /** Já ouviu o pedaço `resposta`? A autoavaliação, que mora no palco, espera por isso. */
   ouviuAResposta?: boolean;
+  /** O que o teclado físico montou e ainda não valeu, e o que ele confirmou — ver `montada`. */
+  montada?: { letter: number; acc: number } | null;
+  confirmada?: { letter: number; acc: number } | null;
+  aoConsumir?: () => void;
   /** Só o `mapa` usa: no modo de foco a moldura do app desaparece, e o placar vem para a linha fina. */
   placar: { correct: number; total: number; seguidas: number };
   naming: 'pt' | 'en';
@@ -624,7 +649,8 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
     );
   }
   if (sf.kind === 'mapa') {
-    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar} />;
+    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar}
+      montada={montada} confirmada={confirmada} aoConsumir={aoConsumir} />;
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
@@ -850,11 +876,15 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }:
  * Erro não avança: a posição fica, o botão pisca vermelho, nada soa. É o que o exercício pede —
  * pular a nota errada ensinaria a desistir, e o braço inteiro está à vista para contar as casas.
  */
-function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
+function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar, montada, confirmada, aoConsumir }: {
   sf: Extract<Surface, { kind: 'mapa' }>;
   phase: Phase; naming: 'pt' | 'en'; onAnswer: Submit;
   onTocarGrupos: (g: number[][]) => void;
   placar: { correct: number; total: number; seguidas: number };
+  /** O que o teclado físico está montando, e o que ele confirmou — ver `montada` no Player. */
+  montada?: { letter: number; acc: number } | null;
+  confirmada?: { letter: number; acc: number } | null;
+  aoConsumir?: () => void;
 }) {
   const t = useT();
   /**
@@ -918,11 +948,26 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
    * (acento) e **ainda não** (fraco). As acertadas não desaparecem — a pedido de que, ao fechar, se
    * veja o desenho inteiro que acabou de ser nomeado.
    */
+  /**
+   * **A nota confirmada pelo teclado responde a posição em jogo.**
+   *
+   * A classe de altura sai de letra + acidente pela tabela diatônica, e é comparada do mesmo jeito
+   * que o clique no botão — então digitar `F` `+` `Enter` vale exatamente o que clicar em "Fá♯"
+   * valeria. Letra sem acidente é a natural: `F` `Enter` é Fá.
+   */
+  useEffect(() => {
+    if (!confirmada || phase !== 'ask') return;
+    const pc = mod([0, 2, 4, 5, 7, 9, 11][mod(confirmada.letter, 7)] + confirmada.acc, 12);
+    responderRef.current(pc, `k:${confirmada.letter}:${confirmada.acc}`);
+    aoConsumir?.();
+  }, [confirmada, phase, aoConsumir]);
+
   const marks = sf.posicoes.map((p, i) => ({
     s: p.corda, f: p.casa,
     color: i < acertadas ? 'var(--accent-quiet)' : i === acertadas ? 'var(--mu)' : 'var(--line)',
   }));
 
+  const responderRef = useRef<(pc: number, id: string) => void>(() => {});
   const responder = (pc: number, id: string) => {
     if (phase !== 'ask' || !alvo) return;
     if (mod(pc, 12) !== mod(alvo.pc, 12)) {
@@ -945,6 +990,7 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
     // O id da resposta é a lista de posições: é o que o histórico guarda como "o que foi clicado".
     onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(','));
   };
+  responderRef.current = responder;
 
   /**
    * **Vire o celular** — e só aparece onde girar resolve: aparelho de toque, em retrato.
@@ -983,6 +1029,19 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
         <button type="button" className="mapa-dica" onClick={() => setLembrete(v => !v)}
           aria-label={t('player.mapaSolfeje')} aria-expanded={lembrete}>♪</button>
       </div>
+      {/**
+        * **O eco do teclado físico**: o que está montado, antes de valer.
+        *
+        * Ele pediu isto em 12/11, para a superfície `letters`: *"cuidar pra ficar claro na tela qual
+        * resposta foi recebida, pra não deixar dúvidas"*. Vale igual aqui — sem o eco, digitar `F`
+        * e esquecer o `+` daria um erro que a pessoa não entenderia.
+        */}
+      {montada && phase === 'ask' && (
+        <div className="mapa-montada" role="status">
+          <b>{noteName({ letter: mod(montada.letter, 7) as 0, acc: montada.acc }, naming)}</b>
+          <span className="muted">{t('player.montadaDica')}</span>
+        </div>
+      )}
       {lembrete && (
         <p className="mapa-lembrete" role="note">
           {t('player.mapaSolfeje')}

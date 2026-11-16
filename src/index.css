@@ -829,8 +829,29 @@ select.sel {
  * rodada, porque a mão aprende onde ele fica e isso deixa de custar atenção. Com `auto-fill` eles
  * se reorganizariam conforme a largura, que é o contrário do que o exercício quer.
  */
-.answers.mapa-nomes { grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.answers.mapa-nomes .ans { min-height: 44px; padding: 8px 4px; font-size: 15px; }
+/*
+ * **A fileira tem a largura do braço**, e isto era um defeito que só aparecia no computador — o
+ * Paulo: *"no celular, está ótimo. mas no pc está pequeno"*.
+ *
+ * Medido em 1280 px: cada botão tinha **21 px** de largura contra 760 do braço, porque `.stage` usa
+ * `align-items: center` e um grid filho encolhe até o conteúdo — e o conteúdo são letras de uma
+ * sílaba. É a terceira vez que este mesmo `center` morde nesta sessão.
+ *
+ * E explica a diferença que ele notou: no **modo de foco** eu já havia posto `align-items: stretch`,
+ * então no celular deitado estava certo; fora do foco, não.
+ *
+ * A largura máxima é a do braço de propósito: o botão fica embaixo da região do braço, e a leitura
+ * é vertical — vê-se a posição, desce-se o olho até o nome.
+ */
+.answers.mapa-nomes {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  align-self: stretch;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+.answers.mapa-nomes .ans { min-height: 52px; padding: 10px 6px; font-size: 17px; }
 
 /* ---------------- o modo de foco do mapa do braço (14/11/2026) ---------------- */
 /*
@@ -936,3 +957,8 @@ select.sel {
   .answers.mapa-nomes .ans { min-height: 40px; padding: 6px 2px; font-size: 14px; }
   .mapa-lembrete { font-size: 12px; }
 }
+
+/* O eco do teclado físico no mapa do braço: o que está montado, antes de valer. */
+.mapa-montada { display: flex; align-items: baseline; gap: 10px; justify-content: center; }
+.mapa-montada b { font-family: var(--display); font-size: 22px; letter-spacing: -0.02em; }
+.mapa-montada .muted { font-size: 12px; }
