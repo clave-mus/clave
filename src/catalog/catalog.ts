@@ -20,6 +20,7 @@ import { ouvidoIntervalo } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
 import { ouvidoCampo } from './items/ouvido-campo';
 import { mapaDoBraco } from './items/mapa-do-braco';
+import { tonicaDeOuvido } from './items/tonica-de-ouvido';
 import { melodiaDeOuvido } from './items/melodia-de-ouvido';
 import { ouvidoEscala } from './items/ouvido-escala';
 import { ouvidoCelulas } from './items/ouvido-celulas';
@@ -42,6 +43,7 @@ export const EXERCISES: CatalogItem[] = [
   ouvidoAcorde,
   ouvidoCampo,
   mapaDoBraco,
+  tonicaDeOuvido,
   melodiaDeOuvido,
   ouvidoEscala,
   ouvidoCelulas,

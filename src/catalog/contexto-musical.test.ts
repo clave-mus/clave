@@ -109,6 +109,9 @@ const REGIAO_NAO_SE_APLICA = [
   // dele são casas de uma posição de mão sorteada; a região em MIDI não tem o que dizer ali, e no
   // violão a corda mais grave (40) fica abaixo de qualquer região centrada no meio do braço.
   'mapa-do-braco',
+  // `tonica-de-ouvido` respeita `key` e não `range`: as alturas saem de um voicing de piano, cuja
+  // região é a das duas mãos (ver `theory/voicings.ts`), não a faixa de prática.
+  'tonica-de-ouvido',
 ];
 
 /**

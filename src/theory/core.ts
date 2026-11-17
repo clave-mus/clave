@@ -235,10 +235,61 @@ export const CHORDS = {
   m7: { suffix: { pt: 'm7', en: 'm7' }, degs: [[1, 0], [3, 3], [5, 7], [7, 10]] as Deg[] },
   m7b5: { suffix: { pt: 'm7(♭5)', en: 'm7♭5' }, degs: [[1, 0], [3, 3], [5, 6], [7, 10]] as Deg[] },
   dim7: { suffix: { pt: '°7', en: 'dim7' }, degs: [[1, 0], [3, 3], [5, 6], [7, 9]] as Deg[] },
+  /**
+   * ## Extensões e alterações (15/11/2026)
+   *
+   * Entraram para o `tonica-de-ouvido`, a pedido do Paulo: *"ter acordes alterados também e tal.
+   * variar bastante!"*, com o critério delegado a mim — *"vá pelo que é mais comum/aceito no jazz"*.
+   *
+   * A lista é o vocabulário corrente, e o que ficou **de fora** é tão deliberado quanto o que entrou:
+   *
+   * - **`7alt` não existe aqui.** É uma família, não um acorde: cada pianista a realiza com um
+   *   conjunto diferente de alterações. Um id que não determina as notas não serve a um gerador;
+   * - **sem duas alterações simultâneas** (`7♯9♭13` e afins). Multiplicam a nomenclatura e as
+   *   enarmonias sem acrescentar nada ao exercício, que pergunta a FUNDAMENTAL;
+   * - **11 natural só nos menores.** Sobre acorde maior, o 11 natural bate de semitom com a terça —
+   *   ali o uso corrente é ♯11, e é esse que está aqui.
+   *
+   * Nenhuma delas entra em `ALL_CHORDS`, de propósito: os itens que já existem continuam com as
+   * treze de antes, e quem quiser as novas as pede por lista própria.
+   */
+  '7(9)': { suffix: { pt: '7(9)', en: '9' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 14]] as Deg[] },
+  '7(13)': { suffix: { pt: '7(13)', en: '13' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [13, 21]] as Deg[] },
+  '7(b9)': { suffix: { pt: '7(♭9)', en: '7♭9' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 13]] as Deg[] },
+  '7(#9)': { suffix: { pt: '7(♯9)', en: '7♯9' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 15]] as Deg[] },
+  '7(#11)': { suffix: { pt: '7(♯11)', en: '7♯11' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [11, 18]] as Deg[] },
+  '7(b13)': { suffix: { pt: '7(♭13)', en: '7♭13' }, degs: [[1, 0], [3, 4], [5, 7], [7, 10], [13, 20]] as Deg[] },
+  '7M(9)': { suffix: { pt: '7M(9)', en: 'maj9' }, degs: [[1, 0], [3, 4], [5, 7], [7, 11], [9, 14]] as Deg[] },
+  '7M(13)': { suffix: { pt: '7M(13)', en: 'maj13' }, degs: [[1, 0], [3, 4], [5, 7], [7, 11], [13, 21]] as Deg[] },
+  '7M(#11)': { suffix: { pt: '7M(♯11)', en: 'maj7♯11' }, degs: [[1, 0], [3, 4], [5, 7], [7, 11], [11, 18]] as Deg[] },
+  'm7(9)': { suffix: { pt: 'm7(9)', en: 'm9' }, degs: [[1, 0], [3, 3], [5, 7], [7, 10], [9, 14]] as Deg[] },
+  'm7(11)': { suffix: { pt: 'm7(11)', en: 'm11' }, degs: [[1, 0], [3, 3], [5, 7], [7, 10], [11, 17]] as Deg[] },
+  'm7b5(9)': { suffix: { pt: 'm7(♭5)(9)', en: 'm9♭5' }, degs: [[1, 0], [3, 3], [5, 6], [7, 10], [9, 14]] as Deg[] },
 } as const satisfies Record<string, { suffix: Record<Convention, string>; degs: Deg[] }>;
 export type ChordId = keyof typeof CHORDS;
 export const TRIADS: ChordId[] = ['maior', 'menor', 'aum', 'dim'];
 export const SEVENTHS: ChordId[] = ['7M', '7', 'm7', 'm7b5', 'dim7'];
+/**
+ * **As qualidades que são a mesma função com enfeite** — o mesmo núcleo de 1, 3, 5 e 7.
+ *
+ * Existe para o `tonica-de-ouvido` poder enfeitar o acorde **do grau** em vez de trocá-lo. Em dó
+ * maior o V é Sol7, e enfeitá-lo dá Sol7(9), Sol7(♭9), Sol7(♯11)… — que é como as alterações
+ * aparecem na música de verdade, sobre o dominante. Trocar a qualidade daria Mim7(♭5) no grau III,
+ * um acorde que aquele campo não tem.
+ *
+ * O núcleo é comparado por grau e semitom, então a conta é de fato musical e não uma tabela escrita
+ * à mão que alguém teria de manter em sincronia com `CHORDS`.
+ */
+export function comMesmoNucleo(base: ChordId): ChordId[] {
+  const nucleo = (id: ChordId) => CHORDS[id].degs.filter(([num]) => num <= 7).map(([num, semi]) => `${num}:${semi}`).join(',');
+  const alvo = nucleo(base);
+  return (Object.keys(CHORDS) as ChordId[]).filter(id => id !== base && nucleo(id) === alvo);
+}
+
+/** As extensões diatônicas: nona, décima primeira e décima terceira sem alteração. */
+export const EXTENSOES: ChordId[] = ['7(9)', '7(13)', '7M(9)', '7M(13)', 'm7(9)', 'm7(11)'];
+/** O vocabulário alterado, mais o meio-diminuto com nona. */
+export const ALTERADOS: ChordId[] = ['7(b9)', '7(#9)', '7(#11)', '7(b13)', '7M(#11)', 'm7b5(9)'];
 
 export function buildChord(root: Note, id: ChordId, inversion = 0): Note[] {
   const notes = CHORDS[id].degs.map(([num, semis]) => transpose(root, { num, semis }));

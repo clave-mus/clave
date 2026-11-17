@@ -51,6 +51,17 @@ function answer(q: Question, wantCorrect: boolean): Response {
     const erradas = certas.map((_, i) => certas.map((m, k) => (k === i ? m + 12 : m)));
     return [{ kind: 'pitches', midis: certas } as Response, ...erradas.map(ms => ({ kind: 'pitches', midis: ms }) as Response)].find(ok)!;
   }
+  /**
+   * **Autoavaliação**: a resposta é a pessoa dizendo como foi. "Consegui" é o acerto; "de novo" é o
+   * não-acerto, e os dois são respostas legítimas — o app não mede, só registra.
+   *
+   * Faltava aqui porque até 15/11 nenhum item era autoavaliação **por padrão**: nos que a têm, ela
+   * depende de um parâmetro (`estimulo: 'escrito'`), e este helper usa os defaults. `tonica-de-ouvido`
+   * é o primeiro em que ela é o único modo.
+   */
+  if (sf.kind === 'autoavaliacao') {
+    return { kind: 'option', id: wantCorrect ? 'facil' : 'nao' } as Response;
+  }
   // `mapa`: a pessoa nomeia posição por posição, e o que chega ao Player no fim são as alturas das
   // posições, na ordem. A errada troca a primeira por outra classe qualquer.
   if (sf.kind === 'mapa') {
@@ -107,7 +118,14 @@ describe('registro de uma tentativa', () => {
       expect(a.content_tags).toEqual(ex.contentTags);
       expect(a.taxonomy_version).toBe(TAXONOMY_VERSION);
       expect(a.question.expected).toBeTruthy();
-      expect(a.validation_type).toBe('deterministic');
+      /**
+       * **O tipo de validação é deduzido da superfície**, e não é `deterministic` para todos.
+       *
+       * Este teste afirmava `deterministic` para o catálogo inteiro, o que era verdade até 15/11:
+       * `tonica-de-ouvido` responde por **autoavaliação**, porque o app não ouve quem canta. Gravar
+       * aquela tentativa como medição seria mentir no histórico — a decisão 37 existe para isso.
+       */
+      expect(a.validation_type).toBe(a.question.surface === 'autoavaliacao' ? 'self_report' : 'deterministic');
       expect(['correct', 'incorrect']).toContain(a.outcome);
       // o resultado gravado bate com a conferência da resposta gravada
       expect(validate(a.question.expected, a.response)).toBe(a.outcome === 'correct');

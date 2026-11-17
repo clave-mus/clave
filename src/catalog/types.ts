@@ -196,9 +196,25 @@ export type Surface =
 export interface PosicaoDoMapa {
   corda: number;
   casa: number;
+  /** A altura real da posição — a casa daquela corda. É ela que o braço desenha. */
   midi: number;
   /** A classe de altura: é ela que o botão de nome responde, em qualquer oitava. */
   pc: number;
+  /**
+   * **A altura que SOA**, que pode não ser a da posição.
+   *
+   * Existe por causa do alto-falante de celular, e o Paulo relatou em 15/11: *"o som está meio
+   * bugado... está dando umas craqueladas"* no aparelho, sem fone, enquanto no PC estava certo.
+   *
+   * Medido: num Mi1 (41 Hz) **0%** da energia está acima de 300 Hz, que é onde um alto-falante
+   * desses começa a reproduzir. O cone se move sem produzir som, e o que se ouve é o esforço dele.
+   * A fundamental precisa passar de ~300 Hz: Lá3 (220 Hz) ainda dá 3–10%, e Mi4 (330 Hz) dá 100%.
+   *
+   * O desenho **não muda** — a casa é a casa. Só o som sobe por oitavas, e no `mapa-do-braco` isso
+   * é inofensivo porque a pergunta é *qual nota*, não *qual altura*: ouvir o Mi1 como Mi4 continua
+   * confirmando "é um mi". Num item de ouvido seria destrutivo, e por isso isto é do item.
+   */
+  soa: number;
 }
 
 /**

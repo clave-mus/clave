@@ -106,6 +106,27 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Tônica de ouvido (`15/11/2026`)
+
+Item novo, com o **motor de voicings de piano** que não existia. Ideia dele: *"tocar um acorde
+qualquer e ter que cantar/audiar a tônica"*.
+
+| Id | O que só você confere |
+|---|---|
+| `tonica-de-ouvido` | **se a faixa da tônica cabe na sua voz.** O padrão é Dó4–Si4, e há Dó3–Si3 e Dó5–Si5 — nomeadas pelas notas porque o app não afirma nada sobre quem usa. Antes do seu relato, 47% das tônicas passavam do Dó5 e o pior caso era Dó6; agora o padrão não passa do Si4. E **se os voicings soam como música.** São 787 por fundamental (~9.400 com as doze), montados por regra de mão e não por tabela: qual grau vai ao baixo, em que oitava, o que sai (a quinta, nas extensões) e em que ordem as de cima se empilham. Confira: (1) se algum voicing soa **errado** — nenhuma regra impede um empilhamento feio, e o projeto não põe juízo onde pode pôr fato; (2) a nomenclatura das **doze qualidades novas** (9, 11, 13, ♭9, ♯9, ♯11, ♭13 e o m7♭5 com nona) — você disse que não queria revisar a minúcia, e mesmo assim ela aparece na tela; (3) se o gabarito da tônica soa na **oitava certa** para cantar (hoje uma oitava acima da nota mais grave do voicing); (4) se *sem a fundamental* é difícil demais ou é o degrau certo; (5) se a tarefa fica clara sem o teclado desenhado — não desenho de propósito, porque ver as notas entregaria a resposta |
+
+**Sobre o encaixe no catálogo**, que foi a sua pergunta: ficou **item novo** e não modo do
+`ouvido-acorde`, pelo critério do seu próprio modelo — o objeto não é "um acorde", é um acorde **num
+voicing**, e esse gerador não existia. O motor nasceu compartilhado em `theory/voicings.ts` para
+que o `ouvido-acorde` possa usá-lo depois, como você pediu, sem motor duplicado.
+
+**O acorde é o do grau**, e isso foi uma correção sua: eu havia feito a fundamental vir do grau e a
+qualidade vir da seleção, o que produzia `Mim7(♭5)` no grau III de dó maior — acorde que o campo não
+tem. Agora o padrão dá as sete cifras do campo (C7M, Dm7, Em7, F7M, G7, Am7, Bm7♭5), e as extensões
+e alterações entram como **enfeite do mesmo grau**: o V vira Sol7(♭9), que é onde a alteração
+aparece na música de verdade. Soltar a qualidade ficou como parâmetro desligado, como você decidiu —
+ligado, são 35 cifras em vez de 7, ao custo de sair da tonalidade.
+
 ### Mapa do braço (`13/11/2026`)
 
 Item novo, desenhado com você numa conversa inteira (36 perguntas) e construído na mesma noite. O
@@ -113,7 +134,7 @@ gerador está testado; o que falta é o **seu ouvido e a sua mão**.
 
 | Id | O que só você confere |
 |---|---|
-| `mapa-do-braco` | **se o exercício ensina o braço.** Quatro graus sorteados do campo aparecem numa posição de mão, uma posição destacada por vez, e você clica no nome. Confira: (1) se a **abertura padrão** — 5 casas no violão, 6 no baixo — dá desenhos que a mão alcança, principalmente na 1ª posição, onde os trastes são largos; (2) se o **passeio** pelo braço parece aleatório de fato (medido: as cinco regiões saem com frequência parecida, nenhuma acima de 30%); (3) se **sortear os graus** é melhor que escolhê-los, como você supôs — e se três graus não seria a entrada melhor que quatro; (4) se as **ordens embaralhadas** espalham o suficiente entre cordas (medido: média de 3,35 cordas por desenho, contra 2,99 só com inversões), ou se vale ligar *uma nota por corda* por padrão; (5) se **não anunciar os graus** na tela deixa o exercício difícil demais na entrada; (6) se **fixar uma região** (por exemplo 7 a 15, atravessando a 12ª casa) com o resto do braço apagado dá o contexto que você queria, ou se o véu incomoda |
+| `mapa-do-braco` | **se o exercício ensina o braço.** Quatro graus sorteados do campo aparecem numa posição de mão, uma posição destacada por vez, e você clica no nome. Confira: (1) se a **abertura padrão** — 5 casas no violão, 6 no baixo — dá desenhos que a mão alcança, principalmente na 1ª posição, onde os trastes são largos; (2) se o **passeio** pelo braço parece aleatório de fato (medido: as cinco regiões saem com frequência parecida, nenhuma acima de 30%); (3) se **sortear os graus** é melhor que escolhê-los, como você supôs — e se três graus não seria a entrada melhor que quatro; (4) se as **ordens embaralhadas** espalham o suficiente entre cordas (medido: média de 3,35 cordas por desenho, contra 2,99 só com inversões), ou se vale ligar *uma nota por corda* por padrão; (5) se **não anunciar os graus** na tela deixa o exercício difícil demais na entrada; (6) se **fixar uma região** (por exemplo 7 a 15, atravessando a 12ª casa) com o resto do braço apagado dá o contexto que você queria, ou se o véu incomoda; (7) se responder **pelo teclado físico** no computador (letra, depois `↑`/`+` ou `↓`/`-`, depois Enter) é mais rápido que clicar — e se exigir o acidente sempre atrapalha quando a nota é natural |
 
 **O modo de foco existe desde 14/11**, e é a parte que você só vai conseguir testar no celular. O
 que ele faz: abaixo de 480 px de altura, a moldura do app sai (cabeçalho, placar, pé, navegação,

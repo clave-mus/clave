@@ -190,6 +190,8 @@ describe('o que está em rascunho nos grupos', () => {
       'ouvido-campo',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',
+      // "Ouvido", desde 15/11: a fundamental cantada, com o motor de voicings novo
+      'tonica-de-ouvido',
     ]);
   });
 });

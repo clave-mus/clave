@@ -21,6 +21,8 @@ const STABLE_IDS = [
   'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-campo',
   // 13/11/2026: desenhado com o Paulo numa conversa inteira. Nasce rascunho.
   'mapa-do-braco',
+  // 15/11/2026: cantar a fundamental de um acorde num voicing de piano. Nasce rascunho.
+  'tonica-de-ouvido',
   'melodia-de-ouvido', 'ouvido-escala', 'ouvido-celulas', 'reconhecer-padroes-escala', 'ritmo-ouvido',
 ];
 

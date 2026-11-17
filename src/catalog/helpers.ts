@@ -21,6 +21,7 @@ import { clave, GRAUS_DO_MATERIAL, pcsPermitidas } from './contexto-musical';
 export {
   buildChord, buildScale, CHORDS, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, SHARP_ORDER,
   scaleDegreeLabels, midi, mod, note, noteName, optionsWith, pc, pcName, pcNameUm, pick, randInt, relativeMinor,
+  TRIADS, SEVENTHS, EXTENSOES, ALTERADOS, comMesmoNucleo,
   SCALES, scaleDegs, scaleMidi, semisFor, shuffle, transpose,
 } from '../theory/core';
 export type { ChordId, Clef, Direcao, Note, Quality, ScaleId } from '../theory/core';
@@ -119,6 +120,23 @@ export function alturaDeTeclado(ctx: Ctx, s: S, lo: number, hi: number): number 
   do m = randInt(lo, hi); while (!permitidas.includes(mod(m, 12)));
   return m;
 }
+
+/**
+ * **O piso da faixa que um alto-falante de celular reproduz**: Mi4, 330 Hz (MIDI 64).
+ *
+ * Medido em 15/11, com o relato do Paulo de craquelado no aparelho sem fone. A percentagem da
+ * energia da nota que fica acima de 300 Hz, onde esses alto-falantes começam a responder:
+ *
+ * | Mi1 41 Hz | Lá1 55 | Mi2 82 | Lá2 110 | Mi3 165 | Lá3 220 | **Mi4 330** |
+ * |---|---|---|---|---|---|---|
+ * | 0% | 0% | 1% | 3% | 7–13% | 3–10% | **100%** |
+ *
+ * O salto é a fundamental cruzar os 300 Hz: os harmônicos da corda são fracos demais para carregar
+ * a nota sozinhos. Medi também que **nada no timbre resolve** — abrir o filtro do laço leva de 0,1%
+ * a 0,2%, e saturação pesada a 1,2%. Subir a altura é a única saída de verdade, e uma oitava não
+ * basta (Mi1 → Mi2 é 0% → 1%).
+ */
+export const PISO_AUDIVEL = 64;
 
 /** Quatro cordas é baixo; seis é violão. */
 export const vozDoBraco = (tuning: readonly number[]) => (tuning.length === 4 ? 'baixo' as const : 'violao' as const);

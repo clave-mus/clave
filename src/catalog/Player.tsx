@@ -18,6 +18,7 @@ import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
+import { atalhoEmVigor, chavesDisputadas, settingsDoAtalho } from './atalhos';
 import { optionResponse, validate } from './validate';
 import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
@@ -75,13 +76,29 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const settings = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...(entrada?.settings ?? {}), ...(local ?? saved ?? {}) }), [def, ctx, saved, local, entrada]);
   /**
-   * Clicar num atalho aplica as duas camadas de uma vez. Separar levaria ao caso em que o atalho
-   * diz "dó maior" e a tonalidade continua a de antes — um atalho que não entrega o que promete.
+   * **Um atalho muda o que os atalhos deste item discordam entre si — e mais nada** (pedido do
+   * Paulo em 16/11: *"ao clicar no atalho de tétrades, isso só mude os graus — e não os outros
+   * parâmetros, como tonalidade, som do celular, etc"*).
+   *
+   * A primeira versão zerava tudo e aplicava o atalho por cima. O efeito no `mapa-do-braco` era o
+   * que ele relatou: clicar em "tétrades" devolvia o som do alto-falante, a abertura, a região e a
+   * tonalidade ao padrão. Essas escolhas são **da pessoa**, não da variante do exercício.
+   *
+   * E não bastava preservar o que o atalho não menciona: a configuração que **só um** atalho
+   * menciona tem de voltar ao padrão nos outros — senão "extensões" ficaria ligada depois de
+   * clicar no atalho simples, que é o defeito oposto. Daí a conta ser por **discordância**, com
+   * cada atalho resolvido contra os padrões: o que todos os atalhos dizem igual não é assunto
+   * deles, e fica como está.
+   *
+   * O mesmo vale para a tonalidade (`params`): os quatro atalhos do mapa pediam dó maior, então
+   * clicar num deles não mexe na tonalidade — mas **abrir** o item ainda cai em dó maior, porque
+   * ali o primeiro atalho é a entrada e não há escolha da pessoa para preservar.
    */
   const aplicarPreset = useCallback((p: NonNullable<SeriesItem['presets']>[number]) => {
-    guardarSettings({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}), ...p.settings });
-    if (p.params) mudar(p.params);
-  }, [def, ctx, guardarSettings, mudar]);
+    const base = { ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}) };
+    guardarSettings(settingsDoAtalho(def, p, settings, base));
+    if (p.params && chavesDisputadas(def).params) mudar(p.params);
+  }, [def, ctx, settings, guardarSettings, mudar]);
   /**
    * Só o que muda a PERGUNTA. Mexer em "arpejar" ou na duração não sorteia um acorde novo — antes
    * sorteava, e a pessoa perdia o que estava tentando identificar.
@@ -116,14 +133,22 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
   /**
    * A resposta que está sendo **montada pelo teclado físico** (decidido com o Paulo em 12/11).
    *
-   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `+` ou `3`
-   * para sustenido, `-` para bemol —, porque é assim que se fala ("sol sustenido"). `Enter`
+   * Esquema: a **letra** monta a nota natural (`G` → Sol), e o acidente vem **depois** — `↑`, `+`
+   * ou `3` para sustenido, `↓` ou `-` para bemol —, porque é assim que se fala ("sol
+   * sustenido"). `Enter`
    * confirma, `Esc` limpa. Nada é enviado antes do `Enter`, e o que está montado aparece na tela:
    * ele pediu *"cuidar pra ficar claro na tela qual resposta foi recebida, pra não deixar dúvidas"*.
    *
    * `Ctrl` ficou fora de propósito: `Ctrl+G` é atalho do navegador e não chega até a página.
    */
   const [montada, setMontada] = useState<{ letter: number; acc: number } | null>(null);
+  /**
+   * A nota que o teclado físico **confirmou** (Enter), para o `mapa` consumir.
+   *
+   * Vai e volta pelo Player porque é ele quem escuta o teclado — a escuta é de janela, não de
+   * componente. O `MapaArea` a lê, responde e avisa que consumiu.
+   */
+  const [confirmada, setConfirmada] = useState<{ letter: number; acc: number } | null>(null);
   /**
    * As alturas já postas numa superfície que **acumula** (`Surface.quantas`): um acorde sendo
    * desenhado, uma melodia sendo tocada de volta. Nada é enviado antes de estar cheia, e dá para
@@ -314,15 +339,41 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
        * Os índices do app são diatônicos a partir do dó (0 = Dó … 6 = Si), e as teclas são os nomes
        * em inglês, que é o que está gravado no teclado de quem usa.
        */
-      if (q.surface.kind === 'letters' && phase === 'ask') {
-        const daLetra = 'CDEFGAB'.indexOf(e.key.toUpperCase());
+      /**
+       * **Também no `mapa`**, a pedido dele em 15/11: *"queria que desse pra dizer o nome das notas
+       * por letras no teclado"*.
+       *
+       * O mecanismo é o mesmo de `letters` — uma montagem só, e não uma segunda cópia: nesta mesma
+       * sessão eu recolhi cinco cópias de uma função de grafia, e abrir a sexta aqui seria piada.
+       * O que muda é só o que se envia no fim, e isso o `MapaArea` resolve lendo a nota montada.
+       *
+       * ⚠️ **`b` não pode ser bemol**: `b` é a letra do Si. Daí `-`, que é tecla direta em qualquer
+       * layout; e `+` com `3` de alternativa, porque `#` é Shift+3 no teclado americano.
+       */
+      const montaNota = (q.surface.kind === 'letters' || q.surface.kind === 'mapa') && phase === 'ask';
+      if (montaNota) {
+        /**
+         * `length === 1` **não é zelo**: `''.indexOf` de string vazia devolve 0, e tecla que chega
+         * com `key` vazia (composição de IME, tecla morta) montava um Dó do nada. Apareceu medindo
+         * as setas no navegador, com um evento sintético de `key: ''`.
+         */
+        const daLetra = e.key.length === 1 ? 'CDEFGAB'.indexOf(e.key.toUpperCase()) : -1;
         if (daLetra >= 0) { e.preventDefault(); setMontada({ letter: daLetra, acc: 0 }); return; }
         if (montada) {
-          if (e.key === '+' || e.key === '3') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
-          if (e.key === '-') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
+          /**
+           * **As setas também alteram** (pedido dele em 16/11): ↑ sustenido, ↓ bemol. É a direção
+           * que o acidente tem no som e na pauta, e não exige procurar o `+` no teclado — que em
+           * teclado ABNT fica em outro lugar que no americano.
+           *
+           * Só valem com uma letra montada, então nada aqui atrapalha rolar a página.
+           */
+          if (e.key === '+' || e.key === '3' || e.key === 'ArrowUp') { e.preventDefault(); setMontada({ ...montada, acc: 1 }); return; }
+          if (e.key === '-' || e.key === 'ArrowDown') { e.preventDefault(); setMontada({ ...montada, acc: -1 }); return; }
           if (e.key === 'Escape') { e.preventDefault(); setMontada(null); return; }
           if (e.key === 'Enter') {
             e.preventDefault();
+            // No `mapa` quem envia é o próprio componente, que sabe qual posição está em jogo.
+            if (q.surface.kind === 'mapa') { setConfirmada(montada); setMontada(null); return; }
             setMontada(null);
             submit({ kind: 'spelled', letter: montada.letter, acc: montada.acc }, `${montada.letter}:${montada.acc}`);
             return;
@@ -340,7 +391,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, q, next, play, submit, montada]);
   // Pergunta nova (ou resposta enviada): o que estava montado não vale mais.
-  useEffect(() => { setMontada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
+  useEffect(() => { setMontada(null); setConfirmada(null); setJuntadas([]); setOuviuAResposta(false); }, [q]);
 
   const area = moduleById[def.primaryModule];
 
@@ -396,10 +447,10 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       </div>
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
-      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} naming={naming} picked={picked} acc={acc} onAnswer={submit}
+      <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} ouviuAResposta={ouviuAResposta} montada={montada} confirmada={confirmada} aoConsumir={() => setConfirmada(null)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
         juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
 
-      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} ouviuAResposta={ouviuAResposta} />
+      <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
@@ -517,9 +568,15 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta, montada, confirmada, aoConsumir }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
   onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
+  /** Já ouviu o pedaço `resposta`? A autoavaliação, que mora no palco, espera por isso. */
+  ouviuAResposta?: boolean;
+  /** O que o teclado físico montou e ainda não valeu, e o que ele confirmou — ver `montada`. */
+  montada?: { letter: number; acc: number } | null;
+  confirmada?: { letter: number; acc: number } | null;
+  aoConsumir?: () => void;
   /** Só o `mapa` usa: no modo de foco a moldura do app desaparece, e o placar vem para a linha fina. */
   placar: { correct: number; total: number; seguidas: number };
   naming: 'pt' | 'en';
@@ -622,7 +679,8 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
     );
   }
   if (sf.kind === 'mapa') {
-    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar} />;
+    return <MapaArea sf={sf} phase={phase} naming={naming} onAnswer={onAnswer} onTocarGrupos={onTocarGrupos} placar={placar}
+      montada={montada} confirmada={confirmada} aoConsumir={aoConsumir} />;
   }
   if (sf.kind === 'fretboard') {
     const marks = [];
@@ -780,6 +838,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       {v.kind !== 'ear' && !!q.sound?.partes?.length && (
         <Listen playing={playing} heard={heard} onPlay={onPlay} partes={q.sound.partes} onPlayParte={onPlayParte} semBotaoGrande />
       )}
+      {/**
+        * **A autoavaliação fica aqui, junto do botão que a libera** — conserto do que o Paulo
+        * relatou em 15/11: *"está contraintuitivo o lugar das respostas de como foi"*.
+        *
+        * Ela renderizava na área de resposta, **fora** do palco: medido na tela, sobravam 65 px de
+        * vazio entre o botão "ouvir a resposta" e a linha que mandava ouvi-lo. Clicava-se em cima e
+        * o julgamento aparecia embaixo, separado do gesto que o habilita.
+        *
+        * O fluxo é ouvir o acorde → cantar → ouvir a resposta → julgar, e os dois últimos passos
+        * agora ficam no mesmo bloco. Vale para **todo** item de audiar: `melodia-de-ouvido` e o
+        * `ouvido-acorde` escrito ganham a mesma vizinhança.
+        */}
+      {q.surface.kind === 'autoavaliacao' && (
+        <AutoAvaliacao phase={phase} onAnswer={onAnswer} ouviuAResposta={ouviuAResposta} />
+      )}
     </div>
   );
 }
@@ -833,11 +906,15 @@ function Listen({ playing, heard, onPlay, partes, onPlayParte, semBotaoGrande }:
  * Erro não avança: a posição fica, o botão pisca vermelho, nada soa. É o que o exercício pede —
  * pular a nota errada ensinaria a desistir, e o braço inteiro está à vista para contar as casas.
  */
-function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
+function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar, montada, confirmada, aoConsumir }: {
   sf: Extract<Surface, { kind: 'mapa' }>;
   phase: Phase; naming: 'pt' | 'en'; onAnswer: Submit;
   onTocarGrupos: (g: number[][]) => void;
   placar: { correct: number; total: number; seguidas: number };
+  /** O que o teclado físico está montando, e o que ele confirmou — ver `montada` no Player. */
+  montada?: { letter: number; acc: number } | null;
+  confirmada?: { letter: number; acc: number } | null;
+  aoConsumir?: () => void;
 }) {
   const t = useT();
   /**
@@ -901,11 +978,26 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
    * (acento) e **ainda não** (fraco). As acertadas não desaparecem — a pedido de que, ao fechar, se
    * veja o desenho inteiro que acabou de ser nomeado.
    */
+  /**
+   * **A nota confirmada pelo teclado responde a posição em jogo.**
+   *
+   * A classe de altura sai de letra + acidente pela tabela diatônica, e é comparada do mesmo jeito
+   * que o clique no botão — então digitar `F` `+` `Enter` vale exatamente o que clicar em "Fá♯"
+   * valeria. Letra sem acidente é a natural: `F` `Enter` é Fá.
+   */
+  useEffect(() => {
+    if (!confirmada || phase !== 'ask') return;
+    const pc = mod([0, 2, 4, 5, 7, 9, 11][mod(confirmada.letter, 7)] + confirmada.acc, 12);
+    responderRef.current(pc, `k:${confirmada.letter}:${confirmada.acc}`);
+    aoConsumir?.();
+  }, [confirmada, phase, aoConsumir]);
+
   const marks = sf.posicoes.map((p, i) => ({
     s: p.corda, f: p.casa,
     color: i < acertadas ? 'var(--accent-quiet)' : i === acertadas ? 'var(--mu)' : 'var(--line)',
   }));
 
+  const responderRef = useRef<(pc: number, id: string) => void>(() => {});
   const responder = (pc: number, id: string) => {
     if (phase !== 'ask' || !alvo) return;
     if (mod(pc, 12) !== mod(alvo.pc, 12)) {
@@ -920,14 +1012,15 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
     const n = acertadas + 1;
     setAcertadas(n);
     if (n < sf.posicoes.length) {
-      onTocarGrupos([[alvo.midi]]);
+      onTocarGrupos([[alvo.soa]]);
       return;
     }
     // fechou: toca a última (ou o arpejo inteiro, se o item pediu) e entrega a pergunta ao Player
-    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.midi]) : [[alvo.midi]]);
+    onTocarGrupos(sf.ouvirNoFim ? sf.posicoes.map(p => [p.soa]) : [[alvo.soa]]);
     // O id da resposta é a lista de posições: é o que o histórico guarda como "o que foi clicado".
     onAnswer({ kind: 'pitches', midis: sf.posicoes.map(p => p.midi) }, sf.posicoes.map(p => `${p.corda}.${p.casa}`).join(','));
   };
+  responderRef.current = responder;
 
   /**
    * **Vire o celular** — e só aparece onde girar resolve: aparelho de toque, em retrato.
@@ -966,6 +1059,19 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
         <button type="button" className="mapa-dica" onClick={() => setLembrete(v => !v)}
           aria-label={t('player.mapaSolfeje')} aria-expanded={lembrete}>♪</button>
       </div>
+      {/**
+        * **O eco do teclado físico**: o que está montado, antes de valer.
+        *
+        * Ele pediu isto em 12/11, para a superfície `letters`: *"cuidar pra ficar claro na tela qual
+        * resposta foi recebida, pra não deixar dúvidas"*. Vale igual aqui — sem o eco, digitar `F`
+        * e esquecer o `+` daria um erro que a pessoa não entenderia.
+        */}
+      {montada && phase === 'ask' && (
+        <div className="mapa-montada" role="status">
+          <b>{noteName({ letter: mod(montada.letter, 7) as 0, acc: montada.acc }, naming)}</b>
+          <span className="muted">{t('player.montadaDica')}</span>
+        </div>
+      )}
       {lembrete && (
         <p className="mapa-lembrete" role="note">
           {t('player.mapaSolfeje')}
@@ -988,12 +1094,59 @@ function MapaArea({ sf, phase, naming, onAnswer, onTocarGrupos, placar }: {
   );
 }
 
-function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, ouviuAResposta }: {
+/**
+ * **Audiar e conferir**: não há resposta a validar, a pessoa diz como foi.
+ *
+ * Virou componente próprio em 15/11 para poder ficar **dentro do palco**, junto do botão que a
+ * libera — o Paulo: *"está contraintuitivo o lugar das respostas de como foi"*. Antes vivia na área
+ * de resposta, a 65 px de vazio do controle de ouvir.
+ *
+ * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
+ * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
+ */
+function AutoAvaliacao({ phase, onAnswer, ouviuAResposta }: {
+  phase: Phase; onAnswer: Submit; ouviuAResposta?: boolean;
+}) {
+  const t = useT();
+  const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
+  if (phase !== 'ask') return <div className="answers compact" />;
+  /**
+   * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
+   * só apareçam depois que tu ouvir a resposta"*).
+   *
+   * E a razão é do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
+   * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela segue essa ordem.
+   */
+  if (!ouviuAResposta) {
+    return (
+      <div className="auto-aval-espera" role="status">
+        <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
+      </div>
+    );
+  }
+  /**
+   * **"Como foi?" visível, e não só como rótulo de leitor de tela.**
+   *
+   * Na foto que o Paulo mandou em 15/11, os três botões de julgamento tinham o mesmo peso dos dois
+   * de ouvir, empilhados logo abaixo: a tela parecia uma lista de cinco ações iguais. Faltava dizer
+   * que ali começa **outra coisa** — ouvir é estudo, julgar é a resposta.
+   */
+  return (
+    <div className="auto-aval-bloco" role="group" aria-label={t('session.howWasIt')}>
+      <span className="auto-aval-titulo">{t('session.howWasIt')}</span>
+      <div className="answers compact auto-aval">
+        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
+        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
+      </div>
+    </div>
+  );
+}
+
+function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }: {
   q: Question; phase: Phase; picked: string | null; acc: number; setAcc: (n: number) => void; onAnswer: Submit; naming: 'pt' | 'en';
   /** O que o teclado físico montou e ainda não foi enviado — mostrado como eco. */
   montada?: { letter: number; acc: number } | null;
-  /** Já ouviu o pedaço `resposta`? A autoavaliação espera por isso. */
-  ouviuAResposta?: boolean;
 }) {
   const t = useT();
   const sf = q.surface;
@@ -1013,44 +1166,8 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, 
       </div>
     );
   }
-  if (sf.kind === 'autoavaliacao') {
-    /**
-     * Audiar e conferir. Não há resposta a conferir — a pessoa diz como foi.
-     *
-     * "Consegui" é o acerto; os outros dois contam como não-acerto para o placar da etapa, mas a
-     * tentativa é gravada como `self_report`, então a análise nunca confunde isto com medição.
-     *
-     * O gabarito mora em `sound.partes` e é tocado pelo botão de pedaço — não aqui. Audiar **antes**
-     * de ouvir é o exercício, e um botão de resposta nesta fileira convidaria a ouvir primeiro.
-     */
-    const escolha = (id: 'facil' | 'esforco' | 'nao') => onAnswer({ kind: 'option', id }, id);
-    if (phase !== 'ask') return <div className="answers compact" />;
-    /**
-     * **Os três botões só aparecem depois de ouvir a resposta** (Paulo, 13/11: *"faça com que eles
-     * só apareçam depois que tu ouvir a resposta"*).
-     *
-     * E a razão é a do exercício, não de arrumação: julgar "consegui" antes de conferir é julgar no
-     * vácuo. A ordem do gesto é audiar → ouvir → julgar, e a tela agora segue essa ordem em vez de
-     * oferecer as três coisas de uma vez.
-     *
-     * Até ouvir, o que aparece é o convite a conferir — o botão do pedaço `resposta` já está logo
-     * acima, e esta linha diz o que fazer com ele.
-     */
-    if (!ouviuAResposta) {
-      return (
-        <div className="auto-aval-espera" role="status">
-          <span className="muted">{t('session.ouvirAntesDeJulgar')}</span>
-        </div>
-      );
-    }
-    return (
-      <div className="answers compact auto-aval" role="group" aria-label={t('session.howWasIt')}>
-        <button type="button" className="ans compact" onClick={() => escolha('facil')}>{t('session.gotIt')}</button>
-        <button type="button" className="ans compact" onClick={() => escolha('esforco')}>{t('session.withHelp')}</button>
-        <button type="button" className="ans compact" onClick={() => escolha('nao')}>{t('session.again')}</button>
-      </div>
-    );
-  }
+  // A autoavaliação mora no PALCO desde 15/11, junto do botão que a libera — ver `AutoAvaliacao`.
+  if (sf.kind === 'autoavaliacao') return null;
 
   if (sf.kind === 'sequence') {
     return <SequenceArea sf={sf} q={q} phase={phase} picked={picked} onAnswer={onAnswer} />;
@@ -1100,6 +1217,16 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada, 
 // ---------------- personalizar ----------------
 function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; antes?: ReactNode; depois?: ReactNode; onReset: () => void }) {
   const t = useT();
+  /**
+   * O atalho acende quando **clicar nele não mudaria nada** — e isso é o que ele governa, não tudo
+   * o que ele declara (ver `chavesDisputadas`). Comparar tudo deixava nenhum atalho aceso logo
+   * depois de clicar em um: os quatro do mapa declaram `campo: maior`, então em fá menor harmônica
+   * o atalho que acabou de ser aplicado aparecia apagado, como se não tivesse pegado.
+   *
+   * A tonalidade continua fora da conta: entra na identidade do atalho só onde os atalhos
+   * discordam dela, e nesse caso compará-la pediria a camada resolvida, que o painel não tem.
+   */
+  const base = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}) }), [def, ctx]);
   return (
     <div className="settings">
       {/* Atalhos nomeados pelo CONTEÚDO, nunca por nível (decisão 100) */}
@@ -1108,11 +1235,7 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, on
           <span>{t('presets.title')}</span>
           <div className="row">
             {def.presets.map(p => {
-              const igual = Object.entries(p.settings).every(([k, v]) => JSON.stringify(values[k]) === JSON.stringify(v));
-              // `igual` olha só os settings: um atalho que diferisse apenas na tonalidade não
-              // acenderia. Nenhum dos de hoje é assim, e acender pela tonalidade pediria comparar
-              // a camada resolvida, que o painel não tem.
-              return <Chip key={p.id} on={igual} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
+              return <Chip key={p.id} on={atalhoEmVigor(def, p, values, base, ctx.params)} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
             })}
           </div>
         </div>
