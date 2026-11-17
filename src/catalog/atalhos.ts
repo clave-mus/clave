@@ -1,3 +1,4 @@
+import type { GlobalParams } from './params';
 import type { SeriesItem, SettingValue } from './types';
 
 /**
@@ -58,4 +59,34 @@ export function settingsDoAtalho(
     else delete novas[k];
   }
   return novas;
+}
+
+/**
+ * **O atalho está em vigor?** — é o que acende o chip no painel.
+ *
+ * A pergunta é "clicar nele mudaria algo?", e só no que ele governa. Comparar tudo o que o atalho
+ * declara deixava **nenhum** atalho aceso logo depois de clicar em um: os quatro do
+ * `mapa-do-braco` declaram `campo: maior`, então em fá menor harmônica o atalho recém-aplicado
+ * aparecia apagado, como se o clique não tivesse pegado.
+ *
+ * **A tonalidade entra na conta quando os atalhos discordam dela**, e isto consertou um defeito que
+ * já existia: em `ouvido-acorde` e em `ouvido-escala` há dois atalhos que diferem *só* na
+ * tonalidade ("todas as qualidades em dó maior" e "todas, tonalidade livre"), e os dois chips
+ * acendiam juntos — a pessoa não tinha como saber qual estava valendo. `pratica` é a camada
+ * resolvida (`ctx.params`); sem ela, a conta volta a ser só dos settings.
+ */
+export function atalhoEmVigor(
+  def: SeriesItem,
+  atalho: NonNullable<SeriesItem['presets']>[number],
+  atual: Record<string, SettingValue>,
+  base: Record<string, SettingValue>,
+  pratica?: GlobalParams,
+): boolean {
+  const { settings, params } = chavesDisputadas(def);
+  const certo = settings
+    .every(k => JSON.stringify(atual[k]) === JSON.stringify(k in atalho.settings ? atalho.settings[k] : base[k]));
+  if (!certo || !params || !pratica || !atalho.params) return certo;
+  // Só o que o atalho declara: o que ele não diz, ele não promete.
+  return Object.entries(atalho.params)
+    .every(([k, v]) => JSON.stringify(pratica[k as keyof GlobalParams]) === JSON.stringify(v));
 }

@@ -5,7 +5,7 @@
 // parâmetros"*. Este arquivo guarda a regra que saiu daí, e os dois defeitos opostos que ela
 // precisa evitar ao mesmo tempo (ver `atalhos.ts`).
 import { describe, expect, it } from 'vitest';
-import { chavesDisputadas, settingsDoAtalho } from './atalhos';
+import { atalhoEmVigor, chavesDisputadas, settingsDoAtalho } from './atalhos';
 import { EXERCISES } from './catalog';
 import { isSeries, type Ctx, type SeriesItem, type SettingValue } from './types';
 import { resolveParams } from './params';
@@ -100,5 +100,36 @@ describe('a regra geral', () => {
   it('a tonalidade só muda onde os atalhos discordam dela', () => {
     expect(chavesDisputadas(EXERCISES.filter(isSeries).find(e => e.id === 'ouvido-campo')!).params).toBe(true);
     expect(chavesDisputadas(EXERCISES.filter(isSeries).find(e => e.id === 'ouvido-celulas')!).params).toBe(false);
+  });
+});
+
+/**
+ * O chip aceso tem de ser **o atalho que está em vigor**, e logo depois do clique. Era o defeito
+ * que a regra nova criou e que a varredura no navegador pegou: comparando tudo o que o atalho
+ * declara, nenhum chip acendia depois de aplicar um — ver `atalhoEmVigor`.
+ */
+describe('o chip aceso', () => {
+  it.each(comAtalhos.map(e => e.id))('%s: depois de clicar, acende esse atalho e só ele', id => {
+    const e = comAtalhos.find(x => x.id === id)!;
+    const base = baseDe(e);
+    for (const a of e.presets!) {
+      const depois = settingsDoAtalho(e, a, base, base);
+      // a tonalidade em vigor depois do clique, que é o que o painel compara
+      const pratica = resolveParams('violao', a.params ?? {});
+      expect(atalhoEmVigor(e, a, depois, base, pratica), `${id}/${a.id} não acendeu`).toBe(true);
+      const acesos = e.presets!.filter(o => atalhoEmVigor(e, o, depois, base, pratica)).map(o => o.id);
+      /**
+       * Mais de um aceso significaria dois atalhos pedindo o mesmo — e foi assim que apareceu o
+       * defeito de `ouvido-acorde` e `ouvido-escala`, em que dois atalhos diferem só na tonalidade
+       * e os dois chips acendiam juntos.
+       */
+      expect(acesos, `${id}/${a.id}`).toEqual([a.id]);
+    }
+  });
+
+  it('a escolha da pessoa fora do que o atalho governa não apaga o chip', () => {
+    const base = baseDe(mapa);
+    const depois = settingsDoAtalho(mapa, atalhoDo(mapa, 'tetrades'), { ...base, campo: 'menor-harmonica', somAudivel: true }, base);
+    expect(atalhoEmVigor(mapa, atalhoDo(mapa, 'tetrades'), depois, base)).toBe(true);
   });
 });

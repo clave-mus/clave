@@ -18,7 +18,7 @@ import RhythmLine from '../components/music/RhythmLine';
 import Staff from '../components/music/Staff';
 import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
-import { chavesDisputadas, settingsDoAtalho } from './atalhos';
+import { atalhoEmVigor, chavesDisputadas, settingsDoAtalho } from './atalhos';
 import { optionResponse, validate } from './validate';
 import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
@@ -1217,6 +1217,16 @@ function AnswerArea({ q, phase, picked, acc, setAcc, onAnswer, naming, montada }
 // ---------------- personalizar ----------------
 function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, onReset }: { def: SeriesItem; ctx: Ctx; values: Record<string, SettingValue>; onChange: (v: Record<string, SettingValue>) => void; onPreset: (p: NonNullable<SeriesItem['presets']>[number]) => void; antes?: ReactNode; depois?: ReactNode; onReset: () => void }) {
   const t = useT();
+  /**
+   * O atalho acende quando **clicar nele não mudaria nada** — e isso é o que ele governa, não tudo
+   * o que ele declara (ver `chavesDisputadas`). Comparar tudo deixava nenhum atalho aceso logo
+   * depois de clicar em um: os quatro do mapa declaram `campo: maior`, então em fá menor harmônica
+   * o atalho que acabou de ser aplicado aparecia apagado, como se não tivesse pegado.
+   *
+   * A tonalidade continua fora da conta: entra na identidade do atalho só onde os atalhos
+   * discordam dela, e nesse caso compará-la pediria a camada resolvida, que o painel não tem.
+   */
+  const base = useMemo(() => ({ ...def.defaults, ...(def.defaultsDo?.(ctx) ?? {}) }), [def, ctx]);
   return (
     <div className="settings">
       {/* Atalhos nomeados pelo CONTEÚDO, nunca por nível (decisão 100) */}
@@ -1225,11 +1235,7 @@ function SettingsPanel({ def, ctx, values, onChange, onPreset, antes, depois, on
           <span>{t('presets.title')}</span>
           <div className="row">
             {def.presets.map(p => {
-              const igual = Object.entries(p.settings).every(([k, v]) => JSON.stringify(values[k]) === JSON.stringify(v));
-              // `igual` olha só os settings: um atalho que diferisse apenas na tonalidade não
-              // acenderia. Nenhum dos de hoje é assim, e acender pela tonalidade pediria comparar
-              // a camada resolvida, que o painel não tem.
-              return <Chip key={p.id} on={igual} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
+              return <Chip key={p.id} on={atalhoEmVigor(def, p, values, base, ctx.params)} onClick={() => onPreset(p)}>{t(p.nome)}</Chip>;
             })}
           </div>
         </div>
