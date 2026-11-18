@@ -30,9 +30,15 @@ export const ouvidoIntervalo: CatalogItem = {
      * (*"ou também como alternativas em alguns casos"*), e nomear é a habilidade que o item já
      * treinava. `notas` é a outra — apontar quais notas soaram, com conferência por contorno.
      */
+    /**
+     * `audiar` é o terceiro, decidido com o Paulo em 18/11: *"ouvir um intervalo harmônico e audiar
+     * as notas separadas"*. As duas notas soam juntas, a pessoa canta cada uma, e os botões de nota
+     * são a conferência — o mesmo par audiar/conferir do estímulo `escrito`, com autoavaliação.
+     */
     { id: 'resposta', label: ctx.t('settings.answerWhere'), type: 'single', options: [
       { id: 'alternativas', label: ctx.t('settings.answerOptions') },
       { id: 'notas', label: ctx.t('settings.answerTheNotes') },
+      { id: 'audiar', label: ctx.t('settings.answerAudiateNotes') },
     ] },
     { id: 'superficie', label: ctx.t('settings.answerSurface'), type: 'single', quando: s => s.resposta === 'notas',
       options: [
@@ -73,9 +79,27 @@ export const ouvidoIntervalo: CatalogItem = {
     { id: 'harmonicos', nome: 'presets.intervalosHarmonicos', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, params: EM_DO_MAIOR },
     { id: 'descendo', nome: 'presets.intervalosDescendo', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'desce' }, params: EM_DO_MAIOR },
     { id: 'livre', nome: 'presets.intervalosLivre', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'misto' }, params: TONALIDADE_LIVRE },
+    // Harmônico é condição, não gosto: audiar notas que já soaram separadas não é exercício nenhum.
+    { id: 'audiar-notas', nome: 'presets.intervalosAudiar', settings: { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas', resposta: 'audiar' }, params: EM_DO_MAIOR },
   ],
-  // Três notas são dois intervalos empilhados, e nomear "o intervalo" deixa de ter resposta única.
-  problema: (s, ctx) => (s.notas === '3' && s.resposta !== 'notas' ? ctx.t('player.tresNotasPedemNotas') : null),
+  problema(s, ctx) {
+    /**
+     * **Audiar as notas pede intervalo harmônico.** Em melódico elas já soaram uma de cada vez, e
+     * não sobra nada para audiar — o exercício seria ouvir e repetir. Recusar e explicar é a
+     * decisão 13; forçar a direção em silêncio seria mudar o parâmetro dela pelas costas.
+     */
+    /**
+     * O estímulo `escrito` **ignora** "onde responder" (ele volta antes, no `make`), então a
+     * exigência de harmônico não vale ali: com a pauta na tela, audiar um intervalo que sobe é o
+     * exercício mais antigo do item. Sem este `estimulo`, trocar para "ler e audiar" com o atalho
+     * novo em vigor e mexer na direção dava "sem pergunta possível" numa configuração que funciona.
+     */
+    if (s.estimulo !== 'escrito' && s.resposta === 'audiar' && s.direcao !== 'juntas') return ctx.t('player.audiarPedeJuntas');
+    // Três notas são dois intervalos empilhados, e nomear "o intervalo" deixa de ter resposta
+    // única. Apontar as notas e audiá-las continuam valendo: ali não se nomeia nada.
+    if (s.notas === '3' && s.resposta === 'alternativas') return ctx.t('player.tresNotasPedemNotas');
+    return null;
+  },
   make(s, ctx) {
     const ids = arr(s.intervalos, ['4', '7']);
     const quantas = s.notas === '3' ? 3 : 2;
@@ -157,6 +181,22 @@ export const ouvidoIntervalo: CatalogItem = {
     /** O nome do que soou: um intervalo, ou os dois empilhados. */
     const nome = degraus.map(x => semitoneName(x, ctx.conv)).join(' + ');
     /**
+     * **Um botão por nota** — e este item era o único de ouvido sem pedaço de som nenhum. O
+     * `ouvido-celulas`, o `reconhecer-padroes-escala` e o `melodia-de-ouvido` já tinham "Nota 1",
+     * "Nota 2"; aqui havia só o botão grande. O Paulo pediu em 18/11, e um botão por nota (em vez
+     * de um que toca as duas em sequência) é o que deixa repetir a nota de baixo até ela entrar.
+     *
+     * **A numeração segue o que se ouviu**: em melódico, "Nota 1" é a primeira que soou — descendo,
+     * portanto, a mais aguda. Em harmônico não há primeira, e aí é de baixo para cima.
+     *
+     * Nomear um intervalo harmônico fica mais fácil com isto à mão, e é escolha dele que os botões
+     * apareçam nos três modos: *"quem está nomeando escolhe não usar"*.
+     */
+    const ouvidas = dir === 'juntas' ? alturas : ordenadas;
+    const porNota = (ms: number[], gabarito = false) => ms.map((m, i) => ({
+      id: `n${i}`, label: ctx.t('quiz.partNote', { n: i + 1 }), groups: [[m]], gabarito,
+    }));
+    /**
      * **Audiar**: as duas notas aparecem na pauta, o contexto toca, e o intervalo fica no botão de
      * conferência — na forma que a configuração pede (juntas ou em sequência).
      *
@@ -183,6 +223,27 @@ export const ouvidoIntervalo: CatalogItem = {
     }
 
     /**
+     * **Audiar as notas**: o intervalo soa junto, a pessoa canta cada nota, e os botões de nota são
+     * a conferência. O julgamento é autoavaliação, e só aparece depois de ouvir — por isso os
+     * pedaços vão marcados como `gabarito`.
+     *
+     * O estímulo `escrito` ganha de propósito quando os dois estão ligados: ali já se audia o
+     * intervalo inteiro a partir da pauta, e é o modo mais antigo.
+     *
+     * `problema()` garante que a direção é "juntas"; o `hint` segue as configurações de qualquer
+     * jeito, para não anunciar "notas juntas" se alguém chamar `make` com uma combinação recusada.
+     */
+    if (s.resposta === 'audiar') {
+      return {
+        prompt: ctx.t('quiz.audiateIntervalNotes'),
+        visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: { groups, partes: porNota(ouvidas, true) },
+        autoplay: true, reveal: nome,
+      };
+    }
+
+    /**
      * Respondendo **as notas**: a superfície acumula tantas alturas quantas soaram, e a conferência
      * é o contorno (§4).
      *
@@ -203,13 +264,13 @@ export const ouvidoIntervalo: CatalogItem = {
         surface: superficie,
         expected: { kind: 'contorno', midis: dir === 'juntas' ? alturas : ordenadas, ordenada: dir !== 'juntas' },
         // Respondendo no braço, o som é do braço: era piano, como ele relatou no `audiar` em 13/11.
-        sound: { groups, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true, reveal: nome,
+        sound: { groups, instrument: noBraco ? vozDoBraco(tuning) : undefined, partes: porNota(ouvidas) }, autoplay: true, reveal: nome,
       };
     }
     return {
       prompt: ctx.t('quiz.earInterval'), visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
       surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: semitoneName(Number(i), ctx.conv) })) }, expected: { kind: 'option', id: String(d) },
-      sound: { groups }, autoplay: true, reveal: nome,
+      sound: { groups, partes: porNota(ouvidas) }, autoplay: true, reveal: nome,
     };
   },
 };

@@ -269,6 +269,14 @@ export interface ParteDoSom {
   id: string;
   label: string;
   groups: number[][];
+  /**
+   * Este pedaço **é o gabarito**, e ouvi-lo libera a autoavaliação (ver `playParte`).
+   *
+   * O id `resposta` já dizia isso, e basta onde o gabarito é um botão só. Em `ouvido-intervalo`
+   * audiando, o gabarito são as notas **uma de cada vez** — um botão por nota, a pedido do Paulo em
+   * 18/11 —, e aí não há um id único para marcar. Qual delas conferir é escolha de quem estuda.
+   */
+  gabarito?: boolean;
 }
 
 export interface Question {

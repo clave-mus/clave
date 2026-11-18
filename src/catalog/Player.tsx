@@ -226,9 +226,10 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
    */
   const playParte = useCallback((question: Question, parte: ParteDoSom) => {
     if (!getState().sound) return;
-    // Ouvir o pedaço `resposta` é o que libera a autoavaliação: julgar antes de conferir é julgar
-    // no vácuo (ver `autoavaliacao`, na área de resposta).
-    if (parte.id === 'resposta') setOuviuAResposta(true);
+    // Ouvir o gabarito é o que libera a autoavaliação: julgar antes de conferir é julgar no vácuo
+    // (ver `autoavaliacao`, na área de resposta). O id `resposta` é a forma curta de dizer isto;
+    // `gabarito` existe para o gabarito que são VÁRIOS botões — ver `ParteDoSom`.
+    if (parte.id === 'resposta' || parte.gabarito) setOuviuAResposta(true);
     pararTudo();
     const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
     setPlaying(true);
