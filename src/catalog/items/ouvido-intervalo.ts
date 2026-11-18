@@ -88,7 +88,13 @@ export const ouvidoIntervalo: CatalogItem = {
      * não sobra nada para audiar — o exercício seria ouvir e repetir. Recusar e explicar é a
      * decisão 13; forçar a direção em silêncio seria mudar o parâmetro dela pelas costas.
      */
-    if (s.resposta === 'audiar' && s.direcao !== 'juntas') return ctx.t('player.audiarPedeJuntas');
+    /**
+     * O estímulo `escrito` **ignora** "onde responder" (ele volta antes, no `make`), então a
+     * exigência de harmônico não vale ali: com a pauta na tela, audiar um intervalo que sobe é o
+     * exercício mais antigo do item. Sem este `estimulo`, trocar para "ler e audiar" com o atalho
+     * novo em vigor e mexer na direção dava "sem pergunta possível" numa configuração que funciona.
+     */
+    if (s.estimulo !== 'escrito' && s.resposta === 'audiar' && s.direcao !== 'juntas') return ctx.t('player.audiarPedeJuntas');
     // Três notas são dois intervalos empilhados, e nomear "o intervalo" deixa de ter resposta
     // única. Apontar as notas e audiá-las continuam valendo: ali não se nomeia nada.
     if (s.notas === '3' && s.resposta === 'alternativas') return ctx.t('player.tresNotasPedemNotas');

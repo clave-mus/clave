@@ -64,6 +64,20 @@ describe('o modo de audiar as notas', () => {
     expect(recusa({ resposta: 'audiar', direcao: 'juntas' })).toBeNull();
   });
 
+  /**
+   * Achado revendo o próprio commit: o guarda olhava só `resposta` e `direcao`, e o estímulo
+   * `escrito` **ignora** "onde responder". Com o atalho novo em vigor, trocar para "ler e audiar" e
+   * mexer na direção dava "sem pergunta possível" numa configuração que funciona — dois cliques.
+   */
+  it('lendo e audiando, a exigência de harmônico não vale', () => {
+    for (const direcao of ['sobe', 'desce', 'juntas', 'misto']) {
+      expect(recusa({ estimulo: 'escrito', resposta: 'audiar', direcao }), direcao).toBeNull();
+      const q = pergunta({ estimulo: 'escrito', resposta: 'audiar', direcao });
+      expect(q.visual.kind, direcao).toBe('staff');
+      expect(q.surface.kind, direcao).toBe('autoavaliacao');
+    }
+  });
+
   it('três notas valem audiando, e dão três botões', () => {
     expect(recusa({ resposta: 'audiar', direcao: 'juntas', notas: '3' })).toBeNull();
     const q = pergunta({ resposta: 'audiar', direcao: 'juntas', notas: '3' });
