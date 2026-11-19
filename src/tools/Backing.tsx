@@ -8,13 +8,33 @@ import {
   type ChordId, type Convention, type Note, type ScaleId,
   type ModoDoCampo,
 } from '../theory/core';
+import { emprestimosDoCampo } from '../theory/campo-harmonico';
 import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
 import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
 import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 
-interface Item { deg: number; type?: ChordId; flat?: boolean }
+/**
+ * **Um compasso da progressão, ou uma marca de modulação.**
+ *
+ * A progressão era uma lista de graus de **um** campo. Empréstimo e modulação quebram essa premissa
+ * de jeitos diferentes, e foi assim que o Paulo decidiu resolver cada um (19/11):
+ *
+ * - **empréstimo** é acorde de fora do campo que não muda o centro: `emp` traz o id da lista curada
+ *   que o `ouvido-campo` já usa — mesma lista, mesmos acordes, motor compartilhado;
+ * - **modulação** é uma **marca** entre dois compassos ("daqui em diante, Fá maior"), como a música
+ *   escreve uma mudança de armadura. Ela não ocupa compasso: tudo depois dela resolve na tonalidade
+ *   nova, e dá para modular quantas vezes quiser.
+ */
+interface Acorde { deg: number; type?: ChordId; flat?: boolean; emp?: string }
+interface Marca { mod: Tonalidade }
+type Item = Acorde | Marca;
+interface Tonalidade { fifths: number; mode: ModoDoCampo }
+const ehMarca = (i: Item): i is Marca => 'mod' in i;
+/** A tônica de uma tonalidade. As três menores partem da relativa menor, como o resto da tela. */
+const tonicaDe = ({ fifths, mode }: Tonalidade): Note =>
+  (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 }));
 type Style = 'rock' | 'balada' | 'samba' | 'swing' | 'shuffle' | 'nenhum';
 interface Preset { id: string; name: MessageKey; mode: ModoDoCampo; items: Item[]; style: Style; bpm: number; tetrads: boolean }
 
@@ -25,6 +45,13 @@ export const PRESETS: Preset[] = [
   { id: 'blues', name: 'backing.presetBlues', mode: 'maior', items: [1, 1, 1, 1, 4, 4, 1, 1, 5, 4, 1, 5].map(d => P(d, '7')), style: 'shuffle', bpm: 88, tetrads: true },
   { id: 'samba', name: 'backing.presetSamba', mode: 'maior', items: [P(1), P(6, '7'), P(2), P(5, '7')], style: 'samba', bpm: 98, tetrads: false },
   { id: 'andaluz', name: 'backing.presetAndalusian', mode: 'menor', items: [P(1), P(7), P(6), P(5, 'maior')], style: 'balada', bpm: 80, tetrads: false },
+  /**
+   * **A modulação, para a coisa não nascer invisível** (pedido dele em 19/11): `ii–V–I` em dó,
+   * marca, e `iiø–V7–i` na relativa menor — a modulação mais comum do repertório. O V da menor é
+   * **empréstimo** (`V`), porque o v diatônico não puxa; então este preset exercita as duas peças
+   * novas de uma vez.
+   */
+  { id: 'modula', name: 'backing.presetModula', mode: 'maior', items: [P(2), P(5, '7'), P(1), P(1), { mod: { fifths: 0, mode: 'menor' } }, P(2), { deg: 5, emp: 'V' }, P(1), P(1)], style: 'balada', bpm: 100, tetrads: true },
 ];
 
 // ---------------- levadas ----------------
@@ -78,21 +105,63 @@ const STYLE_NAMES: Record<Style, MessageKey> = {
 const VOICES: [Voice, MessageKey][] = [['piano', 'voices.piano'], ['pad', 'voices.pad'], ['violao', 'voices.violao'], ['orgao', 'voices.orgao']];
 
 // ---------------- harmonia ----------------
-interface Resolved { root: Note; type: ChordId; symbol: string; roman: string; scales: { id: ScaleId; root: Note; why: MessageKey }[] }
+interface Resolved { root: Note; type: ChordId; symbol: string; roman: string; scales: { id: ScaleId; root: Note; why: MessageKey }[]; tom: Tonalidade }
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 function romanFor(deg: number, type: ChordId, flat: boolean, conv: Convention) {
   const minor = ['menor', 'm7', 'dim', 'm7b5', 'dim7'].includes(type);
   const r = (flat ? '♭' : '') + (minor ? ROMAN[deg - 1].toLowerCase() : ROMAN[deg - 1]);
-  const suf: Partial<Record<ChordId, string>> = { '7': '7', '7M': conv === 'pt' ? '7M' : 'maj7', m7: '7', m7b5: 'ø', dim: '°', dim7: '°7', aum: '+' };
-  return r + (suf[type] ?? '');
+  return r + sufixoRomano(type, conv);
 }
-function resolve(item: Item, tonic: Note, mode: ModoDoCampo, tetrads: boolean, conv: Convention): Resolved {
+function resolve(item: Acorde, tom: Tonalidade, tetrads: boolean, conv: Convention): Resolved {
+  const tonic = tonicaDe(tom);
+  const mode = tom.mode;
   const field = harmonicField(tonic, mode, tetrads, conv);
+  /**
+   * **O empréstimo sai da lista curada** (`emprestimosDoCampo`), e a grafia sai do grau de onde ele
+   * vem: o sexto grau abaixado é Lá♭ em dó maior, nunca Sol♯. É o que `grau`/`alt` guardam.
+   */
+  const emp = item.emp ? emprestimosDoCampo(mode === 'maior' ? 'maior' : 'menor').find(e => e.id === item.emp) : undefined;
+  if (emp) {
+    const base = harmonicField(tonic, mode === 'maior' ? 'maior' : 'menor', tetrads, conv)[emp.grau - 1];
+    const root = emp.alt === 0 ? base.root : { ...base.root, acc: base.root.acc + emp.alt };
+    const type = tetrads ? emp.tetrade : emp.triade;
+    return {
+      root, type, symbol: chordSymbol(root, type, conv), roman: emp.roman + (tetrads ? sufixoRomano(type, conv) : ''),
+      // Empréstimo é acorde de fora: a sugestão de escala segue a mesma porta de "qualidade trocada".
+      scales: suggestScales(root, type, emp.grau, mode, true), tom,
+    };
+  }
   const f = field[item.deg - 1];
   const root = item.flat ? { ...f.root, acc: f.root.acc - 1 } : f.root;
   const type = item.type ?? f.chord;
   const roman = !item.type && !item.flat ? f.roman : romanFor(item.deg, type, !!item.flat || (mode === 'menor' && [3, 6, 7].includes(item.deg)), conv);
-  return { root, type, symbol: chordSymbol(root, type, conv), roman, scales: suggestScales(root, type, item.deg, mode, !!item.type || !!item.flat) };
+  return { root, type, symbol: chordSymbol(root, type, conv), roman, scales: suggestScales(root, type, item.deg, mode, !!item.type || !!item.flat), tom };
+}
+
+/**
+ * **Resolve a progressão inteira, guardando a tonalidade em vigor.**
+ *
+ * As marcas não ocupam compasso: elas só trocam o centro para o que vem depois. `porItem` liga cada
+ * item ao compasso que ele virou (ou `null`, se é marca), para a tela poder desenhar a progressão na
+ * ordem em que foi escrita e ainda saber qual compasso está soando.
+ */
+export function resolverProgressao(items: Item[], inicial: Tonalidade, tetrads: boolean, conv: Convention) {
+  const chords: Resolved[] = [];
+  const porItem: (number | null)[] = [];
+  let tom = inicial;
+  for (const it of items) {
+    if (ehMarca(it)) { tom = it.mod; porItem.push(null); continue; }
+    porItem.push(chords.length);
+    chords.push(resolve(it, tom, tetrads, conv));
+  }
+  // A tonalidade do FIM é onde um acorde novo cairia — é ela que manda nos botões de grau.
+  return { chords, porItem, noFim: tom };
+}
+
+/** O sufixo da cifra romana de uma qualidade (`7`, `ø`, `°7`…). Vive aqui e em `romanFor`. */
+function sufixoRomano(type: ChordId, conv: Convention): string {
+  const suf: Partial<Record<ChordId, string>> = { '7': '7', '7M': conv === 'pt' ? '7M' : 'maj7', m7: '7', m7b5: 'ø', dim: '°', dim7: '°7', aum: '+' };
+  return suf[type] ?? '';
 }
 /**
  * Que escala usar sobre cada acorde. **Só para maior e menor natural**: as sugestões para a menor
@@ -138,6 +207,8 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [running, setRunning] = useState(false);
   const [bar, setBar] = useState(0);
   const [view, setView] = useState<'teclado' | 'braco'>(instrument === 'piano' ? 'teclado' : 'braco');
+  /** Para onde a próxima marca de modulação aponta. Começa na quarta acima, que é a mais comum. */
+  const [destino, setDestino] = useState<Tonalidade>({ fifths: initial.mode === 'maior' ? -1 : -1, mode: initial.mode });
   const clock = useRef<Clock | null>(null);
   const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);  // menor, harmônica e melódica partem da relativa menor
   // O que a pessoa praticou: a tonalidade e o andamento. Só a tonalidade vai em `params`, porque é só
@@ -146,13 +217,28 @@ export default function Backing({ presetId }: { presetId?: string }) {
     // `key.mode` só tem maior e menor; o modo exato (harmônica, melódica) vai nas configurações
     settings: { bpm, campo: mode }, params: { key: { tonic: pc(tonic), mode: mode === 'maior' ? 'maior' : 'menor' } },
   });
-  const chords = useMemo(() => items.map(i => resolve(i, tonic, mode, tetrads, conv)), [items, tonic, mode, tetrads, conv]);
-  const field = useMemo(() => harmonicField(tonic, mode, tetrads, conv), [tonic, mode, tetrads, conv]);
+  const progressao = useMemo(() => resolverProgressao(items, { fifths, mode }, tetrads, conv), [items, fifths, mode, tetrads, conv]);
+  const chords = progressao.chords;
+  /**
+   * **Os botões de grau são do campo em vigor no FIM da progressão**, e não do campo inicial: é ali
+   * que um acorde novo cai. Sem isso, depois de modular para fá maior a tela ofereceria os graus de
+   * dó e escreveria o acorde errado — o botão diria "V" e o acorde sairia no V antigo.
+   */
+  const tomDoFim = progressao.noFim;
+  const tonicaDoFim = useMemo(() => tonicaDe(tomDoFim), [tomDoFim]);
+  const field = useMemo(() => harmonicField(tonicaDoFim, tomDoFim.mode, tetrads, conv), [tonicaDoFim, tomDoFim.mode, tetrads, conv]);
+  /** Os empréstimos do campo em vigor no fim. Só maior e menor têm lista curada — ver `Marca`. */
+  const emprestimos = useMemo(
+    () => (tomDoFim.mode === 'maior' || tomDoFim.mode === 'menor' ? emprestimosDoCampo(tomDoFim.mode) : []),
+    [tomDoFim.mode]);
   const live = useRef({ chords, style, bassOn, compVoice });
   live.current = { chords, style, bassOn, compVoice };
 
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
+
+  /** "Fá maior", "Lá menor" — o nome de uma tonalidade, para a marca e para o painel. */
+  const nomeDoTom = (tom: Tonalidade) => `${noteName(tonicaDe(tom), naming)} ${t(`backing.mode_${tom.mode}`).toLowerCase()}`;
 
   const start = () => {
     if (running) { clock.current?.stop(); setRunning(false); return; }
@@ -225,14 +311,22 @@ export default function Backing({ presetId }: { presetId?: string }) {
       {/* A tinta desta faixa é dela (`--on-area`), não `--ink`: o azul é fixo e a tinta do tema
           inverte, e era por isso que ela ficava ilegível — ver `.backing-faixa` no CSS. */}
       <section className="backing-faixa">
+        {/* A progressão na ordem em que foi escrita: as marcas de modulação aparecem entre os
+            compassos, porque é onde elas agem. `porItem` liga item → compasso que soa. */}
         <div className="row" style={{ alignItems: 'stretch' }}>
-          {chords.map((c, i) => (
-            <button key={i} type="button" onClick={() => setBar(i)}
-              className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''}`}>
-              <div className="cifra">{c.symbol}</div>
-              <div className="roman">{c.roman}</div>
-            </button>
-          ))}
+          {items.map((it, k) => {
+            if (ehMarca(it)) return <span key={k} className="backing-marca">⇢ {nomeDoTom(it.mod)}</span>;
+            const i = progressao.porItem[k] ?? 0;
+            const c = chords[i];
+            if (!c) return null;
+            return (
+              <button key={k} type="button" onClick={() => setBar(i)}
+                className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''}`}>
+                <div className="cifra">{c.symbol}</div>
+                <div className="roman">{c.roman}</div>
+              </button>
+            );
+          })}
         </div>
         <div className="row">
           <Btn onClick={start} tone={running ? 'mu' : undefined}>{t(running ? 'common.stop' : 'common.playPlay')}</Btn>
@@ -248,9 +342,41 @@ export default function Backing({ presetId }: { presetId?: string }) {
       </section>
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
-        <div className="eyebrow">{t(mode === 'maior' ? 'backing.buildYoursMajor' : 'backing.buildYoursMinor', { tonic: noteName(tonic, naming) })}</div>
+        {/* ⚠️ **O enunciado fala da tonalidade do FIM**, como os botões — e isto era um defeito que a
+            tela mostrou: com a modulação carregada, os chips vinham de lá menor e a frase acima
+            deles ainda dizia "dó maior". Rótulo que descreve outra coisa que o controle é pior que
+            rótulo nenhum. */}
+        <div className="eyebrow">{t(tomDoFim.mode === 'maior' ? 'backing.buildYoursMajor' : 'backing.buildYoursMinor', { tonic: noteName(tonicaDoFim, naming) })}</div>
         <div className="row">
           {field.map(d => <Chip key={d.degree} onClick={() => setItems(v => [...v, { deg: d.degree }])}><b>{d.roman}</b> · {d.symbol}</Chip>)}
+        </div>
+        {/* **Os empréstimos vêm da lista curada do `ouvido-campo`** — mesma lista, mesmos acordes.
+            Nas duas menores alteradas não há lista curada, e a fileira não aparece (decisão 13). */}
+        {emprestimos.length > 0 && (
+          <div className="row">
+            <span className="eyebrow">{t('backing.borrowed')}</span>
+            {emprestimos.map(e => {
+              const r = resolve({ deg: e.grau, emp: e.id }, tomDoFim, tetrads, conv);
+              return <Chip key={e.id} onClick={() => setItems(v => [...v, { deg: e.grau, emp: e.id }])}><b>{r.roman}</b> · {r.symbol}</Chip>;
+            })}
+          </div>
+        )}
+        {/* A modulação é uma MARCA: ela entra onde está o fim da progressão e vale do ponto em diante. */}
+        <div className="row">
+          <span className="eyebrow">{t('backing.modulateTo')}</span>
+          <select className="sel" value={destino.fifths} onChange={e => setDestino(d => ({ ...d, fifths: Number(e.target.value) }))}
+            aria-label={t('backing.modulateTo')} id="bk-mod-tom">
+            {Array.from({ length: 13 }, (_, i) => i - 6).map(f2 => (
+              <option key={f2} value={f2}>{noteName(tonicaDe({ fifths: f2, mode: destino.mode }), naming)}</option>
+            ))}
+          </select>
+          <select className="sel" value={destino.mode} onChange={e => setDestino(d => ({ ...d, mode: e.target.value as ModoDoCampo }))}
+            aria-label={t('backing.field')} id="bk-mod-campo">
+            {(['maior', 'menor', 'menor-harmonica', 'menor-melodica'] as const).map(m => (
+              <option key={m} value={m}>{t(`backing.mode_${m}`)}</option>
+            ))}
+          </select>
+          <Btn small tone="ghost" onClick={() => setItems(v => [...v, { mod: destino }])}>{t('backing.addModulation')}</Btn>
         </div>
         <div className="row">
           <Btn small tone="ghost" onClick={() => setItems(v => v.slice(0, -1))} disabled={!items.length}>{t('backing.deleteLast')}</Btn>
@@ -283,3 +409,13 @@ export default function Backing({ presetId }: { presetId?: string }) {
     </div>
   );
 }
+
+/**
+ * A mesma resolução, exportada com os tipos abertos para o teste — que mede empréstimo e modulação
+ * sem montar a tela. Os tipos `Acorde`/`Marca` são internos de propósito: quem escreve progressão é
+ * esta tela.
+ */
+export const resolverProgressaoParaTeste = (
+  items: readonly ({ deg: number; type?: ChordId; flat?: boolean; emp?: string } | { mod: { fifths: number; mode: ModoDoCampo } })[],
+  inicial: { fifths: number; mode: ModoDoCampo }, tetrads: boolean, conv: Convention,
+) => resolverProgressao(items as Item[], inicial, tetrads, conv);

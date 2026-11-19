@@ -88,3 +88,89 @@ describe('bossa nova e baião saíram', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Empréstimos e modulação — 19/11/2026, decidido em sete perguntas.
+//
+// A progressão era uma lista de graus de UM campo. Empréstimo é acorde de fora que não muda o
+// centro; modulação é uma MARCA que troca o centro do ponto em diante. As duas peças resolvem na
+// mesma passada, e é isso que este bloco mede.
+import { resolverProgressaoParaTeste } from './Backing';
+
+const CONV = 'pt' as const;
+const DO_MAIOR = { fifths: 0, mode: 'maior' as const };
+
+describe('os empréstimos saem da lista curada', () => {
+  it('em dó maior, a grafia vem do grau de onde o empréstimo vem', () => {
+    const { chords } = resolverProgressaoParaTeste(
+      [{ deg: 6, emp: 'bVI' }, { deg: 7, emp: 'bVII' }, { deg: 4, emp: 'iv' }, { deg: 2, emp: 'bII' }],
+      DO_MAIOR, false, CONV);
+    // Lá♭, e não Sol♯ — é a razão de `grau`/`alt` existirem
+    expect(chords.map(c => c.symbol)).toEqual(['A♭', 'B♭', 'Fm', 'D♭']);
+    expect(chords.map(c => c.roman)).toEqual(['♭VI', '♭VII', 'iv', '♭II']);
+  });
+
+  it('em lá menor, o vii° é o sétimo grau ELEVADO', () => {
+    const { chords } = resolverProgressaoParaTeste([{ deg: 7, emp: 'viio' }, { deg: 5, emp: 'V' }], { fifths: 0, mode: 'menor' }, false, CONV);
+    // em lá menor o sétimo grau é sol; o empréstimo é sol♯ diminuto
+    expect(chords[0].symbol).toBe('G♯°');
+    expect(chords[1].symbol).toBe('E');
+  });
+
+  it('com tétrades, o empréstimo vem com a sétima da lista', () => {
+    const { chords } = resolverProgressaoParaTeste([{ deg: 7, emp: 'bVII' }, { deg: 4, emp: 'iv' }], DO_MAIOR, true, CONV);
+    // o ♭VII do campo maior é DOMINANTE (o backdoor), e o iv é menor com sétima
+    expect(chords.map(c => c.symbol)).toEqual(['B♭7', 'Fm7']);
+  });
+});
+
+describe('a modulação é uma marca', () => {
+  it('não ocupa compasso, e troca o centro do ponto em diante', () => {
+    const { chords, porItem, noFim } = resolverProgressaoParaTeste(
+      [{ deg: 1 }, { mod: { fifths: -1, mode: 'maior' } }, { deg: 1 }, { deg: 5 }],
+      DO_MAIOR, false, CONV);
+    // três compassos, quatro itens
+    expect(chords).toHaveLength(3);
+    expect(porItem).toEqual([0, null, 1, 2]);
+    // o primeiro I é dó; depois da marca, o I é FÁ e o V é dó
+    expect(chords.map(c => c.symbol)).toEqual(['C', 'F', 'C']);
+    // e o romano é relativo à tonalidade em vigor: o dó do fim é o V de fá, não o I
+    expect(chords.map(c => c.roman)).toEqual(['I', 'I', 'V']);
+    expect(noFim).toEqual({ fifths: -1, mode: 'maior' });
+  });
+
+  it('dá para modular várias vezes, e a última manda no fim', () => {
+    const { chords, noFim } = resolverProgressaoParaTeste(
+      [{ mod: { fifths: 2, mode: 'maior' } }, { deg: 1 }, { mod: { fifths: 0, mode: 'menor' } }, { deg: 1 }],
+      DO_MAIOR, false, CONV);
+    expect(chords.map(c => c.symbol)).toEqual(['D', 'Am']);
+    expect(noFim.mode).toBe('menor');
+  });
+
+  it('cada compasso sabe em que tonalidade está', () => {
+    const { chords } = resolverProgressaoParaTeste(
+      [{ deg: 1 }, { mod: { fifths: 0, mode: 'menor' } }, { deg: 1 }], DO_MAIOR, false, CONV);
+    expect(chords[0].tom).toEqual(DO_MAIOR);
+    expect(chords[1].tom).toEqual({ fifths: 0, mode: 'menor' });
+  });
+
+  it('sem marca nenhuma, nada muda — a progressão de sempre', () => {
+    const { chords, porItem, noFim } = resolverProgressaoParaTeste([{ deg: 1 }, { deg: 5 }, { deg: 6 }, { deg: 4 }], DO_MAIOR, false, CONV);
+    expect(chords.map(c => c.symbol)).toEqual(['C', 'G', 'Am', 'F']);
+    expect(porItem).toEqual([0, 1, 2, 3]);
+    expect(noFim).toEqual(DO_MAIOR);
+  });
+});
+
+describe('o preset que mostra as duas peças', () => {
+  it('existe, modula para a relativa menor e usa o V emprestado', () => {
+    const p = PRESETS.find(x => x.id === 'modula');
+    expect(p, 'o preset de modulação não existe').toBeTruthy();
+    const { chords, noFim } = resolverProgressaoParaTeste(p!.items, { fifths: 0, mode: p!.mode }, p!.tetrads, CONV);
+    expect(noFim).toEqual({ fifths: 0, mode: 'menor' });
+    // o ii–V–I de dó e, depois da marca, o iiø–V7–i de lá menor
+    expect(chords.map(c => c.symbol)).toEqual(['Dm7', 'G7', 'C7M', 'C7M', 'Bm7(♭5)', 'E7', 'Am7', 'Am7']);
+    // o V da menor é maior: é o empréstimo, não o v diatônico
+    expect(chords[5].type).toBe('7');
+  });
+});
