@@ -15,7 +15,7 @@ import { useToolLog } from './common';
 import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 
 interface Item { deg: number; type?: ChordId; flat?: boolean }
-type Style = 'rock' | 'balada' | 'bossa' | 'samba' | 'swing' | 'shuffle' | 'baiao' | 'nenhum';
+type Style = 'rock' | 'balada' | 'samba' | 'swing' | 'shuffle' | 'nenhum';
 interface Preset { id: string; name: MessageKey; mode: ModoDoCampo; items: Item[]; style: Style; bpm: number; tetrads: boolean }
 
 const P = (deg: number, type?: ChordId, flat?: boolean): Item => ({ deg, type, flat });
@@ -23,28 +23,57 @@ export const PRESETS: Preset[] = [
   { id: 'pop', name: 'backing.presetPop', mode: 'maior', items: [P(1), P(5), P(6), P(4)], style: 'rock', bpm: 96, tetrads: false },
   { id: 'ii-v-i', name: 'backing.presetIiVI', mode: 'maior', items: [P(2), P(5), P(1), P(1)], style: 'swing', bpm: 132, tetrads: true },
   { id: 'blues', name: 'backing.presetBlues', mode: 'maior', items: [1, 1, 1, 1, 4, 4, 1, 1, 5, 4, 1, 5].map(d => P(d, '7')), style: 'shuffle', bpm: 88, tetrads: true },
-  { id: 'bossa', name: 'backing.presetBossa', mode: 'maior', items: [P(1), P(6, '7'), P(2), P(5)], style: 'bossa', bpm: 128, tetrads: true },
   { id: 'samba', name: 'backing.presetSamba', mode: 'maior', items: [P(1), P(6, '7'), P(2), P(5, '7')], style: 'samba', bpm: 98, tetrads: false },
   { id: 'andaluz', name: 'backing.presetAndalusian', mode: 'menor', items: [P(1), P(7), P(6), P(5, 'maior')], style: 'balada', bpm: 80, tetrads: false },
-  { id: 'baiao', name: 'backing.presetBaiao', mode: 'maior', items: [P(1, '7'), P(1, '7'), P(7, 'maior', true), P(1, '7')], style: 'baiao', bpm: 104, tetrads: false },
 ];
 
 // ---------------- levadas ----------------
-interface Groove { grid: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[]; bass: [number, number, number][]; comp: [number, number][] }
-// bass: [passo, grau (0 tônica, 7 quinta, 12 oitava, -1 = nota de aproximação), duração em passos]
-const GROOVES: Record<Style, Groove> = {
-  rock: { grid: 16, kick: [0, 8, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 0, 2], [2, 0, 2], [4, 0, 2], [6, 0, 2], [8, 0, 2], [10, 0, 2], [12, 0, 2], [14, 7, 2]], comp: [[0, 6], [6, 2], [8, 8]] },
-  balada: { grid: 16, kick: [0, 7, 10], snare: [8], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 0, 6], [6, 0, 2], [8, 7, 8]], comp: [[0, 16]] },
-  bossa: { grid: 16, kick: [0, 6, 8, 14], snare: [], hat: [0, 2, 4, 6, 8, 10, 12, 14], rim: [0, 3, 6, 10, 12], bass: [[0, 0, 6], [6, 7, 2], [8, 7, 6], [14, 0, 2]], comp: [[0, 3], [3, 3], [6, 4], [10, 2], [12, 4]] },
-  samba: { grid: 16, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 0, 3], [3, 7, 1], [4, 7, 4], [8, 0, 3], [11, 7, 1], [12, 7, 4]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]] },
-  baiao: { grid: 16, kick: [0, 6, 8], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], rim: [2, 6, 10, 14], bass: [[0, 0, 6], [6, 0, 2], [8, 7, 8]], comp: [[0, 3], [6, 2], [8, 4], [14, 2]] },
-  swing: { grid: 12, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 0, 3], [3, 4, 3], [6, 7, 3], [9, -1, 3]], comp: [[0, 3], [5, 4]] },
-  shuffle: { grid: 12, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 0, 2], [2, 0, 1], [3, 4, 2], [5, 4, 1], [6, 7, 2], [8, 7, 1], [9, 9, 2], [11, 7, 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
-  nenhum: { grid: 16, kick: [], snare: [], hat: [], bass: [[0, 0, 16]], comp: [[0, 16]] },
+interface Groove { grid: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[]; bass: [number, GrauDoBaixo, number][]; comp: [number, number][] }
+/**
+ * **O baixo fala por nome**, e não por semitom — e isto é o conserto do defeito que o Paulo ouviu em
+ * 19/11: *"as linhas de baixo estão sempre meio estranhas no acorde vii diminuto"*.
+ *
+ * O número `7` queria dizer "a quinta" e era somado **cru** à fundamental: num vii diminuto a quinta
+ * é **diminuta** (6 semitons), então o baixo tocava um fá♯ sobre um Si°, que não é nota do acorde.
+ * A terça já saía do acorde (`degs[1]`); a quinta, não. Com nome, `quinta` pergunta ao acorde.
+ *
+ * `quintaGrave` é a quinta **abaixo** da fundamental — pedido dele para o samba, e é como se toca.
+ */
+export type GrauDoBaixo = 'raiz' | 'terca' | 'quinta' | 'quintaGrave' | 'sexta' | 'aprox';
+export const GROOVES: Record<Style, Groove> = {
+  rock: { grid: 16, kick: [0, 8, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 2], [2, 'raiz', 2], [4, 'raiz', 2], [6, 'raiz', 2], [8, 'raiz', 2], [10, 'raiz', 2], [12, 'raiz', 2], [14, 'quinta', 2]], comp: [[0, 6], [6, 2], [8, 8]] },
+  balada: { grid: 16, kick: [0, 7, 10], snare: [8], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 6], [6, 'raiz', 2], [8, 'quinta', 8]], comp: [[0, 16]] },
+  /**
+   * **O samba**: a quinta é a **grave** e as notas são semicolcheias pontuadas (1,5 passo) — as duas
+   * coisas que ele pediu em 19/11. A colocação é a de antes (0, 3, 4, 8, 11, 12), que é a
+   * antecipação característica: a nota chega no "a" do tempo e é repicada no tempo.
+   */
+  samba: { grid: 16, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]] },
+  swing: { grid: 12, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 'raiz', 3], [3, 'terca', 3], [6, 'quinta', 3], [9, 'aprox', 3]], comp: [[0, 3], [5, 4]] },
+  shuffle: { grid: 12, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 'raiz', 2], [2, 'raiz', 1], [3, 'terca', 2], [5, 'terca', 1], [6, 'quinta', 2], [8, 'quinta', 1], [9, 'sexta', 2], [11, 'quinta', 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
+  nenhum: { grid: 16, kick: [], snare: [], hat: [], bass: [[0, 'raiz', 16]], comp: [[0, 16]] },
 };
+
+/**
+ * A altura de um grau do baixo. **A quinta e a terça vêm do acorde**, não de uma soma fixa: é o que
+ * faz o vii diminuto soar como ele é.
+ */
+export function alturaDoBaixo(grau: GrauDoBaixo, raiz: number, type: ChordId, proximaRaiz: number): number {
+  const doAcorde = (i: number) => CHORDS[type].degs[i]?.[1] ?? [0, 4, 7][i];
+  switch (grau) {
+    case 'raiz': return raiz;
+    case 'terca': return raiz + doAcorde(1);
+    case 'quinta': return raiz + doAcorde(2);
+    // Uma oitava abaixo da quinta do acorde: num diminuto são 6 semitons, e a grave fica a 6 abaixo.
+    case 'quintaGrave': return raiz + doAcorde(2) - 12;
+    case 'sexta': return raiz + 9;
+    // Aproximação cromática da fundamental seguinte, por cima ou por baixo.
+    case 'aprox': return proximaRaiz + (Math.random() < 0.5 ? 1 : -1);
+  }
+}
 const STYLE_NAMES: Record<Style, MessageKey> = {
-  rock: 'backing.styleRock', balada: 'backing.styleBallad', bossa: 'backing.styleBossa', samba: 'backing.styleSamba',
-  baiao: 'backing.styleBaiao', swing: 'backing.styleSwing', shuffle: 'backing.styleShuffle', nenhum: 'backing.styleNone',
+  rock: 'backing.styleRock', balada: 'backing.styleBallad', samba: 'backing.styleSamba',
+  swing: 'backing.styleSwing', shuffle: 'backing.styleShuffle', nenhum: 'backing.styleNone',
 };
 const VOICES: [Voice, MessageKey][] = [['piano', 'voices.piano'], ['pad', 'voices.pad'], ['violao', 'voices.violao'], ['orgao', 'voices.orgao']];
 
@@ -141,11 +170,10 @@ export default function Backing({ presetId }: { presetId?: string }) {
       const hit = (arr: number[] | undefined, k: Drum, v = 1) => arr?.includes(step) && drum(k, t, v);
       hit(g.kick, 'bumbo'); hit(g.snare, 'caixa', st === 'samba' ? 0.45 : 1); hit(g.hat, 'chimbal', step % (g.grid / 4) === 0 ? 0.9 : 0.55); hit(g.rim, 'aro', 0.8);
       const rootMidi = 36 + mod(pc(ch.root) - 36, 12);
-      if (bo) g.bass.forEach(([s, semi, d]) => {
+      if (bo) g.bass.forEach(([s, grau, d]) => {
         if (s !== step) return;
-        let m = rootMidi + (semi === 4 ? CHORDS[ch.type].degs[1][1] : semi === 9 ? 9 : semi);
-        if (semi === -1) { const nr = 36 + mod(pc(nextCh.root) - 36, 12); m = nr + (Math.random() < 0.5 ? 1 : -1); }
-        tone(m, t, d * sd * 0.92, 'baixo', 0.9);
+        const proxima = 36 + mod(pc(nextCh.root) - 36, 12);
+        tone(alturaDoBaixo(grau, rootMidi, ch.type, proxima), t, d * sd * 0.92, 'baixo', 0.9);
       });
       g.comp.forEach(([s, d]) => s === step && voice(ch.root, ch.type).forEach(m => tone(m, t, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
     });
@@ -194,15 +222,15 @@ export default function Backing({ presetId }: { presetId?: string }) {
         </div>
       </section>
 
-      <section style={{ background: 'var(--co)', padding: 20, display: 'grid', gap: 16 }}>
+      {/* A tinta desta faixa é dela (`--on-area`), não `--ink`: o azul é fixo e a tinta do tema
+          inverte, e era por isso que ela ficava ilegível — ver `.backing-faixa` no CSS. */}
+      <section className="backing-faixa">
         <div className="row" style={{ alignItems: 'stretch' }}>
           {chords.map((c, i) => (
-            <button key={i} type="button" onClick={() => setBar(i)} style={{
-              border: 0, cursor: 'pointer', minWidth: 84, padding: '10px 12px', textAlign: 'left',
-              background: running && i === bar ? 'var(--mu)' : i === bar ? 'var(--cream)' : 'rgba(0,0,0,.28)', color: i === bar ? 'var(--bk)' : 'var(--cream)',
-            }}>
-              <div style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 30, lineHeight: 1 }}>{c.symbol}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>{c.roman}</div>
+            <button key={i} type="button" onClick={() => setBar(i)}
+              className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''}`}>
+              <div className="cifra">{c.symbol}</div>
+              <div className="roman">{c.roman}</div>
             </button>
           ))}
         </div>
@@ -211,9 +239,9 @@ export default function Backing({ presetId }: { presetId?: string }) {
           <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 30 }}>♩ = {bpm}</span>
           <input className="range" style={{ maxWidth: 220 }} type="range" min={50} max={220} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="bk-bpm" />
         </div>
-        <div className="row"><span className="eyebrow" style={{ color: 'var(--cream)' }}>{t('backing.groove')}</span>{(Object.keys(STYLE_NAMES) as Style[]).map(s => <Chip key={s} on={style === s} onClick={() => changeStyle(s)}>{t(STYLE_NAMES[s])}</Chip>)}</div>
+        <div className="row"><span className="eyebrow">{t('backing.groove')}</span>{(Object.keys(STYLE_NAMES) as Style[]).map(s => <Chip key={s} on={style === s} onClick={() => changeStyle(s)}>{t(STYLE_NAMES[s])}</Chip>)}</div>
         <div className="row">
-          <span className="eyebrow" style={{ color: 'var(--cream)' }}>{t('backing.chordSound')}</span>
+          <span className="eyebrow">{t('backing.chordSound')}</span>
           {VOICES.map(([v, l]) => <Chip key={v} on={compVoice === v} onClick={() => setCompVoice(v)}>{t(l)}</Chip>)}
           <Chip on={bassOn} onClick={() => setBassOn(v => !v)}>{t('backing.bass')}</Chip>
         </div>

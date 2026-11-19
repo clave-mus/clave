@@ -49,6 +49,20 @@
   --err-strong: #822921;
 
   /* --- cores das cinco áreas: família quente do campo, com duas âncoras frias --- */
+  /**
+   * ⚠️ **Dentro de uma faixa colorida, a tinta é PRÓPRIA da faixa** — `--on-area`, e não `--ink`.
+   *
+   * Medido em 19/11, do relato dele no celular (*"a interface de fundo azul está ilegível no modo
+   * claro"*): com `--ink`, o contraste na faixa azul do backing era **3,15:1 no claro e 2,16:1 no
+   * escuro** — ilegível nos dois, porque a faixa tem cor fixa e a tinta inverte com o tema. Com
+   * tinta própria: 5,40:1 e 6,50:1.
+   *
+   * `--area-slot` é o fundo de um botão dentro da faixa, e inverte pela mesma razão: escurecer 28%
+   * funciona sobre o azul escuro do claro (8,45:1) e arruina o azul claro do escuro (3,58:1), onde
+   * o que serve é clarear 18% (7,87:1).
+   */
+  --on-area: #fdf8f1;
+  --area-slot: rgba(0, 0, 0, 0.28);
   --area-1: #c14a2b;
   --area-2: #b07a1e;
   --area-3: #3f6b8a;
@@ -117,6 +131,8 @@
     --err-ink: #1a1012;
     --err-quiet: #3a2220;
     --err-strong: #f09a92;
+    --on-area: #14202b;
+    --area-slot: rgba(255, 255, 255, 0.18);
     --area-1: #f08a4b;
     --area-2: #e0b256;
     --area-3: #7aa8c8;
@@ -145,6 +161,8 @@
   --err-ink: #1a1012;
   --err-quiet: #3a2220;
   --err-strong: #f09a92;
+  --on-area: #14202b;
+  --area-slot: rgba(255, 255, 255, 0.18);
   --area-1: #f08a4b;
   --area-2: #e0b256;
   --area-3: #7aa8c8;
@@ -985,3 +1003,22 @@ select.sel {
 .mapa-montada { display: flex; align-items: baseline; gap: 10px; justify-content: center; }
 .mapa-montada b { font-family: var(--display); font-size: 22px; letter-spacing: -0.02em; }
 .mapa-montada .muted { font-size: 12px; }
+
+/**
+ * **A faixa colorida do backing**: fundo de área com **tinta própria**, e não `--ink`.
+ *
+ * Era estilo em linha no componente (`background: var(--co)` com textos em `var(--cream)`), e
+ * `--cream` é apelido de `--ink` — então a tinta invertia com o tema enquanto o azul ficava parado.
+ * Medido: 3,15:1 no claro e 2,16:1 no escuro. Ver `--on-area`.
+ */
+.backing-faixa { background: var(--area-3); color: var(--on-area); padding: 20px; display: grid; gap: 16px; }
+.backing-faixa .eyebrow { color: var(--on-area); opacity: 0.78; }
+/* O acorde do compasso: slot dentro da faixa. O aceso inverte (tinta da faixa como fundo). */
+.backing-compasso {
+  border: 0; cursor: pointer; min-width: 84px; padding: 10px 12px; text-align: left; font: inherit;
+  background: var(--area-slot); color: var(--on-area); border-radius: var(--r-sm);
+}
+.backing-compasso.aqui { background: var(--on-area); color: var(--area-3); }
+.backing-compasso.soando { background: var(--accent); color: var(--accent-ink, var(--ground)); }
+.backing-compasso .cifra { font-family: var(--display); font-weight: 900; font-size: 30px; line-height: 1; }
+.backing-compasso .roman { font-size: 13px; font-weight: 600; opacity: 0.85; }
