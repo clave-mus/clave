@@ -394,3 +394,70 @@ describe('a progressão guardada', () => {
     expect(lerGuardado(JSON.stringify({ ...bom, style: 'baiao' }))).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Micro-tempo do samba — 19/11/2026, pedido dele com os números: *"um atraso sutil (de uns 12 ms em
+// 120 bpm) na segunda semicolcheia e adiantamento na terceira e quarta (de uns 20 ms em 120 bpm)"*.
+//
+// Guardado em **fração da semicolcheia**, e não em milissegundos: assim o balanço é o mesmo balanço
+// em qualquer andamento. O teste confere os milissegundos nos dois andamentos que importam.
+import { desvioDoPasso } from './Backing';
+
+describe('o micro-tempo', () => {
+  /** A duração de um passo (semicolcheia), em segundos. */
+  const sd = (bpm: number, g = GROOVES.samba) => 60 / bpm / (g.grid / g.tempos);
+  const ms = (bpm: number, step: number) => Math.round(desvioDoPasso(GROOVES.samba, step, sd(bpm)) * 1000 * 10) / 10;
+
+  it('a 120 bpm dá os números que ele pediu', () => {
+    expect(ms(120, 0)).toBe(0);     // a que cai no tempo não se mexe
+    expect(ms(120, 1)).toBe(12);    // a segunda atrasa 12 ms
+    expect(ms(120, 2)).toBe(-20);   // a terceira adianta 20 ms
+    expect(ms(120, 3)).toBe(-20);   // a quarta também
+  });
+
+  it('e o mesmo balanço vale em outro andamento, proporcional', () => {
+    // a 98 bpm (o andamento do preset) a semicolcheia é maior, e o desvio acompanha
+    expect(ms(98, 1)).toBeCloseTo(14.7, 1);
+    expect(ms(98, 2)).toBeCloseTo(-24.5, 1);
+    // a 160 bpm ele encolhe
+    expect(ms(160, 1)).toBeCloseTo(9, 1);
+  });
+
+  it('vale em todos os quatro tempos do compasso, e não só no primeiro', () => {
+    for (const tempo of [0, 1, 2, 3]) {
+      const base = tempo * 4;
+      expect(ms(120, base), `tempo ${tempo + 1}`).toBe(0);
+      expect(ms(120, base + 1), `tempo ${tempo + 1}`).toBe(12);
+      expect(ms(120, base + 2), `tempo ${tempo + 1}`).toBe(-20);
+      expect(ms(120, base + 3), `tempo ${tempo + 1}`).toBe(-20);
+    }
+  });
+
+  /**
+   * **O pulso não anda.** O desvio é sempre relativo ao tempo nominal do passo, nunca acumulado: a
+   * semicolcheia que cai no tempo fica em zero nos quatro tempos. É o que separa balanço de relógio
+   * errado — acumulando, o compasso ficaria mais curto ou mais longo a cada volta.
+   */
+  it('o tempo forte continua exatamente no lugar', () => {
+    for (const bpm of [50, 88, 120, 220]) {
+      for (const tempo of [0, 1, 2, 3]) expect(ms(bpm, tempo * 4), `${bpm} bpm`).toBe(0);
+    }
+  });
+
+  /**
+   * O relógio agenda com 80 ms de antecedência (`Clock.start`): um adiantamento maior que isso cairia
+   * no passado e o som não sairia. O pior caso é o andamento mais lento que o controle permite.
+   */
+  it('o adiantamento nunca cai no passado: cabe na antecedência do relógio', () => {
+    const pior = Math.max(...[0, 1, 2, 3].map(p => Math.abs(desvioDoPasso(GROOVES.samba, p, sd(50)))));
+    expect(pior).toBeLessThan(0.08);
+    expect(Math.round(pior * 1000)).toBe(48);
+  });
+
+  it('as outras levadas não têm micro-tempo, e seguem retas', () => {
+    for (const [nome, g] of Object.entries(GROOVES)) {
+      if (nome === 'samba') continue;
+      for (let p = 0; p < g.grid; p++) expect(desvioDoPasso(g, p, 0.125), `${nome}/${p}`).toBe(0);
+    }
+  });
+});

@@ -69,7 +69,35 @@ export const PRESETS: Preset[] = [
  * menos na valsa**, que é 3. Antes `tempos` não existia e o relógio fazia `grid / 4` em todo lugar:
  * com isso, compasso ternário era impossível de representar (decisão dele em 19/11).
  */
-interface Groove { grid: number; tempos: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[]; bass: [number, GrauDoBaixo, number][]; comp: [number, number][] }
+interface Groove {
+  grid: number; tempos: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[];
+  bass: [number, GrauDoBaixo, number][]; comp: [number, number][];
+  /**
+   * **Micro-tempo**: o deslocamento de cada semicolcheia dentro do tempo, em **fração da
+   * semicolcheia** — um valor por subdivisão, começando na que cai no tempo.
+   *
+   * Pedido dele em 19/11 para o samba: *"um atraso sutil (de uns 12 ms em 120 bpm) na segunda
+   * semicolcheia e adiantamento na terceira e quarta (de uns 20 ms em 120 bpm)"*.
+   *
+   * **Em fração, e não em milissegundos**, e esta é a escolha que eu tomei: a 120 bpm a semicolcheia
+   * tem 125 ms, então 12 ms são 9,6% dela e 20 ms são 16%. Guardando a fração, o balanço continua o
+   * mesmo balanço em qualquer andamento (a 98 bpm do preset dá 14,7 e 24,5 ms); guardando os
+   * milissegundos, ele encolheria proporcionalmente ao acelerar e sumiria no andamento rápido. Se
+   * você quiser os milissegundos fixos, é trocar o multiplicador por um número.
+   *
+   * ⚠️ O deslocamento é **sempre relativo ao tempo nominal** do passo, nunca acumulado: a primeira
+   * semicolcheia de cada tempo fica em zero, então o pulso não anda. É o que separa balanço de
+   * relógio errado.
+   */
+  micro?: readonly number[];
+}
+
+/** Quanto este passo se desloca, em segundos. `sd` é a duração de um passo. */
+export function desvioDoPasso(g: Pick<Groove, 'grid' | 'tempos' | 'micro'>, step: number, sd: number): number {
+  if (!g.micro) return 0;
+  const porTempo = g.grid / g.tempos;
+  return (g.micro[step % porTempo] ?? 0) * sd;
+}
 /**
  * **O baixo fala por nome**, e não por semitom — e isto é o conserto do defeito que o Paulo ouviu em
  * 19/11: *"as linhas de baixo estão sempre meio estranhas no acorde vii diminuto"*.
@@ -89,7 +117,7 @@ export const GROOVES: Record<Style, Groove> = {
    * coisas que ele pediu em 19/11. A colocação é a de antes (0, 3, 4, 8, 11, 12), que é a
    * antecipação característica: a nota chega no "a" do tempo e é repicada no tempo.
    */
-  samba: { grid: 16, tempos: 4, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]] },
+  samba: { grid: 16, tempos: 4, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]], micro: [0, 0.096, -0.16, -0.16] },
   swing: { grid: 12, tempos: 4, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 'raiz', 3], [3, 'terca', 3], [6, 'quinta', 3], [9, 'aprox', 3]], comp: [[0, 3], [5, 4]] },
   shuffle: { grid: 12, tempos: 4, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 'raiz', 2], [2, 'raiz', 1], [3, 'terca', 2], [5, 'terca', 1], [6, 'quinta', 2], [8, 'quinta', 1], [9, 'sexta', 2], [11, 'quinta', 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
   /**
@@ -495,15 +523,25 @@ export default function Backing({ presetId }: { presetId?: string }) {
       const sd = 60 / (clock.current?.bpm ?? bpm) / (g.grid / g.tempos);
       // o destaque troca quando o ACORDE troca, não a cada compasso
       if (pos === janelas[bi].inicio) atTime(t, () => setBar(bi));
-      const hit = (arr: number[] | undefined, k: Drum, v = 1) => arr?.includes(step) && drum(k, t, v);
+      /**
+       * **O micro-tempo desloca tudo o que soa neste passo** — bateria, baixo e acorde juntos. É o
+       * ponto: o balanço é da seção rítmica inteira, e deslocar só um instrumento soaria como erro
+       * de quem está tocando, não como levada.
+       *
+       * O relógio agenda com antecedência (ver `Clock.start`), então um adiantamento de poucos
+       * milissegundos continua no futuro — medido, o maior desvio possível (16% da semicolcheia a
+       * 50 bpm) são 48 ms, dentro dos 80 ms de antecedência.
+       */
+      const tq = t + desvioDoPasso(g, step, sd);
+      const hit = (arr: number[] | undefined, k: Drum, v = 1) => arr?.includes(step) && drum(k, tq, v);
       hit(g.kick, 'bumbo'); hit(g.snare, 'caixa', st === 'samba' ? 0.45 : 1); hit(g.hat, 'chimbal', step % (g.grid / g.tempos) === 0 ? 0.9 : 0.55); hit(g.rim, 'aro', 0.8);
       const rootMidi = 36 + mod(pc(ch.root) - 36, 12);
       if (bo) g.bass.forEach(([s, grau, d]) => {
         if (s !== step) return;
         const proxima = 36 + mod(pc(nextCh.root) - 36, 12);
-        tone(alturaDoBaixo(grau, rootMidi, ch.type, proxima), t, d * sd * 0.92, 'baixo', 0.9);
+        tone(alturaDoBaixo(grau, rootMidi, ch.type, proxima), tq, d * sd * 0.92, 'baixo', 0.9);
       });
-      g.comp.forEach(([s, d]) => s === step && ch.vozes.forEach(m => tone(m, t, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
+      g.comp.forEach(([s, d]) => s === step && ch.vozes.forEach(m => tone(m, tq, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
     });
     clock.current = c;
     c.start();
