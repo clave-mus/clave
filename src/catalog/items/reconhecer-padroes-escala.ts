@@ -1,6 +1,5 @@
 import { ALL_SCALES, plain, regiao, scaleName, shuffle, tonicaNaRegiao } from '../helpers';
 import type { ScaleId } from '../helpers';
-import { RASCUNHO } from '../publicacao';
 import type { CatalogItem } from '../types';
 import { acordeDoCampo, escalaDoCampo, lerPadrao, posicoesDoPadrao, rotulo, sortearPadrao } from '../../theory/padrao-de-escala';
 import { CADENCIAS, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
@@ -44,7 +43,7 @@ export const reconhecerPadroesEscala: CatalogItem = {
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
-  publicacao: RASCUNHO,
+  publicacao: { estado: 'publicado', revisadoEm: '2026-11-19', por: 'Paulo' },
   settings: ctx => [
     { id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
     { id: 'tamanho', label: ctx.t('settings.patternSize'), type: 'single',

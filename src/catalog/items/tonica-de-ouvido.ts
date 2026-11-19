@@ -3,7 +3,6 @@ import {
   ALTERADOS, EXTENSOES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, comMesmoNucleo, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
 } from '../helpers';
-import { RASCUNHO } from '../publicacao';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
 
@@ -51,7 +50,7 @@ export const tonicaDeOuvido: CatalogItem = {
   contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions'],
   kind: 'serie', requires: {}, validation: ['self_report'], mobile: true,
   respeita: ['key'],
-  publicacao: RASCUNHO,
+  publicacao: { estado: 'publicado', revisadoEm: '2026-11-19', por: 'Paulo' },
   settings: ctx => [
     /**
      * **Quais famílias de acorde entram** — por família e não uma a uma, porque são 25 qualidades e
