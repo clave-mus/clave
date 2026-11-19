@@ -523,7 +523,17 @@ export default function Backing({ presetId }: { presetId?: string }) {
      */
     const atraso = contagem ? 2 * g0.grid : 0;
     const c = new Clock(bpm, g0.grid / g0.tempos, (i, t) => {
-      const { chords: cs, style: st, bassOn: bo, compVoice: cv, acordesOn: ao } = live.current;
+      const { chords: cs, style: st, bassOn: bo, compVoice: cv } = live.current;
+      /**
+       * ⚠️ **Ausente quer dizer LIGADO**, e não desligado. O Paulo relatou em 19/11 que os acordes
+       * tinham parado de soar com o chip aceso — e a causa era recarga quente de módulo: o relógio
+       * já vinha do código novo (com o interruptor) e a `live` ainda do antigo (sem ele), então
+       * `acordesOn` chegava `undefined` e o `if` calava tudo.
+       *
+       * O conserto dele é recarregar a página, mas o padrão certo é este: quando não se sabe, a
+       * ferramenta **soa**. Vale também para configuração guardada antes de o interruptor existir.
+       */
+      const ao = live.current.acordesOn !== false;
       const g = GROOVES[st];
       if (!cs.length) return;
       if (i < atraso) {
