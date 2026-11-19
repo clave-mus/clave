@@ -174,16 +174,33 @@ describe('catálogo de exercícios', () => {
     });
   });
 
+  /**
+   * **Na configuração padrão, nenhum exercício sobrescreve o volume nem o timbre global** — o
+   * timbre vem do instrumento do som.
+   *
+   * ⚠️ **Duas correções de 19/11, e as duas são para o teste espelhar o Player.** Ele ganhou um
+   * seletor de timbre em `ouvido-intervalo` (pedido do Paulo), e o guarda acusou — corretamente:
+   * uma configuração com `present` que devolve `voice` **sobrescreve** o timbre do perfil.
+   *
+   * O que faltava aqui era o que o Player sempre fez: (1) só as configurações **visíveis** entram
+   * na camada (`quando`), e o seletor de timbre escolhido só existe quando a pessoa pede "escolher
+   * um"; (2) a pergunta tem a sua própria camada (`Question.presentation`), que é onde o timbre
+   * **sorteado** mora. Com os dois padrões — "o do perfil" —, nada sobrescreve nada, e é isso que
+   * este teste afirma.
+   *
+   * Então o guarda continua apertado: sobrescrever o timbre global **sem a pessoa pedir** reprova.
+   */
   it('os parâmetros globais de som (volume e timbre) chegam a todo exercício com áudio, sem editar o catálogo', () => {
-    // nenhum exercício pode sobrescrever o volume nem o timbre global; o timbre vem do instrumento do som
     const params = { ...resolveParams('baixo', { timbres: { piano: 'orgao', violao: 'pad', baixo: 'violao' } }), volume: 0.5 };
     const ctx = { ...ctxFor('pt'), params };
     for (const ex of EXERCISES.filter(isSeries)) {
       for (let i = 0; i < 20; i++) {
         const q = ex.make(ex.defaults, ctx);
         if (!q.sound) continue;
-        const settingsLayer = ex.settings(ctx).reduce((acc, st) => (st.present ? { ...acc, ...st.present(ex.defaults[st.id]) } : acc), {});
-        const pres = resolvePresentation([globalPresentation(params, q.sound.instrument), ex.presentation, settingsLayer]);
+        const settingsLayer = ex.settings(ctx)
+          .filter(st => st.quando?.(ex.defaults) ?? true)
+          .reduce((acc, st) => (st.present ? { ...acc, ...st.present(ex.defaults[st.id]) } : acc), {});
+        const pres = resolvePresentation([globalPresentation(params, q.sound.instrument), ex.presentation, settingsLayer, q.presentation]);
         expect(pres.volume, ex.id).toBe(0.5 * DEFAULT_PRESENTATION.volume);
         expect(pres.voice, ex.id).toBe(params.timbres[q.sound.instrument ?? 'piano']);
       }

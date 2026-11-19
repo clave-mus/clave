@@ -287,6 +287,15 @@ export interface Question {
   sound?: SoundContent; // tocado ao mostrar (ouvido) ou ao responder (visual)
   autoplay?: boolean;
   reveal: string; // a resposta certa, por extenso
+  /**
+   * **Apresentação desta pergunta**, por cima do perfil, do item e das configurações.
+   *
+   * Existe desde 19/11, para o timbre **sorteado a cada pergunta** do `ouvido-intervalo`: o perfil
+   * e as configurações são escolhas que valem para a rodada inteira, e sortear a cada pergunta é,
+   * por definição, propriedade da pergunta. Camada última de propósito — quando a pessoa pede
+   * sorteio, é o sorteio que ela quer ver valer.
+   */
+  presentation?: Partial<Presentation>;
 }
 
 export type SettingValue = string | string[] | boolean | number;
