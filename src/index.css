@@ -1025,6 +1025,9 @@ select.sel {
 /* A marca de modulação: não é compasso, então não parece botão — é um aviso entre dois compassos. */
 .backing-marca {
   align-self: center; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--on-area); opacity: 0.85;
-  border: 1px dashed currentColor; border-radius: var(--pill); padding: 5px 10px; white-space: nowrap;
+  text-transform: uppercase; color: var(--on-area); opacity: 0.85; cursor: pointer;
+  background: none; border: 1px dashed currentColor; border-radius: var(--pill);
+  padding: 5px 10px; white-space: nowrap;
 }
+/* O selecionado é o alvo da edição E o ponto de inserção: um filete sólido diz "é aqui". */
+.backing-compasso.sel, .backing-marca.sel { outline: 2px solid var(--on-area); outline-offset: 2px; opacity: 1; }

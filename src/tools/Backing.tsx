@@ -4,11 +4,12 @@ import { useSearchParams } from 'react-router-dom';
 import { atTime, Clock, drum, tone, type Drum, type Voice } from '../audio/engine';
 import { useStore } from '../state/store';
 import {
-  buildScale, chordSymbol, CHORDS, harmonicField, majorTonic, mod, note, noteName, pc, transpose,
+  buildScale, chordSymbol, CHORDS, harmonicField, majorTonic, midi, mod, note, noteName, pc, transpose,
   type ChordId, type Convention, type Note, type ScaleId,
   type ModoDoCampo,
 } from '../theory/core';
 import { emprestimosDoCampo } from '../theory/campo-harmonico';
+import { voicingsDe } from '../theory/voicings';
 import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
 import { Btn, Chip } from '../components/ui';
@@ -27,7 +28,15 @@ import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
  *   escreve uma mudança de armadura. Ela não ocupa compasso: tudo depois dela resolve na tonalidade
  *   nova, e dá para modular quantas vezes quiser.
  */
-interface Acorde { deg: number; type?: ChordId; flat?: boolean; emp?: string }
+interface Acorde { deg: number; type?: ChordId; flat?: boolean; emp?: string; dur?: Duracao }
+/**
+ * **Quanto um acorde dura, em compassos** (decisão dele em 19/11, da revisão).
+ *
+ * Antes todo acorde durava exatamente um compasso, e isso é o limite que mais aparece quando se
+ * tenta escrever música de verdade: não havia ii–V dentro do mesmo compasso nem tônica de dois.
+ */
+type Duracao = 0.5 | 1 | 2;
+const DURACOES: Duracao[] = [0.5, 1, 2];
 interface Marca { mod: Tonalidade }
 type Item = Acorde | Marca;
 interface Tonalidade { fifths: number; mode: ModoDoCampo }
@@ -105,7 +114,7 @@ const STYLE_NAMES: Record<Style, MessageKey> = {
 const VOICES: [Voice, MessageKey][] = [['piano', 'voices.piano'], ['pad', 'voices.pad'], ['violao', 'voices.violao'], ['orgao', 'voices.orgao']];
 
 // ---------------- harmonia ----------------
-interface Resolved { root: Note; type: ChordId; symbol: string; roman: string; scales: { id: ScaleId; root: Note; why: MessageKey }[]; tom: Tonalidade }
+interface Resolved { root: Note; type: ChordId; symbol: string; roman: string; scales: { id: ScaleId; root: Note; why: MessageKey }[]; tom: Tonalidade; vozes: number[]; dur: Duracao }
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 function romanFor(deg: number, type: ChordId, flat: boolean, conv: Convention) {
   const minor = ['menor', 'm7', 'dim', 'm7b5', 'dim7'].includes(type);
@@ -128,14 +137,14 @@ function resolve(item: Acorde, tom: Tonalidade, tetrads: boolean, conv: Conventi
     return {
       root, type, symbol: chordSymbol(root, type, conv), roman: emp.roman + (tetrads ? sufixoRomano(type, conv) : ''),
       // Empréstimo é acorde de fora: a sugestão de escala segue a mesma porta de "qualidade trocada".
-      scales: suggestScales(root, type, emp.grau, mode, true), tom,
+      scales: suggestScales(root, type, emp.grau, mode, true), tom, vozes: [], dur: item.dur ?? 1,
     };
   }
   const f = field[item.deg - 1];
   const root = item.flat ? { ...f.root, acc: f.root.acc - 1 } : f.root;
   const type = item.type ?? f.chord;
   const roman = !item.type && !item.flat ? f.roman : romanFor(item.deg, type, !!item.flat || (mode === 'menor' && [3, 6, 7].includes(item.deg)), conv);
-  return { root, type, symbol: chordSymbol(root, type, conv), roman, scales: suggestScales(root, type, item.deg, mode, !!item.type || !!item.flat), tom };
+  return { root, type, symbol: chordSymbol(root, type, conv), roman, scales: suggestScales(root, type, item.deg, mode, !!item.type || !!item.flat), tom, vozes: [], dur: item.dur ?? 1 };
 }
 
 /**
@@ -152,10 +161,41 @@ export function resolverProgressao(items: Item[], inicial: Tonalidade, tetrads: 
   for (const it of items) {
     if (ehMarca(it)) { tom = it.mod; porItem.push(null); continue; }
     porItem.push(chords.length);
-    chords.push(resolve(it, tom, tetrads, conv));
+    const r = resolve(it, tom, tetrads, conv);
+    /**
+     * **A condução de vozes é uma cadeia**, e por isso ela mora aqui e não em `resolve`: cada acorde
+     * olha o anterior. Calculado na resolução (e não no relógio), o voicing é o **mesmo em todas as
+     * voltas** do loop — tocar duas vezes dá o mesmo som, que é o que se espera de um acompanhamento.
+     */
+    chords.push({ ...r, vozes: voicingDoAcorde(r.root, r.type, chords.length ? chords[chords.length - 1].vozes : null) });
   }
   // A tonalidade do FIM é onde um acorde novo cairia — é ela que manda nos botões de grau.
   return { chords, porItem, noFim: tom };
+}
+
+/**
+ * **A linha do tempo da progressão, em passos da grade.**
+ *
+ * Era um acorde por compasso (`Math.floor(i / grid) % chords.length`), e com duração isso não serve.
+ * Aqui cada acorde ganha janela própria, e o relógio pergunta "que acorde está soando no passo X?".
+ *
+ * ⚠️ **O loop fecha em compasso inteiro.** Se a soma das durações cair no meio de um compasso (três
+ * acordes de meio, por exemplo), o último estica até o fim do compasso — porque a levada é periódica
+ * por compasso (`i % grid`), e um loop quebrado faria a bateria entrar fora de fase com a harmonia a
+ * cada volta. Esticar é a única saída que mantém as duas em acordo.
+ */
+export function linhaDoTempo(chords: readonly { dur?: Duracao }[], grid: number) {
+  const janelas: { inicio: number; fim: number }[] = [];
+  let passo = 0;
+  for (const c of chords) {
+    const passos = Math.max(1, Math.round((c.dur ?? 1) * grid));
+    janelas.push({ inicio: passo, fim: passo + passos });
+    passo += passos;
+  }
+  const total = Math.max(grid, Math.ceil(passo / grid) * grid);
+  // o último estica até o fim do compasso, para o loop fechar redondo
+  if (janelas.length) janelas[janelas.length - 1].fim = total;
+  return { janelas, total };
 }
 
 /** O sufixo da cifra romana de uma qualidade (`7`, `ø`, `°7`…). Vive aqui e em `romanFor`. */
@@ -184,10 +224,65 @@ function suggestScales(root: Note, type: ChordId, deg: number, mode: ModoDoCampo
   if (!borrowed && mode === 'menor' && deg === 4) return [s('dorico', 'backing.whyIvMinor'), s('penta-menor', 'backing.whySafe')];
   return [s('menor', 'backing.whyMinorChord'), s('penta-menor', 'backing.whySafe')];
 }
-const voice = (root: Note, type: ChordId) => {
-  const r = pc(root);
-  return CHORDS[type].degs.map(([, semi]) => 55 + mod(r + semi - 55, 12)).sort((a, b) => a - b);
-};
+/**
+ * **O voicing do acompanhamento, com condução de vozes** — e isto é o conserto do defeito mais audível
+ * da ferramenta, achado medindo em 19/11.
+ *
+ * O que havia: `55 + mod(pc + semi - 55, 12)`, que **colapsa o acorde numa oitava só**. Medido, o que
+ * saía: dó maior em segunda inversão (G3 C4 E4), o Cmaj7 com o si colado no dó (G3 B3 C4 E4) e o Am7
+ * com o sol colado no lá (G3 A3 C4 E4) — aglomerado na região grave, que é onde isso mais encardi. E
+ * nenhuma relação com o acorde anterior: cada um era calculado sozinho.
+ *
+ * O que entra: `theory/voicings.ts`, o motor que a Tônica de ouvido usa — duas mãos, qualquer grau no
+ * baixo, a quinta saindo quando o acorde tem extensão. De todos os voicings do acorde, escolhe-se o
+ * que **move menos** em relação ao que soou antes: é o que faz um acompanhamento soar tocado em vez
+ * de digitado.
+ *
+ * O primeiro acorde não tem anterior, e aí a referência é o **centro** (dó4 e redor): sem isso a
+ * progressão podia começar no canto do teclado e descer a vida toda.
+ */
+const CENTRO = [55, 60, 64, 67];
+/** A distância entre dois acordes: cada nota do novo até a mais próxima do antigo, somada. */
+function distancia(novo: readonly number[], antigo: readonly number[]): number {
+  const dele = (m: number) => Math.min(...antigo.map(a => Math.abs(a - m)));
+  return novo.reduce((soma, m) => soma + dele(m), 0) / novo.length;
+}
+/**
+ * **Quanto este voicing encardi embaixo** — e esta peça nasceu de medir a anterior.
+ *
+ * Mover pouco, sozinho, escolhe o voicing mais **compacto**: medindo com só esse critério, o Cmaj7
+ * saía `G3 B3 C4 E4` (si colado no dó) e o Am7 `E3 G3 A3 C4` (sol colado no lá) — exatamente o
+ * aglomerado que eu havia criticado na função antiga. Um pianista não põe segunda na região grave.
+ *
+ * A regra é de prática, e por isso é fato e não gosto: **abaixo do dó central, nada menor que uma
+ * terça menor** entre vozes vizinhas. Cada infração custa, e quanto mais grave, mais custa.
+ */
+function encardido(ms: readonly number[]): number {
+  let custo = 0;
+  for (let i = 1; i < ms.length; i++) {
+    const intervalo = ms[i] - ms[i - 1];
+    if (ms[i - 1] < 60 && intervalo < 3) custo += (3 - intervalo) * (ms[i - 1] < 52 ? 3 : 2);
+  }
+  return custo;
+}
+function voicingDoAcorde(root: Note, type: ChordId, anterior: readonly number[] | null): number[] {
+  /**
+   * O teto é **dó6** e não sol6: num acompanhamento o acorde não pode brigar com a melodia de quem
+   * está tocando por cima, e o motor sozinho chega a alturas que invadem essa faixa.
+   */
+  const opcoes = voicingsDe(root, type, { teto: 84 });
+  if (!opcoes.length) return CHORDS[type].degs.map(([, semi]) => 55 + mod(pc(root) + semi - 55, 12)).sort((a, b) => a - b);
+  const alvo = anterior ?? CENTRO;
+  let melhor = opcoes[0];
+  let menor = Infinity;
+  for (const v of opcoes) {
+    const ms = v.todas.map(midi);
+    // o critério é mover pouco; o desempate é a nota mais aguda ficar perto da de antes
+    const d = distancia(ms, alvo) + encardido(ms) + Math.abs(Math.max(...ms) - Math.max(...alvo)) / 24;
+    if (d < menor) { menor = d; melhor = v; }
+  }
+  return melhor.todas.map(midi).sort((a, b) => a - b);
+}
 
 export default function Backing({ presetId }: { presetId?: string }) {
   const [params] = useSearchParams();
@@ -207,6 +302,15 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [running, setRunning] = useState(false);
   const [bar, setBar] = useState(0);
   const [view, setView] = useState<'teclado' | 'braco'>(instrument === 'piano' ? 'teclado' : 'braco');
+  /**
+   * **O item selecionado da progressão** (índice em `items`), que é ao mesmo tempo o alvo da edição e
+   * o **ponto de inserção**: um acorde novo entra depois dele.
+   *
+   * Um conceito só, e não dois: com a seleção no último compasso — que é onde ela fica depois de
+   * montar —, inserir depois dela é exatamente o "acrescentar no fim" de antes. A tela diz onde o
+   * próximo acorde vai cair, então não há adivinhação.
+   */
+  const [sel, setSel] = useState<number | null>(null);
   /** Para onde a próxima marca de modulação aponta. Começa na quarta acima, que é a mais comum. */
   const [destino, setDestino] = useState<Tonalidade>({ fifths: initial.mode === 'maior' ? -1 : -1, mode: initial.mode });
   const clock = useRef<Clock | null>(null);
@@ -237,6 +341,28 @@ export default function Backing({ presetId }: { presetId?: string }) {
   useEffect(() => () => clock.current?.stop(), []);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
 
+  /** Põe um item **depois do selecionado** — ou no fim, quando não há seleção. */
+  const inserir = (novo: Item) => {
+    setItems(v => {
+      const onde = sel === null || sel >= v.length ? v.length : sel + 1;
+      const fora = [...v.slice(0, onde), novo, ...v.slice(onde)];
+      return fora;
+    });
+    setSel(s2 => (s2 === null ? null : s2 + 1));
+  };
+  /** Tira o item selecionado — compasso ou marca de modulação. */
+  const removerSelecionado = () => {
+    if (sel === null) return;
+    setItems(v => v.filter((_, i) => i !== sel));
+    setSel(s2 => (s2 === null ? null : Math.max(0, Math.min(s2, items.length - 2))));
+    setBar(0);
+  };
+  /** Muda a duração do compasso selecionado. Marca de modulação não tem duração. */
+  const mudarDuracao = (d: Duracao) => {
+    if (sel === null) return;
+    setItems(v => v.map((it, i) => (i === sel && !ehMarca(it) ? { ...it, dur: d } : it)));
+  };
+  const itemSel = sel === null ? undefined : items[sel];
   /** "Fá maior", "Lá menor" — o nome de uma tonalidade, para a marca e para o painel. */
   const nomeDoTom = (tom: Tonalidade) => `${noteName(tonicaDe(tom), naming)} ${t(`backing.mode_${tom.mode}`).toLowerCase()}`;
 
@@ -248,11 +374,22 @@ export default function Backing({ presetId }: { presetId?: string }) {
       const g = GROOVES[st];
       if (!cs.length) return;
       const step = i % g.grid;
-      const bi = Math.floor(i / g.grid) % cs.length;
+      /**
+       * **Que acorde está soando neste passo** — a linha do tempo responde, e não mais a conta de
+       * "um acorde por compasso". Um acorde de meio compasso troca no meio dele, e a levada (que é
+       * periódica por compasso) segue andando por baixo sem saber de nada.
+       */
+      // Recalculada a cada passo de propósito: a pessoa pode editar a progressão **tocando**, e uma
+      // linha do tempo congelada no `start()` tocaria a progressão de antes. São poucos objetos por
+      // semicolcheia, e correção vale mais que a alocação.
+      const { janelas, total } = linhaDoTempo(cs, g.grid);
+      const pos = i % total;
+      const bi = Math.max(0, janelas.findIndex(j => pos >= j.inicio && pos < j.fim));
       const ch = cs[bi];
       const nextCh = cs[(bi + 1) % cs.length];
       const sd = 60 / (clock.current?.bpm ?? bpm) / (g.grid / 4);
-      if (step === 0) atTime(t, () => setBar(bi));
+      // o destaque troca quando o ACORDE troca, não a cada compasso
+      if (pos === janelas[bi].inicio) atTime(t, () => setBar(bi));
       const hit = (arr: number[] | undefined, k: Drum, v = 1) => arr?.includes(step) && drum(k, t, v);
       hit(g.kick, 'bumbo'); hit(g.snare, 'caixa', st === 'samba' ? 0.45 : 1); hit(g.hat, 'chimbal', step % (g.grid / 4) === 0 ? 0.9 : 0.55); hit(g.rim, 'aro', 0.8);
       const rootMidi = 36 + mod(pc(ch.root) - 36, 12);
@@ -261,7 +398,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
         const proxima = 36 + mod(pc(nextCh.root) - 36, 12);
         tone(alturaDoBaixo(grau, rootMidi, ch.type, proxima), t, d * sd * 0.92, 'baixo', 0.9);
       });
-      g.comp.forEach(([s, d]) => s === step && voice(ch.root, ch.type).forEach(m => tone(m, t, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
+      g.comp.forEach(([s, d]) => s === step && ch.vozes.forEach(m => tone(m, t, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
     });
     clock.current = c;
     c.start();
@@ -269,7 +406,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
   };
 
   const loadPreset = (p: Preset) => {
-    setItems(p.items); setMode(p.mode); setStyle(p.style); setBpm(p.bpm); setTetrads(p.tetrads); setBar(0);
+    setItems(p.items); setMode(p.mode); setStyle(p.style); setBpm(p.bpm); setTetrads(p.tetrads); setBar(0); setSel(null);
     if (clock.current) clock.current.stepsPerBeat = GROOVES[p.style].grid / 4;
   };
   const changeStyle = (s: Style) => { setStyle(s); if (clock.current) clock.current.stepsPerBeat = GROOVES[s].grid / 4; };
@@ -315,15 +452,18 @@ export default function Backing({ presetId }: { presetId?: string }) {
             compassos, porque é onde elas agem. `porItem` liga item → compasso que soa. */}
         <div className="row" style={{ alignItems: 'stretch' }}>
           {items.map((it, k) => {
-            if (ehMarca(it)) return <span key={k} className="backing-marca">⇢ {nomeDoTom(it.mod)}</span>;
+            if (ehMarca(it)) return (
+              <button key={k} type="button" onClick={() => setSel(k)} aria-pressed={sel === k}
+                className={`backing-marca ${sel === k ? 'sel' : ''}`}>⇢ {nomeDoTom(it.mod)}</button>
+            );
             const i = progressao.porItem[k] ?? 0;
             const c = chords[i];
             if (!c) return null;
             return (
-              <button key={k} type="button" onClick={() => setBar(i)}
-                className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''}`}>
+              <button key={k} type="button" onClick={() => { setBar(i); setSel(k); }}
+                className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''} ${sel === k ? 'sel' : ''}`}>
                 <div className="cifra">{c.symbol}</div>
-                <div className="roman">{c.roman}</div>
+                <div className="roman">{c.roman}{c.dur !== 1 ? ` · ${c.dur === 0.5 ? '½' : c.dur}` : ''}</div>
               </button>
             );
           })}
@@ -348,7 +488,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
             rótulo nenhum. */}
         <div className="eyebrow">{t(tomDoFim.mode === 'maior' ? 'backing.buildYoursMajor' : 'backing.buildYoursMinor', { tonic: noteName(tonicaDoFim, naming) })}</div>
         <div className="row">
-          {field.map(d => <Chip key={d.degree} onClick={() => setItems(v => [...v, { deg: d.degree }])}><b>{d.roman}</b> · {d.symbol}</Chip>)}
+          {field.map(d => <Chip key={d.degree} onClick={() => inserir({ deg: d.degree })}><b>{d.roman}</b> · {d.symbol}</Chip>)}
         </div>
         {/* **Os empréstimos vêm da lista curada do `ouvido-campo`** — mesma lista, mesmos acordes.
             Nas duas menores alteradas não há lista curada, e a fileira não aparece (decisão 13). */}
@@ -357,7 +497,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
             <span className="eyebrow">{t('backing.borrowed')}</span>
             {emprestimos.map(e => {
               const r = resolve({ deg: e.grau, emp: e.id }, tomDoFim, tetrads, conv);
-              return <Chip key={e.id} onClick={() => setItems(v => [...v, { deg: e.grau, emp: e.id }])}><b>{r.roman}</b> · {r.symbol}</Chip>;
+              return <Chip key={e.id} onClick={() => inserir({ deg: e.grau, emp: e.id })}><b>{r.roman}</b> · {r.symbol}</Chip>;
             })}
           </div>
         )}
@@ -376,11 +516,27 @@ export default function Backing({ presetId }: { presetId?: string }) {
               <option key={m} value={m}>{t(`backing.mode_${m}`)}</option>
             ))}
           </select>
-          <Btn small tone="ghost" onClick={() => setItems(v => [...v, { mod: destino }])}>{t('backing.addModulation')}</Btn>
+          <Btn small tone="ghost" onClick={() => inserir({ mod: destino })}>{t('backing.addModulation')}</Btn>
         </div>
+        {/* **O compasso selecionado**: duração e remoção. É o que responde ao "para consertar o
+            sétimo compasso de um blues eu apago seis". */}
+        {itemSel && (
+          <div className="row">
+            <span className="eyebrow">{ehMarca(itemSel) ? t('backing.selectedMark') : t('backing.selectedBar', { n: String((progressao.porItem[sel!] ?? 0) + 1) })}</span>
+            {!ehMarca(itemSel) && DURACOES.map(d => (
+              <Chip key={d} on={(itemSel.dur ?? 1) === d} onClick={() => mudarDuracao(d)}>
+                {d === 0.5 ? t('backing.durHalf') : d === 1 ? t('backing.durOne') : t('backing.durTwo')}
+              </Chip>
+            ))}
+            <Btn small tone="ghost" onClick={removerSelecionado}>{t('backing.removeSelected')}</Btn>
+          </div>
+        )}
         <div className="row">
-          <Btn small tone="ghost" onClick={() => setItems(v => v.slice(0, -1))} disabled={!items.length}>{t('backing.deleteLast')}</Btn>
-          <Btn small tone="ghost" onClick={() => { setItems([]); setBar(0); }}>{t('backing.clear')}</Btn>
+          <span className="muted" style={{ fontSize: 13 }}>
+            {sel === null || sel >= items.length - 1 ? t('backing.insertAtEnd') : t('backing.insertAfter', { n: String((progressao.porItem[sel] ?? 0) + 1) })}
+          </span>
+          <Btn small tone="ghost" onClick={() => { setItems(v => v.slice(0, -1)); setSel(null); }} disabled={!items.length}>{t('backing.deleteLast')}</Btn>
+          <Btn small tone="ghost" onClick={() => { setItems([]); setBar(0); setSel(null); }}>{t('backing.clear')}</Btn>
         </div>
       </section>
 

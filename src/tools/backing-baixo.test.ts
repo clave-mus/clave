@@ -8,7 +8,7 @@
 // pontuadas, como deve ser tocado"*.
 import { describe, expect, it } from 'vitest';
 import { alturaDoBaixo, GROOVES, PRESETS } from './Backing';
-import { CHORDS, type ChordId } from '../theory/core';
+import { CHORDS, mod, pc, type ChordId } from '../theory/core';
 
 const RAIZ = 48; // dó3, uma fundamental qualquer
 const graus = (id: ChordId) => CHORDS[id].degs.map(([, s]) => s);
@@ -172,5 +172,127 @@ describe('o preset que mostra as duas peças', () => {
     expect(chords.map(c => c.symbol)).toEqual(['Dm7', 'G7', 'C7M', 'C7M', 'Bm7(♭5)', 'E7', 'Am7', 'Am7']);
     // o V da menor é maior: é o empréstimo, não o v diatônico
     expect(chords[5].type).toBe('7');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// O voicing do acompanhamento — 19/11/2026, da revisão que ele pediu.
+//
+// O que havia colapsava o acorde numa oitava só (`55 + mod(pc + semi - 55, 12)`): o dó maior saía em
+// segunda inversão, o Cmaj7 com o si colado no dó, o Am7 com o sol colado no lá — e nenhum acorde
+// olhava o anterior. Agora é o motor de `theory/voicings.ts`, escolhendo o que **move menos** sem
+// encardir embaixo.
+describe('o voicing do acompanhamento', () => {
+  const vozesDe = (p: typeof PRESETS[number]) =>
+    resolverProgressaoParaTeste(p.items as never, { fifths: 0, mode: p.mode }, p.tetrads, CONV).chords;
+
+  it('toda nota é nota do acorde', () => {
+    for (const p of PRESETS) {
+      for (const c of vozesDe(p)) {
+        const doAcorde = new Set(CHORDS[c.type].degs.map(([, semi]) => mod(pc(c.root) + semi, 12)));
+        for (const m of c.vozes) {
+          expect([...doAcorde], `${p.id}/${c.symbol}: ${m} fora do acorde`).toContain(mod(m, 12));
+        }
+        // e nenhum grau do acorde desaparece, a não ser a quinta que o motor tira nas extensões
+        const tocadas = new Set(c.vozes.map(m => mod(m, 12)));
+        expect(doAcorde.size - tocadas.size, `${p.id}/${c.symbol}: faltou grau`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  /**
+   * **Nada menor que uma terça menor abaixo do dó central.** É a regra de prática que o primeiro
+   * critério (mover pouco) violava: ele escolhia sempre o voicing mais compacto, que é o aglomerado.
+   */
+  it('não encardi embaixo: nenhuma segunda abaixo do dó central', () => {
+    for (const p of PRESETS) {
+      for (const c of vozesDe(p)) {
+        for (let i = 1; i < c.vozes.length; i++) {
+          if (c.vozes[i - 1] >= 60) continue;
+          expect(c.vozes[i] - c.vozes[i - 1], `${p.id}/${c.symbol}: ${c.vozes}`).toBeGreaterThanOrEqual(3);
+        }
+      }
+    }
+  });
+
+  it('conduz as vozes: o movimento médio fica abaixo de dois semitons', () => {
+    for (const p of PRESETS) {
+      const cs = vozesDe(p);
+      let soma = 0, n = 0;
+      for (let i = 1; i < cs.length; i++) {
+        for (const m of cs[i].vozes) { soma += Math.min(...cs[i - 1].vozes.map(a => Math.abs(a - m))); n++; }
+      }
+      if (!n) continue;
+      expect(soma / n, `${p.id}`).toBeLessThan(2);
+    }
+  });
+
+  it('acorde repetido soa igual, e a volta do loop soa igual — o voicing é decidido na resolução', () => {
+    const cs = resolverProgressaoParaTeste([{ deg: 1 }, { deg: 1 }], { fifths: 0, mode: 'maior' }, true, CONV).chords;
+    expect(cs[0].vozes).toEqual(cs[1].vozes);
+    // duas resoluções da mesma progressão dão o mesmo som (nada de sorteio aqui)
+    const outra = resolverProgressaoParaTeste([{ deg: 1 }, { deg: 1 }], { fifths: 0, mode: 'maior' }, true, CONV).chords;
+    expect(outra.map(c => c.vozes)).toEqual(cs.map(c => c.vozes));
+  });
+
+  it('e o acorde cabe na região de duas mãos, sem invadir o agudo da melodia', () => {
+    for (const p of PRESETS) {
+      for (const c of vozesDe(p)) {
+        expect(Math.min(...c.vozes), `${p.id}/${c.symbol}`).toBeGreaterThanOrEqual(36);
+        expect(Math.max(...c.vozes), `${p.id}/${c.symbol}`).toBeLessThanOrEqual(84);
+      }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Duração por compasso — 19/11/2026, da revisão.
+//
+// Antes todo acorde durava exatamente um compasso, e era o limite que mais aparecia ao escrever
+// música de verdade: nem ii–V dentro do mesmo compasso, nem tônica de dois.
+import { linhaDoTempo } from './Backing';
+
+describe('a linha do tempo', () => {
+  it('um compasso cada é o de sempre', () => {
+    const { janelas, total } = linhaDoTempo([{}, {}, {}, {}], 16);
+    expect(janelas).toEqual([{ inicio: 0, fim: 16 }, { inicio: 16, fim: 32 }, { inicio: 32, fim: 48 }, { inicio: 48, fim: 64 }]);
+    expect(total).toBe(64);
+  });
+
+  it('meio compasso é meio, e dois são dois', () => {
+    const { janelas, total } = linhaDoTempo([{ dur: 0.5 }, { dur: 0.5 }, { dur: 2 }], 16);
+    expect(janelas.map(j => j.fim - j.inicio)).toEqual([8, 8, 32]);
+    expect(total).toBe(48);
+  });
+
+  /**
+   * **O loop fecha em compasso inteiro**, e o último acorde estica para isso. A levada é periódica
+   * por compasso (`i % grid`): um loop quebrado faria a bateria entrar fora de fase com a harmonia a
+   * cada volta, o que soa como defeito e não como música.
+   */
+  it('soma quebrada: o último estica até fechar o compasso', () => {
+    const { janelas, total } = linhaDoTempo([{ dur: 0.5 }, { dur: 0.5 }, { dur: 0.5 }], 16);
+    expect(total).toBe(32);
+    expect(janelas[2]).toEqual({ inicio: 16, fim: 32 });
+  });
+
+  it('na grade de tercinas (swing), meio compasso são seis passos', () => {
+    const { janelas } = linhaDoTempo([{ dur: 0.5 }, { dur: 1 }], 12);
+    expect(janelas.map(j => j.fim - j.inicio)).toEqual([6, 18]);
+  });
+
+  it('progressão vazia não quebra, e um acorde só ocupa um compasso', () => {
+    expect(linhaDoTempo([], 16)).toEqual({ janelas: [], total: 16 });
+    expect(linhaDoTempo([{}], 16).janelas).toEqual([{ inicio: 0, fim: 16 }]);
+  });
+
+  it('todo passo do loop tem exatamente um acorde soando', () => {
+    for (const durs of [[{}, {}], [{ dur: 0.5 as const }, { dur: 2 as const }, {}], [{ dur: 2 as const }]]) {
+      const { janelas, total } = linhaDoTempo(durs, 16);
+      for (let p = 0; p < total; p++) {
+        const quantos = janelas.filter(j => p >= j.inicio && p < j.fim).length;
+        expect(quantos, `passo ${p} de ${JSON.stringify(durs)}`).toBe(1);
+      }
+    }
   });
 });
