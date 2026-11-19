@@ -1,4 +1,7 @@
-import { EM_DO_MAIOR, arr, pick, randInt, regiao, scaleName, tonicaNaRegiao } from '../helpers';
+import { CHORDS, EM_DO_MAIOR, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao } from '../helpers';
+import { qualidadeEnfeitada } from '../enfeites';
+import { voicingsDe } from '../../theory/voicings';
+import { midi } from '../../theory/core';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, SettingValue } from '../types';
 import { grauDaFundamental, materialDoCampo, opcoesDeEmprestimo, type CampoDoExercicio } from '../../theory/campo-harmonico';
@@ -46,6 +49,36 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'campo', label: ctx.t('settings.field'), type: 'single',
       options: (['maior', 'menor'] as const).map(m => ({ id: m, label: scaleName(ctx.t, m) })) },
     { id: 'tetrades', label: ctx.t('settings.tetrads'), type: 'toggle' },
+    /**
+     * **Enfeitar o acorde do grau** (pedido do Paulo em 19/11): *"adicionar inversões e
+     * extensões/voicings diatônicas (ou não diatônicos, como #9 em dominante e afins)"*.
+     *
+     * É **eixo próprio**, e não um terceiro valor de "tríades/tétrades": aquele botão escolhe o
+     * tamanho do acorde, e este responde outra pergunta — *o acorde do grau vem vestido?*
+     *
+     * Quem decide o que combina com o quê é `comMesmoNucleo`, em `catalog/enfeites.ts`, e dela sai
+     * de graça a regra que ele enunciou: `♯9`, `♭9` e `♭13` só grudam em dominante.
+     *
+     * **Só com tétrades**, porque é de onde as extensões penduram: sobre uma tríade o motor não tem
+     * o que oferecer (medido: nenhuma qualidade tem o mesmo núcleo de `maior`), e um controle que
+     * não faz nada é pior que um controle a menos.
+     */
+    { id: 'enfeites', label: ctx.t('settings.chordDressing'), type: 'single', quando: s => s.tetrades !== false, options: [
+      { id: 'nenhum', label: ctx.t('settings.dressingNone') },
+      { id: 'extensoes', label: ctx.t('settings.dressingExtensions') },
+      { id: 'alterados', label: ctx.t('settings.dressingAltered') },
+    ] },
+    /**
+     * **Como o acorde soa**, o mesmo parâmetro que o `ouvido-acorde` ganhou nesta mesma data — um
+     * eixo que já existe em dois itens não vira um terceiro desenho.
+     *
+     * Só no modo de ouvir: audiando, o acorde é o gabarito que se produz na cabeça, e um voicing
+     * espalhado entre duas mãos não é o que se pede para audiar.
+     */
+    { id: 'voicing', label: ctx.t('settings.chordVoicing'), type: 'single', quando: s => s.estimulo === 'som', options: [
+      { id: 'fechado', label: ctx.t('settings.voicingClose') },
+      { id: 'piano', label: ctx.t('settings.voicingPiano') },
+    ] },
     { id: 'graus', label: ctx.t('settings.fieldDegrees'), type: 'multi', justify: true,
       options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: g })) },
     // Um chip de empréstimo por campo, porque as listas são OUTRAS (`theory/campo-harmonico.ts`).
@@ -57,7 +90,8 @@ export const ouvidoCampo: CatalogItem = {
       options: [{ id: 'romano', label: ctx.t('settings.answerRoman') }, { id: 'grau', label: ctx.t('settings.answerDegreeOnly') }] },
     // Como em `ouvido-acorde`, inversão é dificuldade, não pergunta — e é segura: há teste varrendo
     // que nenhum par do material divide o mesmo conjunto de classes de altura.
-    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
+    // Com voicing o baixo já pode ser qualquer grau: inverter de novo seria meia função repetida.
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => !comVoicing(s) },
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single',
       options: [{ id: 'ii-V-I', label: ctx.t('settings.contextIIVI') }, { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
         { id: 'nota', label: ctx.t('settings.contextTonic') }] },
@@ -66,7 +100,7 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [],
+  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado',
     emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2 },
   presets: [
     { id: 'maior-tetrades', nome: 'presets.campoTetrades', settings: { campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
@@ -76,6 +110,9 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'menor-triades', nome: 'presets.campoMenorTriades', settings: { campo: 'menor', tetrades: false, emprestimosMenor: [] }, params: EM_LA_MENOR },
     { id: 'menor-dominante', nome: 'presets.campoMenorDominante', settings: { campo: 'menor', tetrades: true, emprestimosMenor: ['V', 'viio'] }, params: EM_LA_MENOR },
     { id: 'menor-emprestimos', nome: 'presets.campoMenorEmprestimos', settings: { campo: 'menor', tetrades: true, emprestimosMenor: ['V', 'viio', 'IV', 'ii', 'bII'] }, params: EM_LA_MENOR },
+    // O caso que ele descreveu, pronto para usar: o V vestido de ♭9/♯9, que é onde a alteração
+    // aparece na música de verdade.
+    { id: 'maior-alterados', nome: 'presets.campoAlterados', settings: { campo: 'maior', tetrades: true, emprestimos: [], enfeites: 'alterados' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.45 },
   // Com um acorde só não há o que perguntar (decisão 13: recusar, não sortear).
@@ -92,8 +129,31 @@ export const ouvidoCampo: CatalogItem = {
       ? cadenciaHarmonica(cadencia, tonica, s.campo === 'menor' ? 'menor-harmonica' : 'maior', s.tetrades !== false)
       : [[tonica]];
 
-    let ms = acordeNoTeto(tonica, alvo.semis);
-    if (s.inversoes) for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
+    /**
+     * **O acorde do grau, vestido se a pessoa pediu** — e o gabarito não muda com isso: um V
+     * vestido de ♯9 continua sendo o V. É o ponto do parâmetro, e foi decisão dele: a habilidade
+     * aqui é achar a função por trás da roupa.
+     *
+     * O enfeite vale **só no alvo**. A cadência de contexto fica seca: ela existe para firmar o
+     * centro antes da pergunta, e vesti-la embaralharia a referência — a mesma razão pela qual ela
+     * também não é arpejada.
+     */
+    const familias = FAMILIAS[String(s.enfeites ?? 'nenhum')] ?? [];
+    const vestindo = familias.length > 0 && s.tetrades !== false;
+    const qualidade = vestindo ? qualidadeEnfeitada(alvo.chord, familias) : alvo.chord;
+    const semis = qualidade === alvo.chord ? alvo.semis : CHORDS[qualidade].degs.map(([, x]) => alvo.semi + x);
+    /**
+     * **E o voicing de piano**, quando ligado. `voicingsDe` coloca as notas sozinho dentro da
+     * região das duas mãos; o que importa de `raiz` é a classe de altura.
+     *
+     * O `??` cai na pilha fechada em vez de numa pergunta muda — aqui o motor sempre tem o que
+     * devolver (não há "sem fundamental" neste item), e o cinto existe porque um acorde vazio já
+     * passou por três invariantes uma vez.
+     */
+    const raiz = notaGrafada(ctx, tonica + alvo.semi);
+    const doMotor = comVoicing(s) ? voicingsDe(raiz, qualidade, {}) : [];
+    let ms = doMotor.length ? doMotor[randInt(0, doMotor.length - 1)].todas.map(midi) : acordeNoTeto(tonica, semis);
+    if (s.inversoes && !comVoicing(s)) for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
 
     /**
      * Com tétrades, o teto de registro derruba o V7 (e alvos como o vii) uma oitava abaixo da
@@ -104,6 +164,13 @@ export const ouvidoCampo: CatalogItem = {
     const juntos = caberNaFaixa([...contexto, ms], lo, hi);
     for (let g = 0; g < contexto.length; g++) contexto[g] = juntos[g];
     ms = juntos[juntos.length - 1];
+
+    /**
+     * **A revelação diz a cifra que soou** quando o eixo dos enfeites está ligado (decisão dele,
+     * 19/11). Sem ela, "V7" não conta o que você acabou de ouvir — e saber que era um Sol7(♯9) é
+     * metade do aprendizado. Desligado, segue sendo só o romano, como sempre foi.
+     */
+    const revelacao = vestindo ? `${alvo.roman} · ${chordSymbol(raiz, qualidade, ctx.conv)}` : alvo.roman;
 
     // No modo "só o grau", iv e IV viram o MESMO botão `4` — daí o filtro de repetidos.
     const soGrau = s.resposta === 'grau';
@@ -118,7 +185,9 @@ export const ouvidoCampo: CatalogItem = {
      */
     if (s.estimulo === 'escrito') {
       return {
-        prompt: ctx.t('quiz.audiateDegreeChord', { degree: alvo.roman }), visual: { kind: 'text', text: '' },
+        // Audiando, o enunciado precisa dizer **o que** audiar: pedir "o V7" e tocar um V7(♯9) de
+        // gabarito seria pedir uma coisa e conferir outra.
+        prompt: ctx.t('quiz.audiateDegreeChord', { degree: revelacao }), visual: { kind: 'text', text: '' },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: contexto,
@@ -127,7 +196,7 @@ export const ouvidoCampo: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
           ],
         },
-        autoplay: false, reveal: alvo.roman,
+        autoplay: false, reveal: revelacao,
       };
     }
     return {
@@ -146,7 +215,16 @@ export const ouvidoCampo: CatalogItem = {
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [ms] },
         ],
       },
-      autoplay: true, reveal: alvo.roman,
+      autoplay: true, reveal: revelacao,
     };
   },
 };
+
+/** As famílias de enfeite que cada valor do seletor liga. "Alterados" inclui as extensões. */
+const FAMILIAS: Record<string, string[]> = {
+  nenhum: [],
+  extensoes: ['extensoes'],
+  alterados: ['extensoes', 'alterados'],
+};
+/** O voicing de piano está em vigor? Só no modo de ouvir — ver o comentário na configuração. */
+const comVoicing = (s: Record<string, SettingValue>) => s.estimulo === 'som' && s.voicing === 'piano';

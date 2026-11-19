@@ -1,8 +1,9 @@
 import { voicingsDe, type Voicing } from '../../theory/voicings';
 import {
-  ALTERADOS, EXTENSOES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, comMesmoNucleo, harmonicField, midi, mod, notaGrafada,
+  ALTERADOS, EXTENSOES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
 } from '../helpers';
+import { qualidadeEnfeitada } from '../enfeites';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
 
@@ -186,13 +187,9 @@ export const tonicaDeOuvido: CatalogItem = {
  * qualidades novas tem o núcleo dele, e inventar uma seria conteúdo que ninguém revisou.
  */
 function qualidadeDoGrau(base: ChordId, familias: readonly string[]): ChordId {
-  const permitidas: ChordId[] = [
-    ...(familias.includes('extensoes') ? EXTENSOES : []),
-    ...(familias.includes('alterados') ? ALTERADOS : []),
-  ];
-  const enfeites = comMesmoNucleo(base).filter(id => permitidas.includes(id));
-  // A base continua no sorteio: pedir extensões não quer dizer que todo acorde venha enfeitado.
-  return pick([base, ...enfeites]);
+  // A função mudou de casa em 19/11 (`catalog/enfeites.ts`): o `ouvido-campo` passou a enfeitar os
+  // acordes do campo pela mesma regra, e duas cópias divergiriam no primeiro ajuste.
+  return qualidadeEnfeitada(base, familias);
 }
 
 /** As qualidades em jogo, somando as famílias que a pessoa marcou. */
