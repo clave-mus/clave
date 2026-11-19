@@ -769,6 +769,9 @@ const pt = {
     hint: 'Leia batendo o pulso no pé e falando o ritmo (tá, ta-ka, ta-ka-di-mi). Sem fone? Desligue o som e toque assim mesmo: o destaque anda no andamento e você confere em silêncio. Atalhos: espaço toca, N gera outro, ← volta.',
   },
   melodyHarmony: {
+    sound: 'Como soa',
+    soundPedal: 'Pedal (sustenta)',
+    soundPiano: 'Piano (soa uma vez)',
     degree_1: 'fundamental',
     degree_3: 'terça',
     degree_5: 'quinta',

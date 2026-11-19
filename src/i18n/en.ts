@@ -769,6 +769,9 @@ const en: Shape<typeof pt> = {
     hint: 'Read while tapping the pulse with your foot and speaking the rhythm (ta, ta-ka, ta-ka-di-mi). No headphones? Turn the sound off and play anyway: the highlight moves in time and you check in silence. Shortcuts: space plays, N generates another, ← goes back.',
   },
   melodyHarmony: {
+    sound: 'How it sounds',
+    soundPedal: 'Pedal (sustains)',
+    soundPiano: 'Piano (strikes once)',
     degree_1: 'root',
     degree_3: 'third',
     degree_5: 'fifth',
