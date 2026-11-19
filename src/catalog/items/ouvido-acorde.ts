@@ -1,4 +1,6 @@
 import { caberNaFaixa } from '../../theory/cadencia-harmonica';
+import { voicingsDe } from '../../theory/voicings';
+import { midi } from '../../theory/core';
 import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
@@ -50,7 +52,35 @@ export const ouvidoAcorde: CatalogItem = {
       { id: 'fixa', label: ctx.t('settings.rootFixed') },
       { id: 'sorteada', label: ctx.t('settings.rootRandom') },
     ] },
-    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle' },
+    /**
+     * **Como o acorde soa: pilha fechada ou voicing de piano** (decidido com o Paulo em 19/11).
+     *
+     * Até aqui o item montava o acorde com uma linha — `root + semitons` —, então uma dada
+     * qualidade soava **sempre no mesmo empilhamento**: fechado, da fundamental para cima. Com as
+     * inversões ligadas viram 3 ou 4 sons; com o motor de `theory/voicings.ts`, **10 numa tríade e
+     * 21 numa tétrade**, espalhados entre duas mãos, com qualquer grau no baixo e a quinta saindo
+     * quando faz sentido. Medido, não estimado.
+     *
+     * Fica **desligado por padrão**: este item já é usado, e trocar o som dele por baixo mudaria o
+     * exercício sem ninguém pedir. Quem quiser entra pelo atalho novo.
+     *
+     * **Só onde a resposta é nomear a qualidade**: desenhando, as notas precisam caber na
+     * superfície, e um voicing de duas mãos chega a três oitavas — não cabe em doze casas de braço.
+     */
+    { id: 'voicing', label: ctx.t('settings.chordVoicing'), type: 'single', quando: s => ondeCabeVoicing(s), options: [
+      { id: 'fechado', label: ctx.t('settings.voicingClose') },
+      { id: 'piano', label: ctx.t('settings.voicingPiano') },
+    ] },
+    /**
+     * **Sem a fundamental**: a terça e a sétima seguram o acorde e o baixo fica implícito. Só
+     * existe com voicing, e só em tétrade — medido: numa tríade o motor devolve **zero** voicings,
+     * porque sem a raiz sobram duas notas. `problema()` recusa a combinação em vez de sortear o
+     * impossível.
+     */
+    { id: 'semFundamental', label: ctx.t('settings.withoutRoot'), type: 'toggle', quando: s => comVoicing(s) },
+    // Inverter é rodar a pilha fechada. Com voicing isso já está incluído — o baixo pode ser
+    // qualquer grau —, e dois controles fazendo meia coisa cada é pior que um.
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => !comVoicing(s) },
     /**
      * **Onde se responde** (`OR-ouvido-relativo.md`, §3.4: *"dois modos: alternativas com a
      * descrição, ou desenhar o acorde na pauta, no piano ou no violão"*).
@@ -73,7 +103,7 @@ export const ouvidoAcorde: CatalogItem = {
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
       ] }],
-  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas' },
+  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', voicing: 'fechado', semFundamental: false },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -89,6 +119,9 @@ export const ouvidoAcorde: CatalogItem = {
     { id: 'tetrades', nome: 'presets.tetrades', settings: { tipos: ['7M', '7', 'm7', 'm7b5', 'dim7'] }, params: EM_DO_MAIOR },
     { id: 'suspensos', nome: 'presets.suspensos', settings: { tipos: ['maior', 'menor', 'sus2', 'sus4'] }, params: EM_DO_MAIOR },
     { id: 'livre', nome: 'presets.acordesLivre', settings: { tipos: ALL_CHORDS }, params: TONALIDADE_LIVRE },
+    // Tétrades porque é onde o motor rende mais (21 voicings contra 10 da tríade) e onde "sem a
+    // fundamental" existe.
+    { id: 'voicings', nome: 'presets.acordesVoicings', settings: { tipos: ['7M', '7', 'm7', 'm7b5', 'dim7'], voicing: 'piano' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.45 },
   // Sem perfil de piano, o desenho é no braço — ver `INST` em helpers sobre o fim do "auto".
@@ -108,7 +141,20 @@ export const ouvidoAcorde: CatalogItem = {
   problema(s, ctx) {
     const types = arr(s.tipos, []) as ChordId[];
     const osDois = types.includes('sus2') && types.includes('sus4');
-    return s.inversoes && osDois ? ctx.t('player.susAmbiguo') : null;
+    if (s.inversoes && osDois) return ctx.t('player.susAmbiguo');
+    /**
+     * **Sem a fundamental, só tétrade.** Tirar a raiz de uma tríade deixa duas notas, e o motor
+     * devolve zero voicings — medido nas seis tríades e nos dois suspensos. A conta é por número de
+     * graus, e não pela lista `TRIADS`, porque `sus2` e `sus4` também têm três notas e não estão
+     * nela.
+     *
+     * Basta **uma** marcada para recusar: o sorteio escolhe entre as marcadas, e uma tríade no meio
+     * de tétrades daria, de vez em quando, uma pergunta sem som nenhum.
+     */
+    if (comVoicing(s) && s.semFundamental === true && types.some(t => CHORDS[t].degs.length < 4)) {
+      return ctx.t('player.voicingSemTriade');
+    }
+    return null;
   },
   make(s, ctx): Question {
     const types = arr(s.tipos, ['maior', 'menor']) as ChordId[];
@@ -242,12 +288,39 @@ export const ouvidoAcorde: CatalogItem = {
         autoplay: true, reveal: chordName(ctx.t, type),
       };
     }
+    /**
+     * **O acorde, como voicing de piano** quando o parâmetro pede.
+     *
+     * `voicingsDe` coloca as notas sozinho dentro da região das duas mãos, então o que importa de
+     * `root` é a classe de altura — a janela calculada acima vale para a pilha fechada.
+     *
+     * A lista nunca vem vazia aqui: `problema()` já recusou tríade sem fundamental, que é o único
+     * caso medido em que o motor não tem o que devolver. O `??` é o cinto de segurança do tipo, e
+     * cai na pilha fechada em vez de numa pergunta muda — foi assim que um acorde vazio passou por
+     * três invariantes em 15/11.
+     */
+    const soam = comVoicing(s)
+      ? (() => {
+        const vs = voicingsDe(notaGrafada(ctx, root), type, { semFundamental: s.semFundamental === true });
+        return vs.length ? vs[randInt(0, vs.length - 1)].todas.map(midi) : ms;
+      })()
+      : ms;
     return {
       prompt: ctx.t('quiz.earChord'), visual: { kind: 'ear' },
       // As opções de resposta saem em ordem de complexidade (U7), não na ordem em que a pessoa
       // marcou os chips — senão a ordem dos botões mudaria dependendo de como ela configurou.
       surface: { kind: 'choices', compact: types.length > 6, options: chordTypes(ctx.t, porComplexidade(types)) }, expected: { kind: 'option', id: type },
-      sound: { groups: [ms] }, autoplay: true, reveal: chordName(ctx.t, type),
+      // O timbre é o padrão de `SoundContent`, que **é piano** — um voicing de piano tocado com voz
+      // de braço soaria como coisa nenhuma, e é o defeito que ele pegou em 13/11 no audiar.
+      sound: { groups: [soam] }, autoplay: true, reveal: chordName(ctx.t, type),
     };
   },
 };
+
+/**
+ * **Onde o voicing de piano se aplica**: só com som e resposta por alternativas. Desenhando, as
+ * notas têm de caber na superfície; audiando (`escrito`), o acorde é o gabarito que aparece escrito.
+ */
+const ondeCabeVoicing = (s: Record<string, unknown>) => s.estimulo === 'som' && s.resposta === 'alternativas';
+/** O voicing está mesmo em vigor? É `ondeCabeVoicing` mais a escolha da pessoa. */
+const comVoicing = (s: Record<string, unknown>) => ondeCabeVoicing(s) && s.voicing === 'piano';
