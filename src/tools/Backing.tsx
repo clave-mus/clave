@@ -113,11 +113,29 @@ export const GROOVES: Record<Style, Groove> = {
   rock: { grid: 16, tempos: 4, kick: [0, 8, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 2], [2, 'raiz', 2], [4, 'raiz', 2], [6, 'raiz', 2], [8, 'raiz', 2], [10, 'raiz', 2], [12, 'raiz', 2], [14, 'quinta', 2]], comp: [[0, 6], [6, 2], [8, 8]] },
   balada: { grid: 16, tempos: 4, kick: [0, 7, 10], snare: [8], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 6], [6, 'raiz', 2], [8, 'quinta', 8]], comp: [[0, 16]] },
   /**
-   * **O samba**: a quinta é a **grave** e as notas são semicolcheias pontuadas (1,5 passo) — as duas
-   * coisas que ele pediu em 19/11. A colocação é a de antes (0, 3, 4, 8, 11, 12), que é a
-   * antecipação característica: a nota chega no "a" do tempo e é repicada no tempo.
+   * **O samba**, com a linha de baixo que ele ditou em 19/11 — e esta é a terceira versão dela.
+   *
+   * *"é pra ser um tempo em cada nota, tipo — colcheia pontuada e semicolcheia na tônica, aí
+   * colcheia pontuada e semicolcheia na quinta, depois repete"*.
+   *
+   * Então **um tempo por nota harmônica**, e dentro do tempo a dupla característica: colcheia
+   * pontuada (3 passos) + semicolcheia (1 passo), as duas na mesma nota. Tônica no primeiro tempo,
+   * quinta **grave** no segundo, e repete — oito ataques no compasso.
+   *
+   * As duas versões anteriores eram minhas leituras das palavras dele, e ficam registradas porque o
+   * erro foi meu: primeiro seis ataques herdados do código antigo, depois "semicolcheias pontuadas"
+   * em todas as notas (1,5 passo), que era a frase dele lida ao pé da letra no lugar errado — a
+   * pontuação é da **colcheia**, e a semicolcheia que a segue é que fecha o tempo.
+   *
+   * A semicolcheia cai no último passo do tempo, onde o micro-tempo a **adianta** 27 ms (a 88 bpm):
+   * é ela que dá a antecipação do samba, e as duas coisas se encaixam sem ninguém combinar.
    */
-  samba: { grid: 16, tempos: 4, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]], micro: [0, 0.096, -0.16, -0.16] },
+  samba: { grid: 16, tempos: 4, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [
+    [0, 'raiz', 3], [3, 'raiz', 1],
+    [4, 'quintaGrave', 3], [7, 'quintaGrave', 1],
+    [8, 'raiz', 3], [11, 'raiz', 1],
+    [12, 'quintaGrave', 3], [15, 'quintaGrave', 1],
+  ], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]], micro: [0, 0.096, -0.16, -0.16] },
   swing: { grid: 12, tempos: 4, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 'raiz', 3], [3, 'terca', 3], [6, 'quinta', 3], [9, 'aprox', 3]], comp: [[0, 3], [5, 4]] },
   shuffle: { grid: 12, tempos: 4, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 'raiz', 2], [2, 'raiz', 1], [3, 'terca', 2], [5, 'terca', 1], [6, 'quinta', 2], [8, 'quinta', 1], [9, 'sexta', 2], [11, 'quinta', 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
   /**
@@ -349,7 +367,7 @@ const GUARDADO = 'backing';
  */
 interface Guardado {
   items: Item[]; fifths: number; mode: ModoDoCampo; tetrads: boolean; style: Style; bpm: number;
-  contagem?: boolean; bassOn?: boolean; compVoice?: Voice;
+  contagem?: boolean; bassOn?: boolean; acordesOn?: boolean; compVoice?: Voice;
 }
 export function lerGuardado(cru: unknown): Guardado | null {
   if (typeof cru !== 'string') return null;
@@ -367,6 +385,7 @@ export function lerGuardado(cru: unknown): Guardado | null {
       // os três de som: ausentes numa versão antiga, e aí quem manda é o padrão da tela
       ...(typeof o.contagem === 'boolean' ? { contagem: o.contagem } : {}),
       ...(typeof o.bassOn === 'boolean' ? { bassOn: o.bassOn } : {}),
+      ...(typeof o.acordesOn === 'boolean' ? { acordesOn: o.acordesOn } : {}),
       ...(o.compVoice && VOICES.some(([v]) => v === o.compVoice) ? { compVoice: o.compVoice } : {}),
     };
   } catch { return null; }
@@ -394,6 +413,13 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [bpm, setBpm] = useState(salvo?.bpm ?? initial.bpm);
   const [compVoice, setCompVoice] = useState<Voice>(salvo?.compVoice ?? 'piano');
   const [bassOn, setBassOn] = useState(salvo?.bassOn ?? true);
+  /**
+   * **Os acordes também desligam** (pedido dele em 19/11: *"adicione a opção de ter só bateria
+   * também"*). Com os dois desligados sobra a levada sozinha, que é o metrônomo com balanço — e com
+   * acordes desligados e baixo ligado sobra a linha de baixo, que serve para quem quer tocar por
+   * cima dela.
+   */
+  const [acordesOn, setAcordesOn] = useState(salvo?.acordesOn ?? true);
   /**
    * **Dois compassos de claves antes de a progressão entrar** (da revisão de 19/11).
    *
@@ -437,13 +463,13 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const emprestimos = useMemo(
     () => (tomDoFim.mode === 'maior' || tomDoFim.mode === 'menor' ? emprestimosDoCampo(tomDoFim.mode) : []),
     [tomDoFim.mode]);
-  const live = useRef({ chords, style, bassOn, compVoice });
-  live.current = { chords, style, bassOn, compVoice };
+  const live = useRef({ chords, style, bassOn, compVoice, acordesOn });
+  live.current = { chords, style, bassOn, compVoice, acordesOn };
 
   // Guarda a cada mudança. É escrita no estado global, que já persiste — nada de `localStorage` à mão.
   useEffect(() => {
-    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, compVoice } satisfies Guardado) });
-  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, compVoice]);
+    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice } satisfies Guardado) });
+  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice]);
 
   useEffect(() => () => clock.current?.stop(), []);
   /**
@@ -497,7 +523,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
      */
     const atraso = contagem ? 2 * g0.grid : 0;
     const c = new Clock(bpm, g0.grid / g0.tempos, (i, t) => {
-      const { chords: cs, style: st, bassOn: bo, compVoice: cv } = live.current;
+      const { chords: cs, style: st, bassOn: bo, compVoice: cv, acordesOn: ao } = live.current;
       const g = GROOVES[st];
       if (!cs.length) return;
       if (i < atraso) {
@@ -541,7 +567,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
         const proxima = 36 + mod(pc(nextCh.root) - 36, 12);
         tone(alturaDoBaixo(grau, rootMidi, ch.type, proxima), tq, d * sd * 0.92, 'baixo', 0.9);
       });
-      g.comp.forEach(([s, d]) => s === step && ch.vozes.forEach(m => tone(m, tq, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
+      if (ao) g.comp.forEach(([s, d]) => s === step && ch.vozes.forEach(m => tone(m, tq, d * sd * 0.95, cv, cv === 'pad' ? 0.8 : 0.45)));
     });
     clock.current = c;
     c.start();
@@ -632,6 +658,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
         <div className="row">
           <span className="eyebrow">{t('backing.chordSound')}</span>
           {VOICES.map(([v, l]) => <Chip key={v} on={compVoice === v} onClick={() => setCompVoice(v)}>{t(l)}</Chip>)}
+          <Chip on={acordesOn} onClick={() => setAcordesOn(v => !v)}>{t('backing.chords')}</Chip>
           <Chip on={bassOn} onClick={() => setBassOn(v => !v)}>{t('backing.bass')}</Chip>
           <Chip on={contagem} onClick={() => setContagem(v => !v)}>{t('backing.countIn')}</Chip>
         </div>

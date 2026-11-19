@@ -678,6 +678,7 @@ const pt = {
     groove: 'Levada',
     chordSound: 'Som dos acordes',
     countIn: 'Contagem',
+    chords: 'Acordes',
     bass: 'Baixo',
     buildYoursMajor: 'Monte a sua: toque nos graus do campo harmônico de {tonic} maior',
     buildYoursMinor: 'Monte a sua: toque nos graus do campo harmônico de {tonic} menor',

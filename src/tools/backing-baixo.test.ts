@@ -75,12 +75,57 @@ describe('o samba', () => {
     expect(quintas.every(g => g === 'quintaGrave'), quintas.join(',')).toBe(true);
   });
 
-  it('em semicolcheias pontuadas: toda nota dura 1,5 passo', () => {
-    expect(GROOVES.samba.bass.map(([, , d]) => d)).toEqual([1.5, 1.5, 1.5, 1.5, 1.5, 1.5]);
+  /**
+   * **A linha que ele ditou em 19/11, na terceira versão** — as duas primeiras eram minhas leituras
+   * erradas das palavras dele: *"um tempo em cada nota, tipo — colcheia pontuada e semicolcheia na
+   * tônica, aí colcheia pontuada e semicolcheia na quinta, depois repete"*.
+   *
+   * Um tempo por nota harmônica, e dentro do tempo a dupla: colcheia pontuada (3 passos) +
+   * semicolcheia (1), as duas na mesma nota. São oito ataques no compasso.
+   */
+  it('é colcheia pontuada + semicolcheia, um tempo por nota', () => {
+    expect(GROOVES.samba.bass).toEqual([
+      [0, 'raiz', 3], [3, 'raiz', 1],
+      [4, 'quintaGrave', 3], [7, 'quintaGrave', 1],
+      [8, 'raiz', 3], [11, 'raiz', 1],
+      [12, 'quintaGrave', 3], [15, 'quintaGrave', 1],
+    ]);
   });
 
-  it('e a colocação é a antecipação de sempre', () => {
-    expect(GROOVES.samba.bass.map(([s]) => s)).toEqual([0, 3, 4, 8, 11, 12]);
+  it('cada dupla fecha um tempo exato, e o compasso fecha nos quatro', () => {
+    const bass = GROOVES.samba.bass;
+    const porTempo = GROOVES.samba.grid / GROOVES.samba.tempos;
+    for (let i = 0; i < bass.length; i += 2) {
+      const [p1, , d1] = bass[i];
+      const [p2, , d2] = bass[i + 1];
+      // a colcheia pontuada começa no tempo, a semicolcheia emenda e as duas somam um tempo
+      expect(p1 % porTempo, `dupla ${i / 2 + 1}`).toBe(0);
+      expect(p2).toBe(p1 + d1);
+      expect(d1 + d2, `dupla ${i / 2 + 1}`).toBe(porTempo);
+    }
+    expect(bass.length / 2).toBe(GROOVES.samba.tempos);
+  });
+
+  it('a tônica nos tempos ímpares e a quinta grave nos pares', () => {
+    const porDupla = GROOVES.samba.bass.filter((_, i) => i % 2 === 0).map(([, g]) => g);
+    expect(porDupla).toEqual(['raiz', 'quintaGrave', 'raiz', 'quintaGrave']);
+    // e a semicolcheia repete a nota da sua dupla, não a da seguinte
+    for (let i = 0; i < GROOVES.samba.bass.length; i += 2) {
+      expect(GROOVES.samba.bass[i + 1][1]).toBe(GROOVES.samba.bass[i][1]);
+    }
+  });
+
+  /**
+   * E o encaixe que ninguém combinou: a semicolcheia cai no **último passo do tempo**, que é onde o
+   * micro-tempo adianta 27 ms (a 88 bpm). É dela que vem a antecipação do samba.
+   */
+  it('a semicolcheia cai onde o micro-tempo adianta', () => {
+    const porTempo = GROOVES.samba.grid / GROOVES.samba.tempos;
+    for (const [passo, , dur] of GROOVES.samba.bass) {
+      if (dur !== 1) continue;
+      expect(passo % porTempo).toBe(porTempo - 1);
+      expect(desvioDoPasso(GROOVES.samba, passo, 0.17045)).toBeLessThan(0);
+    }
   });
 });
 
@@ -363,7 +408,7 @@ describe('a progressão guardada', () => {
   it('aceita versão antiga, sem os interruptores de som', () => {
     const lido = lerGuardado(JSON.stringify(bom));
     expect(lido!.contagem).toBeUndefined();
-    const novo = { ...bom, contagem: false, bassOn: false, compVoice: 'pad' };
+    const novo = { ...bom, contagem: false, bassOn: false, acordesOn: false, compVoice: 'pad' };
     expect(lerGuardado(JSON.stringify(novo))).toEqual(novo);
     // e timbre que não existe é ignorado, não derruba o resto
     const torto = lerGuardado(JSON.stringify({ ...bom, compVoice: 'cravo' }));

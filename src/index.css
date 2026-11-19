@@ -1013,6 +1013,19 @@ select.sel {
  */
 .backing-faixa { background: var(--area-3); color: var(--on-area); padding: 20px; display: grid; gap: 16px; }
 .backing-faixa .eyebrow { color: var(--on-area); opacity: 0.78; }
+/**
+ * ⚠️ **Os chips dentro da faixa também precisam da tinta dela** — e isto foi metade do conserto que
+ * ficou faltando: a faixa e os cartões ganharam `--on-area` em 19/11, e os chips de levada e de
+ * timbre continuaram com `--ink-soft`, que segue o tema enquanto o azul fica parado. No tema escuro
+ * isso dá tinta clara sobre azul claro, e foi assim que ele mandou a foto: os não selecionados
+ * praticamente sumiam.
+ *
+ * O chip aceso fica como está — ele tem fundo de acento e tinta própria, e já lia nos dois temas.
+ */
+.backing-faixa .chip { color: var(--on-area); border-color: color-mix(in srgb, var(--on-area) 45%, transparent); }
+.backing-faixa .chip:hover:not(.on):not(:disabled) {
+  background: color-mix(in srgb, var(--on-area) 14%, transparent); color: var(--on-area);
+}
 /* O acorde do compasso: slot dentro da faixa. O aceso inverte (tinta da faixa como fundo). */
 .backing-compasso {
   border: 0; cursor: pointer; min-width: 84px; padding: 10px 12px; text-align: left; font: inherit;

@@ -678,6 +678,7 @@ const en: Shape<typeof pt> = {
     groove: 'Groove',
     chordSound: 'Chord sound',
     countIn: 'Count-in',
+    chords: 'Chords',
     bass: 'Bass',
     buildYoursMajor: 'Build your own: tap the degrees of the harmonic field of {tonic} major',
     buildYoursMinor: 'Build your own: tap the degrees of the harmonic field of {tonic} minor',
