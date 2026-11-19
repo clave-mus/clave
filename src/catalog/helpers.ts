@@ -12,6 +12,7 @@ import { digitacoesDaReceita } from '../theory/digitacoes';
 import { pcPermitido, regiao } from './contexto-musical';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
 import type { MessageKey } from '../i18n';
+import type { Voice } from '../audio/engine';
 import { TUNINGS } from '../components/music/Fretboard';
 import type { ChoiceOption, Ctx, Expected, Question, Setting, SettingValue } from './types';
 import { clave, GRAUS_DO_MATERIAL, pcsPermitidas } from './contexto-musical';
@@ -88,6 +89,55 @@ export const GRAUS_ESCOLHIDOS = (ctx: Ctx): Setting => ({
   id: 'grausEscolhidos', label: ctx.t('settings.onlyTheseDegrees'), type: 'multi', justify: true, podeVazio: true,
   options: GRAUS_DO_MATERIAL(ctx),
 });
+
+/**
+ * **O timbre, como parâmetro de exercício** — declarado uma vez, usado por todo item de ouvido.
+ *
+ * Nasceu no `ouvido-intervalo` em 19/11, da pergunta do Paulo (*"será que podemos adicionar mais
+ * timbres?"*), e virou compartilhado no mesmo dia quando ele pediu a varredura: *"revise todo o
+ * catálogo e procure onde o piano novo pode entrar como timbre, onde pode ter timbres diferentes
+ * como parâmetro"*. Seis itens pediam a mesma coisa, e seis cópias divergiriam no primeiro ajuste —
+ * nesta mesma sessão eu recolhi cinco cópias de uma função de grafia.
+ *
+ * Três valores, e o do meio é o que a pergunta dele destravou:
+ *
+ * - **o do perfil**, que é o comportamento de sempre e segue sendo o padrão;
+ * - **escolher um**, com os seis nomeados como no Perfil — a escolha existia, mas só lá, na casinha
+ *   do "piano", onde ninguém a associaria a um exercício;
+ * - **sorteado a cada pergunta**, que é a parte que treina: reconhecer o que se ouve independente do
+ *   timbre é a habilidade que transfere para a música, e treinar sempre no mesmo som não treina isso.
+ *
+ * O item declara `...TIMBRE(ctx)` nas configurações, `...TIMBRE_DEFAULTS` nos padrões, e chama
+ * `vozDaPergunta(s)` no `make` — que devolve a camada de `Question.presentation`, ou nada.
+ */
+export const VOZES: Voice[] = ['piano', 'limpo', 'pad', 'violao', 'baixo', 'orgao'];
+
+export const TIMBRE = (ctx: Ctx): Setting[] => [
+  { id: 'timbre', label: ctx.t('settings.timbre'), type: 'single', options: [
+    { id: 'perfil', label: ctx.t('settings.timbreFromProfile') },
+    { id: 'escolher', label: ctx.t('settings.timbreChoose') },
+    { id: 'sorteado', label: ctx.t('settings.timbreRandom') },
+  ] },
+  // Pura apresentação: trocar o timbre escolhido não sorteia uma pergunta nova.
+  { id: 'qualTimbre', label: ctx.t('settings.whichTimbre'), type: 'single', quando: s => s.timbre === 'escolher',
+    soPresentation: true, present: v => ({ voice: String(v) as Voice }),
+    options: VOZES.map(v => ({ id: v, label: ctx.t(`voices.${v}` as const) })) },
+];
+
+export const TIMBRE_DEFAULTS = { timbre: 'perfil', qualTimbre: 'piano' } as const;
+
+/**
+ * A camada de apresentação **da pergunta**: o timbre sorteado, ou nada.
+ *
+ * Sorteado é propriedade da pergunta, e não da configuração — as outras camadas valem para a rodada
+ * inteira. Ver `Question.presentation`.
+ *
+ * `preservar` é para quando a voz **carrega informação**: um acorde desenhado no braço soa com a voz
+ * do braço, e sortear apagaria isso (foi queixa dele em 13/11). Nos itens que respondem no braço, o
+ * sorteio vale no teclado e na pauta, e o braço mantém a sua voz.
+ */
+export const vozDaPergunta = (s: Record<string, unknown>, preservar = false): { voice: Voice } | undefined =>
+  (!preservar && s.timbre === 'sorteado' ? { voice: pick(VOZES) } : undefined);
 
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });

@@ -39,30 +39,51 @@ export interface AcordeDoExercicio {
   emprestimo: boolean;
 }
 
-interface Emprestimo { id: string; semi: number; triade: ChordId; tetrade: ChordId; roman: string }
+/**
+ * Um empréstimo modal do campo.
+ *
+ * `grau` e `alt` entraram em 19/11, para o backing poder **grafar** a fundamental: `semi` basta para
+ * o que trabalha em classes de altura (é o caso do `ouvido-campo`), e não diz se o acorde a três
+ * semitons é um Mi♭ ou um Ré♯. A identidade musical é "o sexto grau, abaixado" — e dela a grafia
+ * sai de graça, alterando a nota daquele grau.
+ */
+export interface Emprestimo {
+  id: string;
+  /** Semitons da fundamental acima da tônica. */
+  semi: number;
+  /** O grau diatônico de onde ele vem (1..7), e a alteração em relação a ele. */
+  grau: number;
+  alt: -1 | 0 | 1;
+  triade: ChordId;
+  tetrade: ChordId;
+  roman: string;
+}
 
 const EMPRESTIMOS: Record<CampoDoExercicio, Emprestimo[]> = {
   maior: [
-    { id: 'bII', semi: 1, triade: 'maior', tetrade: '7M', roman: '♭II' },
-    { id: 'iio', semi: 2, triade: 'dim', tetrade: 'm7b5', roman: 'ii' },
-    { id: 'bIII', semi: 3, triade: 'maior', tetrade: '7M', roman: '♭III' },
-    { id: 'iv', semi: 5, triade: 'menor', tetrade: 'm7', roman: 'iv' },
-    { id: 'bVI', semi: 8, triade: 'maior', tetrade: '7M', roman: '♭VI' },
+    { id: 'bII', semi: 1, grau: 2, alt: -1, triade: 'maior', tetrade: '7M', roman: '♭II' },
+    { id: 'iio', semi: 2, grau: 2, alt: 0, triade: 'dim', tetrade: 'm7b5', roman: 'ii' },
+    { id: 'bIII', semi: 3, grau: 3, alt: -1, triade: 'maior', tetrade: '7M', roman: '♭III' },
+    { id: 'iv', semi: 5, grau: 4, alt: 0, triade: 'menor', tetrade: 'm7', roman: 'iv' },
+    { id: 'bVI', semi: 8, grau: 6, alt: -1, triade: 'maior', tetrade: '7M', roman: '♭VI' },
     // ♭VII com sétima DOMINANTE, não maior: é o grau 7 do campo do menor natural, de onde ele
     // vem emprestado — o "backdoor" ♭VII7. Conferido em `CAMPOS.menor.tetrades[6]`.
-    { id: 'bVII', semi: 10, triade: 'maior', tetrade: '7', roman: '♭VII' },
+    { id: 'bVII', semi: 10, grau: 7, alt: -1, triade: 'maior', tetrade: '7', roman: '♭VII' },
   ],
   menor: [
-    { id: 'bII', semi: 1, triade: 'maior', tetrade: '7M', roman: '♭II' },
-    { id: 'ii', semi: 2, triade: 'menor', tetrade: 'm7', roman: 'ii' },
-    { id: 'IV', semi: 5, triade: 'maior', tetrade: '7', roman: 'IV' },
-    { id: 'V', semi: 7, triade: 'maior', tetrade: '7', roman: 'V' },
-    { id: 'viio', semi: 11, triade: 'dim', tetrade: 'dim7', roman: 'vii' },
+    { id: 'bII', semi: 1, grau: 2, alt: -1, triade: 'maior', tetrade: '7M', roman: '♭II' },
+    { id: 'ii', semi: 2, grau: 2, alt: 0, triade: 'menor', tetrade: 'm7', roman: 'ii' },
+    { id: 'IV', semi: 5, grau: 4, alt: 0, triade: 'maior', tetrade: '7', roman: 'IV' },
+    { id: 'V', semi: 7, grau: 5, alt: 0, triade: 'maior', tetrade: '7', roman: 'V' },
+    { id: 'viio', semi: 11, grau: 7, alt: 1, triade: 'dim', tetrade: 'dim7', roman: 'vii' },
   ],
 };
 
 /** As opções do chip de configuração: o romano SEM a cauda de sétima, que é a identidade do
  *  empréstimo independente de tríade/tétrade. O meio-diminuto leva o `ø` porque ele é o nome. */
+/** Os empréstimos de um campo, com os dados — para quem precisa grafar, e não só classificar. */
+export const emprestimosDoCampo = (campo: CampoDoExercicio): readonly Emprestimo[] => EMPRESTIMOS[campo];
+
 export function opcoesDeEmprestimo(campo: CampoDoExercicio): { id: string; label: string }[] {
   return EMPRESTIMOS[campo].map(e =>
     ({ id: e.id, label: e.roman + (e.triade !== 'dim' ? '' : e.tetrade === 'm7b5' ? 'ø' : '°') }));

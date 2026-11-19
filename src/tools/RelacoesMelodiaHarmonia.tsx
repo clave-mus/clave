@@ -10,7 +10,7 @@
 // O motor mora em `theory/nota-sobre-acorde.ts` e a frase em `catalog/relacao-texto.ts`; aqui é só
 // tela e som.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { drone, pararDrones } from '../audio/engine';
+import { drone, pararDrones, pararTudo, playGroups } from '../audio/engine';
 import { useGlobalParams } from '../catalog/params';
 import { descreverRelacao } from '../catalog/relacao-texto';
 import { buildChord, harmonicField, majorTonic, midi, noteName, pc, type ModoDoCampo, type Note } from '../theory/core';
@@ -77,20 +77,39 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   // nota soa** — justamente o gesto que a tela existe para permitir. Com modo, aperta-se uma vez,
   // o som fica, e as duas mãos ficam livres para passear pelos acordes.
   const [modo, setModo] = useState<'nada' | 'ambos' | 'acorde' | 'nota'>('nada');
+  /**
+   * **Pedal ou piano** (decisão dele em 19/11: *"faça o piano entrar. mas aí toca só uma vez mesmo,
+   * decai"*).
+   *
+   * Os dois não são variações de timbre: são **naturezas diferentes de som**. O pedal é oscilador
+   * sustentado — fica soando enquanto se passeia pela grade, que é o que a tela foi feita para
+   * permitir. O piano é a amostra de 12/11, e amostra **decai**: não há como segurá-la sem inventar
+   * um laço de sustentação que o motor não tem. Então aqui ele bate uma vez, como um piano de
+   * verdade, e bate de novo a cada clique na grade.
+   */
+  const [som, setSom] = useState<'pedal' | 'piano'>('pedal');
+  /**
+   * Quantas vezes se pediu o som. Existe só para o piano: apertar o modo que já está aceso **bate
+   * de novo** em vez de silenciar, porque num som que já decaiu não há o que silenciar — e sem isto
+   * o segundo toque no botão apagava o modo e os cliques na grade paravam de soar.
+   */
+  const [golpe, setGolpe] = useState(0);
 
   // Dois efeitos separados, de propósito: assim trocar de ACORDE não reinicia a melodia. Num só,
   // qualquer mudança derrubaria os dois sons, e a nota "parada" daria um salto a cada clique.
   useEffect(() => {
     if (modo === 'nada' || modo === 'nota') return;
+    if (som === 'piano') { playGroups([acordes[iGrau].map(midi)], { voice: 'piano', dur: 3.2 }); return; }
     const parar = drone(acordes[iGrau].map(midi), 0.7, 'acorde');
     return parar;
-  }, [modo, acordes, iGrau]);
+  }, [modo, som, golpe, acordes, iGrau]);
 
   useEffect(() => {
     if (modo === 'nada' || modo === 'acorde') return;
+    if (som === 'piano') { playGroups([[midi(melodiaFixa)]], { voice: 'piano', dur: 3.2 }); return; }
     const parar = drone([midi(melodiaFixa)], 0.75, 'destaque');
     return parar;
-  }, [modo, melodiaFixa]);
+  }, [modo, som, golpe, melodiaFixa]);
 
   useEffect(() => { onRunning?.(modo !== 'nada'); }, [modo, onRunning]);
 
@@ -99,11 +118,17 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   // tocando depois que a tela trocou.
   useEffect(() => { pararDrones(); return pararDrones; }, []);
 
-  /** Aperta o modo que já está ligado para silenciar. */
-  const alternar = (m: typeof modo) => setModo(atualModo => (atualModo === m ? 'nada' : m));
+  /**
+   * Aperta o modo que já está ligado para silenciar — **menos no piano**, onde reapertar bate de
+   * novo: o som já decaiu, não há o que calar, e apagar o modo tiraria o som dos cliques na grade.
+   */
+  const alternar = (m: typeof modo) => {
+    if (som === 'piano' && modo === m) { setGolpe(g => g + 1); return; }
+    setModo(atualModo => (atualModo === m ? 'nada' : m));
+  };
 
   useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', modo !== 'nada',
-    { settings: { campo, cromatico, soarMelodia, tetrade } });
+    { settings: { campo, cromatico, soarMelodia, tetrade, som } });
 
   return (
     <div className="rmh" style={{ display: 'grid', gap: 18 }}>
@@ -170,9 +195,17 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
         <Btn tone={modo === 'nota' ? undefined : 'ghost'} onClick={() => alternar('nota')}>{t('melodyHarmony.playNote')}</Btn>
         {/* Volta por pedido do Paulo: apertar o modo ligado já silencia, mas isso não é óbvio, e
             quem não descobrir fica sem saída. Estética própria de propósito — é escape, não modo. */}
-        <button type="button" className="rmh-silenciar" onClick={() => setModo('nada')} disabled={modo === 'nada'}>
+        <button type="button" className="rmh-silenciar" onClick={() => { setModo('nada'); pararTudo(); }} disabled={modo === 'nada'}>
           {t('melodyHarmony.silence')}
         </button>
+      </div>
+
+      <div className="field">
+        <span>{t('melodyHarmony.sound')}</span>
+        <div className="row">
+          <Chip on={som === 'pedal'} onClick={() => { setSom('pedal'); pararTudo(); }}>{t('melodyHarmony.soundPedal')}</Chip>
+          <Chip on={som === 'piano'} onClick={() => { setSom('piano'); pararDrones(); }}>{t('melodyHarmony.soundPiano')}</Chip>
+        </div>
       </div>
 
       <div className="row">

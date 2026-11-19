@@ -1,7 +1,7 @@
 import { caberNaFaixa } from '../../theory/cadencia-harmonica';
 import { voicingsDe } from '../../theory/voicings';
 import { midi } from '../../theory/core';
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco } from '../helpers';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -102,8 +102,13 @@ export const ouvidoAcorde: CatalogItem = {
         { id: 'braco', label: ctx.t('settings.onNeck') },
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
-      ] }],
-  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', voicing: 'fechado', semFundamental: false },
+      ] },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx)],
+  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', voicing: 'fechado', semFundamental: false, ...TIMBRE_DEFAULTS },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -258,7 +263,7 @@ export const ouvidoAcorde: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
           ],
         },
-        autoplay: false, reveal: chordName(ctx.t, type),
+        autoplay: false, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s, noBraco),
       };
     }
 
@@ -285,7 +290,7 @@ export const ouvidoAcorde: CatalogItem = {
         prompt: ctx.t('quiz.drawChord', { chord: chordName(ctx.t, type) }), visual: { kind: 'ear' },
         surface: superficie, expected: { kind: 'contorno', midis: ms, ordenada: false },
         sound: { groups: [ms], instrument: !naPauta && !noPiano ? vozDoBraco(tuning) : undefined },
-        autoplay: true, reveal: chordName(ctx.t, type),
+        autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s, !naPauta && !noPiano),
       };
     }
     /**
@@ -312,7 +317,7 @@ export const ouvidoAcorde: CatalogItem = {
       surface: { kind: 'choices', compact: types.length > 6, options: chordTypes(ctx.t, porComplexidade(types)) }, expected: { kind: 'option', id: type },
       // O timbre é o padrão de `SoundContent`, que **é piano** — um voicing de piano tocado com voz
       // de braço soaria como coisa nenhuma, e é o defeito que ele pegou em 13/11 no audiar.
-      sound: { groups: [soam] }, autoplay: true, reveal: chordName(ctx.t, type),
+      sound: { groups: [soam] }, autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s),
     };
   },
 };

@@ -1,4 +1,4 @@
-import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, pick, scaleName, scaleSound, tonicaNaRegiao } from '../helpers';
+import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, pick, scaleName, scaleSound, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -14,8 +14,13 @@ export const ouvidoEscala: CatalogItem = {
   settings: ctx => [
     { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
     DIRECAO(ctx),
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx),
   ],
-  defaults: { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe' },
+  defaults: { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe', ...TIMBRE_DEFAULTS },
   /**
    * "Todas as escalas, uma etapa só" (Paulo, 09/11) — e isso **obriga** `direcao: 'ambos'`. Não é
    * gosto: com as duas menores melódicas marcadas e só subindo, o `problema` acima recusa a
@@ -44,7 +49,7 @@ export const ouvidoEscala: CatalogItem = {
     return {
       prompt: ctx.t('quiz.whatScale'), visual: { kind: 'ear' },
       surface: { kind: 'choices', options: types.map(t => ({ id: t, label: scaleName(ctx.t, t) })), wide: true }, expected: { kind: 'option', id: type },
-      sound: { groups: ms.map(m => [m]) }, autoplay: true, reveal: scaleName(ctx.t, type),
+      sound: { groups: ms.map(m => [m]) }, autoplay: true, reveal: scaleName(ctx.t, type), presentation: vozDaPergunta(s),
     };
   },
 };

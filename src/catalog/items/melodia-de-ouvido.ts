@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 
@@ -91,8 +91,13 @@ export const melodiaDeOuvido: CatalogItem = {
     ] },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.3, max: 2, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx),
   ],
-  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9, ...TIMBRE_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
@@ -188,9 +193,27 @@ export const melodiaDeOuvido: CatalogItem = {
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         // O gabarito soa no instrumento que está desenhado, não de piano.
         sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: false,
-        reveal: `${emGraus}  ·  ${comNomes}`,
+        reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
       };
     }
+
+    /**
+     * **A nota de partida, marcada no braço** (pedido dele em 19/11: *"melody by ear — no braço,
+     * tem que aparecer uma nota de partida"*).
+     *
+     * O braço não tem onde se agarrar: a conferência aceita a melodia deslocada em **oitavas
+     * inteiras** (§4), mas não deslocada em qualquer intervalo — então quem ouviu os intervalos
+     * certos e começou meio tom fora erra tudo. Em ditado musical a primeira nota é dada; aqui ela
+     * passa a ser dada também, e o resto continua sendo de ouvido.
+     *
+     * **`apoio` já existia no motor** e é o mesmo mecanismo da referência do `ouvido-tecla`: a
+     * marca aparece em **todas** as posições onde aquela altura existe no braço — pedido dele em
+     * 13/11, e a razão é do instrumento (ver o comentário no `Player`). O rótulo leva o nome, como
+     * lá: marca sem nome é ponto misterioso.
+     *
+     * A nota de partida continua entre as `n` que se responde — é âncora, não desconto.
+     */
+    const partida = { midis: [melodia[0]], rotulos: { [melodia[0]]: nomeNaTonalidade(ctx, mod(melodia[0], 12)) } };
 
     /**
      * Respondendo por **graus**, a superfície é a `sequence` que já existe (a mesma do
@@ -204,7 +227,7 @@ export const melodiaDeOuvido: CatalogItem = {
       // acima do teto quando ele não cabe inteiro, e a tela não pode mentir sobre o que soou (o
       // teste `superficie-cobre-o-som` guarda isso desde 09/11).
       : onde === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...grupos.flat()), hi: Math.max(hi, ...grupos.flat()), quantas: n }
-      : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: n };
+      : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: n, apoio: partida };
 
     return {
       prompt: ctx.t('quiz.earMelody'),
@@ -212,7 +235,7 @@ export const melodiaDeOuvido: CatalogItem = {
       surface: superficie,
       expected: onde === 'graus' ? { kind: 'option', id: emGraus } : { kind: 'contorno', midis: melodia },
       sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true,
-      reveal: `${emGraus}  ·  ${comNomes}`,
+      reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
     };
   },
 };
