@@ -660,7 +660,10 @@ select.sel {
    `justify-content: center` centraliza o bloco inteiro, mas a última linha incompleta — três
    células de sete — continua encostada à esquerda dentro dele. Com flex cada linha se centra
    sozinha, que é o que se espera ao ver sete caixas quebrarem em 4 + 3. */
-.rmh-grade { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+/* `minmax(0, 1fr)` em vez de `1fr`: um item de grid não encolhe abaixo do conteúdo sem isto, e as
+   faixas que rolam dependem de a coluna ceder. Ver o comentário em `.rmh-notas`, no celular. */
+.rmh { grid-template-columns: minmax(0, 1fr); }
+.rmh-grade { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-width: 0; }
 .rmh-grade > .rmh-cel { flex: 0 0 92px; }
 /* As notas seguem a mesma regra dos acordes: centradas, e cada linha por si quando quebram. */
 .rmh-notas { justify-content: center; }
@@ -678,10 +681,15 @@ select.sel {
 .rmh-rel.atrito { color: var(--accent); font-weight: 600; }
 .rmh-frase { max-width: 62ch; font-size: 15px; }
 
-/* No celular a grade de sete acordes e a fileira de até doze notas espremem ou quebram em duas
-   linhas. Viram faixa que corre de lado, com encaixe (pedido do Paulo, 09/11).
-   **Encaixa mas não centraliza uma só**: a graça da tela é comparar, então ficam três ou quatro
-   à vista de cada vez em vez de uma por vez.
+/* No celular a fileira de até doze notas vira faixa que corre de lado, com encaixe (pedido do
+   Paulo, 09/11). **Encaixa mas não centraliza uma só**: a graça da tela é comparar, então ficam
+   três ou quatro à vista de cada vez em vez de uma por vez.
+
+   ⚠️ **A GRADE, medida em 19/11, não vira faixa: ela quebra em três linhas** — a regra base manda
+   `flex-wrap: wrap` e este bloco não a desfaz. Está escrito aqui porque o comentário antigo
+   afirmava que as duas rolavam, e não é verdade. Não mexi: os sete acordes quebrados em 3+3+1
+   ficam todos à vista, e o próprio comentário abaixo defende que inteiro é melhor que uma faixa
+   quando dá para caber. Virar faixa é escolha do Paulo, não conserto.
 
    ⚠️ **`pointer: coarse` junto com a largura, e não a largura sozinha.** Com a largura sozinha,
    encolher a janela no computador virava armadilha: a faixa rolava, mas com mouse não havia como
@@ -701,6 +709,21 @@ select.sel {
     display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity;
     justify-content: flex-start; padding-bottom: 6px;
   }
+  /**
+   * ⚠️ **`min-width: 0` é o que faz a faixa ROLAR em vez de empurrar a página.**
+   *
+   * Defeito achado em 19/11, com o Paulo no celular: *"interface de melody over harmony está com
+   * problemas no celular. ficou mais gritante quando selecionei notas de fora da escala"*.
+   *
+   * O porquê, medido: um item de grid (ou de flex) tem `min-width: auto`, então ele se recusa a
+   * ficar menor que o conteúdo — e `overflow-x: auto` nunca entra em ação, porque não há overflow:
+   * quem cede é a PÁGINA. Com sete notas diatônicas a fileira cabia em 346 px e nada acontecia; com
+   * as doze cromáticas ela pede 664, e o documento inteiro ia a **653 px numa tela de 375** —
+   * tudo encolhido, exatamente o que ele viu.
+   *
+   * Vale para as duas faixas e para o contêiner, porque a cadeia precisa ceder inteira.
+   */
+  .rmh-grade, .rmh-notas { min-width: 0; }
   .rmh-notas .chip { flex: 0 0 auto; scroll-snap-align: start; }
 
   /* ⚠️ A barra fica VISÍVEL, e isso é o conserto de um bug real: escondê-la funciona no toque,
