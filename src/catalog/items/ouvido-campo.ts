@@ -1,4 +1,4 @@
-import { CHORDS, EM_DO_MAIOR, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao } from '../helpers';
+import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao } from '../helpers';
 import { qualidadeEnfeitada } from '../enfeites';
 import { voicingsDe } from '../../theory/voicings';
 import { midi } from '../../theory/core';
@@ -92,6 +92,19 @@ export const ouvidoCampo: CatalogItem = {
     // que nenhum par do material divide o mesmo conjunto de classes de altura.
     // Com voicing o baixo já pode ser qualquer grau: inverter de novo seria meia função repetida.
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => !comVoicing(s) },
+    /**
+     * **Os acordes da cadência de contexto**, e o padrão são tríades desde 19/11 (pedido dele:
+     * *"seria bom se a cadência de contexto pudesse ser só de tríades"*).
+     *
+     * Antes a cadência seguia o tamanho do acorde-alvo, e com tétrades ela chegava à pergunta com
+     * quatro notas em cada acorde — mais massa para firmar o mesmo centro, e mais chance de
+     * competir com o que vem depois. O contexto existe para dizer onde é a tônica; tríades dizem
+     * isso com menos tinta.
+     */
+    { id: 'contextoAcordes', label: ctx.t('settings.contextChords'), type: 'single', quando: s => s.contexto !== 'nota', options: [
+      { id: 'triades', label: ctx.t('settings.contextTriads') },
+      { id: 'comoOAlvo', label: ctx.t('settings.contextLikeTarget') },
+    ] },
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single',
       options: [{ id: 'ii-V-I', label: ctx.t('settings.contextIIVI') }, { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
         { id: 'nota', label: ctx.t('settings.contextTonic') }] },
@@ -100,7 +113,7 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
   ],
-  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado',
+  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades',
     emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2 },
   presets: [
     { id: 'maior-tetrades', nome: 'presets.campoTetrades', settings: { campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
@@ -126,7 +139,7 @@ export const ouvidoCampo: CatalogItem = {
     // cadencia de verdade. Os ALVOS seguem sendo os da natural; V7/vii°7 entram só como empréstimo.
     const cadencia = CADENCIAS.find(c => c === s.contexto);
     const contexto: number[][] = cadencia
-      ? cadenciaHarmonica(cadencia, tonica, s.campo === 'menor' ? 'menor-harmonica' : 'maior', s.tetrades !== false)
+      ? cadenciaHarmonica(cadencia, tonica, s.campo === 'menor' ? 'menor-harmonica' : 'maior', s.contextoAcordes === 'comoOAlvo' && s.tetrades !== false)
       : [[tonica]];
 
     /**
@@ -140,7 +153,18 @@ export const ouvidoCampo: CatalogItem = {
      */
     const familias = FAMILIAS[String(s.enfeites ?? 'nenhum')] ?? [];
     const vestindo = familias.length > 0 && s.tetrades !== false;
-    const qualidade = vestindo ? qualidadeEnfeitada(alvo.chord, familias) : alvo.chord;
+    /**
+     * **O enfeite respeita a tonalidade** — e isto veio do ouvido dele em 19/11: o `Bm9♭5` do viiø
+     * e o `Cmaj7♯11` do I soaram mal, e os dois põem nota de fora do campo (um dó♯ e um fá♯ em dó
+     * maior) sem função nenhuma. A regra está em `enfeitesDe`; aqui só se diz onde o acorde está.
+     *
+     * **Dominante é o V, e só ele**: `♭VII7` e o `IV7` do menor têm forma de dominante e não
+     * resolvem na tônica — vesti-los de ♭9 soa como acidente. Foi decisão dele.
+     */
+    const escala = SCALES[s.campo === 'menor' ? 'menor' : 'maior'].degs.map(([, semi]) => semi);
+    const qualidade = vestindo
+      ? qualidadeEnfeitada(alvo.chord, familias, { escala, semi: alvo.semi, dominante: alvo.semi === 7 && alvo.chord === '7' })
+      : alvo.chord;
     const semis = qualidade === alvo.chord ? alvo.semis : CHORDS[qualidade].degs.map(([, x]) => alvo.semi + x);
     /**
      * **E o voicing de piano**, quando ligado. `voicingsDe` coloca as notas sozinho dentro da

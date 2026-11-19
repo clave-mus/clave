@@ -198,7 +198,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 
   // camadas: global (timbre do instrumento, volume) < exercício < configurações da pessoa
   const presentationFor = useCallback((question: Question) =>
-    resolvePresentation([globalPresentation(params, question.sound?.instrument), def.presentation, settingsPresentation]), [params, def.presentation, settingsPresentation]);
+    resolvePresentation([globalPresentation(params, question.sound?.instrument), def.presentation, settingsPresentation, question.presentation]), [params, def.presentation, settingsPresentation]);
 
   /** Toca o som da pergunta. `listening` = a pessoa está ouvindo para responder (conta como escuta). */
   const play = useCallback((question: Question, listening = false) => {

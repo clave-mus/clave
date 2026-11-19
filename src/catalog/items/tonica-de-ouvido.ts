@@ -1,9 +1,9 @@
 import { voicingsDe, type Voicing } from '../../theory/voicings';
 import {
-  ALTERADOS, EXTENSOES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
+  ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
 } from '../helpers';
-import { qualidadeEnfeitada } from '../enfeites';
+import { qualidadeEnfeitada, type NoCampo } from '../enfeites';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
 
@@ -135,8 +135,23 @@ export const tonicaDeOuvido: CatalogItem = {
     // Tríades só se a pessoa pediu tríades e nada mais: pedir tétrade manda no campo.
     const soTriades = fams.length === 1 && fams[0] === 'triades';
     const campo = harmonicField(notaGrafada(ctx, (3 + 1) * 12 + pcDaTonica(ctx)), modoDoCampo(ctx), !soTriades, ctx.conv);
-    const grau = campo[pick(grausEscolhidos(s)) - 1] ?? campo[0];
-    const qualidade = s.qualidadeLivre === true ? pick(qualidades(s)) : qualidadeDoGrau(grau.chord, fams);
+    const nGrau = pick(grausEscolhidos(s));
+    const grau = campo[nGrau - 1] ?? campo[0];
+    /**
+     * **O enfeite respeita a tonalidade**, pela mesma regra do `ouvido-campo` — e este item tinha o
+     * mesmo defeito que o Paulo ouviu lá em 19/11 (`Bm9♭5` no viiø, `Cmaj7♯11` no I: nota de fora
+     * do campo, sem função). Consertar num item e deixar vivo no outro é o padrão que este projeto
+     * passou a sessão inteira desfazendo.
+     *
+     * Com a **qualidade livre** a regra não se aplica, de propósito: ali sair do campo é o que o
+     * parâmetro promete.
+     */
+    const noCampo = {
+      escala: SCALES[modoDoCampo(ctx)].degs.map(([, semi]: readonly [number, number]) => semi),
+      semi: mod(midi(grau.root) - pcDaTonica(ctx), 12),
+      dominante: nGrau === 5 && grau.chord === '7',
+    };
+    const qualidade = s.qualidadeLivre === true ? pick(qualidades(s)) : qualidadeDoGrau(grau.chord, fams, noCampo);
     const escolhidos = voicingsDe(grau.root, qualidade, {
       semFundamental: s.semFundamental === true,
       ...(s.somAudivel === true ? { piso: 60, teto: 96 } : {}),
@@ -186,10 +201,10 @@ export const tonicaDeOuvido: CatalogItem = {
  * Graus que não têm enfeite na família pedida ficam como são. `dim7` é o caso: nenhuma das doze
  * qualidades novas tem o núcleo dele, e inventar uma seria conteúdo que ninguém revisou.
  */
-function qualidadeDoGrau(base: ChordId, familias: readonly string[]): ChordId {
+function qualidadeDoGrau(base: ChordId, familias: readonly string[], onde?: NoCampo): ChordId {
   // A função mudou de casa em 19/11 (`catalog/enfeites.ts`): o `ouvido-campo` passou a enfeitar os
   // acordes do campo pela mesma regra, e duas cópias divergiriam no primeiro ajuste.
-  return qualidadeEnfeitada(base, familias);
+  return qualidadeEnfeitada(base, familias, onde);
 }
 
 /** As qualidades em jogo, somando as famílias que a pessoa marcou. */

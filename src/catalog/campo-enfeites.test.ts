@@ -12,7 +12,7 @@ import { isSeries, type Ctx, type SeriesItem } from './types';
 import { resolveParams } from './params';
 import { translate, type MessageKey, type Vars } from '../i18n';
 import { enfeitesDe } from './enfeites';
-import { CHORDS, type ChordId } from '../theory/core';
+import { CHORDS, SCALES, mod, type ChordId } from '../theory/core';
 
 const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
@@ -169,5 +169,90 @@ describe('o enfeite não troca o acorde', () => {
         expect(nucleo(e), `${e} não tem o núcleo de ${base2}`).toBe(nucleo(base2));
       }
     }
+  });
+});
+
+/**
+ * **A regra da tonalidade** — 19/11, do ouvido dele: *"viiø · Bm9♭5 soou mal... Imaj7 · Cmaj7♯11
+ * soou mal... será que tem uma maneira de tornar essas alterações menos aleatórias e mais
+ * musicais?"*. Os dois punham nota de fora do campo sem função: um dó♯ e um fá♯ em dó maior.
+ */
+describe('o enfeite respeita a tonalidade', () => {
+  const escalaDe = (campo: 'maior' | 'menor') => new Set(SCALES[campo].degs.map(([, x]) => mod(x, 12)));
+
+  it.each(['maior', 'menor'] as const)('%s: fora do V, toda nota do enfeite é da tonalidade', campo => {
+    const escala = escalaDe(campo);
+    /**
+     * **A tonalidade do contexto, não a do campo** — e foi o teste que me ensinou isso: pedir
+     * `campo: 'menor'` com dó maior em vigor dá um dó menor, não um lá menor. A tônica sai da
+     * tonalidade de prática; o campo só diz maior ou menor.
+     */
+    const tonicaPc = campo === 'maior' ? 0 : 9;
+    const ctxDoCampo: Ctx = campo === 'maior' ? ctx
+      : { ...ctx, params: resolveParams('violao', { key: { tonic: 9, mode: 'menor' } }) };
+    for (let grau = 1; grau <= 7; grau++) {
+      for (let i = 0; i < 120; i++) {
+        const q = item.make({ ...base, campo, enfeites: 'alterados', graus: [String(grau)], contexto: 'nota', voicing: 'fechado' } as never, ctxDoCampo);
+        // o alvo é o último grupo; o contexto é a tônica sozinha neste modo
+        const alvo = q.sound!.groups[q.sound!.groups.length - 1];
+        const relativas = alvo.map(m => mod(m - tonicaPc, 12));
+        const fora = relativas.filter(pc => !escala.has(pc));
+        // o V é a exceção: nele, a nota de fora é o vocabulário
+        if (/^V7/.test(q.reveal)) continue;
+        expect(fora, `${campo} grau ${grau}: ${q.reveal} tem ${fora} fora da escala`).toEqual([]);
+      }
+    }
+  });
+
+  it('em dó maior, os dois que ele reprovou não existem mais — e o do IV continua', () => {
+    const noGrau = (g: number) => {
+      const vistas = new Set<string>();
+      for (let i = 0; i < 300; i++) vistas.add(faz({ enfeites: 'alterados', graus: [String(g)] }).reveal);
+      return [...vistas];
+    };
+    // I: a nona e a décima terceira ficam; o ♯11 (fá♯) sai
+    expect(noGrau(1).some(c => c.includes('♯11'))).toBe(false);
+    expect(noGrau(1).some(c => c.includes('(9)'))).toBe(true);
+    // iii: a nona é o mesmo fá♯ e sai; a décima primeira fica
+    expect(noGrau(3).some(c => c.includes('(9)'))).toBe(false);
+    expect(noGrau(3).some(c => c.includes('(11)'))).toBe(true);
+    // viiø: a nona é um dó♯ — não sobra enfeite nenhum
+    expect(noGrau(7).every(c => !/\(\d|♯|♭9/.test(c.replace('(♭5)', '')))).toBe(true);
+    // IV: o MESMO ♯11 do I, e aqui ele é o si natural — o acorde lídio
+    expect(noGrau(4).some(c => c.includes('♯11')), noGrau(4).join(' ')).toBe(true);
+  });
+
+  /**
+   * `♭VII7` e o `IV7` do menor têm forma de dominante e não resolvem na tônica. Alterá-los soa como
+   * acidente, e foi decisão dele que a alteração fique onde ela resolve.
+   */
+  it('o ♭VII7 do menor não recebe alteração, mas recebe as extensões diatônicas', () => {
+    const vistas = new Set<string>();
+    for (let i = 0; i < 400; i++) vistas.add(faz({ campo: 'menor', enfeites: 'alterados', graus: ['7'] }).reveal);
+    expect([...vistas].some(c => /♭9|♯9|♭13|♯11/.test(c)), [...vistas].join(' ')).toBe(false);
+    expect([...vistas].some(c => c.includes('(9)')), [...vistas].join(' ')).toBe(true);
+  });
+
+  it('e o V continua com as seis', () => {
+    const vistas = new Set<string>();
+    for (let i = 0; i < 400; i++) vistas.add(faz({ enfeites: 'alterados', graus: ['5'] }).reveal);
+    for (const esperada of ['(9)', '(13)', '♭9', '♯9', '♯11', '♭13']) {
+      expect([...vistas].some(c => c.includes(esperada)), `${esperada} em ${[...vistas].join(' ')}`).toBe(true);
+    }
+  });
+});
+
+describe('a cadência de contexto', () => {
+  const notasPorAcorde = (contextoAcordes: string) => {
+    const q = faz({ contextoAcordes, tetrades: true });
+    // o último grupo é o alvo e o penúltimo é o respiro vazio
+    return q.sound!.groups.slice(0, -2).map(g => g.length);
+  };
+
+  it('vem em tríades por padrão, e acompanha o alvo quando se pede', () => {
+    expect(notasPorAcorde('triades').every(n => n === 3)).toBe(true);
+    expect(notasPorAcorde('comoOAlvo').every(n => n === 4)).toBe(true);
+    // o padrão do item é o que ele pediu em 19/11
+    expect(faz({}).sound!.groups.slice(0, -2).every(g => g.length === 3)).toBe(true);
   });
 });

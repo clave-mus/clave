@@ -1,6 +1,13 @@
 import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Surface } from '../types';
+import type { Voice } from '../../audio/engine';
+
+/**
+ * **Os seis timbres do motor**, na ordem em que o Perfil os oferece — mesma lista, para a pessoa
+ * reconhecer os nomes de um lugar no outro.
+ */
+const VOZES: Voice[] = ['piano', 'limpo', 'pad', 'violao', 'baixo', 'orgao'];
 
 export const ouvidoIntervalo: CatalogItem = {
   id: 'ouvido-intervalo',
@@ -62,9 +69,29 @@ export const ouvidoIntervalo: CatalogItem = {
      * que parte dele é outra habilidade (ouvir o grau) que ouvir um intervalo solto no ar.
      */
     { id: 'comTonica', label: ctx.t('settings.fromTonic'), type: 'toggle' },
+    /**
+     * **O timbre** — e o ponto não é decoração (conversa de 19/11).
+     *
+     * Dois fatos que o pedido dele destravou: o item já tocava com **seis** timbres possíveis
+     * (piano, synth limpo, pad, violão, baixo, órgão), mas a escolha morava só no Perfil, na
+     * casinha do "piano" — ninguém associaria aquilo a este exercício. E **sortear a cada
+     * pergunta** é a parte que vale para o ouvido: reconhecer um intervalo independente do timbre é
+     * a habilidade que transfere para a música de verdade, e treinar sempre no mesmo som não treina
+     * isso.
+     */
+    { id: 'timbre', label: ctx.t('settings.timbre'), type: 'single', options: [
+      { id: 'perfil', label: ctx.t('settings.timbreFromProfile') },
+      { id: 'escolher', label: ctx.t('settings.timbreChoose') },
+      { id: 'sorteado', label: ctx.t('settings.timbreRandom') },
+    ] },
+    // Pura apresentação: trocar o timbre escolhido não sorteia um intervalo novo.
+    { id: 'qualTimbre', label: ctx.t('settings.whichTimbre'), type: 'single', quando: s => s.timbre === 'escolher',
+      soPresentation: true, present: v => ({ voice: String(v) as Voice }),
+      options: VOZES.map(v => ({ id: v, label: ctx.t(`voices.${v}` as const) })) },
     GRAUS_ESCOLHIDOS(ctx)],
   defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
-    resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [] },
+    resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [],
+    timbre: 'perfil', qualTimbre: 'piano' },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   /**
@@ -181,6 +208,12 @@ export const ouvidoIntervalo: CatalogItem = {
     /** O nome do que soou: um intervalo, ou os dois empilhados. */
     const nome = degraus.map(x => semitoneName(x, ctx.conv)).join(' + ');
     /**
+     * **O timbre sorteado é da PERGUNTA**, não das configurações: ele muda a cada pergunta, e é por
+     * isso que `Question.presentation` existe. Nos outros dois modos ninguém mexe na camada — o
+     * perfil (ou o timbre escolhido, que é `present` de configuração) continua mandando.
+     */
+    const presentation = s.timbre === 'sorteado' ? { voice: pick(VOZES) } : undefined;
+    /**
      * **Um botão por nota** — e este item era o único de ouvido sem pedaço de som nenhum. O
      * `ouvido-celulas`, o `reconhecer-padroes-escala` e o `melodia-de-ouvido` já tinham "Nota 1",
      * "Nota 2"; aqui havia só o botão grande. O Paulo pediu em 18/11, e um botão por nota (em vez
@@ -218,7 +251,7 @@ export const ouvidoIntervalo: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups },
           ],
         },
-        autoplay: false, reveal: nome,
+        autoplay: false, reveal: nome, presentation,
       };
     }
 
@@ -239,7 +272,7 @@ export const ouvidoIntervalo: CatalogItem = {
         visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: { groups, partes: porNota(ouvidas, true) },
-        autoplay: true, reveal: nome,
+        autoplay: true, reveal: nome, presentation,
       };
     }
 
@@ -264,13 +297,13 @@ export const ouvidoIntervalo: CatalogItem = {
         surface: superficie,
         expected: { kind: 'contorno', midis: dir === 'juntas' ? alturas : ordenadas, ordenada: dir !== 'juntas' },
         // Respondendo no braço, o som é do braço: era piano, como ele relatou no `audiar` em 13/11.
-        sound: { groups, instrument: noBraco ? vozDoBraco(tuning) : undefined, partes: porNota(ouvidas) }, autoplay: true, reveal: nome,
+        sound: { groups, instrument: noBraco ? vozDoBraco(tuning) : undefined, partes: porNota(ouvidas) }, autoplay: true, reveal: nome, presentation,
       };
     }
     return {
       prompt: ctx.t('quiz.earInterval'), visual: { kind: 'ear', hint: ctx.t(dir === 'juntas' ? 'quiz.hintTogether' : dir === 'desce' ? 'quiz.hintDown' : 'quiz.hintUp') },
       surface: { kind: 'choices', options: ids.map(i => ({ id: i, label: semitoneName(Number(i), ctx.conv) })) }, expected: { kind: 'option', id: String(d) },
-      sound: { groups, partes: porNota(ouvidas) }, autoplay: true, reveal: nome,
+      sound: { groups, partes: porNota(ouvidas) }, autoplay: true, reveal: nome, presentation,
     };
   },
 };
