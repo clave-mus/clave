@@ -183,15 +183,13 @@ describe('o que está em rascunho nos grupos', () => {
     expect([...new Set(rascunhos)].sort()).toEqual([
       // "Ritmo com metrônomo", esperando o Paulo publicar a tarefa com metrônomo
       'acento-deslocado', 'deslocamento-ritmico',
-      // "O braço", desde 13/11: desenhado com ele numa conversa inteira, e espera a revisão musical
-      'mapa-do-braco',
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
       'melodia-de-ouvido',
       'ouvido-campo',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',
-      // "Ouvido", desde 15/11: a fundamental cantada, com o motor de voicings novo
-      'tonica-de-ouvido',
+      // O `mapa-do-braco` e a `tonica-de-ouvido` saíram desta lista em 19/11: o Paulo revisou os
+      // dois e os publicou. A lista encurtando é o portão funcionando, não teste afrouxando.
     ]);
   });
 });

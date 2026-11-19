@@ -2,7 +2,6 @@ import { assinaturaDoArpejo, sortearArpejo, temMaterial, type ArpejoDoMapa } fro
 import { caberNaFaixa } from '../../theory/cadencia-harmonica';
 import { getModo, notasDoModo } from '../../theory/digitacoes';
 import { PISO_AUDIVEL, arr, bracoDoPerfil, midi, mod, noteName, spellPc, tonalidade, tuningOf, vozDoBraco, type Ctx, type Note, type Question } from '../helpers';
-import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, PosicaoDoMapa } from '../types';
 import { randInt } from '../../theory/core';
 
@@ -61,7 +60,7 @@ export const mapaDoBraco: CatalogItem = {
   requires: {},
   validation: ['deterministic'], mobile: true,
   respeita: ['key'],
-  publicacao: RASCUNHO,
+  publicacao: { estado: 'publicado', revisadoEm: '2026-11-19', por: 'Paulo' },
   settings: ctx => [
     /**
      * Os graus do arpejo, na ordem base. **Fixos durante a rodada** (decisão do Paulo): o desenho
