@@ -1,4 +1,4 @@
-import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao } from '../helpers';
+import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { qualidadeEnfeitada } from '../enfeites';
 import { voicingsDe } from '../../theory/voicings';
 import { midi } from '../../theory/core';
@@ -112,8 +112,13 @@ export const ouvidoCampo: CatalogItem = {
       present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx),
   ],
-  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades',
+  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades', ...TIMBRE_DEFAULTS,
     emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2 },
   presets: [
     { id: 'maior-tetrades', nome: 'presets.campoTetrades', settings: { campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
@@ -220,7 +225,7 @@ export const ouvidoCampo: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
           ],
         },
-        autoplay: false, reveal: revelacao,
+        autoplay: false, reveal: revelacao, presentation: vozDaPergunta(s),
       };
     }
     return {
@@ -239,7 +244,7 @@ export const ouvidoCampo: CatalogItem = {
           { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [ms] },
         ],
       },
-      autoplay: true, reveal: revelacao,
+      autoplay: true, reveal: revelacao, presentation: vozDaPergunta(s),
     };
   },
 };

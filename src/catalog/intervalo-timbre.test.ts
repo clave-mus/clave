@@ -49,16 +49,31 @@ describe('o timbre', () => {
     expect(vistos.size).toBeGreaterThanOrEqual(5);
   });
 
-  it('e o sorteio vale nos quatro modos de pergunta', () => {
+  it('o sorteio vale em todo modo que não soa do braço', () => {
     for (const extra of [
       {},
-      { resposta: 'notas' },
+      { resposta: 'notas', superficie: 'teclado' },
+      { resposta: 'notas', superficie: 'pauta' },
       { resposta: 'audiar', direcao: 'juntas' },
       { estimulo: 'escrito' },
     ]) {
       const q = item.make({ ...base, ...extra, timbre: 'sorteado' } as never, ctx);
       expect(q.presentation?.voice, JSON.stringify(extra)).toBeTruthy();
     }
+  });
+
+  /**
+   * **Respondendo no braço, a voz do braço fica** — e foi este teste que me cobrou a decisão: ele
+   * reprovou quando `vozDaPergunta` passou a preservar, e reprovou com razão. Ali o timbre diz de
+   * que instrumento é a pergunta (queixa dele em 13/11, de braço soando como piano), e sortear
+   * apagaria uma informação para pôr variedade no lugar.
+   */
+  it('mas no braço o timbre do braço manda, mesmo com sorteio', () => {
+    const q = item.make({ ...base, resposta: 'notas', superficie: 'braco', timbre: 'sorteado' } as never, ctx);
+    expect(q.presentation).toBeUndefined();
+    expect(q.sound?.instrument).toBe('violao');
+    // e o que soa é a voz do braço, não um sorteio
+    expect(vozDe({ resposta: 'notas', superficie: 'braco', timbre: 'sorteado' })).toBe('violao');
   });
 
   it('sem sorteio, a pergunta não carrega camada nenhuma', () => {

@@ -1,4 +1,4 @@
-import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao } from '../helpers';
+import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { acomodarMelodiaEAcorde } from '../../theory/nota-sobre-acorde';
 import { CADENCIAS, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import type { ScaleId } from '../helpers';
@@ -71,8 +71,13 @@ export const ouvidoCelulas: CatalogItem = {
     { id: 'resposta', label: ctx.t('settings.answerMode'), type: 'single', options: [
       { id: 'todos', label: ctx.t('settings.answerAll') },
       { id: 'alternativas', label: ctx.t('settings.answerFour') },
-    ] }],
-  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos', contexto: 'nenhum' },
+    ] },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx)],
+  defaults: { escala: 'penta-maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos', contexto: 'nenhum', ...TIMBRE_DEFAULTS },
   /**
    * Os atalhos (09/11/2026). **O primeiro é a entrada do item** — quem abre sem nada salvo cai
    * nele, e o Paulo pediu que fosse o mais simples de todos: uma nota, escala maior, dó maior.
@@ -205,7 +210,7 @@ export const ouvidoCelulas: CatalogItem = {
           ...melodia.map((nota, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[nota]] })),
         ],
       },
-      autoplay: true, reveal: key(c),
+      autoplay: true, reveal: key(c), presentation: vozDaPergunta(s),
     };
   },
 };

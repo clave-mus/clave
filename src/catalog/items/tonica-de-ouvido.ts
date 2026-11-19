@@ -1,8 +1,7 @@
 import { voicingsDe, type Voicing } from '../../theory/voicings';
 import {
   ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
-  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question,
-} from '../helpers';
+  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, } from '../helpers';
 import { qualidadeEnfeitada, type NoCampo } from '../enfeites';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
@@ -109,10 +108,15 @@ export const tonicaDeOuvido: CatalogItem = {
     ] },
     /** Subir tudo para a faixa que um alto-falante de celular reproduz — ver `PISO_AUDIVEL`. */
     { id: 'somAudivel', label: ctx.t('settings.phoneSpeakerRange'), type: 'toggle' },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx),
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false,
+    semFundamental: false, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
   },
   presets: [
     { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
@@ -186,6 +190,7 @@ export const tonicaDeOuvido: CatalogItem = {
       },
       autoplay: true,
       reveal: ctx.t('quiz.tonicaReveal', { chord: cifra, note: tonica }),
+      presentation: vozDaPergunta(s),
     };
   },
 };

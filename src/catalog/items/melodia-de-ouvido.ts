@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco } from '../helpers';
+import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 
@@ -91,8 +91,13 @@ export const melodiaDeOuvido: CatalogItem = {
     ] },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.3, max: 2, step: 0.1,
       format: v => `${v.toFixed(1)} s`, soPresentation: true, present: v => ({ dur: Number(v) }) },
+    /**
+     * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
+     * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
+     */
+    ...TIMBRE(ctx),
   ],
-  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9 },
+  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9, ...TIMBRE_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
@@ -188,7 +193,7 @@ export const melodiaDeOuvido: CatalogItem = {
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         // O gabarito soa no instrumento que está desenhado, não de piano.
         sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: false,
-        reveal: `${emGraus}  ·  ${comNomes}`,
+        reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
       };
     }
 
@@ -212,7 +217,7 @@ export const melodiaDeOuvido: CatalogItem = {
       surface: superficie,
       expected: onde === 'graus' ? { kind: 'option', id: emGraus } : { kind: 'contorno', midis: melodia },
       sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true,
-      reveal: `${emGraus}  ·  ${comNomes}`,
+      reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
     };
   },
 };
