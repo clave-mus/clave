@@ -161,3 +161,36 @@ describe('tonalidade livre é o padrão', () => {
     expect(raizes.size, 'o campo mudou no meio da rodada').toBeLessThanOrEqual(7);
   });
 });
+
+/**
+ * **O mesmo conserto de 19/11, aqui também.** O Paulo ouviu `Bm9♭5` e `Cmaj7♯11` no `ouvido-campo`
+ * e os reprovou; este item enfeita os acordes pela MESMA função, e tinha os mesmos dois sons.
+ * Consertar num item e deixar vivo no outro é o padrão que esta sessão passou inteira desfazendo.
+ */
+describe('o enfeite respeita a tonalidade', () => {
+  const cifras = (extra: Record<string, unknown>, n = 600) => {
+    const vistas = new Set<string>();
+    for (let i = 0; i < n; i++) {
+      const q = tonicaDeOuvido.make!({ ...tonicaDeOuvido.defaults, ...extra } as never, ctxEm(0, 'maior'));
+      vistas.add(q.reveal);
+    }
+    return [...vistas];
+  };
+
+  it('nada de nona no viiø nem ♯11 no I — e o ♯11 do IV fica', () => {
+    const todas = cifras({ familias: ['tetrades', 'extensoes', 'alterados'], mostrarNome: true }).join(' ');
+    expect(todas).not.toContain('Bm7(♭5)(9)');
+    expect(todas).not.toMatch(/Bm9/);
+    expect(todas).not.toMatch(/C7M\(♯11\)/);
+    // o lídio do IV continua, porque ali o ♯11 é da tonalidade
+    expect(todas).toMatch(/F7M\(♯11\)/);
+    // e o dominante segue alterado
+    expect(todas).toMatch(/G7\(♭9\)|G7\(♯9\)|G7\(♭13\)/);
+  });
+
+  it('com a qualidade livre, a regra não se aplica — é o que o parâmetro promete', () => {
+    const todas = cifras({ familias: ['tetrades', 'extensoes', 'alterados'], qualidadeLivre: true, mostrarNome: true }).join(' ');
+    // sair do campo é o ponto: aparece qualidade que a tonalidade não teria
+    expect(todas.length).toBeGreaterThan(0);
+  });
+});
