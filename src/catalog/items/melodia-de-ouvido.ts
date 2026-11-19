@@ -198,6 +198,24 @@ export const melodiaDeOuvido: CatalogItem = {
     }
 
     /**
+     * **A nota de partida, marcada no braço** (pedido dele em 19/11: *"melody by ear — no braço,
+     * tem que aparecer uma nota de partida"*).
+     *
+     * O braço não tem onde se agarrar: a conferência aceita a melodia deslocada em **oitavas
+     * inteiras** (§4), mas não deslocada em qualquer intervalo — então quem ouviu os intervalos
+     * certos e começou meio tom fora erra tudo. Em ditado musical a primeira nota é dada; aqui ela
+     * passa a ser dada também, e o resto continua sendo de ouvido.
+     *
+     * **`apoio` já existia no motor** e é o mesmo mecanismo da referência do `ouvido-tecla`: a
+     * marca aparece em **todas** as posições onde aquela altura existe no braço — pedido dele em
+     * 13/11, e a razão é do instrumento (ver o comentário no `Player`). O rótulo leva o nome, como
+     * lá: marca sem nome é ponto misterioso.
+     *
+     * A nota de partida continua entre as `n` que se responde — é âncora, não desconto.
+     */
+    const partida = { midis: [melodia[0]], rotulos: { [melodia[0]]: nomeNaTonalidade(ctx, mod(melodia[0], 12)) } };
+
+    /**
      * Respondendo por **graus**, a superfície é a `sequence` que já existe (a mesma do
      * `ouvido-celulas`): escolher entre todos os graus, em ordem. Nas outras três, é a superfície
      * do instrumento ou da pauta **acumulando** `n` alturas, e a conferência é o contorno.
@@ -209,7 +227,7 @@ export const melodiaDeOuvido: CatalogItem = {
       // acima do teto quando ele não cabe inteiro, e a tela não pode mentir sobre o que soou (o
       // teste `superficie-cobre-o-som` guarda isso desde 09/11).
       : onde === 'teclado' ? { kind: 'keyboard', lo: Math.min(lo, ...grupos.flat()), hi: Math.max(hi, ...grupos.flat()), quantas: n }
-      : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: n };
+      : { kind: 'fretboard', tuning, from: 0, to: 12, quantas: n, apoio: partida };
 
     return {
       prompt: ctx.t('quiz.earMelody'),
