@@ -29,6 +29,13 @@ export interface AcordeDoExercicio {
   semi: number;
   /** Semitons do acorde acima da tônica, em posição fundamental. */
   semis: number[];
+  /**
+   * A **qualidade** do acorde daquele grau (`7`, `m7`, `dim`…).
+   *
+   * Entrou em 19/11 para o `ouvido-campo` poder enfeitar o acorde — pendurar nona ou ♯9 pede saber
+   * de que acorde se parte, e `semis` sozinho não diz. Quem enfeita é `qualidadeEnfeitada`.
+   */
+  chord: ChordId;
   emprestimo: boolean;
 }
 
@@ -73,12 +80,12 @@ const DO = note(0);
  */
 export function materialDoCampo(campo: CampoDoExercicio, tetrade: boolean, conv: Convention = 'pt'): AcordeDoExercicio[] {
   const diatonicos = harmonicField(DO, campo, tetrade, conv).map(d => ({
-    id: `g${d.degree}`, roman: d.roman, semi: pc(d.root),
+    id: `g${d.degree}`, roman: d.roman, semi: pc(d.root), chord: d.chord,
     semis: CHORDS[d.chord].degs.map(([, s]) => pc(d.root) + s), emprestimo: false,
   }));
   const emprestados = EMPRESTIMOS[campo].map(e => {
     const chord = tetrade ? e.tetrade : e.triade;
-    return { id: e.id, roman: e.roman + romanSuffix(chord, conv), semi: e.semi,
+    return { id: e.id, roman: e.roman + romanSuffix(chord, conv), semi: e.semi, chord,
       semis: CHORDS[chord].degs.map(([, s]) => e.semi + s), emprestimo: true };
   });
   return [...diatonicos, ...emprestados].sort((a, b) => a.semi - b.semi || Number(a.emprestimo) - Number(b.emprestimo));
