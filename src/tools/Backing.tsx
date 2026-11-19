@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { atTime, Clock, drum, tone, type Drum, type Voice } from '../audio/engine';
-import { useStore } from '../state/store';
+import { saveSettings, useStore } from '../state/store';
 import {
   buildScale, chordSymbol, CHORDS, harmonicField, majorTonic, midi, mod, note, noteName, pc, transpose,
   type ChordId, type Convention, type Note, type ScaleId,
@@ -44,7 +44,7 @@ const ehMarca = (i: Item): i is Marca => 'mod' in i;
 /** A tônica de uma tonalidade. As três menores partem da relativa menor, como o resto da tela. */
 const tonicaDe = ({ fifths, mode }: Tonalidade): Note =>
   (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 }));
-type Style = 'rock' | 'balada' | 'samba' | 'swing' | 'shuffle' | 'nenhum';
+type Style = 'rock' | 'balada' | 'samba' | 'swing' | 'shuffle' | 'valsa' | 'nenhum';
 interface Preset { id: string; name: MessageKey; mode: ModoDoCampo; items: Item[]; style: Style; bpm: number; tetrads: boolean }
 
 const P = (deg: number, type?: ChordId, flat?: boolean): Item => ({ deg, type, flat });
@@ -64,7 +64,12 @@ export const PRESETS: Preset[] = [
 ];
 
 // ---------------- levadas ----------------
-interface Groove { grid: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[]; bass: [number, GrauDoBaixo, number][]; comp: [number, number][] }
+/**
+ * Uma levada. `grid` são os passos de um compasso e `tempos`, quantos tempos ele tem — **4 em todas,
+ * menos na valsa**, que é 3. Antes `tempos` não existia e o relógio fazia `grid / 4` em todo lugar:
+ * com isso, compasso ternário era impossível de representar (decisão dele em 19/11).
+ */
+interface Groove { grid: number; tempos: number; kick: number[]; snare: number[]; hat: number[]; rim?: number[]; bass: [number, GrauDoBaixo, number][]; comp: [number, number][] }
 /**
  * **O baixo fala por nome**, e não por semitom — e isto é o conserto do defeito que o Paulo ouviu em
  * 19/11: *"as linhas de baixo estão sempre meio estranhas no acorde vii diminuto"*.
@@ -77,17 +82,23 @@ interface Groove { grid: number; kick: number[]; snare: number[]; hat: number[];
  */
 export type GrauDoBaixo = 'raiz' | 'terca' | 'quinta' | 'quintaGrave' | 'sexta' | 'aprox';
 export const GROOVES: Record<Style, Groove> = {
-  rock: { grid: 16, kick: [0, 8, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 2], [2, 'raiz', 2], [4, 'raiz', 2], [6, 'raiz', 2], [8, 'raiz', 2], [10, 'raiz', 2], [12, 'raiz', 2], [14, 'quinta', 2]], comp: [[0, 6], [6, 2], [8, 8]] },
-  balada: { grid: 16, kick: [0, 7, 10], snare: [8], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 6], [6, 'raiz', 2], [8, 'quinta', 8]], comp: [[0, 16]] },
+  rock: { grid: 16, tempos: 4, kick: [0, 8, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 2], [2, 'raiz', 2], [4, 'raiz', 2], [6, 'raiz', 2], [8, 'raiz', 2], [10, 'raiz', 2], [12, 'raiz', 2], [14, 'quinta', 2]], comp: [[0, 6], [6, 2], [8, 8]] },
+  balada: { grid: 16, tempos: 4, kick: [0, 7, 10], snare: [8], hat: [0, 2, 4, 6, 8, 10, 12, 14], bass: [[0, 'raiz', 6], [6, 'raiz', 2], [8, 'quinta', 8]], comp: [[0, 16]] },
   /**
    * **O samba**: a quinta é a **grave** e as notas são semicolcheias pontuadas (1,5 passo) — as duas
    * coisas que ele pediu em 19/11. A colocação é a de antes (0, 3, 4, 8, 11, 12), que é a
    * antecipação característica: a nota chega no "a" do tempo e é repicada no tempo.
    */
-  samba: { grid: 16, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]] },
-  swing: { grid: 12, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 'raiz', 3], [3, 'terca', 3], [6, 'quinta', 3], [9, 'aprox', 3]], comp: [[0, 3], [5, 4]] },
-  shuffle: { grid: 12, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 'raiz', 2], [2, 'raiz', 1], [3, 'terca', 2], [5, 'terca', 1], [6, 'quinta', 2], [8, 'quinta', 1], [9, 'sexta', 2], [11, 'quinta', 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
-  nenhum: { grid: 16, kick: [], snare: [], hat: [], bass: [[0, 'raiz', 16]], comp: [[0, 16]] },
+  samba: { grid: 16, tempos: 4, kick: [4, 12], snare: [2, 5, 7, 10, 13, 15], hat: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], bass: [[0, 'raiz', 1.5], [3, 'quintaGrave', 1.5], [4, 'quintaGrave', 1.5], [8, 'raiz', 1.5], [11, 'quintaGrave', 1.5], [12, 'quintaGrave', 1.5]], comp: [[2, 2], [5, 2], [7, 3], [10, 2], [13, 3]] },
+  swing: { grid: 12, tempos: 4, kick: [0, 6], snare: [], hat: [0, 3, 5, 6, 9, 11], rim: [3, 9], bass: [[0, 'raiz', 3], [3, 'terca', 3], [6, 'quinta', 3], [9, 'aprox', 3]], comp: [[0, 3], [5, 4]] },
+  shuffle: { grid: 12, tempos: 4, kick: [0, 6], snare: [3, 9], hat: [0, 2, 3, 5, 6, 8, 9, 11], bass: [[0, 'raiz', 2], [2, 'raiz', 1], [3, 'terca', 2], [5, 'terca', 1], [6, 'quinta', 2], [8, 'quinta', 1], [9, 'sexta', 2], [11, 'quinta', 1]], comp: [[2, 1], [5, 1], [8, 1], [11, 1]] },
+  /**
+   * **Valsa**: 3 tempos, 12 passos. O baixo faz o que valsa faz — fundamental no 1 e a quinta nos
+   * outros dois —, e a caixa marca 2 e 3. É a única levada ternária, e entrou para o compasso
+   * ternário deixar de ser impossível; outras ternárias são conteúdo musical, e isso é escolha dele.
+   */
+  valsa: { grid: 12, tempos: 3, kick: [0], snare: [4, 8], hat: [0, 4, 8], bass: [[0, 'raiz', 4], [4, 'quinta', 4], [8, 'quinta', 4]], comp: [[4, 4], [8, 4]] },
+  nenhum: { grid: 16, tempos: 4, kick: [], snare: [], hat: [], bass: [[0, 'raiz', 16]], comp: [[0, 16]] },
 };
 
 /**
@@ -103,13 +114,21 @@ export function alturaDoBaixo(grau: GrauDoBaixo, raiz: number, type: ChordId, pr
     // Uma oitava abaixo da quinta do acorde: num diminuto são 6 semitons, e a grave fica a 6 abaixo.
     case 'quintaGrave': return raiz + doAcorde(2) - 12;
     case 'sexta': return raiz + 9;
-    // Aproximação cromática da fundamental seguinte, por cima ou por baixo.
-    case 'aprox': return proximaRaiz + (Math.random() < 0.5 ? 1 : -1);
+    /**
+     * **A aproximação CONDUZ**, e isto era um defeito: ela sorteava o lado (`Math.random()`), então a
+     * mesma progressão aproximava por cima numa volta e por baixo na outra — a nota mais importante
+     * da linha de baixo mudava de lugar a cada laço do loop.
+     *
+     * A regra é a de um baixista: aproxima-se **contra o movimento**. Subindo para a fundamental
+     * seguinte, entra-se por baixo (um semitom abaixo dela); descendo, por cima. Quando as duas
+     * fundamentais são a mesma nota, por baixo, que é o que soa como condução e não como erro.
+     */
+    case 'aprox': return proximaRaiz + (proximaRaiz > raiz ? -1 : proximaRaiz < raiz ? 1 : -1);
   }
 }
 const STYLE_NAMES: Record<Style, MessageKey> = {
   rock: 'backing.styleRock', balada: 'backing.styleBallad', samba: 'backing.styleSamba',
-  swing: 'backing.styleSwing', shuffle: 'backing.styleShuffle', nenhum: 'backing.styleNone',
+  swing: 'backing.styleSwing', shuffle: 'backing.styleShuffle', valsa: 'backing.styleWaltz', nenhum: 'backing.styleNone',
 };
 const VOICES: [Voice, MessageKey][] = [['piano', 'voices.piano'], ['pad', 'voices.pad'], ['violao', 'voices.violao'], ['orgao', 'voices.orgao']];
 
@@ -284,21 +303,76 @@ function voicingDoAcorde(root: Note, type: ChordId, anterior: readonly number[] 
   return melhor.todas.map(midi).sort((a, b) => a - b);
 }
 
+/**
+ * **O que a pessoa monta não se perde mais** (da revisão de 19/11: *"a progressão não é salva em
+ * lugar nenhum: sair da tela apaga"*).
+ *
+ * Guardado em `settings['backing']`, a mesma gaveta que os itens de catálogo usam — e serializado,
+ * porque ali só cabem valores simples. A leitura **valida a forma**: configuração guardada é dado
+ * de fora (pode vir de uma versão antiga do app), e dado de fora que entra sem conferência quebra a
+ * tela de quem só abriu o app.
+ */
+const GUARDADO = 'backing';
+/**
+ * ⚠️ **Os três interruptores de som entram junto** (`contagem`, `baixo`, `timbre do acorde`), e isto
+ * foi uma inconsistência que a própria conferência mostrou: recarregando, a levada e o andamento
+ * voltavam e a contagem não — "por que ele lembrou da valsa e esqueceu a minha contagem?". Como
+ * podem faltar numa versão guardada antes, são opcionais na leitura.
+ */
+interface Guardado {
+  items: Item[]; fifths: number; mode: ModoDoCampo; tetrads: boolean; style: Style; bpm: number;
+  contagem?: boolean; bassOn?: boolean; compVoice?: Voice;
+}
+export function lerGuardado(cru: unknown): Guardado | null {
+  if (typeof cru !== 'string') return null;
+  try {
+    const o = JSON.parse(cru) as Partial<Guardado>;
+    if (!Array.isArray(o.items) || !o.items.length) return null;
+    const ok = o.items.every(it => it && typeof it === 'object'
+      && (('deg' in it && typeof it.deg === 'number') || ('mod' in it && !!it.mod && typeof it.mod === 'object')));
+    if (!ok) return null;
+    if (typeof o.fifths !== 'number' || typeof o.bpm !== 'number') return null;
+    if (!o.mode || !(o.mode in { maior: 1, menor: 1, 'menor-harmonica': 1, 'menor-melodica': 1 })) return null;
+    if (!o.style || !(o.style in GROOVES)) return null;
+    return {
+      items: o.items, fifths: o.fifths, mode: o.mode, tetrads: o.tetrads === true, style: o.style, bpm: o.bpm,
+      // os três de som: ausentes numa versão antiga, e aí quem manda é o padrão da tela
+      ...(typeof o.contagem === 'boolean' ? { contagem: o.contagem } : {}),
+      ...(typeof o.bassOn === 'boolean' ? { bassOn: o.bassOn } : {}),
+      ...(o.compVoice && VOICES.some(([v]) => v === o.compVoice) ? { compVoice: o.compVoice } : {}),
+    };
+  } catch { return null; }
+}
+
 export default function Backing({ presetId }: { presetId?: string }) {
   const [params] = useSearchParams();
   const naming = useNaming();
   const conv = useLocale();
   const t = useT();
   const instrument = useStore(s => s.profile.instrument);
-  const initial = PRESETS.find(p => p.id === (presetId ?? params.get('p'))) ?? PRESETS[0];
-  const [fifths, setFifths] = useState(0);
-  const [mode, setMode] = useState(initial.mode);
-  const [items, setItems] = useState<Item[]>(initial.items);
-  const [tetrads, setTetrads] = useState(initial.tetrads);
-  const [style, setStyle] = useState<Style>(initial.style);
-  const [bpm, setBpm] = useState(initial.bpm);
-  const [compVoice, setCompVoice] = useState<Voice>('piano');
-  const [bassOn, setBassOn] = useState(true);
+  /**
+   * De onde vem o estado inicial, nesta ordem: **o preset pedido** (rota ou `?p=`, que é intenção
+   * explícita), o que ficou **guardado** da última vez, e só então o primeiro preset.
+   */
+  const pedido = PRESETS.find(p => p.id === (presetId ?? params.get('p')));
+  const guardado = useStore(s => s.settings[GUARDADO]);
+  const salvo = pedido ? null : lerGuardado(guardado?.progressao);
+  const initial = pedido ?? PRESETS[0];
+  const [fifths, setFifths] = useState(salvo?.fifths ?? 0);
+  const [mode, setMode] = useState(salvo?.mode ?? initial.mode);
+  const [items, setItems] = useState<Item[]>(salvo?.items ?? initial.items);
+  const [tetrads, setTetrads] = useState(salvo?.tetrads ?? initial.tetrads);
+  const [style, setStyle] = useState<Style>(salvo?.style ?? initial.style);
+  const [bpm, setBpm] = useState(salvo?.bpm ?? initial.bpm);
+  const [compVoice, setCompVoice] = useState<Voice>(salvo?.compVoice ?? 'piano');
+  const [bassOn, setBassOn] = useState(salvo?.bassOn ?? true);
+  /**
+   * **Dois compassos de claves antes de a progressão entrar** (da revisão de 19/11).
+   *
+   * Sem isso a ferramenta entra frio no primeiro tempo: quem está com o instrumento na mão não tem
+   * como chegar junto. Ligado por padrão, porque o caso de uso é tocar por cima.
+   */
+  const [contagem, setContagem] = useState(salvo?.contagem ?? true);
   const [running, setRunning] = useState(false);
   const [bar, setBar] = useState(0);
   const [view, setView] = useState<'teclado' | 'braco'>(instrument === 'piano' ? 'teclado' : 'braco');
@@ -338,7 +412,26 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const live = useRef({ chords, style, bassOn, compVoice });
   live.current = { chords, style, bassOn, compVoice };
 
+  // Guarda a cada mudança. É escrita no estado global, que já persiste — nada de `localStorage` à mão.
+  useEffect(() => {
+    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, compVoice } satisfies Guardado) });
+  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, compVoice]);
+
   useEffect(() => () => clock.current?.stop(), []);
+  /**
+   * **O compasso que está soando entra na tela.** Medido em 19/11: num celular, doze compassos dão
+   * uma faixa de 1556 px, e o destaque passava fora da vista — a pessoa perdia o lugar.
+   *
+   * `block: 'nearest'` de propósito: ele só rola se precisar, então em tela larga (onde tudo cabe)
+   * nada se move. E respeita `prefers-reduced-motion`, porque rolagem animada é movimento.
+   */
+  useEffect(() => {
+    if (!running) return;
+    const el = document.querySelector('.backing-compasso.soando');
+    if (!(el instanceof HTMLElement)) return;
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: suave ? 'smooth' : 'auto' });
+  }, [bar, running]);
   useEffect(() => { if (clock.current) clock.current.bpm = bpm; }, [bpm]);
 
   /** Põe um item **depois do selecionado** — ou no fim, quando não há seleção. */
@@ -369,11 +462,23 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const start = () => {
     if (running) { clock.current?.stop(); setRunning(false); return; }
     const g0 = GROOVES[style];
-    const c = new Clock(bpm, g0.grid / 4, (i, t) => {
+    /**
+     * A contagem vive **dentro** do relógio, como um atraso: dois compassos em que só a clave soa.
+     * Fazê-la com `setTimeout` antes de iniciar o relógio poria o início da música no relógio da
+     * tela, e o relógio do áudio não é o da tela — é a regra do projeto.
+     */
+    const atraso = contagem ? 2 * g0.grid : 0;
+    const c = new Clock(bpm, g0.grid / g0.tempos, (i, t) => {
       const { chords: cs, style: st, bassOn: bo, compVoice: cv } = live.current;
       const g = GROOVES[st];
       if (!cs.length) return;
-      const step = i % g.grid;
+      if (i < atraso) {
+        // clave em cada tempo, e a primeira de cada compasso mais forte
+        const passoNaContagem = i % g0.grid;
+        if (passoNaContagem % (g0.grid / g0.tempos) === 0) drum(passoNaContagem === 0 ? 'clique-forte' : 'clique', t, 0.9);
+        return;
+      }
+      const step = (i - atraso) % g.grid;
       /**
        * **Que acorde está soando neste passo** — a linha do tempo responde, e não mais a conta de
        * "um acorde por compasso". Um acorde de meio compasso troca no meio dele, e a levada (que é
@@ -383,15 +488,15 @@ export default function Backing({ presetId }: { presetId?: string }) {
       // linha do tempo congelada no `start()` tocaria a progressão de antes. São poucos objetos por
       // semicolcheia, e correção vale mais que a alocação.
       const { janelas, total } = linhaDoTempo(cs, g.grid);
-      const pos = i % total;
+      const pos = (i - atraso) % total;
       const bi = Math.max(0, janelas.findIndex(j => pos >= j.inicio && pos < j.fim));
       const ch = cs[bi];
       const nextCh = cs[(bi + 1) % cs.length];
-      const sd = 60 / (clock.current?.bpm ?? bpm) / (g.grid / 4);
+      const sd = 60 / (clock.current?.bpm ?? bpm) / (g.grid / g.tempos);
       // o destaque troca quando o ACORDE troca, não a cada compasso
       if (pos === janelas[bi].inicio) atTime(t, () => setBar(bi));
       const hit = (arr: number[] | undefined, k: Drum, v = 1) => arr?.includes(step) && drum(k, t, v);
-      hit(g.kick, 'bumbo'); hit(g.snare, 'caixa', st === 'samba' ? 0.45 : 1); hit(g.hat, 'chimbal', step % (g.grid / 4) === 0 ? 0.9 : 0.55); hit(g.rim, 'aro', 0.8);
+      hit(g.kick, 'bumbo'); hit(g.snare, 'caixa', st === 'samba' ? 0.45 : 1); hit(g.hat, 'chimbal', step % (g.grid / g.tempos) === 0 ? 0.9 : 0.55); hit(g.rim, 'aro', 0.8);
       const rootMidi = 36 + mod(pc(ch.root) - 36, 12);
       if (bo) g.bass.forEach(([s, grau, d]) => {
         if (s !== step) return;
@@ -407,9 +512,9 @@ export default function Backing({ presetId }: { presetId?: string }) {
 
   const loadPreset = (p: Preset) => {
     setItems(p.items); setMode(p.mode); setStyle(p.style); setBpm(p.bpm); setTetrads(p.tetrads); setBar(0); setSel(null);
-    if (clock.current) clock.current.stepsPerBeat = GROOVES[p.style].grid / 4;
+    if (clock.current) clock.current.stepsPerBeat = GROOVES[p.style].grid / GROOVES[p.style].tempos;
   };
-  const changeStyle = (s: Style) => { setStyle(s); if (clock.current) clock.current.stepsPerBeat = GROOVES[s].grid / 4; };
+  const changeStyle = (s: Style) => { setStyle(s); if (clock.current) clock.current.stepsPerBeat = GROOVES[s].grid / GROOVES[s].tempos; };
 
   const cur = chords[Math.min(bar, chords.length - 1)];
   const [scaleIdx, setScaleIdx] = useState(0);
@@ -417,8 +522,20 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const scaleNotes = sc ? buildScale(sc.root, sc.id) : [];
   const chordPcs = cur ? CHORDS[cur.type].degs.map(([, s]) => mod(pc(cur.root) + s, 12)) : [];
   const scalePcs = scaleNotes.map(pc);
+  /**
+   * **A janela do teclado cobre o que SOA**, e não três oitavas fixas.
+   *
+   * Era 48–83 cravado: 36 teclas em 339 px de celular dão teclas de 9 px, que ninguém acerta com o
+   * dedo nem lê. Agora ela parte do acorde que está soando e abre **duas oitavas** em volta, em
+   * fronteiras de dó — oitava inteira para o desenho não cortar escala no meio.
+   */
+  const faixaDoTeclado = (() => {
+    const base = cur?.vozes.length ? Math.min(...cur.vozes) : 55;
+    const lo = Math.max(36, Math.floor(base / 12) * 12);
+    return { lo, hi: Math.min(96, lo + 24) };
+  })();
   const kMarks: Record<number, string> = {};
-  for (let m = 48; m <= 83; m++) {
+  for (let m = faixaDoTeclado.lo; m <= faixaDoTeclado.hi; m++) {
     if (chordPcs.includes(m % 12)) kMarks[m] = 'var(--ve)';
     else if (scalePcs.includes(m % 12)) kMarks[m] = 'var(--mu)';
   }
@@ -478,6 +595,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
           <span className="eyebrow">{t('backing.chordSound')}</span>
           {VOICES.map(([v, l]) => <Chip key={v} on={compVoice === v} onClick={() => setCompVoice(v)}>{t(l)}</Chip>)}
           <Chip on={bassOn} onClick={() => setBassOn(v => !v)}>{t('backing.bass')}</Chip>
+          <Chip on={contagem} onClick={() => setContagem(v => !v)}>{t('backing.countIn')}</Chip>
         </div>
       </section>
 
@@ -558,7 +676,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
             {t('backing.notesLine', { notes: scaleNotes.map(n => noteName(n, naming)).join(' · ') })} <span style={{ color: 'var(--ve)' }}>■</span> {t('backing.chordNotes')} · <span style={{ color: 'var(--mu)' }}>■</span> {t('backing.restOfScale')}
           </div>
           {view === 'teclado'
-            ? <Keyboard lo={48} hi={83} marks={kMarks} naming={naming} />
+            ? <Keyboard lo={faixaDoTeclado.lo} hi={faixaDoTeclado.hi} marks={kMarks} naming={naming} />
             : <Fretboard tuning={tuning} from={0} to={12} marks={fMarks} naming={naming} />}
         </section>
       )}

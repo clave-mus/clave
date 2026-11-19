@@ -1031,3 +1031,18 @@ select.sel {
 }
 /* O selecionado é o alvo da edição E o ponto de inserção: um filete sólido diz "é aqui". */
 .backing-compasso.sel, .backing-marca.sel { outline: 2px solid var(--on-area); outline-offset: 2px; opacity: 1; }
+
+/**
+ * **A faixa de compassos no celular** (medido em 19/11: o blues de 12 compassos dava 1556 px de
+ * altura numa tela de 375, e o compasso que soava saía de vista).
+ *
+ * Cartões menores e a cifra um pouco menor: com 84 px cabiam três por linha, com 68 cabem quatro, e
+ * doze compassos passam de quatro linhas para três. A rolagem até o que soa está no componente,
+ * porque depende de qual é — ver `scrollIntoView` em `Backing`.
+ */
+@media (max-width: 560px) {
+  .backing-faixa { padding: 14px; gap: 12px; }
+  .backing-compasso { min-width: 68px; padding: 8px 9px; }
+  .backing-compasso .cifra { font-size: 24px; }
+  .backing-compasso .roman { font-size: 12px; }
+}
