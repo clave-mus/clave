@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
+import { ITENS_ABSORVIDOS } from '../components/nav';
 import { ambientesDePratica, catalogByModule } from '../catalog/catalogView';
 import { itensDaPorta } from '../catalog/portasView';
 import ItemScreen from '../catalog/ItemScreen';
@@ -255,6 +256,12 @@ export function ItemPage() {
   const { moduleById } = useContent();
   const revisao = useRevisao();
   const item = itemById[id];
+  // Item aposentado por fusão não é endereço morto: ele leva a quem o absorveu (`ITENS_ABSORVIDOS`).
+  // Levando `?...` e `#...` junto, pelo mesmo motivo de `reescreverRotaLegada`: o redirecionamento
+  // que descarta a query manda a pessoa ao item certo sem os parâmetros do link, e em silêncio.
+  if (!item && ITENS_ABSORVIDOS[id]) {
+    return <Navigate to={`/catalogo/${ITENS_ABSORVIDOS[id]}${location.search}${location.hash}`} replace />;
+  }
   if (!item) return <NotFound />;
   // Rascunho não abre para quem não está em modo de revisão, nem por endereço direto (decisão 91).
   if (!visivel(item.publicacao, revisao)) {

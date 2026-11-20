@@ -13,7 +13,7 @@ import {
 import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
 import { Btn, Chip } from '../components/ui';
-import { useToolLog } from './common';
+import { fmtClock, Metronome, useToolLog } from './common';
 import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 
 /** Os caracteres do drone: os três sustentados do motor, mais o piano que bate uma vez. */
@@ -63,6 +63,17 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [droneOn, setDroneOn] = useState(salvo?.droneOn ?? false);
   const [droneNotas, setDroneNotas] = useState<number[]>(salvo?.droneNotas ?? []);
   const [droneCarater, setDroneCarater] = useState<Carater | 'piano'>(salvo?.droneCarater ?? 'fundo');
+  /**
+   * **O cronômetro com meta e o metrônomo vieram do item `ambiente`** quando os dois se fundiram
+   * (decisão dele em 20/11). Eles entram porque a fusão não pode perder nada — foi a condição que
+   * ele pôs ao aposentar o `audiar`, e vale igual aqui: o drone tinha meta de tempo e a meta é o
+   * que faz um ambiente *terminar quando a pessoa para*. Sem ela, o item morreria com um buraco.
+   */
+  const [goal, setGoal] = useState(10);
+  const [elapsed, setElapsed] = useState(0);
+  const [timing, setTiming] = useState(false);
+  const [metro, setMetro] = useState(false);
+  const chimed = useRef(false);
 
   /**
    * **Os acordes também desligam** (pedido dele em 19/11: *"adicione a opção de ter só bateria
@@ -96,7 +107,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);  // menor, harmônica e melódica partem da relativa menor
   // O que a pessoa praticou: a tonalidade e o andamento. Só a tonalidade vai em `params`, porque é só
   // ela que esta ferramenta usa — gravar região e material seria afirmar o que ela ignora.
-  useToolLog('backing', 'Backing track', 'ouvido', running, {
+  useToolLog('backing', 'Backing track', 'ouvido', running || timing || metro, {
     // `key.mode` só tem maior e menor; o modo exato (harmônica, melódica) vai nas configurações
     settings: { bpm, campo: mode }, params: { key: { tonic: pc(tonic), mode: mode === 'maior' ? 'maior' : 'menor' } },
   });
@@ -138,6 +149,19 @@ export default function Backing({ presetId }: { presetId?: string }) {
     return parar;
   }, [running, droneOn, notasDoDrone.join(','), droneCarater]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => pararDrones, []);
+
+  useEffect(() => {
+    if (!timing) return;
+    const id = window.setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [timing]);
+  // A meta cumprida avisa com um arpejo, uma vez só — e `chimed` volta a zero ao trocar a meta.
+  useEffect(() => {
+    if (elapsed >= goal * 60 && !chimed.current) {
+      chimed.current = true;
+      playGroups([[72], [76], [79], [84]], { gap: 0.18, dur: 1.2 });
+    }
+  }, [elapsed, goal]);
 
   useEffect(() => () => clock.current?.stop(), []);
   /**
@@ -281,6 +305,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
     if (chordPcs.includes(m % 12)) kMarks[m] = 'var(--ve)';
     else if (scalePcs.includes(m % 12)) kMarks[m] = 'var(--mu)';
   }
+  const metaCumprida = elapsed >= goal * 60;
   const tuning = instrument === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
   const fMarks = tuning.flatMap((open, s) => Array.from({ length: 13 }, (_, f) => f).filter(f => scalePcs.includes(mod(open + f, 12))).map(f => ({
     s, f, color: chordPcs.includes(mod(open + f, 12)) ? 'var(--ve)' : undefined, label: noteName(scaleNotes[scalePcs.indexOf(mod(open + f, 12))] ?? note(0), naming),
@@ -344,6 +369,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
             <Btn small tone="ghost" onClick={() => setDroneNotas([])}>{t('backing.droneClear')}</Btn>
           )}
         </div>
+        {droneOn && <span className="muted" style={{ fontSize: 13, color: 'inherit', opacity: 0.85 }}>{t('ambient.droneText')}</span>}
         {droneOn && (
           <div style={{ maxWidth: 520 }}>
             {/* A tecla escolhida sai no acento, não em `--on-area`: dentro da faixa a tinta é
@@ -421,6 +447,39 @@ export default function Backing({ presetId }: { presetId?: string }) {
           </span>
           <Btn small tone="ghost" onClick={() => { setItems(v => v.slice(0, -1)); setSel(null); }} disabled={!items.length}>{t('backing.deleteLast')}</Btn>
           <Btn small tone="ghost" onClick={() => { setItems([]); setBar(0); setSel(null); }}>{t('backing.clear')}</Btn>
+        </div>
+      </section>
+
+      {/* **O cronômetro com meta, o metrônomo e o como usar** — o que o item `ambiente` tinha e que
+          a fusão de 20/11 tinha que absorver, não descartar. A meta pintada de verde quando cumpre
+          é o mesmo desenho de antes: a tela inteira responde, não um número pequeno num canto. */}
+      <section className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', alignItems: 'start', gap: 18 }}>
+        <div className="panel" style={{ display: 'grid', gap: 12, background: metaCumprida ? 'var(--mu)' : undefined, color: metaCumprida ? 'var(--bk)' : undefined }}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: 30 }}>{t('ambient.timer')}</h2>
+            {metaCumprida && <span style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 20, textTransform: 'uppercase' }}>{t('ambient.goalMet')}</span>}
+          </div>
+          <div className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 72, lineHeight: 0.9 }}>{fmtClock(elapsed)}</div>
+          <div className="row">
+            <span className="eyebrow" style={{ color: 'inherit' }}>{t('ambient.goal')}</span>
+            {[5, 10, 15, 20, 30].map(m => <Chip key={m} on={goal === m} onClick={() => { setGoal(m); chimed.current = false; }}>{t('common.minutes', { n: m })}</Chip>)}
+          </div>
+          <div className="row">
+            <Btn onClick={() => setTiming(v => !v)} tone={timing ? 'mu' : undefined}>{t(timing ? 'common.pause' : elapsed ? 'common.continue' : 'common.start')}</Btn>
+            <Btn tone="ghost" small onClick={() => { setElapsed(0); chimed.current = false; }}>{t('common.reset')}</Btn>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gap: 18 }}>
+          <Metronome compact onRunning={setMetro} />
+          <div className="panel" style={{ display: 'grid', gap: 8 }}>
+            <h3 style={{ fontSize: 24 }}>{t('ambient.howTo')}</h3>
+            <ol style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 4 }}>
+              <li>{t('ambient.step1')}</li>
+              <li>{t('ambient.step2')}</li>
+              <li>{t('ambient.step3')}</li>
+              <li>{t('ambient.step4')}</li>
+            </ol>
+          </div>
         </div>
       </section>
 

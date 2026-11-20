@@ -190,3 +190,45 @@ A reorganização tem duas metades muito diferentes:
 
 A ordem que eu proporia: decidir **5.1 a 5.5** em conversa, fazer a metade mecânica de uma vez com
 as decisões já dentro, e deixar a Teoria como área vazia preparada.
+
+---
+
+## 7. O que já está feito, e como
+
+**As cinco áreas** (20/11) — `ouvido`, `instrumento`, `leitura`, `tecnica`, `teoria`. Ritmo
+dissolvido. A migração de estado cobre as duas gerações anteriores de módulo.
+
+**Ambientes de prática viraram seção própria** no catálogo, fora das áreas
+(`ambientesDePratica` em `catalogView.ts`).
+
+**O item `audiar` foi aposentado** absorvido, não apagado: o estímulo escrito virou modo dos itens
+de ouvido (`ouvido-escala` ganhou `estimulo: som | escrito`), e `ouvido-intervalo` e `ouvido-acorde`
+passaram a declarar a tarefa `audiar` na taxonomia.
+
+**Backing e drone viraram um ambiente só** (20/11). O drone deixou de ser quatro receitas com doze
+botões de tônica e virou **um teclado de Dó2 a Dó5 onde se escolhe tecla por tecla** — pedido dele:
+*"gostaria que o drone também fosse mais editável — como um teclado em que podemos selecionar as
+teclas pressionadas"*. O caráter é escolha (fundo · acorde · destaque · piano, que bate uma vez e
+decai). Sem teclas escolhidas, ele segue a tônica em vigor, inclusive depois de modulação.
+
+O item `ambiente` saiu do catálogo, e **o que ele tinha foi com ele**, pela mesma condição que
+valeu para o `audiar`:
+
+| o que o `ambiente` tinha | onde está agora |
+|---|---|
+| drone com receitas e tônica | teclado do drone no `backing`, mais livre que antes |
+| cronômetro com meta e arpejo | no `backing`, mesmo desenho (a tela responde quando a meta cumpre) |
+| metrônomo compacto | no `backing`, o mesmo componente de `tools/common` |
+| o texto "como usar" | no `backing`, os quatro passos intactos |
+| as declarações (objetos, tarefas) | `backing` ganhou `escalas` e `cantar` |
+| o endereço `/catalogo/ambiente` | redireciona para `/catalogo/backing`, com query e âncora |
+
+Isto fecha, com cinco anos de atraso de uma volta só, o que a decisão de 04/11 já previa — *"o
+drone vira camada, o cronômetro com meta vai para o metrônomo, e a sala genérica sai"* — e que
+tinha ficado pelo caminho.
+
+**Aberto, e dele:** o nome. O item ainda se chama **Backing tracks**, nome que ele escolheu quando
+a ferramenta só fazia acompanhamento. Agora ela também segura um drone, cronometra e bate
+metrônomo, e o nome ficou pequeno para o que ela faz. Trocar é decisão dele.
+
+**Falta da §0:** intervalo harmônico como item separado do melódico (ele decidiu, não foi feito).

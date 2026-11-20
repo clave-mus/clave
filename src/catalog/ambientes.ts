@@ -109,17 +109,15 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/RelacoesMelodiaHarmonia'),
   },
   {
-    id: 'ambiente', kind: 'ambiente',
-    publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['escalas'], tarefas: ['cantar', 'tocar'],
-    primaryModule: 'ouvido', skillTags: ['ear.pitch_identification'], contentTags: ['key.major', 'key.minor'],
-    settings: noSettings, defaults: {},
-    screen: () => import('../tools/Ambiente'),
-  },
-  {
+    /**
+     * **Backing e drone são um ambiente só** (decisão dele em 20/11). O que soa se escolhe por
+     * partes — drone, bateria, baixo, progressão — e o item herdou as declarações do `ambiente`:
+     * cantar entrou nas tarefas, e escalas nos objetos, porque é o que se faz contra um drone.
+     * `requires` fica como estava: os dois pediam instrumento, então a fusão não mexe nisso.
+     */
     id: 'backing', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['harmonia'], tarefas: ['tocar'],
+    objetos: ['harmonia', 'escalas'], tarefas: ['tocar', 'cantar'],
     primaryModule: 'ouvido', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Backing'),
