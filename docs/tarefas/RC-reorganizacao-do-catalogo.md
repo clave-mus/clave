@@ -223,9 +223,8 @@ valeu para o `audiar`:
 | as declarações (objetos, tarefas) | `backing` ganhou `escalas` e `cantar` |
 | o endereço `/catalogo/ambiente` | redireciona para `/catalogo/backing`, com query e âncora |
 
-Isto fecha, com cinco anos de atraso de uma volta só, o que a decisão de 04/11 já previa — *"o
-drone vira camada, o cronômetro com meta vai para o metrônomo, e a sala genérica sai"* — e que
-tinha ficado pelo caminho.
+Isto fecha o que a decisão de 04/11 já previa — *"o drone vira camada, o cronômetro com meta vai
+para o metrônomo, e a sala genérica sai"* — e que tinha ficado pelo caminho dezesseis dias.
 
 **Aberto, e dele:** o nome. O item ainda se chama **Backing tracks**, nome que ele escolheu quando
 a ferramenta só fazia acompanhamento. Agora ela também segura um drone, cronometra e bate
