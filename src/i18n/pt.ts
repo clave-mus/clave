@@ -437,6 +437,8 @@ const pt = {
     title: 'Catálogo',
     sub: 'Tudo que dá para praticar no Clave. Escolha, configure do seu jeito, e guarde para ter a um toque na tela de praticar.',
     countItems: { one: '{count} atividade', other: '{count} atividades' },
+    environments: 'Ambientes de prática',
+    environmentsSub: 'Ligue, pratique, pare quando quiser. Não há pergunta nem resposta aqui.',
     toolTag: 'ferramenta',
     mobileOnly: 'Só sem instrumento',
     done: { one: '{count} feita', other: '{count} feitas' },

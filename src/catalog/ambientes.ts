@@ -177,7 +177,16 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Backing'),
   },
   {
-    id: 'leitura', kind: 'ambiente',
+    /**
+     * **Tarefa, e não ambiente** (decisão dele em 20/11, a Q10 da reorganização).
+     *
+     * O critério do projeto é **como termina e que prova gera**: ambiente termina quando a pessoa
+     * para e registra tempo; tarefa termina quando ela declara *consegui / com ajuda / preciso
+     * repetir*. Ler uma partitura gerada e tocá-la junto é isto — *"tu lê aquilo e batuca junto...
+     * é um exercício de certa forma"*. Eram ambiente porque ninguém tinha posto um veredito neles,
+     * não porque ler não fosse exercício.
+     */
+    id: 'leitura', kind: 'tarefa',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['notacao'], tarefas: ['ler'],
     primaryModule: 'leitura', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
@@ -185,7 +194,7 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/Leitura'),
   },
   {
-    id: 'ritmo', kind: 'ambiente',
+    id: 'ritmo', kind: 'tarefa',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
     primaryModule: 'leitura', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],

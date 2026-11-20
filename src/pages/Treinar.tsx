@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContent } from '../data/localized';
 import { itemById } from '../catalog';
-import { catalogByModule } from '../catalog/catalogView';
+import { ambientesDePratica, catalogByModule } from '../catalog/catalogView';
 import { itensDaPorta } from '../catalog/portasView';
 import ItemScreen from '../catalog/ItemScreen';
 import Player from '../catalog/Player';
@@ -68,6 +68,10 @@ export default function Treinar() {
 
       {por === 'objetivo' && <PorObjetivo mobileOnly={mobileOnly} revisao={revisao} stats={stats} aberto={open} alternar={toggle} />}
 
+      {/* **Os ambientes de prática, fora das áreas** (decisão dele em 20/11). Aparecem nas duas
+          vistas, porque eles não pertencem a objetivo nem a área: são o que você deixa tocando. */}
+      <AmbientesDePratica mobileOnly={mobileOnly} revisao={revisao} />
+
       {por === 'area' && catalogByModule({ mobileOnly, revisao }).map(entry => {
         const m = moduleById[entry.module];
         const items = entry.exercises.length + entry.tools.length;
@@ -93,6 +97,38 @@ export default function Treinar() {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * **A seção dos ambientes de prática.**
+ *
+ * O critério é o do projeto, e não "ferramenta × exercício": ambiente é o que **termina quando a
+ * pessoa para** e registra tempo, sem veredito. Série termina por contagem e dá evidência; tarefa
+ * termina quando você declara como foi. As duas últimas são exercício e moram nas áreas.
+ */
+function AmbientesDePratica({ mobileOnly, revisao }: { mobileOnly: boolean; revisao: boolean }) {
+  const t = useT();
+  const ids = ambientesDePratica({ mobileOnly, revisao });
+  if (!ids.length) return null;
+  return (
+    <section className="sec" id="ambientes">
+      <div className="sec-title"><h2>{t('train.environments')}</h2></div>
+      <p className="note-line muted">{t('train.environmentsSub')}</p>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+        {ids.map(id => (
+          <Link key={id} to={`/catalogo/${id}`} className="ex-card">
+            <span className="acc" style={{ background: 'var(--area-3)' }} />
+            <Field seed={id} color="var(--area-3)" className="field-square" style={{ width: 40, flex: 'none' }} />
+            <div style={{ minWidth: 0 }}>
+              <h3>{itemText(t, id, 'title')}</h3>
+              <p>{itemText(t, id, 'desc')}</p>
+              <div className="meta"><span className="mini-tag">{t('train.toolTag')}</span></div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

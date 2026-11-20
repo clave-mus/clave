@@ -437,6 +437,8 @@ const en: Shape<typeof pt> = {
     title: 'Catalog',
     sub: 'Everything you can practice in Clave. Pick something, set it up your way, and save it to have it one tap away on Practice.',
     countItems: { one: '{count} activity', other: '{count} activities' },
+    environments: 'Practice environments',
+    environmentsSub: 'Turn it on, play, stop when you like. No questions, no answers here.',
     toolTag: 'tool',
     mobileOnly: 'No instrument only',
     done: { one: '{count} done', other: '{count} done' },
