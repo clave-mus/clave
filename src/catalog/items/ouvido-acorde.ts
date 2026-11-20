@@ -8,7 +8,7 @@ import type { CatalogItem } from '../types';
 
 export const ouvidoAcorde: CatalogItem = {
   id: 'ouvido-acorde',
-  objetos: ['acordes'], tarefas: ['ouvir'],
+  objetos: ['acordes'], tarefas: ['ouvir', 'audiar'],
   primaryModule: 'perception.harmonic', skillTags: ['ear.chord_quality'],
   contentTags: ['chord.triads', 'chord.sevenths'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,

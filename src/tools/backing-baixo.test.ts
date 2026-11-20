@@ -7,7 +7,8 @@
 // E o samba: *"faça com que o baixo faça a quinta grave, e não a aguda, e em semicolcheias
 // pontuadas, como deve ser tocado"*.
 import { describe, expect, it } from 'vitest';
-import { alturaDoBaixo, GROOVES, PRESETS } from './Backing';
+import { alturaDoBaixo, GROOVES, linhaDoTempo, desvioDoPasso } from '../theory/levada';
+import { PRESETS, resolverProgressaoParaTeste, lerGuardado } from './backing-progressao';
 import { CHORDS, mod, pc, type ChordId } from '../theory/core';
 
 const RAIZ = 48; // dó3, uma fundamental qualquer
@@ -155,7 +156,6 @@ describe('bossa nova e baião saíram', () => {
 // A progressão era uma lista de graus de UM campo. Empréstimo é acorde de fora que não muda o
 // centro; modulação é uma MARCA que troca o centro do ponto em diante. As duas peças resolvem na
 // mesma passada, e é isso que este bloco mede.
-import { resolverProgressaoParaTeste } from './Backing';
 
 const CONV = 'pt' as const;
 const DO_MAIOR = { fifths: 0, mode: 'maior' as const };
@@ -310,7 +310,6 @@ describe('o voicing do acompanhamento', () => {
 //
 // Antes todo acorde durava exatamente um compasso, e era o limite que mais aparecia ao escrever
 // música de verdade: nem ii–V dentro do mesmo compasso, nem tônica de dois.
-import { linhaDoTempo } from './Backing';
 
 describe('a linha do tempo', () => {
   it('um compasso cada é o de sempre', () => {
@@ -392,7 +391,6 @@ describe('compasso ternário', () => {
 //
 // A leitura valida a forma porque configuração guardada é **dado de fora**: pode vir de uma versão
 // antiga do app, e dado de fora que entra sem conferência quebra a tela de quem só abriu o app.
-import { lerGuardado } from './Backing';
 
 describe('a progressão guardada', () => {
   const bom = { items: [{ deg: 1 }, { mod: { fifths: 0, mode: 'menor' } }, { deg: 5 }], fifths: -1, mode: 'maior', tetrads: true, style: 'samba', bpm: 98 };
@@ -446,7 +444,6 @@ describe('a progressão guardada', () => {
 //
 // Guardado em **fração da semicolcheia**, e não em milissegundos: assim o balanço é o mesmo balanço
 // em qualquer andamento. O teste confere os milissegundos nos dois andamentos que importam.
-import { desvioDoPasso } from './Backing';
 
 describe('o micro-tempo', () => {
   /** A duração de um passo (semicolcheia), em segundos. */
