@@ -1,7 +1,7 @@
 // Backing track sandbox: progressão, levada, análise harmônica e sugestão de escalas.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { atTime, Clock, drum, tone, type Drum, type Voice } from '../audio/engine';
+import { atTime, Clock, drone, drum, pararDrones, playGroups, tone, type Carater, type Drum, type Voice } from '../audio/engine';
 import { saveSettings, useStore } from '../state/store';
 import { buildScale, CHORDS, harmonicField, majorTonic, mod, note, noteName, pc, transpose, type ModoDoCampo } from '../theory/core';
 import { emprestimosDoCampo } from '../theory/campo-harmonico';
@@ -16,6 +16,11 @@ import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
 import { useLocale, useNaming, useT, type MessageKey } from '../i18n';
 
+/** Os caracteres do drone: os três sustentados do motor, mais o piano que bate uma vez. */
+const CARATERES: [Carater | 'piano', MessageKey][] = [
+  ['fundo', 'backing.drone_fundo'], ['acorde', 'backing.drone_acorde'],
+  ['destaque', 'backing.drone_destaque'], ['piano', 'backing.drone_piano'],
+];
 const STYLE_NAMES: Record<Style, MessageKey> = {
   rock: 'backing.styleRock', balada: 'backing.styleBallad', samba: 'backing.styleSamba',
   swing: 'backing.styleSwing', shuffle: 'backing.styleShuffle', valsa: 'backing.styleWaltz', nenhum: 'backing.styleNone',
@@ -43,6 +48,22 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const [bpm, setBpm] = useState(salvo?.bpm ?? initial.bpm);
   const [compVoice, setCompVoice] = useState<Voice>(salvo?.compVoice ?? 'piano');
   const [bassOn, setBassOn] = useState(salvo?.bassOn ?? true);
+  /**
+   * **O drone**, que veio do item `ambiente` ao se fundirem (decisão dele em 20/11) — e aqui ele é
+   * **mais editável do que era lá**: em vez de quatro receitas (nota, quinta, maior, menor), um
+   * teclado onde se escolhe tecla por tecla. Pedido dele: *"gostaria que o drone também fosse mais
+   * editável — como um teclado em que podemos selecionar as teclas pressionadas"*.
+   *
+   * Ele é **mais uma parte do que soa**, ao lado de bateria, baixo e acordes: liga e desliga igual.
+   * Com a progressão tocando, ele segura por baixo — que é o som de estudar modo sobre pedal.
+   *
+   * As notas são **absolutas**, e não graus: quem escolheu um Lá quer um Lá, mesmo trocando a
+   * tonalidade da progressão. O padrão é a tônica em vigor, com a oitava acima.
+   */
+  const [droneOn, setDroneOn] = useState(salvo?.droneOn ?? false);
+  const [droneNotas, setDroneNotas] = useState<number[]>(salvo?.droneNotas ?? []);
+  const [droneCarater, setDroneCarater] = useState<Carater | 'piano'>(salvo?.droneCarater ?? 'fundo');
+
   /**
    * **Os acordes também desligam** (pedido dele em 19/11: *"adicione a opção de ter só bateria
    * também"*). Com os dois desligados sobra a levada sozinha, que é o metrônomo com balanço — e com
@@ -98,8 +119,25 @@ export default function Backing({ presetId }: { presetId?: string }) {
 
   // Guarda a cada mudança. É escrita no estado global, que já persiste — nada de `localStorage` à mão.
   useEffect(() => {
-    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice } satisfies Guardado) });
-  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice]);
+    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater } satisfies Guardado) });
+  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater]);
+
+  /** As notas do drone — as escolhidas, ou a tônica em vigor com a oitava acima. */
+  const notasDoDrone = droneNotas.length ? droneNotas : [48 + mod(pc(tonicaDoFim), 12), 60 + mod(pc(tonicaDoFim), 12)];
+  /**
+   * **O drone soa enquanto a ferramenta estiver tocando**, e não o tempo todo: um só botão comanda
+   * tudo o que soa, que é o que faz disto um ambiente e não quatro brinquedos.
+   *
+   * Ele vive **fora do relógio** porque não tem passo: é som contínuo. A exceção é o piano, que é
+   * amostra e **decai** — ali ele bate uma vez a cada mudança, como no melody over harmony.
+   */
+  useEffect(() => {
+    if (!running || !droneOn) return;
+    if (droneCarater === 'piano') { playGroups([[...notasDoDrone].sort((a, b) => a - b)], { voice: 'piano', dur: 4 }); return; }
+    const parar = drone([...notasDoDrone].sort((a, b) => a - b), 0.5, droneCarater);
+    return parar;
+  }, [running, droneOn, notasDoDrone.join(','), droneCarater]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => pararDrones, []);
 
   useEffect(() => () => clock.current?.stop(), []);
   /**
@@ -295,6 +333,29 @@ export default function Backing({ presetId }: { presetId?: string }) {
           <input className="range" style={{ maxWidth: 220 }} type="range" min={50} max={220} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="bk-bpm" />
         </div>
         <div className="row"><span className="eyebrow">{t('backing.groove')}</span>{(Object.keys(STYLE_NAMES) as Style[]).map(s => <Chip key={s} on={style === s} onClick={() => changeStyle(s)}>{t(STYLE_NAMES[s])}</Chip>)}</div>
+        {/* **O drone**: liga, escolhe as teclas, escolhe o caráter. Teclado em vez de receitas —
+            pedido dele em 20/11, e é o que deixa segurar um intervalo qualquer, não só os quatro. */}
+        <div className="row">
+          <Chip on={droneOn} onClick={() => setDroneOn(v => !v)}>{t('backing.drone')}</Chip>
+          {droneOn && CARATERES.map(([c, l]) => (
+            <Chip key={c} on={droneCarater === c} onClick={() => setDroneCarater(c)}>{t(l)}</Chip>
+          ))}
+          {droneOn && droneNotas.length > 0 && (
+            <Btn small tone="ghost" onClick={() => setDroneNotas([])}>{t('backing.droneClear')}</Btn>
+          )}
+        </div>
+        {droneOn && (
+          <div style={{ maxWidth: 520 }}>
+            {/* A tecla escolhida sai no acento, não em `--on-area`: dentro da faixa a tinta é
+                quase branca no tema claro, e tecla branca marcada de branco não se vê. */}
+            <Keyboard lo={36} hi={72} naming={naming} label={t('backing.droneKeys')}
+              marks={Object.fromEntries(notasDoDrone.map(m => [m, 'var(--mu)']))}
+              onPress={m => setDroneNotas(v => {
+                const atuais = v.length ? v : notasDoDrone;
+                return atuais.includes(m) ? atuais.filter(x => x !== m) : [...atuais, m];
+              })} />
+          </div>
+        )}
         <div className="row">
           <span className="eyebrow">{t('backing.chordSound')}</span>
           {VOICES.map(([v, l]) => <Chip key={v} on={compVoice === v} onClick={() => setCompVoice(v)}>{t(l)}</Chip>)}

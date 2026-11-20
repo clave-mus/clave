@@ -9,7 +9,7 @@ import { emprestimosDoCampo } from '../theory/campo-harmonico';
 import { voicingConduzido } from '../theory/voicings';
 import { GROOVES, type Duracao, type Style } from '../theory/levada';
 import type { MessageKey } from '../i18n';
-import type { Voice } from '../audio/engine';
+import type { Carater, Voice } from '../audio/engine';
 
 /** Os timbres que a tela oferece para o acompanhamento. A leitura do guardado confere contra esta lista. */
 export const VOICES: [Voice, MessageKey][] = [['piano', 'voices.piano'], ['pad', 'voices.pad'], ['violao', 'voices.violao'], ['orgao', 'voices.orgao']];
@@ -165,6 +165,8 @@ export const GUARDADO = 'backing';
 export interface Guardado {
   items: Item[]; fifths: number; mode: ModoDoCampo; tetrads: boolean; style: Style; bpm: number;
   contagem?: boolean; bassOn?: boolean; acordesOn?: boolean; compVoice?: Voice;
+  /** O drone: ligado, quais notas, e com que caráter. Ausentes numa versão guardada antes de 20/11. */
+  droneOn?: boolean; droneNotas?: number[]; droneCarater?: Carater | 'piano';
 }
 export function lerGuardado(cru: unknown): Guardado | null {
   if (typeof cru !== 'string') return null;
@@ -184,6 +186,10 @@ export function lerGuardado(cru: unknown): Guardado | null {
       ...(typeof o.bassOn === 'boolean' ? { bassOn: o.bassOn } : {}),
       ...(typeof o.acordesOn === 'boolean' ? { acordesOn: o.acordesOn } : {}),
       ...(o.compVoice && VOICES.some(([v]) => v === o.compVoice) ? { compVoice: o.compVoice } : {}),
+      ...(typeof o.droneOn === 'boolean' ? { droneOn: o.droneOn } : {}),
+      ...(Array.isArray(o.droneNotas) && o.droneNotas.every(n => typeof n === 'number' && n >= 21 && n <= 108)
+        ? { droneNotas: o.droneNotas } : {}),
+      ...(o.droneCarater && ['fundo', 'acorde', 'destaque', 'piano'].includes(o.droneCarater) ? { droneCarater: o.droneCarater } : {}),
     };
   } catch { return null; }
 }
