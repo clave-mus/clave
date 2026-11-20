@@ -53,7 +53,7 @@ export default function NoInstrumento({ onRunning, settings }: { onRunning?: (r:
   const [bemol, setBemol] = useState(false);
   const [feitas, setFeitas] = useState(0);
 
-  useToolLog('no-instrumento', 'No instrumento', 'theory', fase !== 'parado', { settings: { esperar, mostrar, ouvirAntes, mostrarBraco } });
+  useToolLog('no-instrumento', 'No instrumento', 'instrumento', fase !== 'parado', { settings: { esperar, mostrar, ouvirAntes, mostrarBraco } });
   useEffect(() => { onRunning?.(fase !== 'parado'); }, [fase, onRunning]);
 
   const relogio = useRef<number | null>(null);

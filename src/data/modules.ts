@@ -11,11 +11,11 @@ export interface ModuleBase {
 // As cinco cores são uma família do campo quente do estilo Campo, com duas âncoras frias para
 // as áreas se distinguirem entre si. Definidas como tokens em src/index.css, nos dois temas.
 export const MODULE_LIST: ModuleBase[] = [
-  { id: 'theory', color: 'var(--area-1)' },
-  { id: 'technique', color: 'var(--area-2)' },
-  { id: 'perception.melodic', color: 'var(--area-3)' },
-  { id: 'perception.harmonic', color: 'var(--area-4)' },
-  { id: 'perception.rhythmic', color: 'var(--area-5)' },
+  { id: 'ouvido', color: 'var(--area-3)' },
+  { id: 'instrumento', color: 'var(--area-4)' },
+  { id: 'leitura', color: 'var(--area-1)' },
+  { id: 'tecnica', color: 'var(--area-2)' },
+  { id: 'teoria', color: 'var(--area-5)' },
 ];
 
 export type Instrument = 'piano' | 'violao' | 'baixo';

@@ -51,7 +51,7 @@ export default function Leitura() {
   const [pos, setPos] = useState<number | null>(null); // tempo atual (em tempos)
   const [startBar, setStartBar] = useState(0);
   const clock = useRef<Clock | null>(null);
-  useToolLog('leitura', 'Gerador de leitura', mode === 'notas' ? 'perception.melodic' : 'perception.rhythmic', running, { settings: { bpm, modo: mode } });
+  useToolLog('leitura', 'Gerador de leitura', mode === 'notas' ? 'leitura' : 'leitura', running, { settings: { bpm, modo: mode } });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const notes: Note[] = useMemo(() => melody(preset.steps).map(s => applyKey(s, preset.fifths)), [preset, seed]);

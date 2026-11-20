@@ -26,7 +26,7 @@ export default function Ambiente({ goalMinutes }: { goalMinutes?: number }) {
   const stopDrone = useRef<(() => void) | null>(null);
   const chimed = useRef(false);
   // a tonalidade do drone é o conteúdo desta prática; sem o snapshot ela se perde (F3-9)
-  useToolLog('ambiente', 'Solfejar e tocar', 'perception.melodic', timing || droneOn || metro, { settings: { tonica: tonic, drone: kind } });
+  useToolLog('ambiente', 'Solfejar e tocar', 'ouvido', timing || droneOn || metro, { settings: { tonica: tonic, drone: kind } });
 
   useEffect(() => () => stopDrone.current?.(), []);
   useEffect(() => {

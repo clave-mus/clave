@@ -5,7 +5,7 @@ import type { CatalogItem } from '../types';
 export const pautaArmadura: CatalogItem = {
   id: 'pauta-armadura',
   objetos: ['notacao'], tarefas: ['nomear'],
-  primaryModule: 'theory', skillTags: ['notation.key_signature', 'theory.key_relations'],
+  primaryModule: 'teoria', skillTags: ['notation.key_signature', 'theory.key_relations'],
   contentTags: ['key.major', 'key.minor', 'key.signatures', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],

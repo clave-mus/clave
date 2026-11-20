@@ -70,7 +70,7 @@ export default function Audiar({ onRunning, settings }: { onRunning?: (r: boolea
   useRegistroDePratica(() => {
     if (feitas === 0) return null;
     return {
-      id: 'audiar', title: itemText(t, 'audiar', 'title'), module: 'perception.melodic',
+      id: 'audiar', title: itemText(t, 'audiar', 'title'), module: 'ouvido',
       seconds: Math.round((Date.now() - started.current) / 1000),
       autoavaliadas: audiarAutoavaliar ? { sim, total: feitas } : undefined,
       snapshot: { settings: { estimulos, drone: comDrone, tamanho, pedal: String(settings?.pedal ?? 'sorteado') } },

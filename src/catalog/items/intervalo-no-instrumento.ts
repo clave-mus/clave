@@ -28,7 +28,7 @@ import type { CatalogItem } from '../types';
 export const intervaloNoInstrumento: CatalogItem = {
   id: 'intervalo-no-instrumento',
   objetos: ['intervalos'], tarefas: ['nomear', 'tocar'],
-  primaryModule: 'theory',
+  primaryModule: 'instrumento',
   skillTags: ['theory.interval_naming', 'fretboard.interval_shapes'],
   contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,

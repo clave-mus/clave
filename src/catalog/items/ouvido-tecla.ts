@@ -164,7 +164,7 @@ function todasAsCasas(tuning: readonly number[], m: number): { s: number; f: num
 export const ouvidoTecla: CatalogItem = {
   id: 'ouvido-tecla',
   objetos: ['notas'], tarefas: ['ouvir', 'tocar'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.pitch_identification', 'keyboard.note_finding'],
+  primaryModule: 'ouvido', skillTags: ['ear.pitch_identification', 'keyboard.note_finding'],
   contentTags: ['pitch.naturals', 'pitch.accidentals'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range', 'material'],

@@ -6,7 +6,7 @@ import type { CatalogItem } from '../types';
 export const pautaEscala: CatalogItem = {
   id: 'pauta-escala',
   objetos: ['escalas', 'notacao'], tarefas: ['ler'],
-  primaryModule: 'theory', skillTags: ['theory.scale_identification', 'notation.pitch_reading'],
+  primaryModule: 'leitura', skillTags: ['theory.scale_identification', 'notation.pitch_reading'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'material'],

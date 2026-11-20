@@ -5,7 +5,7 @@ import type { CatalogItem, Surface } from '../types';
 export const ouvidoIntervalo: CatalogItem = {
   id: 'ouvido-intervalo',
   objetos: ['intervalos'], tarefas: ['ouvir', 'audiar'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.interval_identification'],
+  primaryModule: 'ouvido', skillTags: ['ear.interval_identification'],
   contentTags: ['interval.simple'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range', 'material'],

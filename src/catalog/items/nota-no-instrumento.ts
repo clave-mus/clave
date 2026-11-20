@@ -31,7 +31,7 @@ import type { CatalogItem } from '../types';
 export const notaNoInstrumento: CatalogItem = {
   id: 'nota-no-instrumento',
   objetos: ['notas'], tarefas: ['nomear', 'tocar'],
-  primaryModule: 'theory',
+  primaryModule: 'instrumento',
   skillTags: ['keyboard.note_naming', 'keyboard.note_finding', 'fretboard.note_naming', 'fretboard.note_finding'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard', 'instrument.guitar', 'instrument.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,

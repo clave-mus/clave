@@ -76,7 +76,7 @@ export default function Tecnica() {
   // O que ficou no histórico: a rotina, a ordem quando há, e o andamento — **de início e de fim**. Com a
   // subida ligada não existe um valor único, e gravar só um dos dois seria inventar; os dois dizem de
   // onde a prática partiu e aonde chegou. Informação neutra, nunca placar (decisão 82).
-  useToolLog('tecnica', 'Rotinas de técnica', 'technique', running, {
+  useToolLog('tecnica', 'Rotinas de técnica', 'tecnica', running, {
     settings: {
       rotina: routine.id,
       ...(routine.eixo && valorDoEixo ? { [routine.eixo.id]: valorDoEixo } : {}),

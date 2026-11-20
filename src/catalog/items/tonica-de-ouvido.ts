@@ -45,7 +45,7 @@ import { randInt } from '../../theory/core';
 export const tonicaDeOuvido: CatalogItem = {
   id: 'tonica-de-ouvido',
   objetos: ['acordes', 'notas'], tarefas: ['ouvir', 'audiar'],
-  primaryModule: 'perception.harmonic',
+  primaryModule: 'ouvido',
   skillTags: ['ear.chord_quality', 'ear.audiation'],
   contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions'],
   kind: 'serie', requires: {}, validation: ['self_report'], mobile: true,

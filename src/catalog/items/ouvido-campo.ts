@@ -31,7 +31,7 @@ function poolDe(s: Record<string, SettingValue>, conv: 'pt' | 'en' = 'pt') {
 export const ouvidoCampo: CatalogItem = {
   id: 'ouvido-campo',
   objetos: ['harmonia', 'acordes'], tarefas: ['ouvir'],
-  primaryModule: 'perception.harmonic', skillTags: ['ear.harmonic_function'],
+  primaryModule: 'ouvido', skillTags: ['ear.harmonic_function'],
   contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],

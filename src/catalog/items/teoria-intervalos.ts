@@ -12,7 +12,7 @@ import type { CatalogItem } from '../types';
 export const teoriaIntervalos: CatalogItem = {
   id: 'teoria-intervalos',
   objetos: ['intervalos'], tarefas: ['nomear'],
-  primaryModule: 'theory', skillTags: ['theory.interval_naming'],
+  primaryModule: 'teoria', skillTags: ['theory.interval_naming'],
   contentTags: ['interval.simple'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],

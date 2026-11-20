@@ -3,11 +3,11 @@
 // content.en.ts precisa ter as mesmas chaves e o mesmo número de itens em cada lista.
 const ptContent = {
   modules: {
-    theory: { name: 'Teoria', short: 'Notação, escalas, acordes e o mapa do instrumento' },
-    technique: { name: 'Técnica', short: 'Controle motor e regularidade' },
-    'perception.melodic': { name: 'Percepção melódica', short: 'Alturas, intervalos e escalas' },
-    'perception.harmonic': { name: 'Percepção harmônica', short: 'Acordes e sonoridades' },
-    'perception.rhythmic': { name: 'Percepção rítmica', short: 'Pulso, figuras e células' },
+    ouvido: { name: 'Ouvido', short: 'Reconhecer o que soa' },
+    instrumento: { name: 'Mapear o instrumento', short: 'Onde cada nota mora no braço e no teclado' },
+    leitura: { name: 'Leitura', short: 'Da nota escrita ao som' },
+    tecnica: { name: 'Técnica', short: 'Controle motor e regularidade' },
+    teoria: { name: 'Teoria', short: 'Os nomes e as razões' },
   },
   instruments: {
     piano: 'Piano / teclado',

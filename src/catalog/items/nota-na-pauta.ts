@@ -29,7 +29,7 @@ import type { CatalogItem } from '../types';
 export const notaNaPautaItem: CatalogItem = {
   id: 'nota-na-pauta',
   objetos: ['notas', 'notacao'], tarefas: ['nomear', 'ler', 'escrever'],
-  primaryModule: 'theory',
+  primaryModule: 'leitura',
   skillTags: ['notation.pitch_reading', 'notation.pitch_writing'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'clef.treble', 'clef.bass', 'staff.ledger_lines'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,

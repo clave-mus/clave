@@ -127,7 +127,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
     setModo(atualModo => (atualModo === m ? 'nada' : m));
   };
 
-  useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'perception.harmonic', modo !== 'nada',
+  useToolLog('relacoes-melodia-harmonia', 'Relações entre melodia e harmonia', 'ouvido', modo !== 'nada',
     { settings: { campo, cromatico, soarMelodia, tetrade, som } });
 
   return (

@@ -21,7 +21,7 @@ import type { CatalogItem } from '../types';
 export const acordeNaPauta: CatalogItem = {
   id: 'acorde-na-pauta',
   objetos: ['acordes', 'notacao'], tarefas: ['nomear', 'ler'],
-  primaryModule: 'theory',
+  primaryModule: 'leitura',
   skillTags: ['theory.chord_identification', 'notation.pitch_reading'],
   contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic', 'self_report'], mobile: true,

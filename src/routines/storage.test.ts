@@ -202,7 +202,7 @@ describe('o histórico guarda os parâmetros (F3-9)', () => {
     const { logActivity, getState, resetAll } = await import('../state/store');
     resetAll();
     logActivity({
-      id: 'ambiente', title: 'Solfejar e tocar', module: 'perception.melodic', seconds: 300,
+      id: 'ambiente', title: 'Solfejar e tocar', module: 'ouvido', seconds: 300,
       snapshot: { settings: { tonica: 7 }, params: { instrument: 'baixo', tuning: [28, 33, 38, 43], key: { tonic: 7, mode: 'maior' }, range: { lo: 40, hi: 64 }, material: 'diatonico' } },
     });
     const a = getState().history[0];
@@ -215,7 +215,7 @@ describe('o histórico guarda os parâmetros (F3-9)', () => {
   it('atividade antiga, sem snapshot, continua válida', async () => {
     const { logActivity, getState, resetAll } = await import('../state/store');
     resetAll();
-    logActivity({ id: 'metronomo', title: 'Metrônomo', module: 'technique', seconds: 120 });
+    logActivity({ id: 'metronomo', title: 'Metrônomo', module: 'tecnica', seconds: 120 });
     expect(getState().history[0].snapshot).toBeUndefined();
   });
 });

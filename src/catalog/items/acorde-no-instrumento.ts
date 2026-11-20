@@ -25,7 +25,7 @@ import type { CatalogItem } from '../types';
 export const acordeNoInstrumento: CatalogItem = {
   id: 'acorde-no-instrumento',
   objetos: ['acordes'], tarefas: ['nomear', 'tocar'],
-  primaryModule: 'theory',
+  primaryModule: 'instrumento',
   skillTags: ['theory.chord_identification', 'keyboard.chord_shapes', 'fretboard.chord_shapes'],
   contentTags: ['chord.triads', 'chord.sevenths', 'chord.inversions', 'chord.open_shapes', 'chord.barre_shapes', 'instrument.keyboard', 'instrument.guitar'],
   kind: 'serie', requires: {}, validation: ['deterministic', 'self_report'], mobile: true,

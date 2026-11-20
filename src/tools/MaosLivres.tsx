@@ -74,7 +74,7 @@ export default function MaosLivres({ onRunning, settings }: { onRunning?: (r: bo
   }, [locale, temVoz]);
   const anuncioReal: Anuncio = anuncio === 'voz' && !temVoz ? 'repetir' : anuncio;
 
-  useToolLog('maos-livres', 'Mãos livres', 'perception.melodic', rodando, { settings: { objetos, pensar, anuncio } });
+  useToolLog('maos-livres', 'Mãos livres', 'ouvido', rodando, { settings: { objetos, pensar, anuncio } });
   useEffect(() => { onRunning?.(rodando); }, [rodando, onRunning]);
 
   /** Os temporizadores do ciclo, para parar na hora de parar. */

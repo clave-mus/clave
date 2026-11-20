@@ -6,7 +6,7 @@ import type { CatalogItem } from '../types';
 export const ouvidoEscala: CatalogItem = {
   id: 'ouvido-escala',
   objetos: ['escalas'], tarefas: ['ouvir'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_quality'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_quality'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],

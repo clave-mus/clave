@@ -42,7 +42,7 @@ const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico
 export const melodiaDeOuvido: CatalogItem = {
   id: 'melodia-de-ouvido',
   objetos: ['melodia', 'notas'], tarefas: ['ouvir', 'audiar'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees', 'ear.audiation'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_degrees', 'ear.audiation'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'key.major', 'key.minor'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range', 'material'],

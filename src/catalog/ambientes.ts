@@ -22,7 +22,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'metronomo', kind: 'ambiente',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.triplets'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/common').then(m => ({ default: m.Metronome })),
@@ -37,7 +37,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'maos-livres', kind: 'ambiente', semTela: true,
     publicacao: RASCUNHO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['intervalos', 'acordes', 'escalas', 'notas'], tarefas: ['ouvir'],
-    primaryModule: 'perception.melodic',
+    primaryModule: 'ouvido',
     skillTags: ['ear.interval_identification', 'ear.chord_quality', 'ear.scale_quality', 'ear.pitch_identification'],
     contentTags: ['interval.simple', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor', 'scale.modes'],
     // **Tem configuração declarada**, ao contrário dos outros ambientes, e por um motivo concreto: a
@@ -69,7 +69,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'no-instrumento', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['notas'], tarefas: ['tocar'],
-    primaryModule: 'theory', skillTags: ['fretboard.note_finding'],
+    primaryModule: 'instrumento', skillTags: ['fretboard.note_finding'],
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     settings: ctx => [
       { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
@@ -94,7 +94,7 @@ export const AMBIENTES: CatalogItem[] = [
     // respeitou as duas; só não avisava — e por isso o painel de prática não as oferecia aqui.
     respeita: ['key', 'range'],
     objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
-    primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
+    primaryModule: 'ouvido', skillTags: ['ear.audiation'],
     contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
     settings: ctx => [
       {
@@ -142,7 +142,7 @@ export const AMBIENTES: CatalogItem[] = [
     // Nas DUAS percepções, a pedido do Paulo: a nota é melódica, o acorde embaixo é harmônico, e
     // o exercício é exatamente o encontro dos dois. `primaryModule` segue sendo a harmônica, que é
     // a que conta no histórico.
-    primaryModule: 'perception.harmonic', tambemEm: ['perception.melodic'],
+    primaryModule: 'ouvido',
     skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
     contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor'],
     settings: ctx => [
@@ -164,7 +164,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'ambiente', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['escalas'], tarefas: ['cantar', 'tocar'],
-    primaryModule: 'perception.melodic', skillTags: ['ear.pitch_identification'], contentTags: ['key.major', 'key.minor'],
+    primaryModule: 'ouvido', skillTags: ['ear.pitch_identification'], contentTags: ['key.major', 'key.minor'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Ambiente'),
   },
@@ -172,7 +172,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'backing', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['harmonia'], tarefas: ['tocar'],
-    primaryModule: 'perception.harmonic', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
+    primaryModule: 'ouvido', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Backing'),
   },
@@ -180,7 +180,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'leitura', kind: 'ambiente',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['notacao'], tarefas: ['ler'],
-    primaryModule: 'perception.melodic', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
+    primaryModule: 'leitura', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Leitura'),
   },
@@ -188,7 +188,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'ritmo', kind: 'ambiente',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
-    primaryModule: 'perception.rhythmic', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
+    primaryModule: 'leitura', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
     /**
      * **O atalho é o que a rotina consegue pedir.** Até 10/11/2026 este item declarava
      * `noSettings`, e toda a configuração dele morava dentro da tela. Isso tornava impossível a
@@ -211,7 +211,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'tecnica', kind: 'tarefa',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['motor'], tarefas: ['tocar'],
-    primaryModule: 'technique',
+    primaryModule: 'tecnica',
     skillTags: ['technique.fingering', 'technique.finger_independence', 'technique.string_crossing', 'technique.tempo_control'],
     contentTags: ['instrument.guitar', 'instrument.bass'],
     settings: noSettings, defaults: {},
@@ -229,7 +229,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'acento-deslocado', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),
@@ -238,7 +238,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'subdivisao-alternada', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),
@@ -247,7 +247,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'deslocamento-ritmico', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo'], tarefas: ['tocar'],
-    primaryModule: 'perception.rhythmic', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth', 'rhythm.rests'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),

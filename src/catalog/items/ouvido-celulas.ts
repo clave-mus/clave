@@ -15,7 +15,7 @@ const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
 export const ouvidoCelulas: CatalogItem = {
   id: 'ouvido-celulas',
   objetos: ['escalas', 'melodia'], tarefas: ['ouvir'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_degrees'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
