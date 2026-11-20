@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, noteName, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Surface } from '../types';
 
@@ -18,6 +18,18 @@ export const ouvidoIntervalo: CatalogItem = {
     { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
       { id: 'som', label: ctx.t('settings.hearIt') },
       { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
+    /**
+     * **Como o intervalo aparece quando se audia**: na pauta (o de sempre) ou **pelo nome**.
+     *
+     * Pelo nome é o que o item `audiar` fazia e que se perderia na aposentadoria dele (20/11): o
+     * enunciado diz "audie uma terça maior acima de Dó4", nada é desenhado, e o gabarito fica no
+     * botão. É a única forma de cobrar intervalo **sem notação e sem instrumento** — com o fone no
+     * ônibus, que é onde ele estuda.
+     */
+    { id: 'mostraAudiando', label: ctx.t('settings.audiateShow'), type: 'single', quando: s => s.estimulo === 'escrito', options: [
+      { id: 'pauta', label: ctx.t('settings.showStaff') },
+      { id: 'nome', label: ctx.t('settings.showName') },
     ] },
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: semiOptions(ctx).map(o => ({ ...o, tier: SEMI_TIER[Number(o.id)] })) },
     { id: 'direcao', label: ctx.t('settings.direction'), type: 'single', options: [{ id: 'sobe', label: ctx.t('settings.up') }, { id: 'desce', label: ctx.t('settings.down') }, { id: 'juntas', label: ctx.t('settings.together') }, { id: 'misto', label: ctx.t('settings.mixed') }] },
@@ -69,7 +81,7 @@ export const ouvidoIntervalo: CatalogItem = {
     ...TIMBRE(ctx),
     GRAUS_ESCOLHIDOS(ctx)],
   defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
-    resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [],
+    resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [], mostraAudiando: 'pauta',
     ...TIMBRE_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
@@ -221,10 +233,15 @@ export const ouvidoIntervalo: CatalogItem = {
      */
     if (s.estimulo === 'escrito') {
       const tonica = tonicaDeContexto(ctx, base);
+      const peloNome = s.mostraAudiando === 'nome';
       return {
-        prompt: ctx.t('quiz.audiateInterval'),
-        visual: { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined,
-          columns: dir === 'juntas' ? [alturas.map(m => notaGrafada(ctx, m))] : groups.map(g => g.map(m => notaGrafada(ctx, m))) },
+        prompt: peloNome
+          ? ctx.t('quiz.audiateIntervalByName', { interval: nome, note: noteName(notaGrafada(ctx, base), ctx.naming) })
+          : ctx.t('quiz.audiateInterval'),
+        visual: peloNome
+          ? { kind: 'text', text: '' }
+          : { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined,
+            columns: dir === 'juntas' ? [alturas.map(m => notaGrafada(ctx, m))] : groups.map(g => g.map(m => notaGrafada(ctx, m))) },
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[tonica]],

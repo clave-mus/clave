@@ -117,12 +117,6 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 |---|---|
 | `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela **todas** as casas onde ela existe na faixa inteira (X8, 06/11/2026: antes marcava uma só, sorteada), e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira os tempos padrão de espera (8 s) e de exibição da resposta (4 s), e se "ouvir a nota antes" ajuda ou entrega demais |
 
-### Audiar (`X3`, revisão de 04/11/2026)
-
-| Id | O que só você confere |
-|---|---|
-| `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
-
 ### Relações entre melodia e harmonia (`MH`, 07/11/2026)
 
 | Id | O que só você confere |

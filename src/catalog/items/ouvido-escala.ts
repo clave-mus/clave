@@ -1,4 +1,4 @@
-import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, pick, scaleName, scaleSound, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, notaGrafada, noteName, pick, scaleName, scaleSound, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -12,6 +12,19 @@ export const ouvidoEscala: CatalogItem = {
   respeita: ['key', 'range'],
   publicacao: LEGADO,
   settings: ctx => [
+    /**
+     * **Audiar uma escala pelo NOME** — o modo que faltava, e que o item `audiar` fazia sozinho até
+     * 20/11. Com ele aposentado (decisão do Paulo), o que ele cobrava precisa existir aqui, senão a
+     * aposentadoria deixa buraco: *"o que existe atualmente no Audiar não pode ser perdido"*.
+     *
+     * **Só pelo nome, e não na pauta**: escala escrita na pauta já é outro item (`pauta-escala`).
+     * Aqui o enunciado diz "audie a escala menor harmônica de Lá", toca a tônica, e o gabarito fica
+     * no botão — é o exercício de ouvir por dentro, sem notação nenhuma.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
     { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
     DIRECAO(ctx),
     /**
@@ -20,7 +33,7 @@ export const ouvidoEscala: CatalogItem = {
      */
     ...TIMBRE(ctx),
   ],
-  defaults: { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe', ...TIMBRE_DEFAULTS },
+  defaults: { estimulo: 'som', tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe', ...TIMBRE_DEFAULTS },
   /**
    * "Todas as escalas, uma etapa só" (Paulo, 09/11) — e isso **obriga** `direcao: 'ambos'`. Não é
    * gosto: com as duas menores melódicas marcadas e só subindo, o `problema` acima recusa a
@@ -46,6 +59,25 @@ export const ouvidoEscala: CatalogItem = {
     const type = pick(types);
     const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });
     const ms = scaleSound(tonic, type, s.direcao);
+    /**
+     * Audiando: o enunciado **diz a escala**, só a tônica soa, e a escala inteira fica no botão de
+     * gabarito. A autoavaliação espera esse botão — julgar antes de conferir é julgar no vácuo.
+     */
+    if (s.estimulo === 'escrito') {
+      return {
+        prompt: ctx.t('quiz.audiateScaleByName', { scale: scaleName(ctx.t, type), note: noteName(notaGrafada(ctx, tonic), ctx.naming) }),
+        visual: { kind: 'text', text: '' },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: [[tonic]],
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonic]] },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
+          ],
+        },
+        autoplay: false, reveal: scaleName(ctx.t, type), presentation: vozDaPergunta(s),
+      };
+    }
     return {
       prompt: ctx.t('quiz.whatScale'), visual: { kind: 'ear' },
       surface: { kind: 'choices', options: types.map(t => ({ id: t, label: scaleName(ctx.t, t) })), wide: true }, expected: { kind: 'option', id: type },

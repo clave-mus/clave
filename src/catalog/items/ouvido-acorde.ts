@@ -102,6 +102,12 @@ export const ouvidoAcorde: CatalogItem = {
         { id: 'braco', label: ctx.t('settings.onNeck') },
         { id: 'piano', label: ctx.t('settings.instrumentPiano') },
         { id: 'pauta', label: ctx.t('settings.onStaff') },
+        /**
+         * **Pelo nome**, só audiando: o enunciado diz "audie um acorde maior com sétima" e nada é
+         * desenhado. É o que o item `audiar` cobrava e que se perderia ao aposentá-lo (20/11) — o
+         * único jeito de estudar acorde de ouvido sem tela e sem instrumento.
+         */
+        { id: 'nome', label: ctx.t('settings.showName') },
       ] },
     /**
      * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
@@ -243,7 +249,9 @@ export const ouvidoAcorde: CatalogItem = {
       const noPiano = s.instrumento === 'piano';
       const noBraco = !noPiano && s.instrumento !== 'pauta';
       const tuning = ctx.params.tuning;
-      const visual: Question['visual'] = s.instrumento === 'pauta'
+      const visual: Question['visual'] = s.instrumento === 'nome'
+        ? { kind: 'text', text: '' }
+        : s.instrumento === 'pauta'
         ? { kind: 'staff', clef: clave(ctx), fifths: quintasDaTonalidade(ctx) ?? undefined, columns: ms.map(m => [notaGrafada(ctx, m)]) }
         : noPiano ? { kind: 'keyboard', ...faixaQueCabe(ms), marks: ms }
         // **Só as notas que o braço alcança são desenhadas.** `casaDaAltura` devolvia a casa 0 da
@@ -251,7 +259,10 @@ export const ouvidoAcorde: CatalogItem = {
         // desenhado não era o acorde, e a pessoa audiava outra coisa.
         : { kind: 'fretboard', tuning, from: 0, to: 12, marks: ms.map(m => casaDaAltura(tuning, m)).filter((c): c is { s: number; f: number } => c !== null) };
       return {
-        prompt: ctx.t(s.instrumento === 'pauta' ? 'quiz.audiateChord' : 'quiz.audiateChordOnInstrument'), visual,
+        prompt: s.instrumento === 'nome'
+          ? ctx.t('quiz.audiateChordByName', { chord: chordName(ctx.t, type) })
+          : ctx.t(s.instrumento === 'pauta' ? 'quiz.audiateChord' : 'quiz.audiateChordOnInstrument'),
+        visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         sound: {
           groups: [[root]],

@@ -7,8 +7,6 @@
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
-import { ESCALAS_GRAUS } from './items/audiar';
-import { arr, scaleName } from './helpers';
 import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
 import type { MessageKey } from '../i18n';
@@ -79,56 +77,6 @@ export const AMBIENTES: CatalogItem[] = [
     ],
     defaults: { esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
     screen: () => import('../tools/NoInstrumento'),
-  },
-  {
-    // X3 (06/11/2026). **Tarefa**, não série: igual ao `no-instrumento`, o app não ouve — mostra o
-    // alvo, espera o clique que revela, e confere com autoavaliação. A diferença daqui é que a
-    // autoavaliação é POR RODADA, não só ao fim da etapa (pedido do Paulo, para ver como fica) —
-    // `tools/Audiar.tsx` respeita `state.audiarAutoavaliar` para isso ser desligável.
-    //
-    // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
-    id: 'audiar', kind: 'tarefa',
-    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
-    // Faltava declarar (achado em 09/11 pelo teste de `doTime`, ao pôr a audiação na rotina em dó
-    // maior): `items/audiar.ts` chama `tonicaNaRegiao`, que lê tonalidade E região. O item sempre
-    // respeitou as duas; só não avisava — e por isso o painel de prática não as oferecia aqui.
-    respeita: ['key', 'range'],
-    objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
-    primaryModule: 'ouvido', skillTags: ['ear.audiation'],
-    contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
-    settings: ctx => [
-      {
-        id: 'estimulos', label: ctx.t('audiar.stimuli'), type: 'multi',
-        options: [
-          { id: 'referencia', label: ctx.t('audiar.stimulusReference') },
-          { id: 'graus', label: ctx.t('audiar.stimulusDegrees') },
-        ],
-      },
-      // Quantos graus a célula tem. Era 4, escrito no código.
-      { id: 'tamanho', label: ctx.t('audiar.cellSize'), type: 'single', quando: s => arr(s.estimulos, []).includes('graus'),
-        options: ['2', '3', '4', '5', '6'].map(n => ({ id: n, label: n })) },
-      // De que escalas os graus saem. Eram duas, escritas no código.
-      { id: 'escalas', label: ctx.t('audiar.degreeScales'), type: 'multi', quando: s => arr(s.estimulos, []).includes('graus'),
-        options: ESCALAS_GRAUS.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
-      /**
-       * O **pedal sempre o mesmo** (pedido do Paulo, 10/11/2026).
-       *
-       * Sem isto a tônica é sorteada a cada rodada, e o pedal muda de altura junto — o que faz
-       * sentido para treinar relatividade e atrapalha quem quer internalizar um centro só.
-       *
-       * `fixo` vale a rodada inteira da sessão: a tela sorteia uma vez e reusa.
-       */
-      { id: 'pedal', label: ctx.t('audiar.pedal'), type: 'single', options: [
-        { id: 'sorteado', label: ctx.t('audiar.pedalRandom') },
-        { id: 'fixo', label: ctx.t('audiar.pedalFixed') },
-      ] },
-      { id: 'drone', label: ctx.t('audiar.drone'), type: 'toggle' },
-    ],
-    defaults: {
-      estimulos: ['referencia', 'graus'], tamanho: '4',
-      escalas: ['maior', 'menor'], pedal: 'sorteado', drone: false,
-    },
-    screen: () => import('../tools/Audiar'),
   },
   {
     // MH (07/11/2026). **Tarefa**, não série: não há resposta a conferir — a pessoa explora como

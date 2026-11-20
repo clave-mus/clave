@@ -115,7 +115,7 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
-    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', audiar: 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente',
+    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente',
     /**
      * ⚠️ **A leitura de notas e a de ritmo viraram `tarefa` em 20/11** (decisão dele). O critério
      * é como termina: ambiente termina quando a pessoa para e registra tempo; tarefa termina quando
