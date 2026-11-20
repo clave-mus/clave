@@ -18,6 +18,7 @@
  * considerou uma terceira (`I-vi-IV-V`) e cortou.
  */
 import { mod, type ModoDoCampo } from './core';
+import { conduzirAcorde } from './voicings';
 import { acordeDoCampo } from './padrao-de-escala';
 import type { ScaleId } from './core';
 
@@ -60,7 +61,54 @@ export function acordeNoTeto(tonica: number, semis: number[]): number[] {
 export function cadenciaHarmonica(
   id: CadenciaId, tonica: number, escala: ScaleId | ModoDoCampo = 'maior', tetrade = false,
 ): number[][] {
-  return GRAUS[id].map(grau => acordeNoTeto(tonica, acordeDoCampo(escala as ScaleId, grau, tetrade)));
+  const acordes = GRAUS[id].map(grau => acordeNoTeto(tonica, acordeDoCampo(escala as ScaleId, grau, tetrade)));
+  return conduzirCadencia(acordes, tonica);
+}
+
+/**
+ * **A cadência com as vozes conduzidas** — e esta é a parte que mudou em 19/11, depois de medir.
+ *
+ * O que havia: cada acorde empilhado da fundamental para cima, cada um calculado sozinho. Medido em
+ * dó maior, o ii–V–I saía `[Ré4 Fá4 Lá4] → [Sol4 Si4 Ré5] → [Dó4 Mi4 Sol4]`, com **3,17 semitons**
+ * de movimento médio por voz nas tríades — o V subindo uma oitava inteira e voltando. É o som de
+ * teclado de iniciante, e é a primeira coisa que se ouve em quatro itens do catálogo.
+ *
+ * Agora cada acorde escolhe a oitava de cada nota para ficar perto do anterior (`conduzirAcorde`),
+ * que é a mesma peça que o acompanhamento usa desde a revisão. **O primeiro acorde continua onde
+ * estava**: ele é a referência de registro da cadência inteira, e mexer nele moveria o contexto
+ * para longe do alvo do exercício — a diferença de registro viraria pista (ver `acordeNoTeto`).
+ */
+export function conduzirCadencia(acordes: number[][], tonica: number): number[][] {
+  const faixa = { lo: tonica - 12, hi: tonica + TETO_ACIMA_DA_TONICA, vao: 16 };
+  const out: number[][] = [];
+  acordes.forEach((acorde, i) => {
+    if (i === 0) { out.push(acorde); return; }
+    /**
+     * ⚠️ **O último acorde fecha em posição fundamental**, e isto foi um guarda do projeto que me
+     * pegou: `direcao-audiar.test.ts` exige que o contexto **feche na tônica**, porque é o acorde
+     * final que estabelece o centro — e a primeira versão desta função devolvia o I em primeira
+     * inversão (`[Mi4 Sol4 Dó5]`), que conduz lindamente e **não fecha nada**.
+     *
+     * Um músico faz a mesma coisa: as vozes passeiam no meio da cadência e a última chega com a
+     * fundamental no baixo. `baixo` prende a nota mais grave à fundamental daquele acorde.
+     */
+    const ultimo = i === acordes.length - 1;
+    out.push(conduzirAcorde(acorde, out[out.length - 1], ultimo ? { ...faixa, baixo: acorde[0] } : faixa));
+  });
+  return out;
+}
+
+/**
+ * O acorde-ALVO de um exercício, conduzido a partir do último acorde do contexto.
+ *
+ * Irmã de `acordeNoTeto`, e pelo mesmo motivo dela: o alvo tem de morar no registro do contexto. A
+ * diferença é que agora ele **continua a condução** em vez de recomeçar da fundamental — assim a
+ * cadência e a pergunta soam como uma coisa só, e não como três acordes e um anúncio.
+ */
+export function alvoConduzido(tonica: number, semis: number[], anterior: readonly number[] | null): number[] {
+  const base = acordeNoTeto(tonica, semis);
+  if (!anterior?.length) return base;
+  return conduzirAcorde(base, anterior, { lo: tonica - 12, hi: tonica + TETO_ACIMA_DA_TONICA, vao: 16 });
 }
 
 /**

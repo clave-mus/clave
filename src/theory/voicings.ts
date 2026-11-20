@@ -238,3 +238,46 @@ export function voicingConduzido(root: Note, type: ChordId, anterior: readonly n
   }
   return melhor.todas.map(midi).sort((a, b) => a - b);
 }
+
+/**
+ * **Conduzir um acorde qualquer**, dado em alturas MIDI de partida (a fundamental e os graus já
+ * somados), para perto do acorde anterior.
+ *
+ * Irmã de `voicingConduzido`, e existe porque nem todo acorde do app tem `ChordId`: a cadência de
+ * contexto vem de `acordeDoCampo`, que devolve **semitons sobre a tônica** — pentatônica inclusive,
+ * onde não há qualidade nomeada. Esta aqui trabalha com o conjunto de classes e nada mais.
+ *
+ * Como funciona: cada nota pode subir ou descer oitavas dentro da faixa; de todas as combinações,
+ * vale a que **move menos** em relação ao acorde anterior, sem encardir embaixo e sem abrir mais que
+ * `vao`. Sem acorde anterior, a referência é o centro — o mesmo critério do acompanhamento.
+ *
+ * `baixo` prende a nota mais grave a uma classe de altura, para o acorde ficar em posição
+ * fundamental quando isso importa.
+ */
+export function conduzirAcorde(
+  base: readonly number[], anterior: readonly number[] | null,
+  { lo = 48, hi = 84, vao = 16, baixo }: { lo?: number; hi?: number; vao?: number; baixo?: number } = {},
+): number[] {
+  const porNota = base.map(m => {
+    const oitavas: number[] = [];
+    for (let x = lo + mod(m - lo, 12); x <= hi; x += 12) oitavas.push(x);
+    return oitavas.length ? oitavas : [m];
+  });
+  let melhor: number[] | null = null;
+  let menor = Infinity;
+  const combinar = (i: number, atual: number[]) => {
+    if (i === porNota.length) {
+      const ms = [...atual].sort((a, b) => a - b);
+      if (ms[ms.length - 1] - ms[0] > vao) return;
+      // `baixo` prende a nota mais grave a uma classe: é o que mantém o acorde em posição
+      // fundamental quando ele precisa fechar alguma coisa. Ver `conduzirCadencia`.
+      if (baixo !== undefined && mod(ms[0], 12) !== mod(baixo, 12)) return;
+      const d = distanciaEntreAcordes(ms, anterior ?? CENTRO) + custoDeEncardimento(ms);
+      if (d < menor) { menor = d; melhor = ms; }
+      return;
+    }
+    for (const x of porNota[i]) combinar(i + 1, [...atual, x]);
+  };
+  combinar(0, []);
+  return melhor ?? [...base].sort((a, b) => a - b);
+}

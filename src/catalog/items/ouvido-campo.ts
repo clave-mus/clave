@@ -5,7 +5,7 @@ import { midi } from '../../theory/core';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, SettingValue } from '../types';
 import { grauDaFundamental, materialDoCampo, opcoesDeEmprestimo, type CampoDoExercicio } from '../../theory/campo-harmonico';
-import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
+import { CADENCIAS, alvoConduzido, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 
 const EM_LA_MENOR = { key: { tonic: 9, mode: 'menor' } } as const;
 /** O material filtrado pelo que a pessoa incluiu: graus marcados + empréstimos marcados. */
@@ -181,7 +181,17 @@ export const ouvidoCampo: CatalogItem = {
      */
     const raiz = notaGrafada(ctx, tonica + alvo.semi);
     const doMotor = comVoicing(s) ? voicingsDe(raiz, qualidade, {}) : [];
-    let ms = doMotor.length ? doMotor[randInt(0, doMotor.length - 1)].todas.map(midi) : acordeNoTeto(tonica, semis);
+    /**
+     * **O alvo continua a condução do contexto** (19/11): a cadência agora conduz as vozes, e o
+     * acorde da pergunta entrando empilhado da fundamental soaria como anúncio — a diferença de
+     * registro e de empilhamento viraria pista, que é o que `acordeNoTeto` existia para evitar.
+     *
+     * Com voicing de piano ligado, quem manda é o motor de voicings: ali a pessoa pediu
+     * explicitamente outra coisa.
+     */
+    let ms = doMotor.length
+      ? doMotor[randInt(0, doMotor.length - 1)].todas.map(midi)
+      : alvoConduzido(tonica, semis, contexto[contexto.length - 1] ?? null);
     if (s.inversoes && !comVoicing(s)) for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
 
     /**
