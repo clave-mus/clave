@@ -112,7 +112,15 @@ export function materialDoCampo(campo: CampoDoExercicio, tetrade: boolean, conv:
   return [...diatonicos, ...emprestados].sort((a, b) => a.semi - b.semi || Number(a.emprestimo) - Number(b.emprestimo));
 }
 
-const GRAU_POR_SEMI = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
+/**
+ * Os doze graus sobre uma fundamental, em bemóis — o trítono sai `♭5`, e não `♯4` (decisão dele em
+ * 07/11, para os cinco alterados ficarem todos em bemol, como a fileira aparece nos métodos).
+ *
+ * Exportado desde 20/11, quando o `ouvido-celulas` passou a oferecer a RELAÇÃO como resposta: a
+ * lista de botões é esta mesma, e duas listas iguais em dois arquivos acabam divergindo.
+ */
+export const GRAUS_CROMATICOS = ['1', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7'];
+const GRAU_POR_SEMI = GRAUS_CROMATICOS;
 
 /** O grau da fundamental, para o modo de resposta "só o grau": `iv` e `IV` são os dois `4`. */
 export const grauDaFundamental = (semi: number): string => GRAU_POR_SEMI[mod(semi, 12)];

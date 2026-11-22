@@ -1297,9 +1297,28 @@ function SequenceArea({ sf, q, phase, picked, onAnswer }: {
 }) {
   const t = useT();
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
+  /**
+   * **A sequência zera a cada pergunta nova** — e não zerava.
+   *
+   * Defeito achado medindo os modos novos em 20/11, mas ele é antigo: este componente não remonta
+   * entre perguntas, então o que a pessoa escolheu na anterior continuava nas casas da seguinte. Em
+   * `ouvido-celulas` e em `reconhecer-padroes-escala`, que já respondiam por sequência, a pergunta
+   * nova nascia meio respondida.
+   *
+   * `q` é objeto novo a cada `make()`, então a identidade dele é o sinal certo: muda a pergunta,
+   * limpa as casas.
+   */
+  useEffect(() => { setEscolhidos([]); }, [q]);
   const sep = sf.separador ?? ' ';
-  const cheia = escolhidos.length >= sf.comprimento;
-  const porId = new Map(sf.options.map(o => [o.id, o]));
+  /**
+   * **Com `passos`, cada passo tem a sua paleta e o seu rótulo** — e o comprimento sai deles.
+   * Sem `passos`, tudo segue como antes: uma paleta só, repetida.
+   */
+  const passos = sf.passos;
+  const quantos = passos ? passos.length : sf.comprimento;
+  const cheia = escolhidos.length >= quantos;
+  const paleta = passos ? (passos[Math.min(escolhidos.length, passos.length - 1)]?.options ?? []) : sf.options;
+  const porId = new Map([...sf.options, ...(passos?.flatMap(p => p.options) ?? [])].map(o => [o.id, o]));
   const rotulo = (id: string) => porId.get(id)?.label ?? id;
   const certa = q.expected.kind === 'option' ? q.expected.id : '';
 
@@ -1308,17 +1327,21 @@ function SequenceArea({ sf, q, phase, picked, onAnswer }: {
       {/* As casas: o que já foi escolhido e o que falta. Mostrar as vazias é o que diz quantas
           notas a pessoa tem de informar sem precisar de texto explicando. */}
       <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
-        {Array.from({ length: sf.comprimento }, (_, i) => (
-          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''}`}>{escolhidos[i] ? rotulo(escolhidos[i]) : ''}</span>
+        {Array.from({ length: quantos }, (_, i) => (
+          /* Com passos, a casa vazia leva o rótulo do passo: ela deixa de ser um buraco e vira a
+             pergunta ("que acorde?"), que é o que o modo do par precisa dizer sem texto à parte. */
+          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''} ${!escolhidos[i] && passos ? 'rotulada' : ''}`}>
+            {escolhidos[i] ? rotulo(escolhidos[i]) : (passos?.[i]?.label ?? '')}
+          </span>
         ))}
       </div>
 
       {phase === 'ask' ? (
         <>
           <div className="answers compact seq-paleta">
-            {sf.options.map(o => (
+            {paleta.map(o => (
               <button key={o.id} type="button" className="ans compact" disabled={cheia}
-                onClick={() => setEscolhidos(v => (v.length >= sf.comprimento ? v : [...v, o.id]))}>{o.label}</button>
+                onClick={() => setEscolhidos(v => (v.length >= quantos ? v : [...v, o.id]))}>{o.label}</button>
             ))}
           </div>
           <div className="row seq-acoes">

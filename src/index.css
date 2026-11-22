@@ -1090,3 +1090,7 @@ select.sel {
   font-family: var(--mono); font-size: 15px; letter-spacing: .06em;
   color: var(--ink-soft); font-variant-numeric: tabular-nums;
 }
+
+/* A casa ainda vazia de uma sequência com passos diferentes leva o rótulo do passo — é ela que
+   diz "agora escolha o acorde". Miúdo e apagado para não competir com o que já foi escolhido. */
+.seq-casa.rotulada { font-size: 12px; color: var(--ink-faint); font-family: var(--body); letter-spacing: .02em; }

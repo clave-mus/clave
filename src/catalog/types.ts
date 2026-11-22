@@ -110,7 +110,19 @@ export type Surface =
    * Com `comprimento: 1` isto é só uma lista maior de botões, e nem precisaria de superfície
    * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
    */
-  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
+  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string;
+      /**
+       * **Uma lista por passo**, quando os passos pedem coisas diferentes — e com um rótulo cada,
+       * porque sem ele a pessoa não sabe o que está escolhendo agora.
+       *
+       * Nasceu em 20/11, do modo "que acorde é, e que nota é por cima": o primeiro passo são os
+       * graus do campo e o segundo são os graus da escala. A lista única de antes dava os dois
+       * passos com a mesma paleta, e a paleta é metade do enunciado.
+       *
+       * Quando `passos` existe, é ele que manda: `comprimento` passa a ser o número de passos, e
+       * `options` serve só para quem precisa da união (a leitura dos rótulos na conferência).
+       */
+      passos?: { label: string; options: ChoiceOption[] }[] }
   /**
    * **Audiar e conferir**: não há resposta a conferir, só a pessoa dizendo como foi.
    *

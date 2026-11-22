@@ -105,6 +105,18 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### O modo quiz da relação melodia-harmonia (20/11/2026)
+
+Não são itens novos — são **modos** de `ouvido-campo` e `ouvido-celulas`, e por isso nada nasceu
+rascunho. Mas cada um muda o que o exercício pede, e a revisão musical é sua:
+
+| onde | o quê | confira |
+|---|---|---|
+| `ouvido-campo` | **nota segurada sobre o acorde**, com posição (por cima · no meio · por baixo) | se reconhecer o grau **através** da nota parada é difícil na medida certa; se "no meio" se ouve como nota ou some dentro do acorde; e se por baixo, com o acorde subindo de oitava para abrir espaço, ainda soa como o mesmo exercício |
+| `ouvido-celulas` | **o par** (que acorde + que graus) e **a relação** (`♭7`, `5`) | se o par com dois acordes é a porta de entrada certa — você escreveu que começar com poucos graus é o recomendado —, e se a relação sozinha é mesmo o degrau do meio entre os dois |
+| os dois | **os nomes dos dez atalhos novos** | a redação é sua; eu escrevi uma primeira versão descritiva |
+| `ouvido-celulas` | **o nome do item** | ele deixou de ser "células de graus" faz tempo: aceita uma nota só, acorde qualquer do campo, e agora pergunta o acorde. O documento de 07/11 já anotava que o nome ia ficar para trás |
+
 ### A oitava de escuta nas superfícies de baixo (20/11/2026)
 
 Não é item novo — é **parâmetro** de cinco itens, e a revisão musical é sua. Pedido seu: *"nos

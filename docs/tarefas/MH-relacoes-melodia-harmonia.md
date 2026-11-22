@@ -188,3 +188,56 @@ fileira aparece nos métodos. Os dois nomes são defensáveis; é escolha, e dá
 
 1. A redação final do nome do exercício de adivinhar.
 2. O trítono: ♭5 (atual) ou ♯4.
+
+---
+
+## O modo quiz, feito em 20/11/2026
+
+As duas explorações já existiam na tela do Relações desde 07/11. O **modo quiz** que ele descreveu
+nas anotações — e que ele chamou de *"um dos exercícios mais difíceis e valiosos do app"* — entrou
+agora, e **sem item novo**: os dois são modos de itens que já existiam, que é a decisão 15 aplicada.
+
+| o que ele descreveu | onde ficou |
+|---|---|
+| **Melodia fixa** — segura-se uma nota e varia o acorde embaixo; dizer qual acorde é | modo do `ouvido-campo`: a nota soa junto com o acorde, e a pergunta continua sendo o grau |
+| **Melodia variável** — dizer o grau **e** a nota por cima | modo de resposta `par` do `ouvido-celulas`, em dois passos |
+| o degrau do meio que ele pediu depois — *"pedir só a relação"* | modo de resposta `relacao` do `ouvido-celulas`: `♭7`, `5`, `♭3` |
+| **onde a nota fica no acorde** (parâmetro que faltava) | `posicaoDaMelodia` no `ouvido-campo`: por cima, no meio, por baixo |
+
+### O que precisou ser construído
+
+- **A sequência com uma lista por passo** (`Surface.passos`). A superfície de escolher N coisas em
+  ordem existia desde 09/11, mas com **a mesma paleta** nos dois passos — e aqui o primeiro passo
+  são os graus do campo e o segundo os da escala. Cada passo leva um rótulo, porque a paleta é
+  metade do enunciado.
+- **`GRAUS_CROMATICOS` exportado** de `theory/campo-harmonico.ts`: a lista de doze relações é a
+  mesma do campo, e duas listas iguais em dois arquivos acabam divergindo.
+
+### Três defeitos que a medição pegou
+
+1. **O enunciado respondia metade da pergunta.** O `hint` do `ouvido-celulas` diz "primeiro o acorde
+   do grau X" — no modo do par, isso entrega o primeiro passo. Agora ele cala ali.
+2. **A sequência não zerava entre perguntas.** Defeito antigo, de antes destes modos: o componente
+   não remonta, então o que foi escolhido na pergunta anterior continuava nas casas da seguinte —
+   em `ouvido-celulas` e `reconhecer-padroes-escala`, a pergunta nova nascia meio respondida.
+3. **"Por baixo" não ficava por baixo.** Escrevi a colocação da nota à mão e a região empurrava ela
+   de volta para dentro do acorde: medido, pedindo "por baixo" com região a partir de 48, a nota
+   soava **acima** da mais grave do acorde. Agora passa por `acomodarMelodiaEAcorde`, o motor que o
+   `ouvido-celulas` já usava, onde **quem se move é o acorde**.
+
+### Medido no navegador
+
+- modo do par, dois acordes: o primeiro passo oferece **só I e V** (os possíveis), o segundo os
+  graus da escala, e a conferência compara o par inteiro (`1 3` errado, `1 8` certo);
+- modo da relação: paleta de doze (`1 ♭2 2 ♭3 3 4 ♭5 5 ♭6 6 ♭7 7`), e o acorde segue dito;
+- melodia por cima: o pedaço "acorde" soa `[60, 63, 69, 72]` **com** a nota segurada, e "a nota
+  segurada" toca o 72 sozinho;
+- melodia por baixo: o acorde subiu para `[60, 63, 69]` e a nota ficou em **48**, a mais grave de
+  tudo.
+
+### Dez atalhos novos, a pedido dele
+
+*"Crie bons atalhos nesses exercícios pra representar todos os modos/maneiras de usar os
+exercícios."* Cinco em cada item — e cinco deles cobrem **modos antigos que não tinham atalho**:
+audiar o grau escrito e responder só pelo número, no campo; a melodia por baixo e as quatro
+alternativas, nas células. A redação dos nomes é dele, como sempre.
