@@ -10,8 +10,10 @@
 // O motor mora em `theory/nota-sobre-acorde.ts` e a frase em `catalog/relacao-texto.ts`; aqui é só
 // tela e som.
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { drone, pararDrones, pararTudo, playGroups } from '../audio/engine';
 import { useGlobalParams } from '../catalog/params';
+import { lacoDaRelacao } from '../catalog/lacos';
 import { descreverRelacao } from '../catalog/relacao-texto';
 import { buildChord, harmonicField, majorTonic, midi, noteName, pc, type ModoDoCampo, type Note } from '../theory/core';
 import { intervalShort } from '../theory/names';
@@ -30,6 +32,7 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
   const naming = useNaming();
   const conv = useLocale();
   const params = useGlobalParams();
+  const navigate = useNavigate();
 
   const [campo, setCampo] = useState<ModoDoCampo>(() => (CAMPOS.includes(settings?.campo as ModoDoCampo) ? settings!.campo as ModoDoCampo : 'maior'));
   // Padrão: só as notas da escala. Abrir para as doze é opt-in — decisão do Paulo em 07/11.
@@ -215,6 +218,27 @@ export default function RelacoesMelodiaHarmonia({ onRunning, settings }: { onRun
       </div>
 
       {!soarMelodia && <p className="muted">{t('melodyHarmony.singIt')}</p>}
+
+      {/**
+        * **O laço com o quiz** — o mesmo que a escada dos padrões tem desde 20/11, e pela mesma
+        * mecânica aprovada: a configuração viaja no `state` da navegação (`lerAbertura`), chega ao
+        * `make` como camada `local`, e **não vaza** para o que o exercício tem salvo.
+        *
+        * Esta tela explora; o `ouvido-celulas` no modo do par cobra. Era a ponta solta do modo
+        * quiz: havia para onde ir e não havia como ir.
+        *
+        * A configuração mora em `catalog/lacos.ts`, com um teste varrendo chave por chave contra o
+        * item de destino: o laço carrega nomes de configuração de OUTRO item, e renomear um deles
+        * quebraria isto em silêncio.
+        */}
+      <div className="row">
+        <Btn tone="ghost" onClick={() => {
+          setModo('nada');
+          pararTudo();
+          const laco = lacoDaRelacao(campo, tetrade, pc(raiz));
+          navigate(`/catalogo/${laco.itemId}`, { state: { instancia: laco.instancia, params: laco.params } });
+        }}>{t('melodyHarmony.testMe')}</Btn>
+      </div>
     </div>
   );
 }

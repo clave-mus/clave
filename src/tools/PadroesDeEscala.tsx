@@ -18,6 +18,7 @@ import {
   rotulo, sortearPadrao, type Padrao,
 } from '../theory/padrao-de-escala';
 import { ALL_SCALES } from '../catalog/helpers';
+import { lacoDosPadroes } from '../catalog/lacos';
 import { Btn, Chip } from '../components/ui';
 import { useToolLog } from './common';
 import { useNaming, useT, type MessageKey } from '../i18n';
@@ -198,12 +199,14 @@ export default function PadroesDeEscala() {
         </div>
       </div>
 
-      {/* O laço com o exercício: o padrão viaja pelo `state` da navegação (`lerAbertura`). */}
+      {/* O laço com o exercício: o padrão viaja pelo `state` da navegação (`lerAbertura`), e a
+          configuração dele mora em `catalog/lacos.ts`, onde um teste a confere contra o item. */}
       {completo && (
         <div>
-          <Btn onClick={() => navigate('/catalogo/reconhecer-padroes-escala', {
-            state: { instancia: { escala, padrao: escreverPadrao(padrao) } },
-          })}>{t('patterns.testMe')}</Btn>
+          <Btn onClick={() => {
+            const laco = lacoDosPadroes(escala, padrao);
+            navigate(`/catalogo/${laco.itemId}`, { state: { instancia: laco.instancia } });
+          }}>{t('patterns.testMe')}</Btn>
         </div>
       )}
 

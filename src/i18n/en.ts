@@ -822,6 +822,7 @@ const en: Shape<typeof pt> = {
     playNote: 'Note only',
     chromatic: 'Notes outside the scale',
     soundMelody: 'Sound the melody',
+    testMe: 'Test me on this',
     singIt: 'The melody will not sound: sing the note over the chord and use "Note only" to check.',
   },
   music: {
@@ -852,7 +853,7 @@ const en: Shape<typeof pt> = {
     'ouvido-escala': { title: 'Scales by ear', desc: 'Recognize the scale or mode.' },
     'explorar-padroes-escala': { title: 'Explore patterns through the scale', desc: 'Write a short shape and hear every position of the scale at your own pace, with the context sustaining underneath. Inspired by a video from the ChicagoBassBuddy channel; worth watching, but not required.' },
     'reconhecer-padroes-escala': { title: 'Recognise patterns through the scale', desc: 'A short shape sounds starting on some degree — say which. Inspired by a video from the ChicagoBassBuddy channel; worth watching, but not required.' },
-    'ouvido-celulas': { title: 'Melody over harmony', desc: 'A chord from the field sounds, then one to five notes. Which scale degrees were they?' },
+    'ouvido-celulas': { title: 'Notes over a chord', desc: 'A chord from the field sounds with notes over it. Say which degrees they were, what each one is over the chord, or both — which chord and which notes.' },
     'ritmo-ouvido': { title: 'Which rhythm is this?', desc: 'Hear one bar and pick the right notation. Feel free to tap along.' },
   },
   tools: {
