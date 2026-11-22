@@ -1,4 +1,4 @@
-import { EM_DO_MAIOR, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, noteName, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { EM_DO_MAIOR, ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, emBracoDeBaixo, vozDaPergunta, SEMI_TIER, TODOS_OS_INTERVALOS, TONALIDADE_LIVRE, alturaDoPc, alturaNaRegiao, arr, clave, mod, faixaDoBraco, superficieDoPerfil, faixaQueCabe, notaGrafada, noteName, pcsDosGraus, pick, quintasDaTonalidade, tonicaNaRegiao, semiOptions, semitoneName, tonicaDeContexto, vozDoBraco } from '../helpers';
 import { LEGADO, RASCUNHO } from '../publicacao';
 import type { CatalogItem, Ctx, Question, Setting, SettingValue, Surface } from '../types';
 
@@ -91,6 +91,8 @@ const settingsDeIntervalo = (ctx: Ctx, harmonico: boolean): Setting[] => [
    * 19/11. Nasceu aqui, da pergunta dele; a nota de por que o sorteio é a parte que treina está lá.
    */
   ...TIMBRE(ctx),
+  // A oitava de escuta: só aparece respondendo num braço de baixo, que é onde o problema existe.
+  ...ESCUTA_ACIMA(ctx, s => s.resposta === 'notas' && emBracoDeBaixo(ctx, s.superficie ?? superficieDoPerfil(ctx))),
   GRAUS_ESCOLHIDOS(ctx),
 ];
 
@@ -325,7 +327,7 @@ export const ouvidoIntervalo: CatalogItem = {
 
   defaults: { estimulo: 'som', intervalos: ['3', '4', '5', '7', '12'], direcao: 'sobe',
     resposta: 'alternativas', notas: '2', comTonica: false, grausEscolhidos: [], mostraAudiando: 'pauta',
-    ...TIMBRE_DEFAULTS },
+    ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   /**

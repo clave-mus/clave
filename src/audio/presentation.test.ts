@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRESENTATION, DRUM_GAIN, resolvePresentation, schedule } from './presentation';
+import type { SoundContent } from '../catalog/types';
 
 describe('volume padrão dos exercícios', () => {
   it('é o nível medido fora do tempo real, bem acima dos 0,7 de antes', () => {
@@ -41,3 +42,38 @@ describe('perfil de apresentação', () => {
   });
 });
 
+
+/**
+ * **A oitava de escuta** (20/11/2026), pedido dele: *"nos exercícios com superfície de baixo, sempre
+ * dê pra escolher ouvir as notas uma ou duas oitavas acima"*.
+ *
+ * Ela é apresentação, e o que isto trava é a consequência disso: **nada mais muda**. A nota que o
+ * item gerou continua sendo a nota, a resposta continua sendo a posição real, e só a altura que
+ * chega ao ouvido sobe. Se um dia alguém transpuser no gerador, estes números continuam iguais e o
+ * exercício passa a aceitar a nota errada calado — por isso a medida é aqui.
+ */
+describe('transpor: a oitava de escuta', () => {
+  const seq: SoundContent = { groups: [[40], [52]] };
+
+  it('soma doze por oitava no que SOA, e preserva o tempo', () => {
+    const real = schedule(seq, resolvePresentation([{}]));
+    const uma = schedule(seq, resolvePresentation([{ transpor: 12 }]));
+    const duas = schedule(seq, resolvePresentation([{ transpor: 24 }]));
+    expect(real.notes.map(([m]) => m)).toEqual([40, 52]);
+    expect(uma.notes.map(([m]) => m)).toEqual([52, 64]);
+    expect(duas.notes.map(([m]) => m)).toEqual([64, 76]);
+    // o relógio não se mexe: subir de oitava não é mudar o andamento
+    expect(uma.notes.map(([, t]) => t)).toEqual(real.notes.map(([, t]) => t));
+    expect(duas.length).toBe(real.length);
+  });
+
+  it('vale também dentro de um acorde, nota por nota', () => {
+    const acorde: SoundContent = { groups: [[28, 35, 40]] };
+    const { notes } = schedule(acorde, resolvePresentation([{ transpor: 24 }]));
+    expect(notes.map(([m]) => m)).toEqual([52, 59, 64]);
+  });
+
+  it('o padrão é zero — quem não escolhe nada ouve a altura real', () => {
+    expect(resolvePresentation([]).transpor).toBe(0);
+  });
+});

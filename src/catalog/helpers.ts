@@ -139,6 +139,39 @@ export const TIMBRE_DEFAULTS = { timbre: 'perfil', qualTimbre: 'piano' } as cons
 export const vozDaPergunta = (s: Record<string, unknown>, preservar = false): { voice: Voice } | undefined =>
   (!preservar && s.timbre === 'sorteado' ? { voice: pick(VOZES) } : undefined);
 
+/**
+ * **A superfície em vigor é um braço de BAIXO?** — quem decide é o valor escolhido, e o perfil só
+ * entra quando o valor é o genérico `braco`.
+ */
+export const emBracoDeBaixo = (ctx: Ctx, onde: unknown): boolean =>
+  onde === 'baixo' || (onde === 'braco' && bracoDoPerfil(ctx) === 'baixo');
+
+/**
+ * **Ouvir uma ou duas oitavas acima**, onde a superfície é um braço de baixo.
+ *
+ * Pedido dele em 20/11: *"nos exercícios com superfície de baixo, sempre dê pra escolher ouvir as
+ * notas uma ou duas oitavas acima"*. Um baixo de quatro cordas começa no Mi1 (MIDI 28): ali o fone
+ * de celular quase não entrega a fundamental, e cantar de volta pede uma voz que a maioria não tem.
+ *
+ * É `soPresentation` e soma em `transpor`: **a nota continua sendo a que é**. A resposta é a posição
+ * real no braço, o desenho mostra onde ela mora, e só a altura que chega ao ouvido muda. Era a única
+ * forma de atender o pedido sem mentir sobre o que soou — transpor no gerador faria o exercício
+ * pedir uma nota e aceitar outra.
+ *
+ * `quando` é do item: cada um sabe em que configuração a sua superfície é o braço do baixo.
+ */
+export const ESCUTA_ACIMA = (ctx: Ctx, quando: (s: Record<string, SettingValue>) => boolean): Setting[] => [
+  { id: 'oitavaDeEscuta', label: ctx.t('settings.listenOctave'), type: 'single', quando,
+    soPresentation: true, present: v => ({ transpor: Number(v) * 12 }),
+    options: [
+      { id: '0', label: ctx.t('settings.listenAsIs') },
+      { id: '1', label: ctx.t('settings.listenOctaveUp') },
+      { id: '2', label: ctx.t('settings.listenTwoOctavesUp') },
+    ] },
+];
+
+export const ESCUTA_DEFAULTS = { oitavaDeEscuta: '0' } as const;
+
 export const FRETS = ({ t }: Ctx): Setting => ({ id: 'casas', label: t('settings.frets'), type: 'single', options: [
   { id: '0-5', label: t('settings.frets05'), tier: 1 }, { id: '5-9', label: t('settings.frets59'), tier: 2 }, { id: '0-12', label: t('settings.frets012'), tier: 3 }] });
 /** Direção de percurso. Entra em todo item que toca uma escala ou um arpejo (decisão 70). */

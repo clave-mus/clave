@@ -14,6 +14,15 @@ import { resolveParams } from './params';
 import { isSeries, type Ctx, type SettingValue } from './types';
 
 const ctx: Ctx = { naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v), params: resolveParams('violao', {}) };
+/**
+ * **O mesmo contexto com perfil de baixo.**
+ *
+ * Há condições que dependem do PERFIL, e não só do que a pessoa escolheu: a oitava de escuta
+ * (20/11) só aparece onde a superfície é um braço de **baixo**, e `braco` num perfil de violão não
+ * é. Varrer só um perfil declararia inalcançável uma condição que é alcançável — o defeito que isto
+ * conserta apareceu na primeira rodada, acusando o item em vez do contexto do teste.
+ */
+const ctxBaixo: Ctx = { ...ctx, params: resolveParams('baixo', {}) };
 
 function leituras(id: string): Set<string> {
   const ex = EXERCISES.filter(isSeries).find(e => e.id === id)!;
@@ -171,19 +180,40 @@ describe('quando: configuração condicional', () => {
     }
   });
 
+  /**
+   * **Condicional tem de aparecer em algum lugar — e "algum lugar" inclui o perfil.**
+   *
+   * A pergunta é por **id**, e não por closure: a oitava de escuta (20/11) só se oferece onde a
+   * superfície é um braço de baixo, então a sua `quando` ligada a um contexto de violão é falsa
+   * sempre — e isso está certo. O que seria defeito é ela não aparecer em perfil nenhum.
+   *
+   * Varre uma e duas escolhas únicas por vez: há condição que pede as duas coisas ao mesmo tempo
+   * (responder "as notas" **e** num braço de baixo).
+   */
   it('toda configuração condicional fica visível em pelo menos uma combinação alcançável', () => {
     for (const ex of itens) {
-      const condicionais = ex.settings(ctx).filter(s => s.quando);
-      if (!condicionais.length) continue;
-      // varre os valores de cada configuração de escolha única, que é o que liga/desliga as outras
-      const combos: Record<string, SettingValue>[] = [{ ...ex.defaults }];
-      for (const s of ex.settings(ctx)) {
-        if (s.type !== 'single') continue;
-        for (const o of s.options ?? []) combos.push({ ...ex.defaults, [s.id]: o.id });
+      const vistas = new Set<string>();
+      const condicionais = new Set<string>();
+      for (const c of [ctx, ctxBaixo]) {
+        const todas = ex.settings(c);
+        const padroes = { ...ex.defaults, ...(ex.defaultsDo?.(c) ?? {}) } as Record<string, SettingValue>;
+        const unicas = todas.filter(s => s.type === 'single');
+        const combos: Record<string, SettingValue>[] = [padroes];
+        for (const s of unicas) for (const o of s.options ?? []) combos.push({ ...padroes, [s.id]: o.id });
+        for (const a of unicas) for (const oa of a.options ?? []) {
+          for (const b of unicas) {
+            if (b.id === a.id) continue;
+            for (const ob of b.options ?? []) combos.push({ ...padroes, [a.id]: oa.id, [b.id]: ob.id });
+          }
+        }
+        for (const s of todas) {
+          if (!s.quando) continue;
+          condicionais.add(s.id);
+          if (combos.some(x => s.quando!(x))) vistas.add(s.id);
+        }
       }
-      for (const s of condicionais) {
-        const aparece = combos.some(c => s.quando!(c));
-        expect(aparece, `${ex.id}: \`${s.id}\` nunca aparece — condição inalcançável`).toBe(true);
+      for (const id of condicionais) {
+        expect(vistas.has(id), `${ex.id}: \`${id}\` nunca aparece — condição inalcançável`).toBe(true);
       }
     }
   });

@@ -1,4 +1,4 @@
-import { GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDaPergunta, vozDoBraco } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, TONALIDADE_LIVRE, TUNINGS, emBracoDeBaixo, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDaPergunta, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -268,10 +268,11 @@ export const ouvidoTecla: CatalogItem = {
      * foi queixa dele em 13/11, e um sorteio de timbre não pode desfazer isso.
      */
     ...TIMBRE(ctx),
+    ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.onde ?? ondePadrao(ctx))),
   ],
   // `onde` fica FORA dos defaults estáticos: quem o resolve é `ondePadrao`, pelo perfil. Um valor
   // fixo aqui venceria o contexto em todo chamador que não seja o Player.
-  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [], ...TIMBRE_DEFAULTS },
+  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [], ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   /**
    * **A oitava da referência também sai do contexto**, e sem isto o chip não aparecia marcado.
    *

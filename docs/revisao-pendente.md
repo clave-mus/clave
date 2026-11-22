@@ -105,6 +105,24 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### A oitava de escuta nas superfícies de baixo (20/11/2026)
+
+Não é item novo — é **parâmetro** de cinco itens, e a revisão musical é sua. Pedido seu: *"nos
+exercícios com superfície de baixo, sempre dê pra escolher ouvir as notas uma ou duas oitavas
+acima"*. Entrou em `ouvido-tecla`, `ouvido-intervalo`, `ouvido-intervalo-harmonico`,
+`melodia-de-ouvido`, `nota-no-instrumento` e `intervalo-no-instrumento`, sempre escondido onde a
+superfície não é braço de baixo.
+
+**Duas coisas para você decidir:**
+
+1. **O padrão é "na altura real".** Pode ser que, no baixo, uma oitava acima devesse ser o padrão —
+   você ligou o equivalente por padrão no `mapa-do-braco` em 15/11 (ver abaixo).
+2. **No `mapa-do-braco` o parâmetro NÃO entrou**, porque ali já existe o `somAudivel`, que você
+   revisou em 15/11: um interruptor que sobe o arpejo inteiro por oitavas até passar dos 300 Hz que
+   um alto-falante de celular reproduz, ligado por padrão no baixo. Ele resolve o mesmo problema de
+   forma automática. Pôr os dois seria dois controles para uma coisa — se você preferir a escolha
+   explícita de uma ou duas oitavas lá também, ele vira o parâmetro novo e o interruptor sai.
+
 ### Intervalo harmônico, item próprio (20/11/2026)
 
 | Id | O que só você confere |

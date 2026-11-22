@@ -51,6 +51,12 @@ export const acordeNoInstrumento: CatalogItem = {
     // arpejar antes é como se ouve um acorde desenhado, nota por nota, para depois ouvi-lo junto.
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true,
       present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
+    /**
+     * **A oitava de escuta NÃO entra aqui**, e o motivo é do próprio item: o baixo não é opção de
+     * instrumento neste exercício (decisão dele em 09/11 — com perfil de baixo, o padrão é o
+     * piano), então a condição seria inalcançável. Interface que nunca aparece é interface morta, e
+     * há um teste que a cobra. Se o baixo entrar aqui algum dia, o parâmetro entra com ele.
+     */
   ],
   defaults: { tipos: ['maior', 'menor', 'dim', 'aum'],
     pergunta: 'acorde', soltas: false, casas: '0-12', arpejo: false,

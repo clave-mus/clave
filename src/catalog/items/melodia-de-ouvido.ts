@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, arr, casasDaAltura, emBracoDeBaixo, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 
@@ -96,8 +96,9 @@ export const melodiaDeOuvido: CatalogItem = {
      * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
      */
     ...TIMBRE(ctx),
+    ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.superficie ?? superficieDoPerfil(ctx))),
   ],
-  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9, ...TIMBRE_DEFAULTS },
+  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9, ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
