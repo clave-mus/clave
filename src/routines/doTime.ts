@@ -105,7 +105,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { porque: 'intervalos melódicos, subindo: a unidade de tudo',
         instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'sobe' }, EM_DO)] },
       { porque: 'os mesmos intervalos tocados juntos: sem ordem no tempo, o ouvido tem de ouvir a fusão',
-        instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, EM_DO)] },
+        // Harmônico virou item em 20/11: a etapa aponta para ele, e `direcao` saiu — lá ela não é
+        // configuração, é o que o item é.
+        instancias: [i('ouvido-intervalo-harmonico', { intervalos: TODOS_OS_INTERVALOS }, EM_DO)] },
       { porque: 'todas as qualidades de acorde, sobre a mesma fundamental: sobra a cor',
         instancias: [i('ouvido-acorde', { tipos: ALL_CHORDS, arpejo: true, duracao: 2 }, EM_DO)] },
       // Entrou em 12/11/2026, a pedido dele ("não tínhamos um exercício de reconhecer graus do

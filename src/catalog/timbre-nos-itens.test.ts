@@ -4,7 +4,7 @@
 // ter timbres diferentes como parâmetro"*. A varredura achou o quadro: o piano de amostras **já** é
 // o timbre padrão de onze itens (desde 12/11), cinco soam com a voz do braço de propósito, e só o
 // `ouvido-intervalo` tinha o parâmetro. Este arquivo guarda os sete que o têm agora — declarado uma
-// vez em `TIMBRE`, não oito vezes.
+// vez em `TIMBRE`, não nove vezes.
 //
 // **O `ouvido-tecla` entrou em 20/11.** Ele estava na lista dos de fora, e a justificativa era
 // minha, não dele: o documento do Paulo pede timbre na linha de **nota** com as mesmas palavras com
@@ -40,10 +40,11 @@ describe('quem tem o parâmetro', () => {
    * A lista é explícita de propósito: um item de ouvido novo que esqueça o `TIMBRE` aparece aqui
    * como falta, e não como silêncio. Os de braço e de pauta ficam fora — ver o teste do fim.
    */
-  it('são os oito itens de ouvido, e a lista é esta', () => {
+  it('são os nove itens de ouvido, e a lista é esta', () => {
     expect(comTimbre.map(e => e.id).sort()).toEqual([
       'melodia-de-ouvido', 'ouvido-acorde', 'ouvido-campo', 'ouvido-celulas',
-      'ouvido-escala', 'ouvido-intervalo', 'ouvido-tecla', 'tonica-de-ouvido',
+      'ouvido-escala', 'ouvido-intervalo', 'ouvido-intervalo-harmonico', 'ouvido-tecla',
+      'tonica-de-ouvido',
     ]);
   });
 

@@ -7,6 +7,10 @@
 // Duas coisas são medidas aqui: o modo novo (`resposta: 'audiar'`) e os **botões por nota**, que
 // este item era o único de ouvido a não ter — `ouvido-celulas`, `reconhecer-padroes-escala` e
 // `melodia-de-ouvido` já declaravam "Nota 1", "Nota 2".
+//
+// **Em 20/11 o alvo virou `ouvido-intervalo-harmonico`.** O modo nasceu dentro do melódico, quando
+// harmônico era o valor `juntas` de uma configuração; com a divisão (decisão dele), ele só existe
+// no item harmônico — e `direcao` deixou de ser configuração ali, porque é a identidade do item.
 import { describe, expect, it } from 'vitest';
 import { EXERCISES } from './catalog';
 import { isSeries, type Ctx, type SeriesItem } from './types';
@@ -17,7 +21,9 @@ const ctx: Ctx = {
   naming: 'pt', conv: 'pt', t: (k: MessageKey, v?: Vars) => translate('pt', k, v),
   params: resolveParams('violao', { key: { tonic: 0, mode: 'maior' } }),
 };
-const item = EXERCISES.filter(isSeries).find(e => e.id === 'ouvido-intervalo') as SeriesItem;
+const item = EXERCISES.filter(isSeries).find(e => e.id === 'ouvido-intervalo-harmonico') as SeriesItem;
+/** O melódico, para medir o que ele deixou de oferecer. */
+const melodico = EXERCISES.filter(isSeries).find(e => e.id === 'ouvido-intervalo') as SeriesItem;
 const pergunta = (extra: Record<string, unknown>) => item.make({ ...item.defaults, ...extra } as never, ctx);
 const recusa = (extra: Record<string, unknown>) => item.problema?.({ ...item.defaults, ...extra } as never, ctx) ?? null;
 
@@ -29,7 +35,7 @@ describe('o modo de audiar as notas', () => {
 
   it('as notas soam JUNTAS, e cada botão toca uma sozinha', () => {
     for (let i = 0; i < 30; i++) {
-      const q = pergunta({ resposta: 'audiar', direcao: 'juntas' });
+      const q = pergunta({ resposta: 'audiar' });
       // um grupo só: é isso que faz o intervalo ser harmônico
       expect(q.sound!.groups).toHaveLength(1);
       const soaram = q.sound!.groups[0];
@@ -48,7 +54,7 @@ describe('o modo de audiar as notas', () => {
    * Sem isto a autoavaliação nunca apareceria, e o modo ficaria sem como responder.
    */
   it('cada botão é gabarito, e a resposta é autoavaliação', () => {
-    const q = pergunta({ resposta: 'audiar', direcao: 'juntas' });
+    const q = pergunta({ resposta: 'audiar' });
     expect(q.surface.kind).toBe('autoavaliacao');
     expect(q.expected).toEqual({ kind: 'option', id: 'facil' });
     expect(q.sound!.partes!.every(p => p.gabarito)).toBe(true);
@@ -57,11 +63,19 @@ describe('o modo de audiar as notas', () => {
     expect(q.reveal).toBeTruthy();
   });
 
-  it('recusa direção melódica, e explica', () => {
-    for (const direcao of ['sobe', 'desce', 'misto']) {
-      expect(recusa({ resposta: 'audiar', direcao }), direcao).toBe(translate('pt', 'player.audiarPedeJuntas'));
+  /**
+   * **Depois da divisão, o modo nem se oferece no melódico** — e é melhor assim: a recusa existia
+   * para uma combinação que a tela deixava montar, e agora a tela não deixa. A recusa continua lá
+   * para quem chamar `problema` à mão, que é o caminho das rotinas antigas.
+   */
+  it('o melódico não oferece audiar, e recusa se alguém insistir', () => {
+    const resposta = melodico.settings(ctx).find(x => x.id === 'resposta')!;
+    expect((resposta.options ?? []).map(o => o.id)).toEqual(['alternativas', 'notas']);
+    for (const direcao of ['sobe', 'desce']) {
+      const r = melodico.problema?.({ ...melodico.defaults, resposta: 'audiar', direcao } as never, ctx) ?? null;
+      expect(r, direcao).toBe(translate('pt', 'player.audiarPedeJuntas'));
     }
-    expect(recusa({ resposta: 'audiar', direcao: 'juntas' })).toBeNull();
+    expect(recusa({ resposta: 'audiar' })).toBeNull();
   });
 
   /**
@@ -70,8 +84,8 @@ describe('o modo de audiar as notas', () => {
    * mexer na direção dava "sem pergunta possível" numa configuração que funciona — dois cliques.
    */
   it('lendo e audiando, a exigência de harmônico não vale', () => {
-    for (const direcao of ['sobe', 'desce', 'juntas', 'misto']) {
-      expect(recusa({ estimulo: 'escrito', resposta: 'audiar', direcao }), direcao).toBeNull();
+    for (const direcao of ['sobe', 'desce']) {
+      expect(melodico.problema?.({ ...melodico.defaults, estimulo: 'escrito', resposta: 'audiar', direcao } as never, ctx) ?? null, direcao).toBeNull();
       const q = pergunta({ estimulo: 'escrito', resposta: 'audiar', direcao });
       expect(q.visual.kind, direcao).toBe('staff');
       expect(q.surface.kind, direcao).toBe('autoavaliacao');
@@ -79,8 +93,8 @@ describe('o modo de audiar as notas', () => {
   });
 
   it('três notas valem audiando, e dão três botões', () => {
-    expect(recusa({ resposta: 'audiar', direcao: 'juntas', notas: '3' })).toBeNull();
-    const q = pergunta({ resposta: 'audiar', direcao: 'juntas', notas: '3' });
+    expect(recusa({ resposta: 'audiar', notas: '3' })).toBeNull();
+    const q = pergunta({ resposta: 'audiar', notas: '3' });
     expect(q.sound!.groups[0]).toHaveLength(3);
     expect(q.sound!.partes).toHaveLength(3);
     // e nomear três notas continua recusado: "o intervalo" não teria resposta só
@@ -89,7 +103,7 @@ describe('o modo de audiar as notas', () => {
 
   it('o atalho novo pede harmônico — senão ele cairia no próprio guarda', () => {
     const atalho = item.presets!.find(p => p.id === 'audiar-notas')!;
-    expect(atalho.settings).toMatchObject({ resposta: 'audiar', direcao: 'juntas' });
+    expect(atalho.settings).toMatchObject({ resposta: 'audiar' });
     expect(recusa(atalho.settings)).toBeNull();
   });
 });
@@ -111,8 +125,9 @@ describe('os botões por nota nos outros modos', () => {
    * conferência diria o contrário do exercício.
    */
   it('descendo, "Nota 1" é a primeira que soou, não a mais grave', () => {
+    // Descer é coisa do melódico: no harmônico as duas notas soam juntas, e não há "primeira".
     for (let i = 0; i < 30; i++) {
-      const q = pergunta({ resposta: 'alternativas', direcao: 'desce' });
+      const q = melodico.make({ ...melodico.defaults, resposta: 'alternativas', direcao: 'desce' } as never, ctx);
       const primeira = q.sound!.groups[0][0];
       expect(q.sound!.partes![0].groups).toEqual([[primeira]]);
       expect(q.sound!.partes![1].groups[0][0]).toBeLessThan(primeira);
@@ -121,7 +136,7 @@ describe('os botões por nota nos outros modos', () => {
 
   it('juntas, a numeração é de baixo para cima', () => {
     for (let i = 0; i < 30; i++) {
-      const q = pergunta({ resposta: 'alternativas', direcao: 'juntas' });
+      const q = pergunta({ resposta: 'alternativas' });
       const ms = q.sound!.partes!.map(p => p.groups[0][0]);
       expect([...ms].sort((a, b) => a - b)).toEqual(ms);
     }

@@ -105,6 +105,12 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Intervalo harmônico, item próprio (20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `ouvido-intervalo-harmonico` | **Se a divisão rendeu o que você esperava dela.** Era o modo `juntas` do `ouvido-intervalo`, e agora é item, com os mesmos parâmetros e o mesmo gerador — o que mudou é que ele se acha no catálogo pelo nome e tem atalhos próprios. Confira: se o **timbre padrão** serve (você escreveu *"synths de timbre limpo e bom sustain pra segurar o intervalo um pouco"*, e hoje o padrão é o timbre do perfil, que no seu caso é baixo); se os três modos de resposta — nomear, apontar as notas, audiar as notas — fazem sentido todos aqui; e se **três notas** ainda é intervalo ou já é acorde (a mesma dúvida que estava anotada no melódico) |
+
 ### Explorar padrões pela escala (`PE`, 20/11/2026)
 
 | Id | O que só você confere |

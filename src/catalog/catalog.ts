@@ -16,7 +16,7 @@ import { pautaArmadura } from './items/pauta-armadura';
 import { pautaEscala } from './items/pauta-escala';
 import { teoriaIntervalos } from './items/teoria-intervalos';
 import { ouvidoTecla } from './items/ouvido-tecla';
-import { ouvidoIntervalo } from './items/ouvido-intervalo';
+import { ouvidoIntervalo, ouvidoIntervaloHarmonico } from './items/ouvido-intervalo';
 import { ouvidoAcorde } from './items/ouvido-acorde';
 import { ouvidoCampo } from './items/ouvido-campo';
 import { mapaDoBraco } from './items/mapa-do-braco';
@@ -40,6 +40,7 @@ export const EXERCISES: CatalogItem[] = [
   teoriaIntervalos,
   ouvidoTecla,
   ouvidoIntervalo,
+  ouvidoIntervaloHarmonico,
   ouvidoAcorde,
   ouvidoCampo,
   mapaDoBraco,

@@ -225,11 +225,19 @@ describe('a autoavaliação tem o que conferir', () => {
    * O efeito colateral é que um item com autoavaliação e **sem** esse pedaço fica impossível de
    * responder: a tela espera para sempre por um botão que não existe. Nenhum item está assim hoje,
    * e é justamente por isso que vale travar — o próximo item de audiar vai nascer desta armadilha.
+   *
+   * ⚠️ **`gabarito` conta tanto quanto o id `resposta`**, e isto saiu errado até 20/11: o Player
+   * libera a autoavaliação com `parte.id === 'resposta' || parte.gabarito` (ver a linha 232 dele),
+   * porque existe gabarito que são VÁRIOS botões — audiar as notas de um intervalo é um. O teste
+   * olhava só o id, e por sorte nenhuma pergunta sorteada caía no outro caso: no melódico, audiar
+   * as notas exigia direção harmônica, que os padrões não traziam. Com o intervalo harmônico virando
+   * item, a varredura passou a gerar a pergunta — e acusou o teste, não o item.
    */
   it('todo item de autoavaliação oferece o pedaço `resposta` para ouvir', () => {
     for (const { q, onde } of todasAsPerguntas()) {
       if (q.surface.kind !== 'autoavaliacao') continue;
-      const temResposta = (q.sound?.partes ?? []).some(p => p.id === 'resposta' && p.groups.flat().length > 0);
+      const temResposta = (q.sound?.partes ?? [])
+        .some(p => (p.id === 'resposta' || p.gabarito) && p.groups.flat().length > 0);
       expect(temResposta, `autoavaliação sem gabarito para ouvir · ${onde}`).toBe(true);
     }
   });
