@@ -1,4 +1,5 @@
-// Backing track sandbox: progressão, levada, análise harmônica e sugestão de escalas.
+// Acompanhamentos (nome dele, 20/11): progressão, levada, baixo, drone, metrônomo, cronômetro com
+// meta e a escala de cada acorde. O id do item segue `backing`, que é o que o histórico já guarda.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { atTime, Clock, drone, drum, pararDrones, playGroups, tone, type Carater, type Drum, type Voice } from '../audio/engine';
@@ -107,7 +108,7 @@ export default function Backing({ presetId }: { presetId?: string }) {
   const tonic = useMemo(() => (mode === 'maior' ? majorTonic(fifths) : transpose(majorTonic(fifths), { num: 6, semis: 9 })), [fifths, mode]);  // menor, harmônica e melódica partem da relativa menor
   // O que a pessoa praticou: a tonalidade e o andamento. Só a tonalidade vai em `params`, porque é só
   // ela que esta ferramenta usa — gravar região e material seria afirmar o que ela ignora.
-  useToolLog('backing', 'Backing track', 'ouvido', running || timing || metro, {
+  useToolLog('backing', 'Acompanhamentos', 'ouvido', running || timing || metro, {
     // `key.mode` só tem maior e menor; o modo exato (harmônica, melódica) vai nas configurações
     settings: { bpm, campo: mode }, params: { key: { tonic: pc(tonic), mode: mode === 'maior' ? 'maior' : 'menor' } },
   });

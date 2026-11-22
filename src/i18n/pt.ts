@@ -827,7 +827,7 @@ const pt = {
     'relacoes-melodia-harmonia': { title: 'Relações entre melodia e harmonia', desc: 'Ouça como cada nota soa em cima de cada acorde de um campo harmônico.' },
     'maos-livres': { title: 'Mãos livres', desc: 'A pergunta toca, você pensa, a resposta vem. Sem olhar e sem responder.' },
     metronomo: { title: 'Metrônomo', desc: 'Pulso, compasso, subdivisão e tap tempo.' },
-    backing: { title: 'Backing tracks', desc: 'Monte o acompanhamento: progressão com empréstimos e modulação, levada, baixo e a escala de cada acorde.' },
+    backing: { title: 'Acompanhamentos', desc: 'Monte o que soa com você: progressão com empréstimos e modulação, levada, baixo, drone, metrônomo e a escala de cada acorde.' },
     leitura: { title: 'Gerador de leitura', desc: 'Partituras infinitas: só notas ou só ritmo, em loop de 4 compassos.' },
     ritmo: { title: 'Leitura rítmica', desc: 'Compassos novos a cada toque, do pulso às quiálteras. Para ler em silêncio ou ouvir com metrônomo.' },
     tecnica: { title: 'Rotinas de técnica', desc: 'Padrões de mão com metrônomo. O app escolhe a ordem dos dedos; você escolhe o andamento.' },

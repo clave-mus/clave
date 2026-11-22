@@ -129,7 +129,12 @@ describe('catálogo de exercícios', () => {
       const ctx = { ...ctxFor('pt'), params };
       const values = { ...ex.defaults, ...over } as Record<string, never>;
       const q = ex.make(values, ctx);
-      const fromSettings = ex.settings(ctx).reduce((acc, st) => (st.present && values[st.id] !== undefined ? { ...acc, ...st.present(values[st.id]) } : acc), {});
+      // `quando` entra na conta porque o Player a respeita: controle escondido não muda o som. Sem
+      // este filtro, o `qualTimbre` do `TIMBRE` (escondido fora de "escolher") forçava piano no
+      // braço — e o teste acusava o item, quando o errado era esta linha.
+      const fromSettings = ex.settings(ctx)
+        .filter(st => st.quando?.(values) ?? true)
+        .reduce((acc, st) => (st.present && values[st.id] !== undefined ? { ...acc, ...st.present(values[st.id]) } : acc), {});
       return resolvePresentation([globalPresentation(params, q.sound?.instrument), ex.presentation, fromSettings]);
     };
     const base = { gap: 0.75, arp: 0, voice: 'piano', bpm: 84 };

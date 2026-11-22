@@ -825,7 +825,7 @@ const en: Shape<typeof pt> = {
     'relacoes-melodia-harmonia': { title: 'Melody against harmony', desc: 'Hear how each note sounds over each chord of a harmonic field.' },
     'maos-livres': { title: 'Hands free', desc: 'The question plays, you think, the answer comes. No looking, no answering.' },
     metronomo: { title: 'Metronome', desc: 'Pulse, time signature, subdivision and tap tempo.' },
-    backing: { title: 'Backing tracks', desc: 'Build the backing: a progression with borrowed chords and modulation, a groove, a bass line, and the scale for each chord.' },
+    backing: { title: 'Accompaniments', desc: 'Build what plays along with you: a progression with borrowed chords and modulation, a groove, a bass line, a drone, a metronome, and the scale for each chord.' },
     leitura: { title: 'Reading generator', desc: 'Endless sheet music: notes only or rhythm only, in a 4-bar loop.' },
     ritmo: { title: 'Rhythm reading', desc: 'Fresh bars at every tap, from the pulse to tuplets. Read in silence or listen with a metronome.' },
     tecnica: { title: 'Technique routines', desc: 'Hand patterns with a metronome. The app picks the finger order; you pick the tempo.' },

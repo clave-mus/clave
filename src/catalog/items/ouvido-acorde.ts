@@ -283,6 +283,21 @@ export const ouvidoAcorde: CatalogItem = {
      * ordem de clique e em qualquer oitava — desde que TODAS deslocadas junto (a regra do §4). Um
      * Dó maior desenhado uma oitava abaixo é um Dó maior; com uma nota solta fora, não é.
      */
+    /**
+     * **Um botão por nota do acorde**, no molde do `ouvido-intervalo` (18/11).
+     *
+     * O documento dele pede em Qualidades de acordes com as mesmas palavras: *"Interface: ter botoes
+     * pra ouvir as notas separadas caso precise"*. Existia só audiando; ouvindo, havia o botão
+     * grande e nada mais — e é ouvindo que repetir a terça até ela entrar resolve a pergunta.
+     *
+     * Não é o mesmo que arpejar: arpejo toca as notas na sequência, de uma vez. Aqui cada nota é um
+     * botão, e quem decide usar é quem está ouvindo — *"quem está nomeando escolhe não usar"*.
+     *
+     * De baixo para cima, porque num acorde não há "primeira que soou".
+     */
+    const porNota = (notas: number[]) => [...notas].sort((a, b) => a - b)
+      .map((m, i) => ({ id: `n${i}`, label: ctx.t('quiz.partNote', { n: i + 1 }), groups: [[m]] }));
+
     if (s.resposta === 'desenhar') {
       const noPiano = s.instrumento === 'piano';
       const naPauta = s.instrumento === 'pauta';
@@ -300,7 +315,7 @@ export const ouvidoAcorde: CatalogItem = {
       return {
         prompt: ctx.t('quiz.drawChord', { chord: chordName(ctx.t, type) }), visual: { kind: 'ear' },
         surface: superficie, expected: { kind: 'contorno', midis: ms, ordenada: false },
-        sound: { groups: [ms], instrument: !naPauta && !noPiano ? vozDoBraco(tuning) : undefined },
+        sound: { groups: [ms], partes: porNota(ms), instrument: !naPauta && !noPiano ? vozDoBraco(tuning) : undefined },
         autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s, !naPauta && !noPiano),
       };
     }
@@ -328,7 +343,7 @@ export const ouvidoAcorde: CatalogItem = {
       surface: { kind: 'choices', compact: types.length > 6, options: chordTypes(ctx.t, porComplexidade(types)) }, expected: { kind: 'option', id: type },
       // O timbre é o padrão de `SoundContent`, que **é piano** — um voicing de piano tocado com voz
       // de braço soaria como coisa nenhuma, e é o defeito que ele pegou em 13/11 no audiar.
-      sound: { groups: [soam] }, autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s),
+      sound: { groups: [soam], partes: porNota(soam) }, autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s),
     };
   },
 };
