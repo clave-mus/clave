@@ -309,3 +309,33 @@ Sobraram duas, e nenhuma bloqueia o motor nem o exercício — dá para começar
 - os nomes dos dois itens (seção 1);
 - a pentatônica tem campo harmônico, o da escala de que ela é subconjunto (seção 4, faixa 3);
 - o crédito ao ChicagoBassBuddy **não** vai também no `ouvido-celulas` (seção 8).
+
+---
+
+## 11. Feito em 20/11/2026
+
+A tela existe: `src/tools/PadroesDeEscala.tsx`, item `explorar-padroes-escala` (`tarefa`,
+`RASCUNHO`), na porta do improviso ao lado do par. As quatro faixas estão lá, com o texto de
+abertura e o crédito nas palavras dele.
+
+**O que o §10 deixou pendente se resolveu sem decisão nova:** o texto de abertura ele aprovou em
+10/11 (está na §4), e "em que grupos os dois itens entram" deixou de existir como pergunta quando
+os grupos viraram as cinco áreas — os dois são **Ouvido**.
+
+**Medido no navegador**, não só em teste:
+
+| o que a §9 pede | medida |
+|---|---|
+| escrever clicando e ouvir cada posição | clicar 1 · 3 · 2 · 6 escreve `1-3-2-6`, e as cinco posições saem `1-3-2-6 · 2-5-3-1 · 3-6-5-2 · 5-1-6-3 · 6-2-1-5` |
+| o padrão soa em sequência | quatro notas, 420 ms exatos entre elas, agendadas pelo relógio do áudio |
+| o contexto sustenta **e para** | seis osciladores vivos com o V ligado, **zero** depois de sair da tela |
+| o crédito e o link | visíveis, e o link abre em aba nova |
+| "me teste neste padrão" | abre o exercício com `3-3-2-1` entre as cinco alternativas, que são o mesmo desenho em graus diferentes |
+| celular | escada de 320 px, degraus de 41 px, nenhuma rolagem lateral |
+
+**Um defeito pego na medição**, e vale registrar porque nasceu de guardar a mesma coisa duas vezes:
+a primeira versão guardava o padrão relativo e o "primeiro degrau clicado" em estados separados, e
+no primeiro clique o padrão já se escrevia com o primeiro degrau do render anterior. Além disso a
+linha de resumo lia o desenho a partir do grau 1 enquanto a escada o marcava onde a pessoa clicou —
+o mesmo desenho em duas leituras, lado a lado, sem nada explicando a diferença. Agora há **uma**
+verdade: a lista de degraus apertados, em absoluto; o padrão e o resumo saem dela.

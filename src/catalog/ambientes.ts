@@ -110,6 +110,27 @@ export const AMBIENTES: CatalogItem[] = [
   },
   {
     /**
+     * **Explorar padrões pela escala** — a metade de exploração do par de
+     * `docs/tarefas/PE-padroes-de-escala.md`. O exercício (`reconhecer-padroes-escala`) saiu
+     * primeiro, em 10/11, porque cabia no Player; esta é a peça com tela própria, e ela faz o que
+     * ele descreveu: *"o aluno arpeja o padrão começando no 1, depois no 2, e assim por diante,
+     * conferindo após solfejar. Ele faz isso até ficar confortável. Isso por si só já é um grande
+     * exercício"*.
+     *
+     * `tarefa` e não `serie`: termina quando a pessoa declara que ficou confortável, não quando o
+     * app conta N perguntas. E `settings` vazio de propósito — quem escolhe o padrão é a tela, e o
+     * laço com o exercício passa pelo `state` da navegação, não por configuração guardada.
+     */
+    id: 'explorar-padroes-escala', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['escalas', 'melodia'], tarefas: ['cantar', 'tocar'],
+    primaryModule: 'ouvido', skillTags: ['ear.scale_degrees'],
+    contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
+    settings: noSettings, defaults: {},
+    screen: () => import('../tools/PadroesDeEscala'),
+  },
+  {
+    /**
      * **Backing e drone são um ambiente só** (decisão dele em 20/11). O que soa se escolhe por
      * partes — drone, bateria, baixo, progressão — e o item herdou as declarações do `ambiente`:
      * cantar entrou nas tarefas, e escalas nos objetos, porque é o que se faz contra um drone.

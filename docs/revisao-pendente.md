@@ -105,6 +105,12 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Explorar padrões pela escala (`PE`, 20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `explorar-padroes-escala` | **Se a escada é mesmo o gesto certo.** O padrão se escreve clicando degrau por degrau, e os deslocamentos saem do primeiro clique — então clicar 3 · 5 · 4 · 7 escreve o mesmo desenho que 1 · 3 · 2 · 5. Confira se isso é óbvio usando, ou se falta a tela dizer. Confira também: o **piso em dó3**, que é onde o padrão soa (com salto de ±2 e seis notas ele chega perto do dó5); o **intervalo entre as notas** ao apertar uma posição (420 ms, para dar tempo de ouvir sem arrastar); e se a **pentatônica maior como padrão** continua sendo a escala de entrada certa. A exploração sai sem braço virtual e sem metrônomo, as duas por sua decisão |
+
 ### Mãos livres (`F6-1`)
 
 | Id | O que só você confere |

@@ -125,6 +125,9 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
      * é isto. Eram ambiente porque ninguém tinha posto um veredito nelas.
      */
     leitura: 'tarefa', ritmo: 'tarefa', tecnica: 'tarefa',
+    // A exploração dos padrões é `tarefa` por desenho (PE §2): ela termina quando a pessoa declara
+    // que ficou confortável, e o par dela — `reconhecer-padroes-escala` — é a `serie`.
+    'explorar-padroes-escala': 'tarefa',
     // MH: explora como uma nota soa sobre cada acorde — e com o som da melodia desligado, canta.
     // Nos dois casos o app não ouve, então termina na autoavaliação.
     'relacoes-melodia-harmonia': 'tarefa',

@@ -1059,3 +1059,34 @@ select.sel {
   .backing-compasso .cifra { font-size: 24px; }
   .backing-compasso .roman { font-size: 12px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Explorar padrões pela escala (PE, 20/11/2026)
+
+   **A escada é vertical porque a escala é vertical.** A analogia é do Paulo, e o grau 1 fica
+   embaixo: subir na tela é subir de altura. É o contrário de uma fileira de chips, e é de propósito
+   — numa fileira horizontal "o desenho sobe" deixa de significar nada.
+
+   Cada degrau carrega a ORDEM dos cliques (`1 · 4` quando o desenho volta ao mesmo grau), porque o
+   padrão pode repetir grau e descer: sem a ordem, a escada mostraria um conjunto, não um caminho.
+   --------------------------------------------------------------------------- */
+.pde-escada { display: grid; gap: 4px; max-width: 320px; }
+.pde-degrau {
+  display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);
+  color: var(--ink); font: inherit; text-align: left;
+  transition: border-color .12s, background .12s;
+}
+.pde-degrau:hover:not(:disabled) { border-color: var(--rule-strong); background: var(--raised); }
+.pde-degrau.on { border-color: var(--accent); background: var(--accent-quiet); }
+.pde-degrau:disabled { opacity: .5; cursor: default; }
+.pde-grau { font-family: var(--display); font-weight: 620; font-size: 16px; min-width: 2ch; }
+/* A ordem em mono e tabular: `1 · 4` tem de alinhar com `2` na coluna de cima. */
+.pde-ordem {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.pde-escrito {
+  font-family: var(--mono); font-size: 15px; letter-spacing: .06em;
+  color: var(--ink-soft); font-variant-numeric: tabular-nums;
+}
