@@ -105,6 +105,18 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Graus no braço, com metrônomo (20/11/2026)
+
+Modo novo do `no-instrumento`, que você escolheu como casa dele (a opção 1 das três). Não é item
+novo, então nada nasceu rascunho — mas muda o que o exercício pede:
+
+| o quê | confira |
+|---|---|
+| **o alvo pode ser um grau**, e aí são as **doze** classes contra a tônica escolhida | se incluir os alterados é certo (o seu exemplo era `♭3`, que é alterado em maior) ou se os sete da tonalidade bastariam |
+| **metrônomo em vez de cronômetro**: 60 bpm e 2 compassos em cada alvo por padrão, com a revelação durando **um compasso** | se dois compassos dão tempo de tocar o grau em todas as posições de uma região de cinco casas — num baixo são 2 ou 3 posições, num violão até 5 |
+| **a região passou a valer**, e o padrão dela aqui é **até a 5ª casa** | é diferente dos outros itens de braço, que abrem o braço inteiro. Aqui a tarefa é tocar em TODAS as posições da região, e o braço inteiro viraria maratona |
+| **a tônica se escolhe na tela** | nos outros itens ela é parâmetro de prática; esta é tarefa de tela própria, sem painel, então ela oferece a sua — como o Relações e o Acompanhamentos já fazem |
+
 ### O modo quiz da relação melodia-harmonia (20/11/2026)
 
 Não são itens novos — são **modos** de `ouvido-campo` e `ouvido-celulas`, e por isso nada nasceu

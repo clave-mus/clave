@@ -6,6 +6,7 @@
 //
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
+import { FRETS } from './helpers';
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
 import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
@@ -70,12 +71,49 @@ export const AMBIENTES: CatalogItem[] = [
     primaryModule: 'instrumento', skillTags: ['fretboard.note_finding'],
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     settings: ctx => [
-      { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
-      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1, format: v => `${v} s` },
+      /**
+       * **O alvo: uma nota ou um grau** (decisão dele em 20/11, escolhendo este item como casa do
+       * exercício que ele descreveu em *Mapear o braço · Graus no braço*).
+       *
+       * Com `grau`, a tela mostra `♭3` e a pessoa toca aquele grau da tonalidade em vigor em todas
+       * as posições da região. É o mesmo exercício do item — mostrar um alvo, tocar no braço de
+       * verdade, se autoavaliar —, trocando o que se mostra: nome de nota exige saber onde ela
+       * está, grau exige saber onde ela está **e** o que ela é na tonalidade.
+       */
+      { id: 'alvo', label: ctx.t('onInstrument.target'), type: 'single', options: [
+        { id: 'nota', label: ctx.t('onInstrument.targetNote') },
+        { id: 'grau', label: ctx.t('onInstrument.targetDegree') },
+      ] },
+      /**
+       * **O compasso ou o cronômetro.** O desenho dele pede metrônomo lento e *"X compassos em cada
+       * grau"*; o item nasceu com segundos. Os dois ficam, porque medem coisas diferentes: segundos
+       * é "tempo para achar", compasso é "tocar dentro do tempo".
+       *
+       * Com metrônomo, a revelação dura **um compasso** — a 60 bpm são os mesmos 4 s do padrão
+       * antigo, e assim nada no ciclo sai do pulso.
+       */
+      { id: 'ritmo', label: ctx.t('onInstrument.pacing'), type: 'single', options: [
+        { id: 'segundos', label: ctx.t('onInstrument.pacingSeconds') },
+        { id: 'metronomo', label: ctx.t('onInstrument.pacingMetronome') },
+      ] },
+      { id: 'bpm', label: ctx.t('common.tempo'), type: 'range', min: 40, max: 120, step: 2,
+        format: v => `♩ = ${v}`, quando: s => s.ritmo === 'metronomo' },
+      { id: 'compassos', label: ctx.t('onInstrument.barsEach'), type: 'single',
+        quando: s => s.ritmo === 'metronomo',
+        options: ['1', '2', '4'].map(n => ({ id: n, label: n })) },
+      { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1,
+        format: v => `${v} s`, quando: s => s.ritmo !== 'metronomo' },
+      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1,
+        format: v => `${v} s`, quando: s => s.ritmo !== 'metronomo' },
+      // A região do braço, com as mesmas opções dos itens de braço. **Até a 5ª casa por padrão**,
+      // como ele escreveu — e é diferente do padrão dos outros itens (braço inteiro), porque aqui a
+      // tarefa é tocar o grau em TODAS as posições da região: o braço inteiro seria maratona.
+      { ...FRETS(ctx) },
       { id: 'ouvirAntes', label: ctx.t('onInstrument.hearFirst'), type: 'toggle' },
       { id: 'mostrarBraco', label: ctx.t('onInstrument.showFretboard'), type: 'toggle' },
     ],
-    defaults: { esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
+    defaults: { alvo: 'nota', ritmo: 'segundos', bpm: 60, compassos: '2', casas: '0-5',
+      esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
     screen: () => import('../tools/NoInstrumento'),
   },
   {
