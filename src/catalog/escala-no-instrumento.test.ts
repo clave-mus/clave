@@ -9,8 +9,9 @@ import { EXERCISES } from './catalog';
 import { isSeries, type Ctx, type SeriesItem } from './types';
 import { resolveParams } from './params';
 import { validate } from './validate';
-import { ALL_SCALES, assinaturaDaEscala, note, type ScaleId } from './helpers';
-import { midi, mod } from '../theory/core';
+import { ALL_SCALES, assinaturaDaEscala, spellPc, type ScaleId } from './helpers';
+import { mod, noteName } from '../theory/core';
+import { getModo, notasDoModo } from '../theory/digitacoes';
 import { classesDoModo, digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
 import { translate, type MessageKey, type Vars } from '../i18n';
 
@@ -33,7 +34,7 @@ describe('o desenho distingue uma escala da outra', () => {
     for (let pc = 0; pc < 12; pc++) {
       const vistas = new Map<string, ScaleId>();
       for (const id of ALL_SCALES) {
-        const chave = assinaturaDaEscala({ ...note(pc), oct: 4 }, id);
+        const chave = assinaturaDaEscala({ ...spellPc(pc), oct: 4 }, id);
         const antes = vistas.get(chave);
         if (antes) empates.push(`${antes} = ${id}`);
         else vistas.set(chave, id);
@@ -249,23 +250,17 @@ describe('a grafia das notas segue a escala', () => {
   /**
    * O caso que ele deu: em **fá♯ maior** a sétima é **Mi♯**, e não Fá. A tabela fixa do Player
    * escreveria Fá, porque ela só conhece sustenidos sobre as sete naturais.
+   *
+   * ⚠️ **Medido na FONTE da grafia, não numa pergunta sorteada.** A primeira versão deste teste
+   * rodava sessenta perguntas esperando que fá♯ caísse como tônica, e falhou no CI depois de passar
+   * na minha máquina: teste que depende de sorteio não afirma nada, só costuma passar.
    */
-  it('em fá♯ maior a sétima é Mi♯, não Fá', () => {
-    const emFaSustenido = {
-      ...ctx,
-      params: resolveParams('baixo', { key: { tonic: 6, mode: 'maior' }, material: 'diatonico' }),
-    };
-    let viu = false;
-    for (let i = 0; i < 60; i++) {
-      const q = item.make({ ...base(emFaSustenido), direcao: 'desenhar', familia: ['maior'], graus: ['1'] } as never, emFaSustenido);
-      if (q.expected.kind !== 'digitacao') continue;
-      // a TÔNICA tem de ser fá♯ — mi maior também tem fá♯, e foi nela que eu tropecei escrevendo
-      if (mod(midi(q.expected.tonica), 12) !== 6 || q.expected.grau !== 1) continue;
-      const nomes = Object.values(q.grafia ?? {});
-      viu = true;
-      expect(nomes, `fá♯ maior saiu como ${nomes.join(' ')}`).toContain('Mi♯');
-      expect(nomes).not.toContain('Fá');
-    }
-    expect(viu, 'nunca sorteou fá♯ como tônica').toBe(true);
+  it.each([
+    ['maior', 1, 'Mi♯'],
+    ['maior', 4, 'Mi♯'],
+  ] as const)('fá♯, família %s grau %i: a grafia traz %s', (familia, grau, esperada) => {
+    const nomes = notasDoModo(getModo({ ...spellPc(6), oct: 3 }, familia, grau)).map(n => noteName(n, 'pt'));
+    expect(nomes, nomes.join(' ')).toContain(esperada);
+    expect(nomes, 'saiu com a grafia da tabela de sustenidos').not.toContain('Fá');
   });
 });
