@@ -1,0 +1,128 @@
+// Digitações de escala no braço — 25/11/2026.
+//
+// O exercício dele é "monte uma digitação deste modo, e depois monte outra". Duas coisas precisam
+// estar travadas antes de haver tela: que o braço dá desenhos de sobra, e que o veredito aceita
+// QUALQUER digitação legítima — não só as que a busca por acaso devolveu.
+import { describe, expect, it } from 'vitest';
+import { classesDoModo, digitacoesDaEscala, julgarDigitacao, sugerirDigitacao, assinaturaDaDigitacao } from './digitacao-de-escala';
+import { note, mod } from './core';
+
+const BAIXO = [28, 33, 38, 43];
+const VIOLAO = [40, 45, 50, 55, 59, 64];
+const re = { ...note(2), oct: 2 };
+
+describe('quantos desenhos o braço dá', () => {
+  it.each([
+    ['maior', 1], ['maior', 2], ['maior', 5],
+    ['menor-harmonica', 1], ['menor-harmonica', 5],
+    ['menor-melodica-jazz', 1], ['menor-melodica-jazz', 7],
+  ] as const)('%s, grau %i: há desenho de sobra no baixo', (familia, grau) => {
+    const ds = digitacoesDaEscala({ tonica: re, familia, grau, tuning: BAIXO });
+    expect(ds.length, `${familia}/${grau}`).toBeGreaterThan(5);
+    // e todos são de sete notas, uma por grau
+    for (const d of ds) expect(d.length).toBe(7);
+  });
+
+  it('não repete desenho na lista', () => {
+    const ds = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 2, tuning: BAIXO });
+    expect(new Set(ds.map(assinaturaDaDigitacao)).size).toBe(ds.length);
+  });
+
+  it('no violão também, e com mais cordas há mais desenho', () => {
+    const noBaixo = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: BAIXO });
+    const noViolao = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: VIOLAO });
+    expect(noViolao.length).toBeGreaterThan(noBaixo.length);
+  });
+});
+
+describe('o veredito', () => {
+  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+
+  it('aceita TODA digitação que a busca devolve', () => {
+    for (const d of digitacoesDaEscala(pedido)) {
+      expect(julgarDigitacao(d, pedido), assinaturaDaDigitacao(d)).toEqual({ certo: true });
+    }
+  });
+
+  /**
+   * O que importa de verdade: o veredito é regra, não lista. Um desenho legítimo que o `limite` da
+   * busca cortou tem de passar igual — senão a pessoa monta algo certo e o app diz que errou.
+   */
+  it('aceita um desenho legítimo que a busca NÃO devolveu', () => {
+    const achadas = new Set(digitacoesDaEscala({ ...pedido, limite: 3 }).map(assinaturaDaDigitacao));
+    const todas = digitacoesDaEscala({ ...pedido, limite: 400 });
+    const forada = todas.find(d => !achadas.has(assinaturaDaDigitacao(d)))!;
+    expect(forada).toBeTruthy();
+    expect(julgarDigitacao(forada, pedido)).toEqual({ certo: true });
+  });
+
+  it('recusa nota de fora da escala, e diz qual', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const classes = classesDoModo(pedido);
+    const foraDaEscala = [...Array(12).keys()].find(c => !classes.includes(c))!;
+    // troca a última posição por uma de classe de fora, na mesma corda
+    const ultima = d[d.length - 1];
+    let casa = ultima.casa;
+    while (mod(BAIXO[ultima.corda] + casa, 12) !== foraDaEscala) casa += 1;
+    const v = julgarDigitacao([...d.slice(0, -1), { corda: ultima.corda, casa }], pedido);
+    expect(v.certo).toBe(false);
+    expect(v.motivo).toBe('sobram');
+  });
+
+  it('recusa quando falta grau', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const v = julgarDigitacao(d.slice(0, -1), pedido);
+    expect(v.certo).toBe(false);
+    expect(v.motivo).toBe('faltam');
+    expect(v.faltando?.length).toBe(1);
+  });
+
+  it('recusa desenho que não sobe em ordem de grau', () => {
+    // sobe uma oitava com a segunda nota: as classes continuam certas, a ordem não
+    const d = digitacoesDaEscala(pedido)[0];
+    const trocado = d.map((x, i) => (i === 1 ? { ...x, casa: x.casa + 12 } : x));
+    const v = julgarDigitacao(trocado, { ...pedido, maxVaoCasas: 99 });
+    expect(v.certo).toBe(false);
+    expect(v.motivo).toBe('desce');
+  });
+
+  it('recusa o que não cabe na mão', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const esticado = d.map((x, i) => (i === d.length - 1 ? { ...x, casa: x.casa } : x));
+    expect(julgarDigitacao(esticado, { ...pedido, maxVaoCasas: 1 }).motivo).toBe('vao');
+  });
+
+  it('a tônica do modo é a nota mais grave do desenho', () => {
+    const classes = classesDoModo(pedido);
+    for (const d of digitacoesDaEscala(pedido)) {
+      const grave = d.reduce((a, b) => (BAIXO[a.corda] + a.casa <= BAIXO[b.corda] + b.casa ? a : b));
+      expect(mod(BAIXO[grave.corda] + grave.casa, 12)).toBe(classes[0]);
+    }
+  });
+});
+
+describe('a sugestão', () => {
+  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+
+  it('nunca repete o que a pessoa já montou', () => {
+    const feitas: { corda: number; casa: number }[][] = [];
+    for (let i = 0; i < 8; i++) {
+      const nova = sugerirDigitacao(pedido, feitas);
+      if (!nova) break;
+      expect(feitas.map(assinaturaDaDigitacao)).not.toContain(assinaturaDaDigitacao(nova));
+      feitas.push(nova);
+    }
+    expect(feitas.length).toBeGreaterThan(4);
+  });
+
+  it('devolve null quando acabaram os desenhos', () => {
+    const todas = digitacoesDaEscala(pedido);
+    expect(sugerirDigitacao(pedido, todas)).toBeNull();
+  });
+
+  it('a sugestão é sempre uma digitação válida', () => {
+    const s = sugerirDigitacao(pedido, [])!;
+    expect(julgarDigitacao(s, pedido)).toEqual({ certo: true });
+    expect(s).toHaveLength(7);
+  });
+});
