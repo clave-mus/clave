@@ -564,9 +564,14 @@ const notaDeAltura = (m: number): Note => ({
   oct: Math.floor(m / 12) - 1,
 });
 
-/** O nome de uma altura, com a oitava — a casa tem de dizer qual altura entrou, não só a nota. */
-const nomeDaAltura = (m: number, naming: 'pt' | 'en') =>
-  `${noteName(fromStep(stepDePc(mod(m, 12)), accDePc(mod(m, 12))), naming)}${Math.floor(m / 12) - 1}`;
+/**
+ * O nome de uma altura, com a oitava — a casa tem de dizer qual altura entrou, não só a nota.
+ *
+ * `grafia` vem da PERGUNTA quando ela sabe se escrever (`Question.grafia`): em fá♯ maior a sétima é
+ * Mi♯, e a tabela fixa abaixo — que é toda em sustenidos — diria Fá. Sem ela, nada muda.
+ */
+const nomeDaAltura = (m: number, naming: 'pt' | 'en', grafia?: Record<number, string>) =>
+  `${grafia?.[mod(m, 12)] ?? noteName(fromStep(stepDePc(mod(m, 12)), accDePc(mod(m, 12))), naming)}${Math.floor(m / 12) - 1}`;
 /** Passo diatônico e acidente de uma classe de altura, na grafia com sustenido. */
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
@@ -602,6 +607,18 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
   const [sugestoes, setSugestoes] = useState<PosicaoDaDigitacao[][]>([]);
   const [semMais, setSemMais] = useState(false);
   useEffect(() => { setSugestoes([]); setSemMais(false); }, [q]);
+  /**
+   * **Modo de foco no braço**, pedido dele em 25/11 para montar digitação — a mesma regra do
+   * `mapa-do-braco` desde 13/11: num celular deitado a moldura do app (cabeçalho, placar, pé e
+   * navegação) soma mais de 300 px dos 375 que existem, e o braço alto precisa deles.
+   *
+   * A tela manda, não o rótulo do aparelho: acima de 480 px de altura nada muda. E vale só onde o
+   * braço é o exercício (`alto`), não em toda pergunta de braço.
+   */
+  const tela = useTela();
+  const bracoEOExercicio = sf.kind === 'fretboard' && sf.alto === true;
+  const emFocoNoBraco = bracoEOExercicio && !tela.cabeAMoldura;
+  useFocoDeTela(emFocoNoBraco);
   /**
    * Quantas alturas a superfície espera antes de valer. `1` (ou ausente) é o caminho de sempre:
    * um toque é a resposta.
@@ -663,7 +680,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
         {Array.from({ length: quantas }, (_, i) => (
           <span key={i} className={`seq-casa ${juntadas[i] !== undefined ? 'cheia' : ''}`}>
-            {juntadas[i] !== undefined ? nomeDaAltura(juntadas[i].m, naming) : ''}
+            {juntadas[i] !== undefined ? nomeDaAltura(juntadas[i].m, naming, q.grafia) : ''}
           </span>
         ))}
       </div>
@@ -771,7 +788,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       else setSemMais(true);
     };
     return (
-      <div className="stage dark">
+      <div className={`stage dark braco ${emFocoNoBraco ? 'em-foco' : ''}`}>
         {fb}
         <div className="prompt">{q.prompt}</div>
         {ouvir}
