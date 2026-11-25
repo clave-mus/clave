@@ -116,7 +116,9 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
 | **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
 | **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |
-| ⚠️ **falta** | **2 a 5 desenhos na mesma rodada**, que você aprovou e eu não entreguei: o motor sabe dizer se um desenho é diferente dos anteriores, mas falta a superfície que acumula vários numa pergunta só |
+| **2 a 5 desenhos na rodada** | eles chegam numa pergunta só: cada sete posições são um desenho, e a conferência exige que todos sejam válidos **e diferentes entre si**. Confira se montar cinco seguidos cansa ou se é o treino certo |
+| **o botão de sugestão** | aparece depois de responder, nunca antes (antes seria pedir a resposta). Ele exclui o que você acabou de montar e as sugestões já vistas, numera as notas na ordem de subida, e avisa quando acabaram os desenhos daquele modo naquela região |
+| **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
 
 ### Escala no instrumento (20/11/2026)
 

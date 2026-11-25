@@ -68,6 +68,7 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   const grau = pick(graus.length ? graus : [1]);
   const tuning = tuningOf(s, ctx);
   const maxVaoCasas = Number(s.vao ?? 4);
+  const desenhos = Math.min(5, Math.max(1, Number(s.desenhos ?? 1)));
   const [, ate] = fretRange(s);
 
   /**
@@ -81,7 +82,10 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   for (const pcAlvo of candidatas) {
     const tentativa = notaGrafada(ctx, 48 + pcAlvo);
     const achadas = digitacoesDaEscala({ tonica: tentativa, familia, grau, tuning, maxCasa: ate, maxVaoCasas, limite: 60 });
-    if (achadas.length) { tonica = tentativa; exemplos = achadas; break; }
+    // **Desenhos SUFICIENTES**, e não "pelo menos um": pedindo três digitações diferentes, uma
+    // tônica que só tem duas naquela região é uma pergunta sem resposta. Medido na tela em 25/11 —
+    // com as casas 0–5 existe **um** desenho, e o botão de sugestão se esgotava no segundo toque.
+    if (achadas.length >= desenhos) { tonica = tentativa; exemplos = achadas; break; }
   }
 
   const nota = noteName(tonica, ctx.naming);
@@ -90,14 +94,16 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   return {
     // O ordinal vem da convenção do idioma: `4º` em português, `4th` em inglês. Era `${grau}º`
     // cravado, e saía "mode 4º" na tela inglesa.
-    prompt: ctx.t('scaleOnInstrument.buildPrompt', { degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota }),
+    prompt: desenhos > 1
+      ? ctx.t('scaleOnInstrument.buildManyPrompt', { n: String(desenhos), degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota })
+      : ctx.t('scaleOnInstrument.buildPrompt', { degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota }),
     visual: { kind: 'text', text: '' },
     surface: {
-      kind: 'fretboard', tuning, from: 0, to: ate, quantas: 7, alto: true,
+      kind: 'fretboard', tuning, from: 0, to: ate, quantas: 7 * desenhos, alto: true,
       // A tônica aparece como apoio: o desenho que se decora parte dela.
       apoio: { midis: exemplos.length ? [tuning[exemplos[0][0].corda] + exemplos[0][0].casa] : [] },
     },
-    expected: { kind: 'digitacao', tonica, familia, grau, tuning, maxVaoCasas },
+    expected: { kind: 'digitacao', tonica, familia, grau, tuning, maxVaoCasas, desenhos },
     // Ouvir é escolha: a escala soa no botão, nunca sozinha — senão a pergunta vira ditado.
     sound: { groups: classesDoModo({ tonica, familia, grau }).map(pcModo => [48 + pcModo]), instrument: vozDoBraco(tuning) },
     autoplay: false,
@@ -155,12 +161,16 @@ export const escalaNoInstrumento: CatalogItem = {
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
       options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: `${g}º` })) },
     /**
-     * ⚠️ **"Quantos desenhos por rodada" (2 a 5) ainda NÃO entra aqui.** Ele aprovou em 25/11, e o
-     * que falta não é a regra — é superfície: uma pergunta que acumula vários desenhos, cada um
-     * conferido contra os anteriores. O motor já sabe responder *"este é diferente dos que ela já
-     * fez?"* (`assinaturaDaDigitacao`), e o controle entra junto com a tela que o usa. Oferecer um
-     * seletor que nada lê seria interface morta, e há teste que o cobra.
+     * **Quantos desenhos diferentes na mesma rodada** (decisão dele na Q2, que pediu até cinco):
+     * *"seria legal pedir pro usuário escrever diversas digitações pra mesma escala. isso ajuda a
+     * sair do shape"*.
+     *
+     * Eles chegam numa pergunta só, em sequência: cada sete posições formam um desenho, e a
+     * conferência exige que todos sejam válidos **e diferentes entre si**.
      */
+    { id: 'desenhos', label: ctx.t('scaleOnInstrument.howMany'), type: 'single',
+      quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
+      options: ['1', '2', '3', '4', '5'].map(n => ({ id: n, label: n })) },
     { id: 'vao', label: ctx.t('scaleOnInstrument.span'), type: 'single',
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
       options: ['3', '4', '5'].map(n => ({ id: n, label: ctx.t('scaleOnInstrument.spanFrets', { n }) })) },
@@ -168,7 +178,7 @@ export const escalaNoInstrumento: CatalogItem = {
     { ...FRETS(ctx), quando: s => s.instrumento !== 'piano' },
   ],
   defaults: { direcao: 'identificar', tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'], casas: '0-12',
-    familia: ['maior'], graus: ['1', '2', '3', '4', '5', '6', '7'], vao: '4' },
+    familia: ['maior'], graus: ['1', '2', '3', '4', '5', '6', '7'], vao: '4', desenhos: '1' },
   // O instrumento começa no do perfil, como nos irmãos — e o piano é um valor como os outros.
   defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : (ctx.params.instrument === 'baixo' ? 'baixo' : 'violao') }),
   presets: [
@@ -178,6 +188,30 @@ export const escalaNoInstrumento: CatalogItem = {
     { id: 'no-braco', nome: 'presets.escalaNoBraco', settings: { direcao: 'identificar', tipos: ['maior', 'menor', 'penta-maior', 'penta-menor', 'blues'], casas: '0-5' } },
   ],
   presentation: { gap: 0.32 },
+  /**
+   * **Região curta não dá desenho para todo mundo.** Com as casas 0–5 e vão de 4, um modo costuma
+   * ter UM desenho; pedir três diferentes ali é pedir o impossível. Recusar e explicar é a decisão
+   * 13 — e a saída é da pessoa: abrir as casas, alargar o vão, ou pedir menos desenhos.
+   */
+  problema(s, ctx) {
+    if (s.instrumento === 'piano' || s.direcao !== 'desenhar') return null;
+    const desenhos = Math.min(5, Math.max(1, Number(s.desenhos ?? 1)));
+    if (desenhos < 2) return null;
+    const familias = FAMILIAS.map(([id]) => id).filter(f => arr(s.familia, ['maior']).includes(f));
+    const graus = arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= 7);
+    const tuning = tuningOf(s, ctx);
+    const [, ate] = fretRange(s);
+    const maxVaoCasas = Number(s.vao ?? 4);
+    for (const familia of familias.length ? familias : ['maior' as FamiliaBase]) {
+      for (const grau of graus.length ? graus : [1]) {
+        for (let pcAlvo = 0; pcAlvo < 12; pcAlvo++) {
+          const achadas = digitacoesDaEscala({ tonica: notaGrafada(ctx, 48 + pcAlvo), familia, grau, tuning, maxCasa: ate, maxVaoCasas, limite: 60 });
+          if (achadas.length >= desenhos) return null;
+        }
+      }
+    }
+    return ctx.t('scaleOnInstrument.semDesenhos', { n: String(desenhos) });
+  },
   make(s, ctx): Question {
     // No braço, desenhar é montar uma digitação — outro gerador, outra conferência.
     if (s.instrumento !== 'piano' && s.direcao === 'desenhar') return montarDigitacao(s, ctx);

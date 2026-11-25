@@ -3,7 +3,7 @@
 // pede), casas diferentes do braço que dão a mesma nota contam igual, e C7M, Cmaj7 e "C 7M" são a
 // mesma cifra.
 import { midi, mod, type ChordId } from '../theory/core';
-import { julgarDigitacao } from '../theory/digitacao-de-escala';
+import { assinaturaDaDigitacao, julgarDigitacao } from '../theory/digitacao-de-escala';
 import type { ChoiceOption, Expected, Response } from './types';
 
 const NATURAL = [0, 2, 4, 5, 7, 9, 11];
@@ -89,7 +89,19 @@ export function validate(expected: Expected, r: Response): boolean {
      */
     case 'digitacao': {
       if (r.kind !== 'pitches' || !r.posicoes?.length) return false;
-      return julgarDigitacao(r.posicoes, expected).certo;
+      const quantos = expected.desenhos ?? 1;
+      const porDesenho = r.posicoes.length / quantos;
+      if (!Number.isInteger(porDesenho)) return false;
+      const assinaturas = new Set<string>();
+      for (let k = 0; k < quantos; k++) {
+        const desenho = r.posicoes.slice(k * porDesenho, (k + 1) * porDesenho);
+        if (!julgarDigitacao(desenho, expected).certo) return false;
+        // **Diferentes entre si** — é o ponto do modo: repetir o mesmo desenho não sai do shape.
+        const a = assinaturaDaDigitacao(desenho);
+        if (assinaturas.has(a)) return false;
+        assinaturas.add(a);
+      }
+      return true;
     }
     case 'contorno': {
       if (r.kind !== 'pitches') return false;

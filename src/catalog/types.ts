@@ -74,7 +74,13 @@ export type Expected =
    * com vão de 4 casas), e foi por isso que esta conferência não pôde ser `contorno`. Quem julga é
    * `theory/digitacao-de-escala.ts`.
    */
-  | { kind: 'digitacao'; tonica: Note; familia: FamiliaBase; grau: number; tuning: readonly number[]; maxVaoCasas?: number }
+  | { kind: 'digitacao'; tonica: Note; familia: FamiliaBase; grau: number; tuning: readonly number[]; maxVaoCasas?: number;
+      /**
+       * Quantos desenhos **diferentes** a rodada pede (1 a 5, decisão dele em 25/11): *"seria legal
+       * pedir pro usuário escrever diversas digitações pra mesma escala. isso ajuda a sair do
+       * shape"*. As posições chegam em sequência, e cada sete formam um desenho.
+       */
+      desenhos?: number }
   | { kind: 'option'; id: string }
   /** Classe de altura: qualquer oitava, qualquer grafia (Dó♯ = Ré♭). */
   | { kind: 'pitchClass'; pc: number }

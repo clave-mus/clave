@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { EXERCISES } from './catalog';
 import { isSeries, type Ctx, type SeriesItem } from './types';
 import { resolveParams } from './params';
+import { validate } from './validate';
 import { ALL_SCALES, assinaturaDaEscala, note, type ScaleId } from './helpers';
 import { mod } from '../theory/core';
 import { digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
@@ -141,6 +142,80 @@ describe('as duas direções', () => {
       if (q.surface.kind !== 'choices') continue;
       const tonicas = new Set(q.surface.options.map(o => o.label.split(' ')[0]));
       expect(tonicas.size, `alternativas com tônicas diferentes: ${[...tonicas].join(', ')}`).toBe(1);
+    }
+  });
+});
+
+/**
+ * **Vários desenhos na mesma rodada** (decisão dele na Q2, 25/11): até cinco, e eles têm de ser
+ * diferentes entre si — repetir o mesmo desenho é justamente o que o modo existe para evitar.
+ */
+describe('a rodada de vários desenhos', () => {
+  const ctx = ctxCom('baixo');
+  const pergunta = (desenhos: string) =>
+    item.make({ ...base(ctx), direcao: 'desenhar', desenhos, casas: '0-12' } as never, ctx);
+
+  it.each(['1', '2', '3', '5'])('pede 7 × %s posições', desenhos => {
+    const q = pergunta(desenhos);
+    expect('quantas' in q.surface && q.surface.quantas).toBe(7 * Number(desenhos));
+    expect(q.expected.kind === 'digitacao' && q.expected.desenhos).toBe(Number(desenhos));
+  });
+
+  it('aceita desenhos diferentes e recusa o mesmo repetido', () => {
+    const q = pergunta('2');
+    if (q.expected.kind !== 'digitacao') throw new Error('era para ser digitação');
+    const ds = digitacoesDaEscala({ ...q.expected, maxCasa: 12, limite: 60 });
+    expect(ds.length).toBeGreaterThan(1);
+    const resposta = (grupos: typeof ds) => ({
+      kind: 'pitches' as const,
+      midis: grupos.flat().map(p => q.expected.kind === 'digitacao' ? q.expected.tuning[p.corda] + p.casa : 0),
+      posicoes: grupos.flat(),
+    });
+    expect(validate(q.expected, resposta([ds[0], ds[1]])), 'dois diferentes').toBe(true);
+    expect(validate(q.expected, resposta([ds[0], ds[0]])), 'o mesmo duas vezes').toBe(false);
+  });
+
+  it('recusa quando um dos desenhos é inválido', () => {
+    const q = pergunta('2');
+    if (q.expected.kind !== 'digitacao') throw new Error('era para ser digitação');
+    const ds = digitacoesDaEscala({ ...q.expected, maxCasa: 12, limite: 60 });
+    const quebrado = [...ds[1].slice(0, 6), { corda: ds[1][6].corda, casa: ds[1][6].casa + 1 }];
+    const grupos = [ds[0], quebrado];
+    expect(validate(q.expected, {
+      kind: 'pitches',
+      midis: grupos.flat().map(p => q.expected.kind === 'digitacao' ? q.expected.tuning[p.corda] + p.casa : 0),
+      posicoes: grupos.flat(),
+    })).toBe(false);
+  });
+});
+
+/**
+ * **Região curta não dá desenho para todo mundo** — medido na tela em 25/11: com as casas 0–5 e
+ * vão de 4, um modo costuma ter UM desenho, e o botão de sugestão se esgotava no segundo toque.
+ * Pedir três diferentes ali é pergunta sem resposta, e a decisão 13 manda recusar e explicar.
+ */
+describe('a recusa quando não há desenho de sobra', () => {
+  const ctx = ctxCom('baixo');
+  const recusa = (extra: Record<string, unknown>) =>
+    item.problema?.({ ...base(ctx), direcao: 'desenhar', ...extra } as never, ctx) ?? null;
+
+  it('recusa cinco desenhos numa região apertada', () => {
+    expect(recusa({ desenhos: '5', casas: '0-5', vao: '3', familia: ['maior'], graus: ['1'] })).toBeTruthy();
+  });
+
+  it('não recusa um desenho só, nem o braço inteiro', () => {
+    expect(recusa({ desenhos: '1', casas: '0-5', vao: '3' })).toBeNull();
+    expect(recusa({ desenhos: '3', casas: '0-12', vao: '4' })).toBeNull();
+  });
+
+  it('a pergunta sorteada sempre tem desenhos suficientes para o que pediu', () => {
+    for (const desenhos of ['2', '3', '4']) {
+      for (let i = 0; i < 12; i++) {
+        const q = item.make({ ...base(ctx), direcao: 'desenhar', desenhos, casas: '0-12' } as never, ctx);
+        if (q.expected.kind !== 'digitacao') continue;
+        const achadas = digitacoesDaEscala({ ...q.expected, maxCasa: 12, limite: 60 });
+        expect(achadas.length, `${q.expected.familia}/${q.expected.grau} com ${desenhos}`).toBeGreaterThanOrEqual(Number(desenhos));
+      }
     }
   });
 });

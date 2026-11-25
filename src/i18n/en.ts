@@ -126,6 +126,11 @@ const en: Shape<typeof pt> = {
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
   scaleOnInstrument: {
+    semDesenhos: 'There are not {n} different fingerings for this mode in this region. Open more frets, widen the hand span, or ask for fewer shapes.',
+    howMany: 'How many shapes per round',
+    buildManyPrompt: 'Build {n} DIFFERENT fingerings for mode {degree} of the {family}, starting on {note}.',
+    suggest: 'Show a shape you did not play',
+    noMoreSuggestions: 'No more shapes for this mode in this region.',
     family: 'The family',
     family_maior: 'Major scale',
     familyHarmonica: 'Harmonic minor',
