@@ -610,7 +610,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
   const tocar = (j: Junta) => (acumula
     ? onJuntar(j)
     : onAnswer({ kind: 'pitch', midi: j.m }, j.s !== undefined ? `${j.s}:${j.f}` : String(j.m)));
-  const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
+  /**
+   * ⚠️ **As POSIÇÕES vão junto das alturas** (25/11). Uma digitação de escala é onde se toca: duas
+   * cordas dão a mesma altura, e o vão da mão só se mede em casas. Sem isto, o julgamento da
+   * digitação não teria como recusar um desenho que não cabe na mão — e aceitaria calado.
+   */
+  const enviar = () => onAnswer(
+    {
+      kind: 'pitches',
+      midis: juntadas.map(j => j.m),
+      posicoes: juntadas.every(j => j.s !== undefined && j.f !== undefined)
+        ? juntadas.map(j => ({ corda: j.s!, casa: j.f! }))
+        : undefined,
+    },
+    juntadas.map(j => (j.s !== undefined ? `${j.s}:${j.f}` : j.m)).join(','),
+  );
   /**
    * **O controle de ouvir, em qualquer superfície.**
    *
@@ -721,6 +735,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
         <div className="prompt">{q.prompt}</div>
         {ouvir}
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
+          alto={sf.alto}
           onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
         {acoes}
       </div>

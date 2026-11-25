@@ -30,6 +30,9 @@ export function assinatura(e: Expected): string {
     case 'pitch': return `p:${e.midi}`;
     case 'spelled': return `s:${e.letter}.${e.acc}.${e.oct ?? ''}`;
     case 'chord': return `c:${e.root}.${e.quality}`;
+    // A pergunta é o MODO, não um desenho: duas rodadas do mesmo modo são a mesma pergunta, e o
+    // anti-eco tem de saber disso.
+    case 'digitacao': return `d:${e.familia}.${e.grau}.${e.tonica.letter}.${e.tonica.acc}`;
     // Contorno: a assinatura é o conjunto de alturas, com a ordem quando ela importa.
     case 'contorno': return `k:${(e.ordenada === false ? [...e.midis].sort((a, b) => a - b) : e.midis).join(',')}`;
   }

@@ -539,6 +539,15 @@ select.sel {
 .staff-svg, .kbd-svg, .fret-svg, .rhythm-svg { width: 100%; height: auto; display: block; }
 .staff-svg { max-width: 560px; }
 .kbd-svg, .fret-svg { max-width: 760px; }
+/**
+ * O braço nunca passa de dois terços da altura da tela.
+ *
+ * Medido em 25/11, montando digitação de escala: com as cordas altas (o dobro do espaçamento, para
+ * o dedo acertar) e uma região curta de casas, o SVG escala pela LARGURA e estourava a altura — 408
+ * px num celular deitado de 375. `max-height` faz o desenho encaixar pelo lado que apertar, e o
+ * `preserveAspectRatio` do SVG centraliza o que sobra.
+ */
+.fret-svg { max-height: 66svh; margin-inline: auto; }
 .kbd-svg .key.white:hover { fill: var(--accent-quiet); }
 .kbd-svg .key.black:hover { fill: var(--rule-strong); }
 .fret-svg .fret-cell { cursor: pointer; }

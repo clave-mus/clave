@@ -105,6 +105,19 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Montar digitação de modo no braço (25/11/2026)
+
+Modo novo do `escala-no-instrumento`, decidido com ele em 25/11 (Q1): no braço, "ler o nome e
+marcar as notas" virou **montar uma digitação**, com dezenas de respostas certas.
+
+| o quê | confira |
+|---|---|
+| **o veredito** | ele é regra, não lista: classes do modo · nenhuma repetida · subindo em ordem de grau · cabendo no vão da mão. Confira se o vão padrão (4 casas) é o certo para o seu baixo, e se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
+| **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
+| **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
+| **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |
+| ⚠️ **falta** | **2 a 5 desenhos na mesma rodada**, que você aprovou e eu não entreguei: o motor sabe dizer se um desenho é diferente dos anteriores, mas falta a superfície que acumula vários numa pergunta só |
+
 ### Escala no instrumento (20/11/2026)
 
 | Id | O que só você confere |

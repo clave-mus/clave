@@ -25,10 +25,6 @@ const PODEM_ESPERAR: Record<string, string> = {
   // deles ainda não existem.
   conducoes: 'enumerador sem tela (FM-4)',
   rearmonizacoes: 'enumerador sem tela (FM-5)',
-  // 25/11: o motor das digitações de escala ficou pronto ANTES do item, de propósito — ele é o que
-  // não dependia de nenhuma resposta do Paulo, e o item depende de três (onde mora, o que conta
-  // como acerto, e como se chamam os modos das menores). Sai desta lista quando o item entrar.
-  'digitacao-de-escala': 'espera a decisão de onde o item mora (25/11)',
 };
 
 describe('nenhum motor fica órfão', () => {

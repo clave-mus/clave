@@ -3,6 +3,7 @@
 // pede), casas diferentes do braço que dão a mesma nota contam igual, e C7M, Cmaj7 e "C 7M" são a
 // mesma cifra.
 import { midi, mod, type ChordId } from '../theory/core';
+import { julgarDigitacao } from '../theory/digitacao-de-escala';
 import type { ChoiceOption, Expected, Response } from './types';
 
 const NATURAL = [0, 2, 4, 5, 7, 9, 11];
@@ -80,6 +81,15 @@ export function validate(expected: Expected, r: Response): boolean {
       if (r.kind !== 'chord') return false;
       const c = parseChordSymbol(r.text);
       return !!c && c.root === expected.root && c.quality === expected.quality;
+    }
+    /**
+     * **Digitação de escala**: o certo é a regra, não uma lista de posições — ver o `Expected`.
+     * Sem as posições não dá para julgar o vão da mão, e é por isso que a superfície que acumula
+     * manda `posicoes` junto das alturas.
+     */
+    case 'digitacao': {
+      if (r.kind !== 'pitches' || !r.posicoes?.length) return false;
+      return julgarDigitacao(r.posicoes, expected).certo;
     }
     case 'contorno': {
       if (r.kind !== 'pitches') return false;

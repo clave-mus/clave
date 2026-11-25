@@ -38,6 +38,15 @@ interface Props {
    * o contexto fica e não há recorte nenhum.
    */
   foco?: readonly [number, number];
+  /**
+   * **Cordas com o dobro do espaçamento**, para o dedo no celular deitado.
+   *
+   * Medido em 25/11: com o espaçamento normal cada corda tem **24 px** de altura num celular
+   * deitado — metade de um alvo de toque confortável. Montar uma digitação de escala são sete
+   * toques certeiros, e ali 24 px erra. Com o dobro dá ~48 px, e quatro cordas ainda cabem nos
+   * 375 px de altura da tela deitada.
+   */
+  alto?: boolean;
 }
 
 /**
@@ -67,11 +76,12 @@ const NA_MADEIRA: Record<string, string> = {
 const naMadeira = (c: string | undefined) => (c ? NA_MADEIRA[c] ?? c : 'var(--fret-dot-now)');
 
 const FW = 52;
-const GAP = 22;
+const GAP_BASE = 22;
 
-export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco }: Props) {
+export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco, alto = false }: Props) {
   const t = useT();
   const n = tuning.length;
+  const GAP = alto ? GAP_BASE * 2 : GAP_BASE;
   const left = 50;  // espaço para o nome da corda à esquerda
   const top = 18;
   const frets = to - from;

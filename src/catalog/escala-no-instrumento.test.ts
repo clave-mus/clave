@@ -10,6 +10,7 @@ import { isSeries, type Ctx, type SeriesItem } from './types';
 import { resolveParams } from './params';
 import { ALL_SCALES, assinaturaDaEscala, note, type ScaleId } from './helpers';
 import { mod } from '../theory/core';
+import { digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
 import { translate, type MessageKey, type Vars } from '../i18n';
 
 const ctxCom = (instrument: 'violao' | 'baixo' | 'piano'): Ctx => ({
@@ -93,11 +94,35 @@ describe('o desenho distingue uma escala da outra', () => {
 });
 
 describe('as duas direções', () => {
-  it('desenhar só existe no piano — no braço faltaria um motor de digitação', () => {
-    const noBraco = item.settings(ctxCom('baixo')).find(s => s.id === 'direcao');
-    expect(noBraco?.quando?.({ ...base(ctxCom('baixo')) } as never)).toBe(false);
-    const noPiano = item.settings(ctxCom('piano')).find(s => s.id === 'direcao');
-    expect(noPiano?.quando?.({ ...base(ctxCom('piano')), instrumento: 'piano' } as never)).toBe(true);
+  /**
+   * **Desenhar existe nas duas superfícies desde 25/11** — e no braço é outro exercício: montar
+   * uma DIGITAÇÃO, com dezenas de respostas certas. No piano continua sendo marcar as notas da
+   * escala, onde a resposta é uma só (decisão dele, e o motor de digitação é o que faltava).
+   */
+  it('no braço, desenhar é montar uma digitação; no piano, marcar as notas', () => {
+    const noBraco = ctxCom('baixo');
+    const q = item.make({ ...base(noBraco), direcao: 'desenhar' } as never, noBraco);
+    expect(q.expected.kind).toBe('digitacao');
+    expect(q.surface.kind).toBe('fretboard');
+    // sete toques, braço alto para o dedo no celular deitado
+    expect('quantas' in q.surface && q.surface.quantas).toBe(7);
+    expect('alto' in q.surface && q.surface.alto).toBe(true);
+
+    const noPiano = ctxCom('piano');
+    const p = item.make({ ...base(noPiano), instrumento: 'piano', direcao: 'desenhar' } as never, noPiano);
+    expect(p.expected.kind).toBe('contorno');
+  });
+
+  it('a digitação pedida tem pelo menos uma resposta possível no braço', () => {
+    const ctx = ctxCom('baixo');
+    for (let i = 0; i < 40; i++) {
+      const q = item.make({ ...base(ctx), direcao: 'desenhar' } as never, ctx);
+      if (q.expected.kind !== 'digitacao') continue;
+      const achadas = digitacoesDaEscala({ ...q.expected, maxCasa: 12, limite: 60 });
+      expect(achadas.length, `${q.expected.familia}/${q.expected.grau} sem digitação`).toBeGreaterThan(0);
+      // e o que a busca devolve é aceito pelo juiz da pergunta
+      expect(julgarDigitacao(achadas[0], q.expected).certo).toBe(true);
+    }
   });
 
   it('desenhando, a conferência é o contorno das notas da escala', () => {
