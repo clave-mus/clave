@@ -186,9 +186,21 @@ export function julgarDigitacao(
   const ordem = corpo.map(c => classes.indexOf(c));
   for (let i = 1; i < ordem.length; i++) if (ordem[i] !== ordem[i - 1] + 1) return { certo: false, motivo: 'desce' };
 
+  /**
+   * **Numa corda só, não há vão** — a mão desliza.
+   *
+   * Ele mandou o caso em 25/11: mi menor melódica inteira na corda mais grave, casas 0 2 3 5 7 9
+   * 11 12, e o veredito recusou por vão. As notas estavam certas, subindo, sem repetir; o que
+   * reprovou foi uma regra que mede **posição de mão** — e uma escala ao longo de uma corda não é
+   * tocada em posição, é tocada deslizando. É estudo clássico de baixo, e estava sendo chamado de
+   * erro.
+   *
+   * O vão continua valendo quando o desenho cruza cordas, que é onde ele descreve mesmo a mão.
+   */
+  const umaCordaSo = new Set(pos.map(x => x.corda)).size === 1;
   const pressionadas = pos.filter(x => x.casa > 0).map(x => x.casa);
   const vao = pressionadas.length > 1 ? Math.max(...pressionadas) - Math.min(...pressionadas) : 0;
-  if (vao > (p.maxVaoCasas ?? 4)) return { certo: false, motivo: 'vao' };
+  if (!umaCordaSo && vao > (p.maxVaoCasas ?? 4)) return { certo: false, motivo: 'vao' };
   return { certo: true };
 }
 

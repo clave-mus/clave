@@ -9,7 +9,12 @@ import { note, mod } from './core';
 
 const BAIXO = [28, 33, 38, 43];
 const VIOLAO = [40, 45, 50, 55, 59, 64];
-const re = { ...note(2), oct: 2 };
+/**
+ * ⚠️ `note` recebe o **índice diatônico**, não a classe de altura: `note(2)` é MI. Este arquivo
+ * chamava esta constante de `re` e os testes falavam em "mi dórico" — era mi o tempo todo. O nome
+ * mentia; o que os testes mediam estava certo, porque qualquer tônica serve para a medida.
+ */
+const mi = { ...note(2), oct: 2 };
 
 describe('quantos desenhos o braço dá', () => {
   it.each([
@@ -17,26 +22,26 @@ describe('quantos desenhos o braço dá', () => {
     ['menor-harmonica', 1], ['menor-harmonica', 5],
     ['menor-melodica-jazz', 1], ['menor-melodica-jazz', 7],
   ] as const)('%s, grau %i: há desenho de sobra no baixo', (familia, grau) => {
-    const ds = digitacoesDaEscala({ tonica: re, familia, grau, tuning: BAIXO });
+    const ds = digitacoesDaEscala({ tonica: mi, familia, grau, tuning: BAIXO });
     expect(ds.length, `${familia}/${grau}`).toBeGreaterThan(5);
     // e todos são de sete notas, uma por grau
     for (const d of ds) expect(d.length).toBe(7);
   });
 
   it('não repete desenho na lista', () => {
-    const ds = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 2, tuning: BAIXO });
+    const ds = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 2, tuning: BAIXO });
     expect(new Set(ds.map(assinaturaDaDigitacao)).size).toBe(ds.length);
   });
 
   it('no violão também, e com mais cordas há mais desenho', () => {
-    const noBaixo = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: BAIXO });
-    const noViolao = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: VIOLAO });
+    const noBaixo = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 1, tuning: BAIXO });
+    const noViolao = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 1, tuning: VIOLAO });
     expect(noViolao.length).toBeGreaterThan(noBaixo.length);
   });
 });
 
 describe('o veredito', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('aceita TODA digitação que a busca devolve', () => {
     for (const d of digitacoesDaEscala(pedido)) {
@@ -102,7 +107,7 @@ describe('o veredito', () => {
 });
 
 describe('a sugestão', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('nunca repete o que a pessoa já montou', () => {
     const feitas: { corda: number; casa: number }[][] = [];
@@ -132,7 +137,7 @@ describe('a sugestão', () => {
  * cada um passou pela minha revisão sem que eu visse.
  */
 describe('o que ele relatou usando', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('fechar na oitava vale — era recusado', () => {
     const d = digitacoesDaEscala(pedido)[0];
@@ -175,5 +180,34 @@ describe('o que ele relatou usando', () => {
       expect(alturas[7] - alturas[0]).toBe(12);
       expect(julgarDigitacao(d, pedido)).toEqual({ certo: true });
     }
+  });
+});
+
+/**
+ * **A escala ao longo de UMA corda vale** — ele mandou o caso em 25/11, com a tela: mi menor
+ * melódica nas casas 0 2 3 5 7 9 11 12 da corda mais grave, recusada por vão.
+ *
+ * O vão mede posição de mão, e numa corda só a mão desliza. Chamar isso de erro é chamar de erro
+ * um estudo clássico de baixo.
+ */
+describe('numa corda só não há vão', () => {
+  
+  const umaCorda = [0, 2, 3, 5, 7, 9, 11, 12].map(casa => ({ corda: 0, casa }));
+
+  it('aceita a escala inteira na corda mais grave', () => {
+    expect(julgarDigitacao(umaCorda, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO }))
+      .toEqual({ certo: true });
+  });
+
+  it('e continua recusando as notas erradas ali', () => {
+    const errada = [...umaCorda.slice(0, -1), { corda: 0, casa: 13 }];
+    expect(julgarDigitacao(errada, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO }).certo).toBe(false);
+  });
+
+  it('cruzando cordas, o vão volta a valer', () => {
+    const espalhada = [{ corda: 0, casa: 0 }, { corda: 0, casa: 2 }, { corda: 0, casa: 3 },
+      { corda: 1, casa: 0 }, { corda: 1, casa: 2 }, { corda: 1, casa: 4 }, { corda: 1, casa: 6 }, { corda: 1, casa: 7 }];
+    expect(julgarDigitacao(espalhada, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO, maxVaoCasas: 4 }).motivo)
+      .toBe('vao');
   });
 });
