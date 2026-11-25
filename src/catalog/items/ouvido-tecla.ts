@@ -1,4 +1,4 @@
-import { GRAUS_ESCOLHIDOS, TONALIDADE_LIVRE, TUNINGS, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDoBraco } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, TONALIDADE_LIVRE, TUNINGS, emBracoDeBaixo, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDaPergunta, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -164,7 +164,7 @@ function todasAsCasas(tuning: readonly number[], m: number): { s: number; f: num
 export const ouvidoTecla: CatalogItem = {
   id: 'ouvido-tecla',
   objetos: ['notas'], tarefas: ['ouvir', 'tocar'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.pitch_identification', 'keyboard.note_finding'],
+  primaryModule: 'ouvido', skillTags: ['ear.pitch_identification', 'keyboard.note_finding'],
   contentTags: ['pitch.naturals', 'pitch.accidentals'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range', 'material'],
@@ -259,10 +259,20 @@ export const ouvidoTecla: CatalogItem = {
       { id: 'letras', label: ctx.t('settings.byLetters') },
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
+    /**
+     * **O timbre** — o mesmo parâmetro compartilhado dos outros itens de ouvido (`TIMBRE`, em
+     * `helpers`). Este item tinha ficado de fora da rodada de 19/11 sem motivo: o documento dele
+     * pede timbre na linha de **nota** com as mesmas palavras que pede nas outras.
+     *
+     * No braço a superfície continua mandando (`preservar`): audiando num baixo, o som é de baixo —
+     * foi queixa dele em 13/11, e um sorteio de timbre não pode desfazer isso.
+     */
+    ...TIMBRE(ctx),
+    ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.onde ?? ondePadrao(ctx))),
   ],
   // `onde` fica FORA dos defaults estáticos: quem o resolve é `ondePadrao`, pelo perfil. Um valor
   // fixo aqui venceria o contexto em todo chamador que não seja o Player.
-  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [] },
+  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [], ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   /**
    * **A oitava da referência também sai do contexto**, e sem isto o chip não aparecia marcado.
    *
@@ -534,7 +544,7 @@ export const ouvidoTecla: CatalogItem = {
             { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: [[m]] },
           ],
         },
-        autoplay: false, reveal: `${comOitava}  ·  ${grau}`,
+        autoplay: false, reveal: `${comOitava}  ·  ${grau}`, presentation: vozDaPergunta(s, noBraco),
       };
     }
 
@@ -575,6 +585,7 @@ export const ouvidoTecla: CatalogItem = {
       reveal: semOitava
         ? (onde === 'graus' ? grauDoPc(ctx, mod(m, 12)) : nomeNaTonalidade(ctx, mod(m, 12)))
         : `${nomeNaTonalidade(ctx, mod(m, 12))}${Math.floor(m / 12) - 1}`,
+      presentation: vozDaPergunta(s, noBraco),
     };
   },
 };

@@ -1,4 +1,4 @@
-import { INST, arr, bracoDoPerfil, mod, nomeNaTonalidade, paresNoBraco, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, INST, arr, bracoDoPerfil, mod, nomeNaTonalidade, paresNoBraco, pcPermitida, pick, semiOptions, semisDoIntervalo, semitoneName, tuningOf, vozDoBraco } from '../helpers';
 import { INTERVALS } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -28,7 +28,7 @@ import type { CatalogItem } from '../types';
 export const intervaloNoInstrumento: CatalogItem = {
   id: 'intervalo-no-instrumento',
   objetos: ['intervalos'], tarefas: ['nomear', 'tocar'],
-  primaryModule: 'theory',
+  primaryModule: 'instrumento',
   skillTags: ['theory.interval_naming', 'fretboard.interval_shapes'],
   contentTags: ['interval.simple', 'instrument.guitar', 'instrument.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
@@ -63,8 +63,14 @@ export const intervaloNoInstrumento: CatalogItem = {
     ] },
     INST(ctx),
     { id: 'intervalos', label: ctx.t('settings.intervals'), type: 'multi', options: INTERVALS.map(i => ({ id: i.id, label: ivLabelSemis(i.id, ctx), tier: i.tier })) },
+    /**
+     * **Ouvir uma ou duas oitavas acima**, só com o braço do baixo escolhido — pedido dele em
+     * 20/11. Soma em `transpor`, que é apresentação: a nota continua sendo a que é, e a resposta
+     * continua sendo a casa onde ela mora de verdade.
+     */
+    ...ESCUTA_ACIMA(ctx, s => s.instrumento === 'baixo'),
   ],
-  defaults: { direcao: 'identificar', intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'] },
+  defaults: { direcao: 'identificar', intervalos: ['m2', 'M2', 'm3', 'M3', 'J4', 'J5', 'm6', 'M6', 'J8'], ...ESCUTA_DEFAULTS },
   defaultsDo: ctx => ({ instrumento: bracoDoPerfil(ctx) }),
   make(s, ctx) {
     const tuning = tuningOf(s, ctx);

@@ -116,7 +116,7 @@ describe('a mesma instância em vários grupos', () => {
    * A lista é explícita de propósito: item novo que queira `superficie` tem de entrar aqui, e
    * entrar aqui obriga a responder "o estímulo deste item é som?".
    */
-  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido', 'ouvido-intervalo'];
+  const SUPERFICIE_E_PARAMETRO = ['melodia-de-ouvido', 'ouvido-intervalo', 'ouvido-intervalo-harmonico'];
 
   it('a superfície só é parâmetro onde o estímulo é som', () => {
     for (const item of ITEMS) {
@@ -186,6 +186,9 @@ describe('o que está em rascunho nos grupos', () => {
       // "Ouvido", desde 09/11 — entrou no grupo com o aval dele, e segue em rascunho
       'melodia-de-ouvido',
       'ouvido-campo',
+      // O intervalo harmônico virou item em 20/11 (decisão dele). O conteúdo não é novo — era o
+      // modo `juntas` do melódico —, mas o item é, e item novo nasce rascunho (decisão 91).
+      'ouvido-intervalo-harmonico',
       'relacoes-melodia-harmonia',
       'subdivisao-alternada',
       // O `mapa-do-braco` e a `tonica-de-ouvido` saíram desta lista em 19/11: o Paulo revisou os

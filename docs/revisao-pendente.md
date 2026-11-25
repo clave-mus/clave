@@ -105,6 +105,95 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Aproximações cromáticas na melodia (25/11/2026)
+
+Parâmetro novo do `melodia-de-ouvido`, do seu pedido: *"tanto entre notas, como entre o 4 e o 5,
+como se aproximando de uma nota, como fazendo um ♭2-1"*. Os três casos são o mesmo mecanismo — uma
+nota a meio tom de uma nota da escala, imediatamente antes dela.
+
+| o quê | confira |
+|---|---|
+| **a cromática substitui, não acrescenta** | pedindo cinco notas com duas cromáticas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **resolvendo × soltas** | resolvendo é a definição estrita (cai no alvo a meio tom); soltas é outro som, a nota alterada sem destino. Dois atalhos, um para cada |
+| **nunca duas coladas, nunca a primeira** | duas cromáticas seguidas viram cromatismo, e começar fora da escala tira a referência antes de a melodia dizer onde está |
+| ⚠️ **a grafia na pauta** | audiando, a cromática aparece escrita, e quem decide a grafia é a tonalidade: em dó maior o pc 3 sai **Mi♭**. Subindo para o Mi, o certo musical seria **Ré♯**. A regra "grafia pela tonalidade" é antiga e vale em todo o resto do app — mudar para "grafia pela direção da aproximação" é decisão sua, e vale só aqui |
+
+### Montar digitação de modo no braço (25/11/2026)
+
+Modo novo do `escala-no-instrumento`, decidido com ele em 25/11 (Q1): no braço, "ler o nome e
+marcar as notas" virou **montar uma digitação**, com dezenas de respostas certas.
+
+| o quê | confira |
+|---|---|
+| **o veredito** | ele é regra, não lista: classes do modo · nenhuma repetida · subindo em ordem de grau · cabendo no vão da mão. Confira se o vão padrão (4 casas) é o certo para o seu baixo, e se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
+| **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
+| **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
+| **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |
+| **2 a 5 desenhos na rodada** | eles chegam numa pergunta só: cada sete posições são um desenho, e a conferência exige que todos sejam válidos **e diferentes entre si**. Confira se montar cinco seguidos cansa ou se é o treino certo |
+| **o botão de sugestão** | aparece depois de responder, nunca antes (antes seria pedir a resposta). Ele exclui o que você acabou de montar e as sugestões já vistas **por FORMA** — o mesmo desenho uma oitava acima não conta como novo (você relatou em 25/11) —, numera as notas na ordem de subida, e avisa quando acabaram |
+| **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |
+| **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
+
+### Escala no instrumento (20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `escala-no-instrumento` | **Se o desenho é reconhecível.** O nome é seu; o resto pede o seu ouvido e o seu olho. No piano, a escala acende uma oitava com a **tônica rotulada `1`** — sem isso dó maior e ré dórico são a mesma figura, e eu preferi marcar a tônica a tirar os modos do sorteio. No braço, acendem **todas as posições da escala na região**, com a tônica no acento: confira se isso se lê como escala ou como mancha, principalmente com a região inteira (0–12). Confira também que **desenhar** só existe no piano — no braço eu precisaria de um motor de digitação de escala que não existe, e inventar um seria decisão musical sua |
+
+### Graus no braço, com metrônomo (20/11/2026)
+
+Modo novo do `no-instrumento`, que você escolheu como casa dele (a opção 1 das três). Não é item
+novo, então nada nasceu rascunho — mas muda o que o exercício pede:
+
+| o quê | confira |
+|---|---|
+| **o alvo pode ser um grau**, e aí são as **doze** classes contra a tônica escolhida | se incluir os alterados é certo (o seu exemplo era `♭3`, que é alterado em maior) ou se os sete da tonalidade bastariam |
+| **metrônomo em vez de cronômetro**: 60 bpm e 2 compassos em cada alvo por padrão, com a revelação durando **um compasso** | se dois compassos dão tempo de tocar o grau em todas as posições de uma região de cinco casas — num baixo são 2 ou 3 posições, num violão até 5 |
+| **a região passou a valer**, e o padrão dela aqui é **até a 5ª casa** | é diferente dos outros itens de braço, que abrem o braço inteiro. Aqui a tarefa é tocar em TODAS as posições da região, e o braço inteiro viraria maratona |
+| **a tônica se escolhe na tela** | nos outros itens ela é parâmetro de prática; esta é tarefa de tela própria, sem painel, então ela oferece a sua — como o Relações e o Acompanhamentos já fazem |
+
+### O modo quiz da relação melodia-harmonia (20/11/2026)
+
+Não são itens novos — são **modos** de `ouvido-campo` e `ouvido-celulas`, e por isso nada nasceu
+rascunho. Mas cada um muda o que o exercício pede, e a revisão musical é sua:
+
+| onde | o quê | confira |
+|---|---|---|
+| `ouvido-campo` | **nota segurada sobre o acorde**, com posição (por cima · no meio · por baixo) | se reconhecer o grau **através** da nota parada é difícil na medida certa; se "no meio" se ouve como nota ou some dentro do acorde; e se por baixo, com o acorde subindo de oitava para abrir espaço, ainda soa como o mesmo exercício |
+| `ouvido-celulas` | **o par** (que acorde + que graus) e **a relação** (`♭7`, `5`) | se o par com dois acordes é a porta de entrada certa — você escreveu que começar com poucos graus é o recomendado —, e se a relação sozinha é mesmo o degrau do meio entre os dois |
+| os dois | **os nomes dos dez atalhos novos** | a redação é sua; eu escrevi uma primeira versão descritiva |
+| `ouvido-celulas` | **o nome do item** | ele deixou de ser "células de graus" faz tempo: aceita uma nota só, acorde qualquer do campo, e agora pergunta o acorde. O documento de 07/11 já anotava que o nome ia ficar para trás |
+
+### A oitava de escuta nas superfícies de baixo (20/11/2026)
+
+Não é item novo — é **parâmetro** de cinco itens, e a revisão musical é sua. Pedido seu: *"nos
+exercícios com superfície de baixo, sempre dê pra escolher ouvir as notas uma ou duas oitavas
+acima"*. Entrou em `ouvido-tecla`, `ouvido-intervalo`, `ouvido-intervalo-harmonico`,
+`melodia-de-ouvido`, `nota-no-instrumento` e `intervalo-no-instrumento`, sempre escondido onde a
+superfície não é braço de baixo.
+
+**Duas coisas para você decidir:**
+
+1. **O padrão é "na altura real".** Pode ser que, no baixo, uma oitava acima devesse ser o padrão —
+   você ligou o equivalente por padrão no `mapa-do-braco` em 15/11 (ver abaixo).
+2. **No `mapa-do-braco` o parâmetro NÃO entrou**, porque ali já existe o `somAudivel`, que você
+   revisou em 15/11: um interruptor que sobe o arpejo inteiro por oitavas até passar dos 300 Hz que
+   um alto-falante de celular reproduz, ligado por padrão no baixo. Ele resolve o mesmo problema de
+   forma automática. Pôr os dois seria dois controles para uma coisa — se você preferir a escolha
+   explícita de uma ou duas oitavas lá também, ele vira o parâmetro novo e o interruptor sai.
+
+### Intervalo harmônico, item próprio (20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `ouvido-intervalo-harmonico` | **Se a divisão rendeu o que você esperava dela.** Era o modo `juntas` do `ouvido-intervalo`, e agora é item, com os mesmos parâmetros e o mesmo gerador — o que mudou é que ele se acha no catálogo pelo nome e tem atalhos próprios. Confira: se o **timbre padrão** serve (você escreveu *"synths de timbre limpo e bom sustain pra segurar o intervalo um pouco"*, e hoje o padrão é o timbre do perfil, que no seu caso é baixo); se os três modos de resposta — nomear, apontar as notas, audiar as notas — fazem sentido todos aqui; e se **três notas** ainda é intervalo ou já é acorde (a mesma dúvida que estava anotada no melódico) |
+
+### Explorar padrões pela escala (`PE`, 20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `explorar-padroes-escala` | **Se a escada é mesmo o gesto certo.** O padrão se escreve clicando degrau por degrau, e os deslocamentos saem do primeiro clique — então clicar 3 · 5 · 4 · 7 escreve o mesmo desenho que 1 · 3 · 2 · 5. Confira se isso é óbvio usando, ou se falta a tela dizer. Confira também: o **piso em dó3**, que é onde o padrão soa (com salto de ±2 e seis notas ele chega perto do dó5); o **intervalo entre as notas** ao apertar uma posição (420 ms, para dar tempo de ouvir sem arrastar); e se a **pentatônica maior como padrão** continua sendo a escala de entrada certa. A exploração sai sem braço virtual e sem metrônomo, as duas por sua decisão |
+
 ### Mãos livres (`F6-1`)
 
 | Id | O que só você confere |
@@ -116,12 +205,6 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 | Id | O que só você confere |
 |---|---|
 | `no-instrumento` | **se o exercício serve.** Ele é a única coisa no app que pede para tocar no braço de verdade — mostra a nota, espera, revela **todas** as casas onde ela existe na faixa inteira (X8, 06/11/2026: antes marcava uma só, sorteada), e termina na autoavaliação. O app **não ouve**, e por isso o que ele consegue afirmar é pouco: que você praticou, e o que você achou de si. Confira os tempos padrão de espera (8 s) e de exibição da resposta (4 s), e se "ouvir a nota antes" ajuda ou entrega demais |
-
-### Audiar (`X3`, revisão de 04/11/2026)
-
-| Id | O que só você confere |
-|---|---|
-| `audiar` | **o nome do item e dos dois estímulos** — ficou em aberto de propósito (👤 na tarefa `RV`). Confira também os textos do enunciado (`audiar.askInterval`/`askScale`/`askChord`/`askDegrees`), os pools de intervalos/escalas/acordes sorteados (razoáveis para um rascunho, não curados), e se a autoavaliação por rodada — diferente de todo o resto do catálogo, que pergunta só ao fim da etapa — não cansa antes do fim de uma sessão de 8 minutos |
 
 ### Relações entre melodia e harmonia (`MH`, 07/11/2026)
 

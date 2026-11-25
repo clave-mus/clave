@@ -39,7 +39,7 @@ import { CADENCIAS, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 export const reconhecerPadroesEscala: CatalogItem = {
   id: 'reconhecer-padroes-escala',
   objetos: ['escalas', 'melodia'], tarefas: ['ouvir'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_degrees'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],

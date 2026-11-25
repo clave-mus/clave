@@ -1,4 +1,4 @@
-import { ALL_SCALES, CLEFS, arr, buildScale, midi, notaGrafada, noteName, optionsWith, pcPermitido, pick, pickClef, plain, quintasDaTonalidade, scaleName, shuffle } from '../helpers';
+import { ALL_SCALES, CLEFS, arr, assinaturaDaEscala, buildScale, midi, notaGrafada, noteName, optionsWith, pcPermitido, pick, pickClef, plain, quintasDaTonalidade, scaleName, shuffle } from '../helpers';
 import type { MessageKey, Note, ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -6,7 +6,7 @@ import type { CatalogItem } from '../types';
 export const pautaEscala: CatalogItem = {
   id: 'pauta-escala',
   objetos: ['escalas', 'notacao'], tarefas: ['ler'],
-  primaryModule: 'theory', skillTags: ['theory.scale_identification', 'notation.pitch_reading'],
+  primaryModule: 'leitura', skillTags: ['theory.scale_identification', 'notation.pitch_reading'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'material'],
@@ -50,7 +50,23 @@ export const pautaEscala: CatalogItem = {
      * os vizinhos de `ALL_SCALES`. É a tensão consciente com a regra de "distrator que o gerador
      * poderia ter produzido" — aqui vale menos que não entregar a resposta de graça.
      */
-    const outros = shuffle([...types.filter(t => t !== type), ...ALL_SCALES.filter(t => t !== type && !types.includes(t))]);
+    /**
+     * ⚠️ **Distrator com o mesmo desenho sai da lista** (20/11/2026). O teste do
+     * `escala-no-instrumento` achou o par: **as duas melódicas sobem iguais**, e esta pauta desenha
+     * a subida — então "Lá menor melódica (clássica)" e "(jazz)" apareciam como duas alternativas
+     * para uma figura só. O defeito é daqui também, e a correção é a mesma linha.
+     */
+    const vistas = new Set([assinaturaDaEscala(tonic, type)]);
+    const inedita = (t: ScaleId) => {
+      const a = assinaturaDaEscala(tonic, t);
+      if (vistas.has(a)) return false;
+      vistas.add(a);
+      return true;
+    };
+    const outros = shuffle([
+      ...types.filter(t => t !== type),
+      ...ALL_SCALES.filter(t => t !== type && !types.includes(t)),
+    ]).filter(inedita);
     const pool = [type, ...outros.slice(0, 5)].map(t => name(tonic, t));
     const correct = name(tonic, type);
     return {

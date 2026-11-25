@@ -125,7 +125,7 @@ export default function Ritmo({ settings: daEtapa }: ScreenProps = {}) {
 
   const ex = history[idx];
   const m = METERS[ex.meter];
-  useToolLog('ritmo', 'Leitura rítmica', 'perception.rhythmic', true, { settings: { bpm, compasso: settings.meter } });
+  useToolLog('ritmo', 'Leitura rítmica', 'leitura', true, { settings: { bpm, compasso: settings.meter } });
 
   const stop = useCallback(() => {
     clock.current?.stop();

@@ -6,9 +6,8 @@
 //
 // `tecnica` é `tarefa`, não `ambiente`: ela termina quando a pessoa se autoavalia (F6-5).
 // Título e descrição ficam em tools.<id> nos textos de cada idioma.
+import { FRETS } from './helpers';
 import { OBJETOS_DE_BOLSO, PENSAR } from './maos-livres';
-import { ESCALAS_GRAUS } from './items/audiar';
-import { arr, scaleName } from './helpers';
 import { PRESETS } from '../theory/rhythm-gen';
 import { LEGADO, RASCUNHO } from './publicacao';
 import type { MessageKey } from '../i18n';
@@ -22,7 +21,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'metronomo', kind: 'ambiente',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.triplets'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/common').then(m => ({ default: m.Metronome })),
@@ -37,7 +36,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'maos-livres', kind: 'ambiente', semTela: true,
     publicacao: RASCUNHO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['intervalos', 'acordes', 'escalas', 'notas'], tarefas: ['ouvir'],
-    primaryModule: 'perception.melodic',
+    primaryModule: 'ouvido',
     skillTags: ['ear.interval_identification', 'ear.chord_quality', 'ear.scale_quality', 'ear.pitch_identification'],
     contentTags: ['interval.simple', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor', 'scale.modes'],
     // **Tem configuração declarada**, ao contrário dos outros ambientes, e por um motivo concreto: a
@@ -69,66 +68,53 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'no-instrumento', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['notas'], tarefas: ['tocar'],
-    primaryModule: 'theory', skillTags: ['fretboard.note_finding'],
+    primaryModule: 'instrumento', skillTags: ['fretboard.note_finding'],
     contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.guitar', 'instrument.bass'],
     settings: ctx => [
-      { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1, format: v => `${v} s` },
-      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1, format: v => `${v} s` },
+      /**
+       * **O alvo: uma nota ou um grau** (decisão dele em 20/11, escolhendo este item como casa do
+       * exercício que ele descreveu em *Mapear o braço · Graus no braço*).
+       *
+       * Com `grau`, a tela mostra `♭3` e a pessoa toca aquele grau da tonalidade em vigor em todas
+       * as posições da região. É o mesmo exercício do item — mostrar um alvo, tocar no braço de
+       * verdade, se autoavaliar —, trocando o que se mostra: nome de nota exige saber onde ela
+       * está, grau exige saber onde ela está **e** o que ela é na tonalidade.
+       */
+      { id: 'alvo', label: ctx.t('onInstrument.target'), type: 'single', options: [
+        { id: 'nota', label: ctx.t('onInstrument.targetNote') },
+        { id: 'grau', label: ctx.t('onInstrument.targetDegree') },
+      ] },
+      /**
+       * **O compasso ou o cronômetro.** O desenho dele pede metrônomo lento e *"X compassos em cada
+       * grau"*; o item nasceu com segundos. Os dois ficam, porque medem coisas diferentes: segundos
+       * é "tempo para achar", compasso é "tocar dentro do tempo".
+       *
+       * Com metrônomo, a revelação dura **um compasso** — a 60 bpm são os mesmos 4 s do padrão
+       * antigo, e assim nada no ciclo sai do pulso.
+       */
+      { id: 'ritmo', label: ctx.t('onInstrument.pacing'), type: 'single', options: [
+        { id: 'segundos', label: ctx.t('onInstrument.pacingSeconds') },
+        { id: 'metronomo', label: ctx.t('onInstrument.pacingMetronome') },
+      ] },
+      { id: 'bpm', label: ctx.t('common.tempo'), type: 'range', min: 40, max: 120, step: 2,
+        format: v => `♩ = ${v}`, quando: s => s.ritmo === 'metronomo' },
+      { id: 'compassos', label: ctx.t('onInstrument.barsEach'), type: 'single',
+        quando: s => s.ritmo === 'metronomo',
+        options: ['1', '2', '4'].map(n => ({ id: n, label: n })) },
+      { id: 'esperar', label: ctx.t('onInstrument.wait'), type: 'range', min: 3, max: 20, step: 1,
+        format: v => `${v} s`, quando: s => s.ritmo !== 'metronomo' },
+      { id: 'mostrar', label: ctx.t('onInstrument.showFor'), type: 'range', min: 2, max: 15, step: 1,
+        format: v => `${v} s`, quando: s => s.ritmo !== 'metronomo' },
+      // A região do braço, com as mesmas opções dos itens de braço. **Até a 5ª casa por padrão**,
+      // como ele escreveu — e é diferente do padrão dos outros itens (braço inteiro), porque aqui a
+      // tarefa é tocar o grau em TODAS as posições da região: o braço inteiro seria maratona.
+      { ...FRETS(ctx) },
       { id: 'ouvirAntes', label: ctx.t('onInstrument.hearFirst'), type: 'toggle' },
       { id: 'mostrarBraco', label: ctx.t('onInstrument.showFretboard'), type: 'toggle' },
     ],
-    defaults: { esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
+    defaults: { alvo: 'nota', ritmo: 'segundos', bpm: 60, compassos: '2', casas: '0-5',
+      esperar: 8, mostrar: 4, ouvirAntes: true, mostrarBraco: true },
     screen: () => import('../tools/NoInstrumento'),
-  },
-  {
-    // X3 (06/11/2026). **Tarefa**, não série: igual ao `no-instrumento`, o app não ouve — mostra o
-    // alvo, espera o clique que revela, e confere com autoavaliação. A diferença daqui é que a
-    // autoavaliação é POR RODADA, não só ao fim da etapa (pedido do Paulo, para ver como fica) —
-    // `tools/Audiar.tsx` respeita `state.audiarAutoavaliar` para isso ser desligável.
-    //
-    // A geração mora em `items/audiar.ts`, porque o mãos-livres (F6-1) a usa também, sem tela.
-    id: 'audiar', kind: 'tarefa',
-    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
-    // Faltava declarar (achado em 09/11 pelo teste de `doTime`, ao pôr a audiação na rotina em dó
-    // maior): `items/audiar.ts` chama `tonicaNaRegiao`, que lê tonalidade E região. O item sempre
-    // respeitou as duas; só não avisava — e por isso o painel de prática não as oferecia aqui.
-    respeita: ['key', 'range'],
-    objetos: ['intervalos', 'escalas', 'acordes'], tarefas: ['audiar'],
-    primaryModule: 'perception.melodic', skillTags: ['ear.audiation'],
-    contentTags: ['interval.simple', 'scale.major', 'scale.minor', 'scale.modes', 'chord.triads', 'chord.sevenths'],
-    settings: ctx => [
-      {
-        id: 'estimulos', label: ctx.t('audiar.stimuli'), type: 'multi',
-        options: [
-          { id: 'referencia', label: ctx.t('audiar.stimulusReference') },
-          { id: 'graus', label: ctx.t('audiar.stimulusDegrees') },
-        ],
-      },
-      // Quantos graus a célula tem. Era 4, escrito no código.
-      { id: 'tamanho', label: ctx.t('audiar.cellSize'), type: 'single', quando: s => arr(s.estimulos, []).includes('graus'),
-        options: ['2', '3', '4', '5', '6'].map(n => ({ id: n, label: n })) },
-      // De que escalas os graus saem. Eram duas, escritas no código.
-      { id: 'escalas', label: ctx.t('audiar.degreeScales'), type: 'multi', quando: s => arr(s.estimulos, []).includes('graus'),
-        options: ESCALAS_GRAUS.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
-      /**
-       * O **pedal sempre o mesmo** (pedido do Paulo, 10/11/2026).
-       *
-       * Sem isto a tônica é sorteada a cada rodada, e o pedal muda de altura junto — o que faz
-       * sentido para treinar relatividade e atrapalha quem quer internalizar um centro só.
-       *
-       * `fixo` vale a rodada inteira da sessão: a tela sorteia uma vez e reusa.
-       */
-      { id: 'pedal', label: ctx.t('audiar.pedal'), type: 'single', options: [
-        { id: 'sorteado', label: ctx.t('audiar.pedalRandom') },
-        { id: 'fixo', label: ctx.t('audiar.pedalFixed') },
-      ] },
-      { id: 'drone', label: ctx.t('audiar.drone'), type: 'toggle' },
-    ],
-    defaults: {
-      estimulos: ['referencia', 'graus'], tamanho: '4',
-      escalas: ['maior', 'menor'], pedal: 'sorteado', drone: false,
-    },
-    screen: () => import('../tools/Audiar'),
   },
   {
     // MH (07/11/2026). **Tarefa**, não série: não há resposta a conferir — a pessoa explora como
@@ -142,7 +128,7 @@ export const AMBIENTES: CatalogItem[] = [
     // Nas DUAS percepções, a pedido do Paulo: a nota é melódica, o acorde embaixo é harmônico, e
     // o exercício é exatamente o encontro dos dois. `primaryModule` segue sendo a harmônica, que é
     // a que conta no histórico.
-    primaryModule: 'perception.harmonic', tambemEm: ['perception.melodic'],
+    primaryModule: 'ouvido',
     skillTags: ['ear.scale_degrees', 'theory.harmonic_field'],
     contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths', 'scale.major', 'scale.minor'],
     settings: ctx => [
@@ -161,34 +147,62 @@ export const AMBIENTES: CatalogItem[] = [
     screen: () => import('../tools/RelacoesMelodiaHarmonia'),
   },
   {
-    id: 'ambiente', kind: 'ambiente',
-    publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['escalas'], tarefas: ['cantar', 'tocar'],
-    primaryModule: 'perception.melodic', skillTags: ['ear.pitch_identification'], contentTags: ['key.major', 'key.minor'],
+    /**
+     * **Explorar padrões pela escala** — a metade de exploração do par de
+     * `docs/tarefas/PE-padroes-de-escala.md`. O exercício (`reconhecer-padroes-escala`) saiu
+     * primeiro, em 10/11, porque cabia no Player; esta é a peça com tela própria, e ela faz o que
+     * ele descreveu: *"o aluno arpeja o padrão começando no 1, depois no 2, e assim por diante,
+     * conferindo após solfejar. Ele faz isso até ficar confortável. Isso por si só já é um grande
+     * exercício"*.
+     *
+     * `tarefa` e não `serie`: termina quando a pessoa declara que ficou confortável, não quando o
+     * app conta N perguntas. E `settings` vazio de propósito — quem escolhe o padrão é a tela, e o
+     * laço com o exercício passa pelo `state` da navegação, não por configuração guardada.
+     */
+    id: 'explorar-padroes-escala', kind: 'tarefa',
+    publicacao: RASCUNHO, requires: {}, validation: ['self_report'], mobile: true,
+    objetos: ['escalas', 'melodia'], tarefas: ['cantar', 'tocar'],
+    primaryModule: 'ouvido', skillTags: ['ear.scale_degrees'],
+    contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic', 'scale.blues'],
     settings: noSettings, defaults: {},
-    screen: () => import('../tools/Ambiente'),
+    screen: () => import('../tools/PadroesDeEscala'),
   },
   {
+    /**
+     * **Backing e drone são um ambiente só** (decisão dele em 20/11). O que soa se escolhe por
+     * partes — drone, bateria, baixo, progressão — e o item herdou as declarações do `ambiente`:
+     * cantar entrou nas tarefas, e escalas nos objetos, porque é o que se faz contra um drone.
+     * `requires` fica como estava: os dois pediam instrumento, então a fusão não mexe nisso.
+     */
     id: 'backing', kind: 'ambiente',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
-    objetos: ['harmonia'], tarefas: ['tocar'],
-    primaryModule: 'perception.harmonic', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
+    objetos: ['harmonia', 'escalas'], tarefas: ['tocar', 'cantar'],
+    primaryModule: 'ouvido', skillTags: ['theory.harmonic_field'], contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Backing'),
   },
   {
-    id: 'leitura', kind: 'ambiente',
+    /**
+     * **Tarefa, e não ambiente** (decisão dele em 20/11, a Q10 da reorganização).
+     *
+     * O critério do projeto é **como termina e que prova gera**: ambiente termina quando a pessoa
+     * para e registra tempo; tarefa termina quando ela declara *consegui / com ajuda / preciso
+     * repetir*. Ler uma partitura gerada e tocá-la junto é isto — *"tu lê aquilo e batuca junto...
+     * é um exercício de certa forma"*. Eram ambiente porque ninguém tinha posto um veredito neles,
+     * não porque ler não fosse exercício.
+     */
+    id: 'leitura', kind: 'tarefa',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['notacao'], tarefas: ['ler'],
-    primaryModule: 'perception.melodic', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
+    primaryModule: 'leitura', skillTags: ['notation.pitch_reading'], contentTags: ['clef.treble', 'clef.bass', 'pitch.naturals'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Leitura'),
   },
   {
-    id: 'ritmo', kind: 'ambiente',
+    id: 'ritmo', kind: 'tarefa',
     publicacao: LEGADO, requires: {}, validation: ['none'], mobile: true,
     objetos: ['ritmo'], tarefas: ['ler'],
-    primaryModule: 'perception.rhythmic', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
+    primaryModule: 'leitura', skillTags: ['notation.rhythm_reading'], contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
     /**
      * **O atalho é o que a rotina consegue pedir.** Até 10/11/2026 este item declarava
      * `noSettings`, e toda a configuração dele morava dentro da tela. Isso tornava impossível a
@@ -211,7 +225,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'tecnica', kind: 'tarefa',
     publicacao: LEGADO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['motor'], tarefas: ['tocar'],
-    primaryModule: 'technique',
+    primaryModule: 'tecnica',
     skillTags: ['technique.fingering', 'technique.finger_independence', 'technique.string_crossing', 'technique.tempo_control'],
     contentTags: ['instrument.guitar', 'instrument.bass'],
     settings: noSettings, defaults: {},
@@ -229,7 +243,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'acento-deslocado', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),
@@ -238,7 +252,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'subdivisao-alternada', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo', 'motor'], tarefas: ['tocar'],
-    primaryModule: 'technique', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),
@@ -247,7 +261,7 @@ export const AMBIENTES: CatalogItem[] = [
     id: 'deslocamento-ritmico', kind: 'tarefa',
     publicacao: RASCUNHO, requires: { instrumento: true }, validation: ['self_report'], mobile: false,
     objetos: ['ritmo'], tarefas: ['tocar'],
-    primaryModule: 'perception.rhythmic', skillTags: ['technique.tempo_control'],
+    primaryModule: 'tecnica', skillTags: ['technique.tempo_control'],
     contentTags: ['rhythm.eighth', 'rhythm.triplets', 'rhythm.sixteenth', 'rhythm.rests'],
     settings: noSettings, defaults: {},
     screen: () => import('../tools/Cadencia'),

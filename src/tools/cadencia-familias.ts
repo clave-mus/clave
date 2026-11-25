@@ -64,29 +64,29 @@ function escolha(v: Valores) {
 
 export const FAMILIAS: Record<FamiliaId, Familia> = {
   'acento-deslocado': {
-    id: 'acento-deslocado', modulo: 'technique', padroes: { porTempo: '4', compassos: '2' },
+    id: 'acento-deslocado', modulo: 'ouvido', padroes: { porTempo: '4', compassos: '2' },
     controles: () => [{ id: 'porTempo', rotulo: 'cadence.perBeat', opcoes: SUBS([2, 3, 4]) }, COMPASSOS],
     plano: v => planoAcento(Number(um(v, 'porTempo', '4')), Number(um(v, 'compassos', '2'))),
   },
   'subdivisao-alternada': {
-    id: 'subdivisao-alternada', modulo: 'technique', padroes: { subs: ['2', '3', '4'], compassos: '2' },
+    id: 'subdivisao-alternada', modulo: 'ouvido', padroes: { subs: ['2', '3', '4'], compassos: '2' },
     controles: () => [{ id: 'subs', rotulo: 'cadence.subs', multi: true, opcoes: SUBS([1, 2, 3, 4]) }, COMPASSOS],
     problema: v => (varios(v, 'subs').length < 2 ? 'cadence.needTwo' : null),
     // sempre da mais lenta para a mais rápida, qualquer que seja a ordem em que foram marcadas
     plano: v => planoSubdivisao(varios(v, 'subs').map(Number).sort((a, b) => a - b), Number(um(v, 'compassos', '2'))),
   },
   'sustentar-e-cortar': {
-    id: 'sustentar-e-cortar', modulo: 'technique', padroes: { segurar: '2' },
+    id: 'sustentar-e-cortar', modulo: 'ouvido', padroes: { segurar: '2' },
     controles: () => [{ id: 'segurar', rotulo: 'cadence.holdFor', opcoes: numeros(['1', '2', '3']) }],
     plano: v => planoSustentar(Number(um(v, 'segurar', '2'))),
   },
   'legato-staccato': {
-    id: 'legato-staccato', modulo: 'technique', padroes: { compassos: '2' },
+    id: 'legato-staccato', modulo: 'ouvido', padroes: { compassos: '2' },
     controles: () => [COMPASSOS],
     plano: v => planoArticulacao(Number(um(v, 'compassos', '2'))),
   },
   'deslocamento-ritmico': {
-    id: 'deslocamento-ritmico', modulo: 'perception.rhythmic', padroes: { grade: '4', familia: '0' },
+    id: 'deslocamento-ritmico', modulo: 'ouvido', padroes: { grade: '4', familia: '0' },
     controles: v => {
       const { grade, todas } = escolha(v);
       return [

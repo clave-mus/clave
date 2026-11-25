@@ -140,6 +140,12 @@ Mas "correto" e "bom para estudar" não são a mesma coisa, e **quais grafias o 
 2. sortear a fundamental de modo a evitar dobrados (preferir a enarmonia que dá grafia simples);
 3. um parâmetro: "grafias difíceis — sim / não".
 
+> ## ✅ Decidido em 19/11/2026: **fica como está** (caminho 1)
+>
+> O Paulo: *"eu acho que a teoria manda e a gente deixa assim"*. Fá♯♯ em dó maior continua
+> aparecendo, porque é a grafia certa de um Si aumentado. **Não reabrir**: propor de novo evitar
+> dobrados é desperdiçar uma rodada de decisão dele.
+
 Nenhum deles é conserto; são três produtos diferentes. Fica registrado para uma conversa.
 
 ---

@@ -99,6 +99,46 @@
   --key-white: #f7f3ec;
   --key-black: #211e1c;
 
+  /* --- o braço também é um objeto físico, e tinha o MESMO defeito (Paulo, 20/11: *"mudar um pouco
+         as cores dos círculos metálicos do braço, pra que fiquem mais visíveis"*) ---
+
+     A madeira é escura nos dois temas, mas as marcas de casa usavam `--cream`, que é apelido de
+     `--ink` e **inverte**. Medido antes de mexer, contra a madeira `#3b2418`:
+
+     | marcas de casa | tema claro | tema escuro |
+     |----------------|-----------:|------------:|
+     | antes          |   1,08:1   |   2,81:1    |
+     | agora          |   5,40:1   |   5,40:1    |
+
+     No tema claro elas eram invisíveis — 1,08 é praticamente o tom da madeira. No escuro ficavam
+     abaixo dos 3:1 que valem para desenho. Agora a cor é fixa, como a das teclas do piano.
+
+     ⚠️ **O nome das cordas NÃO entra aqui**: ele mora à esquerda do braço, sobre o papel, e segue
+     `--cream` de propósito. Troquei por engano na primeira versão e ele sumiu no tema claro, branco
+     sobre branco — a medição estava certa e o fundo é que era outro. */
+  --fret-wood: #3b2418;
+  --fret-metal: #d8cfc0;   /* marcas de casa e pestana: metal e osso, nunca tinta de tema */
+  --fret-line: #a99f8c;    /* o traste. Já era fixo, e já media 5,53:1 — veio para cá por família */
+
+  /* As BOLINHAS que marcam nota no braço tinham o mesmo defeito, e pior: elas carregam informação.
+     Medido contra a madeira, com os tokens que os chamadores passavam:
+
+     | a bolinha      | tinta de antes    | claro | escuro |
+     |----------------|-------------------|------:|-------:|
+     | a nomear       | `--line`          | 11,04 |  1,00  |
+     | já nomeada     | `--accent-quiet`  | 11,48 |  1,09  |
+     | a da vez       | `--mu`            |  2,95 |  5,82  |
+     | errou          | `--err`           |  2,17 |  4,72  |
+
+     **No tema escuro, as duas primeiras sumiam**: 1,00 é literalmente a cor da madeira, e o arpejo
+     ficava com uma bolinha só à vista. No claro, a da vez e o erro ficavam abaixo de 3:1. Agora são
+     fixas, e `Fretboard` traduz a tinta do tema para a da madeira — ver a tabela lá. */
+  --fret-dot: #e8dfd0;        /* a nomear — 10,95:1 */
+  --fret-dot-done: #9c8b78;   /* já nomeada: presente, e visivelmente mais quieta — 4,39:1 */
+  --fret-dot-now: #f08a4b;    /* a da vez — 5,82:1 */
+  --fret-dot-err: #e2726a;    /* errou — 4,72:1 */
+  --fret-dot-alt: #e0b256;    /* a outra família (notas do acorde, no Acompanhamentos) — 7,35:1 */
+
   --bk: var(--ground);
   --bk-2: var(--surface);
   --bk-3: var(--raised);
@@ -499,6 +539,15 @@ select.sel {
 .staff-svg, .kbd-svg, .fret-svg, .rhythm-svg { width: 100%; height: auto; display: block; }
 .staff-svg { max-width: 560px; }
 .kbd-svg, .fret-svg { max-width: 760px; }
+/**
+ * O braço nunca passa de dois terços da altura da tela.
+ *
+ * Medido em 25/11, montando digitação de escala: com as cordas altas (o dobro do espaçamento, para
+ * o dedo acertar) e uma região curta de casas, o SVG escala pela LARGURA e estourava a altura — 408
+ * px num celular deitado de 375. `max-height` faz o desenho encaixar pelo lado que apertar, e o
+ * `preserveAspectRatio` do SVG centraliza o que sobra.
+ */
+.fret-svg { max-height: 66svh; margin-inline: auto; }
 .kbd-svg .key.white:hover { fill: var(--accent-quiet); }
 .kbd-svg .key.black:hover { fill: var(--rule-strong); }
 .fret-svg .fret-cell { cursor: pointer; }
@@ -1013,6 +1062,19 @@ select.sel {
  */
 .backing-faixa { background: var(--area-3); color: var(--on-area); padding: 20px; display: grid; gap: 16px; }
 .backing-faixa .eyebrow { color: var(--on-area); opacity: 0.78; }
+/**
+ * ⚠️ **Os chips dentro da faixa também precisam da tinta dela** — e isto foi metade do conserto que
+ * ficou faltando: a faixa e os cartões ganharam `--on-area` em 19/11, e os chips de levada e de
+ * timbre continuaram com `--ink-soft`, que segue o tema enquanto o azul fica parado. No tema escuro
+ * isso dá tinta clara sobre azul claro, e foi assim que ele mandou a foto: os não selecionados
+ * praticamente sumiam.
+ *
+ * O chip aceso fica como está — ele tem fundo de acento e tinta própria, e já lia nos dois temas.
+ */
+.backing-faixa .chip { color: var(--on-area); border-color: color-mix(in srgb, var(--on-area) 45%, transparent); }
+.backing-faixa .chip:hover:not(.on):not(:disabled) {
+  background: color-mix(in srgb, var(--on-area) 14%, transparent); color: var(--on-area);
+}
 /* O acorde do compasso: slot dentro da faixa. O aceso inverte (tinta da faixa como fundo). */
 .backing-compasso {
   border: 0; cursor: pointer; min-width: 84px; padding: 10px 12px; text-align: left; font: inherit;
@@ -1031,3 +1093,53 @@ select.sel {
 }
 /* O selecionado é o alvo da edição E o ponto de inserção: um filete sólido diz "é aqui". */
 .backing-compasso.sel, .backing-marca.sel { outline: 2px solid var(--on-area); outline-offset: 2px; opacity: 1; }
+
+/**
+ * **A faixa de compassos no celular** (medido em 19/11: o blues de 12 compassos dava 1556 px de
+ * altura numa tela de 375, e o compasso que soava saía de vista).
+ *
+ * Cartões menores e a cifra um pouco menor: com 84 px cabiam três por linha, com 68 cabem quatro, e
+ * doze compassos passam de quatro linhas para três. A rolagem até o que soa está no componente,
+ * porque depende de qual é — ver `scrollIntoView` em `Backing`.
+ */
+@media (max-width: 560px) {
+  .backing-faixa { padding: 14px; gap: 12px; }
+  .backing-compasso { min-width: 68px; padding: 8px 9px; }
+  .backing-compasso .cifra { font-size: 24px; }
+  .backing-compasso .roman { font-size: 12px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Explorar padrões pela escala (PE, 20/11/2026)
+
+   **A escada é vertical porque a escala é vertical.** A analogia é do Paulo, e o grau 1 fica
+   embaixo: subir na tela é subir de altura. É o contrário de uma fileira de chips, e é de propósito
+   — numa fileira horizontal "o desenho sobe" deixa de significar nada.
+
+   Cada degrau carrega a ORDEM dos cliques (`1 · 4` quando o desenho volta ao mesmo grau), porque o
+   padrão pode repetir grau e descer: sem a ordem, a escada mostraria um conjunto, não um caminho.
+   --------------------------------------------------------------------------- */
+.pde-escada { display: grid; gap: 4px; max-width: 320px; }
+.pde-degrau {
+  display: flex; align-items: center; gap: 10px; padding: 7px 12px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);
+  color: var(--ink); font: inherit; text-align: left;
+  transition: border-color .12s, background .12s;
+}
+.pde-degrau:hover:not(:disabled) { border-color: var(--rule-strong); background: var(--raised); }
+.pde-degrau.on { border-color: var(--accent); background: var(--accent-quiet); }
+.pde-degrau:disabled { opacity: .5; cursor: default; }
+.pde-grau { font-family: var(--display); font-weight: 620; font-size: 16px; min-width: 2ch; }
+/* A ordem em mono e tabular: `1 · 4` tem de alinhar com `2` na coluna de cima. */
+.pde-ordem {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.pde-escrito {
+  font-family: var(--mono); font-size: 15px; letter-spacing: .06em;
+  color: var(--ink-soft); font-variant-numeric: tabular-nums;
+}
+
+/* A casa ainda vazia de uma sequência com passos diferentes leva o rótulo do passo — é ela que
+   diz "agora escolha o acorde". Miúdo e apagado para não competir com o que já foi escolhido. */
+.seq-casa.rotulada { font-size: 12px; color: var(--ink-faint); font-family: var(--body); letter-spacing: .02em; }

@@ -30,6 +30,17 @@ export const REDIRECTS: Record<string, string> = {
 };
 
 /**
+ * **Itens aposentados que foram absorvidos por outro, e quem os absorveu.**
+ *
+ * Não é o mesmo que item apagado: aqui o endereço continua levando a algum lugar certo, porque o
+ * que o item fazia continua existindo. O `ambiente` entrou em 20/11, quando o drone virou um
+ * teclado dentro do `backing` e os dois viraram um ambiente só.
+ */
+export const ITENS_ABSORVIDOS: Record<string, string> = {
+  ambiente: 'backing',
+};
+
+/**
  * Para onde vai um endereço legado de item, **levando a query e o âncora junto**.
  *
  * O redirecionamento antigo reescrevia só o `pathname` e descartava `?...` e `#...`. Em silêncio:

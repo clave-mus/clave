@@ -38,14 +38,50 @@ interface Props {
    * o contexto fica e não há recorte nenhum.
    */
   foco?: readonly [number, number];
+  /**
+   * **Cordas com o dobro do espaçamento**, para o dedo no celular deitado.
+   *
+   * Medido em 25/11: com o espaçamento normal cada corda tem **24 px** de altura num celular
+   * deitado — metade de um alvo de toque confortável. Montar uma digitação de escala são sete
+   * toques certeiros, e ali 24 px erra. Com o dobro dá ~48 px, e quatro cordas ainda cabem nos
+   * 375 px de altura da tela deitada.
+   */
+  alto?: boolean;
 }
 
-const FW = 52;
-const GAP = 22;
+/**
+ * **O que cada tinta do tema vira SOBRE a madeira.**
+ *
+ * O braço é escuro nos dois temas, e as tintas que os chamadores passam (`--mu`, `--line`,
+ * `--accent-quiet`…) invertem com o tema — então metade delas sumia. Medido em 20/11: no tema
+ * escuro, "a nomear" e "já nomeada" ficavam a **1,00:1** da madeira, ou seja, invisíveis; no claro,
+ * "a da vez" e "errou" ficavam abaixo dos 3:1 que valem para desenho. Os números estão em
+ * `index.css`, junto dos tokens.
+ *
+ * A tradução mora **aqui**, e não nos oito chamadores, por um motivo: quem sabe que a superfície é
+ * madeira escura é este componente. Espalhar isso faria todo chamador novo reintroduzir o defeito —
+ * e foi exatamente assim que ele apareceu.
+ *
+ * Quem passar uma cor que não está na tabela recebe a cor como pediu: a tabela conserta o que
+ * conhece, não impõe paleta.
+ */
+const NA_MADEIRA: Record<string, string> = {
+  'var(--mu)': 'var(--fret-dot-now)',
+  'var(--ok)': 'var(--fret-dot-now)',   // `--ok` é apelido de `--accent`, a mesma tinta
+  'var(--err)': 'var(--fret-dot-err)',
+  'var(--line)': 'var(--fret-dot)',
+  'var(--accent-quiet)': 'var(--fret-dot-done)',
+  'var(--ve)': 'var(--fret-dot-alt)',
+};
+const naMadeira = (c: string | undefined) => (c ? NA_MADEIRA[c] ?? c : 'var(--fret-dot-now)');
 
-export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco }: Props) {
+const FW = 52;
+const GAP_BASE = 22;
+
+export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco, alto = false }: Props) {
   const t = useT();
   const n = tuning.length;
+  const GAP = alto ? GAP_BASE * 2 : GAP_BASE;
   const left = 50;  // espaço para o nome da corda à esquerda
   const top = 18;
   const frets = to - from;
@@ -59,8 +95,10 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
 
   return (
     <svg className="fret-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label ?? t('music.neck')}>
-      <rect x={left} y={top - 8} width={frets * FW} height={(n - 1) * GAP + 16} fill="#3b2418" />
-      {inlays.map(f => <circle key={f} cx={left + (f - from - 0.5) * FW} cy={top + ((n - 1) * GAP) / 2} r="5" fill="var(--cream)" opacity="0.35" />)}
+      <rect x={left} y={top - 8} width={frets * FW} height={(n - 1) * GAP + 16} fill="var(--fret-wood)" />
+      {/* As marcas de casa, em metal fixo. Eram `--cream` a 0,35 — que no tema claro resolvia para
+          tinta escura sobre madeira escura, 1,08:1: invisíveis. Ver a nota em `index.css`. */}
+      {inlays.map(f => <circle key={f} cx={left + (f - from - 0.5) * FW} cy={top + ((n - 1) * GAP) / 2} r="5.5" fill="var(--fret-metal)" opacity="0.7" />)}
       {/**
         * O véu sobre o que está FORA do foco — um retângulo de cada lado, na cor do papel.
         *
@@ -82,12 +120,19 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
              */
             fill="rgb(0 0 0)" opacity="0.6" pointerEvents="none" />
         ))}
-      {12 > from && 12 <= to && [0.3, 0.7].map(k => <circle key={k} cx={left + (12 - from - 0.5) * FW} cy={top + (n - 1) * GAP * k} r="5" fill="var(--cream)" opacity="0.35" />)}
+      {/* A casa 12 leva duas marcas, como num braço de verdade. */}
+      {12 > from && 12 <= to && [0.3, 0.7].map(k => <circle key={k} cx={left + (12 - from - 0.5) * FW} cy={top + (n - 1) * GAP * k} r="5.5" fill="var(--fret-metal)" opacity="0.7" />)}
       {Array.from({ length: frets + 1 }, (_, i) => (
-        <path key={i} d={`M${left + i * FW},${top - 8} V${top + (n - 1) * GAP + 8}`} stroke={i === 0 && from === 0 ? 'var(--cream)' : '#a99f8c'} strokeWidth={i === 0 && from === 0 ? 6 : 2} />
+        <path key={i} d={`M${left + i * FW},${top - 8} V${top + (n - 1) * GAP + 8}`}
+          stroke={i === 0 && from === 0 ? 'var(--fret-metal)' : 'var(--fret-line)'} strokeWidth={i === 0 && from === 0 ? 6 : 2} />
       ))}
       {/* O nome de cada corda solta, à esquerda. Sem ele é fácil se confundir sobre em que corda se
-          está — ainda mais no baixo de cinco e na guitarra, onde há duas cordas Mi. */}
+          está — ainda mais no baixo de cinco e na guitarra, onde há duas cordas Mi.
+          ⚠️ **Este fica em `--cream` de propósito**, ao contrário de tudo que é desenhado na
+          madeira: ele mora em `left - 32`, **fora** do braço, sobre o papel — e o papel inverte com
+          o tema. Pus `--fret-ink` aqui na primeira versão de 20/11 e o nome sumiu no tema claro,
+          branco sobre branco. Foi o screenshot que pegou; a medição eu tinha feito contra a
+          madeira errada. */}
       {tuning.map((aberta, s) => (
         <text key={`n${s}`} x={left - 32} y={yS(s) + 4} textAnchor="middle" fontSize="11" fontWeight="700"
           fill="var(--cream)" opacity={onlyString === undefined || onlyString === s ? 0.9 : 0.4} fontFamily="var(--body)">
@@ -109,8 +154,12 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
         const p = mod(tuning[m.s] + m.f, 12);
         return (
           <g key={i} pointerEvents="none">
-            <circle cx={xF(m.f)} cy={yS(m.s)} r="9.5" fill={m.color ?? 'var(--mu)'} stroke="var(--bk)" strokeWidth="1.5" />
-            {(m.label || showNames) && <text x={xF(m.f)} y={yS(m.s) + 3.6} textAnchor="middle" fontSize="9.5" fontWeight="700" fill="var(--bk)" fontFamily="var(--body)">{m.label ?? pcName(p, naming, false)}</text>}
+            {/* O contorno é escuro fixo, como a madeira: `--bk` inverte e no tema claro ele
+                virava um halo claro em volta da bolinha. */}
+            <circle cx={xF(m.f)} cy={yS(m.s)} r="9.5" fill={naMadeira(m.color)} stroke="var(--fret-wood)" strokeWidth="1.5" />
+            {/* O nome DENTRO da bolinha, em tinta fixa escura: a bolinha é clara nos dois temas
+                agora, e `--bk` é o papel, que no tema claro é quase branco — o nome sumia. */}
+            {(m.label || showNames) && <text x={xF(m.f)} y={yS(m.s) + 3.6} textAnchor="middle" fontSize="9.5" fontWeight="700" fill="var(--fret-wood)" fontFamily="var(--body)">{m.label ?? pcName(p, naming, false)}</text>}
           </g>
         );
       })}

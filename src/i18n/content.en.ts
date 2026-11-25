@@ -3,11 +3,11 @@ import type { Shape } from './index';
 
 const enContent: Shape<typeof ptContent> = {
   modules: {
-    theory: { name: 'Theory', short: 'Notation, scales, chords and the map of your instrument' },
-    technique: { name: 'Technique', short: 'Motor control and steadiness' },
-    'perception.melodic': { name: 'Melodic perception', short: 'Pitches, intervals and scales' },
-    'perception.harmonic': { name: 'Harmonic perception', short: 'Chords and sonorities' },
-    'perception.rhythmic': { name: 'Rhythmic perception', short: 'Pulse, note values and cells' },
+    ouvido: { name: 'Ear', short: 'Recognising what you hear' },
+    instrumento: { name: 'Mapping the instrument', short: 'Where every note lives on the neck and the keys' },
+    leitura: { name: 'Reading', short: 'From the written note to the sound' },
+    tecnica: { name: 'Technique', short: 'Motor control and evenness' },
+    teoria: { name: 'Theory', short: 'The names and the reasons' },
   },
   instruments: {
     piano: 'Piano / keyboard',

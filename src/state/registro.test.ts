@@ -9,7 +9,7 @@ import { DEFAULT_STATE, getState, registrarAtividade, setState } from './store';
 
 beforeEach(() => { setState(() => ({ ...DEFAULT_STATE })); });
 
-const base = { id: 'backing', title: 'Backing track', module: 'perception.harmonic' as const };
+const base = { id: 'backing', title: 'Backing track', module: 'ouvido' as const };
 
 describe('registrarAtividade', () => {
   it('a primeira gravação cria a entrada', () => {
@@ -78,7 +78,7 @@ describe('registrarAtividade', () => {
   });
 
   it('atividade antiga, sem `sessao`, convive com as novas', () => {
-    setState(s => ({ ...s, history: [{ at: 1, id: 'x', title: 'X', module: 'theory', seconds: 30 }] }));
+    setState(s => ({ ...s, history: [{ at: 1, id: 'x', title: 'X', module: 'teoria', seconds: 30 }] }));
     registrarAtividade({ ...base, sessao: 'a', seconds: 60 });
     expect(getState().history).toHaveLength(2);
   });

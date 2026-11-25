@@ -51,7 +51,7 @@ export const PORTAS: readonly Porta[] = [
   {
     id: 'ouvido',
     // Tudo o que tem etiqueta `ear.*`, mais o ambiente de cantar/tocar com referência.
-    itens: ['ouvido-intervalo', 'ouvido-acorde', 'tonica-de-ouvido', 'ouvido-campo', 'melodia-de-ouvido', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'audiar', 'maos-livres', 'relacoes-melodia-harmonia', 'ambiente'],
+    itens: ['ouvido-intervalo', 'ouvido-intervalo-harmonico', 'ouvido-acorde', 'tonica-de-ouvido', 'ouvido-campo', 'melodia-de-ouvido', 'ouvido-escala', 'ouvido-celulas', 'ouvido-tecla', 'ritmo-ouvido', 'maos-livres', 'relacoes-melodia-harmonia', 'backing'],
   },
   {
     id: 'harmonia',
@@ -84,7 +84,7 @@ export const PORTAS: readonly Porta[] = [
     id: 'improviso',
     // "O que prepara o improviso: escalas, arpejos, notas-alvo e vocabulário". Não há exercício de
     // improvisar, e o rótulo da porta é "Improvisar e solar" de propósito (decisão 80).
-    itens: ['ouvido-celulas', 'reconhecer-padroes-escala', 'ouvido-escala', 'pauta-escala', 'ambiente', 'backing', 'nota-no-instrumento'],
+    itens: ['ouvido-celulas', 'explorar-padroes-escala', 'reconhecer-padroes-escala', 'ouvido-escala', 'pauta-escala', 'escala-no-instrumento', 'backing', 'nota-no-instrumento'],
   },
   { id: 'comecar', itens: [], diagnostico: true },
 ];

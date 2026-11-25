@@ -21,10 +21,24 @@ export interface Presentation {
   chord: 'block' | 'arpeggio' | 'arpeggio-block';
   /** Andamento dos ritmos (contagem e ataques). */
   bpm: number;
+  /**
+   * **Semitons somados a tudo que soa** — e a nada do que se responde.
+   *
+   * Pedido dele em 20/11: *"nos exercícios com superfície de baixo, sempre dê pra escolher ouvir as
+   * notas uma ou duas oitavas acima"*. O braço de um baixo chega ao Mi1 (MIDI 28), e ali reconhecer
+   * intervalo é outra briga: o fone de celular quase não entrega aquela região, e cantar de volta
+   * pede uma voz que a maioria não tem.
+   *
+   * Mora na apresentação, e **não no gerador**, de propósito: a nota continua sendo a que é, a
+   * resposta continua sendo a posição real no braço, e o desenho continua mostrando onde ela mora.
+   * Só a altura em que ela chega ao ouvido muda. Por isso é `soPresentation`: trocar a oitava de
+   * escuta não sorteia pergunta nova.
+   */
+  transpor: number;
 }
 
 export const DEFAULT_PRESENTATION: Presentation = {
-  voice: 'piano', volume: 2, gap: 0.75, arp: 0, dur: 0.9, chord: 'block', bpm: 84,
+  voice: 'piano', volume: 2, gap: 0.75, arp: 0, dur: 0.9, chord: 'block', bpm: 84, transpor: 0,
 };
 
 /** Junta as camadas; as últimas valem mais. Campos ausentes ficam com o valor de baixo. */
@@ -37,7 +51,12 @@ export function resolvePresentation(layers: (Partial<Presentation> | undefined)[
   return out;
 }
 
-/** Linha do tempo das notas, em segundos a partir do começo: [midi, início][]. */
+/**
+ * Linha do tempo das notas, em segundos a partir do começo: [midi, início][].
+ *
+ * **`transpor` é somado aqui**, e não em `playContent`, para a soma ser mensurável: esta função
+ * devolve o que vai soar, e é por ela que os testes afirmam a altura.
+ */
 export function schedule(content: SoundContent, p: Presentation): { notes: [number, number][]; length: number } {
   const notes: [number, number][] = [];
   let t = 0;
@@ -57,11 +76,11 @@ export function schedule(content: SoundContent, p: Presentation): { notes: [numb
      */
     const arpeja = p.chord !== 'block' && (content.arpejaveis?.includes(g) ?? true);
     if (group.length > 1 && arpeja) {
-      group.forEach((m, i) => notes.push([m, t + i * p.gap]));
+      group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.gap]));
       t += group.length * p.gap;
       if (p.chord === 'arpeggio') return;
     }
-    group.forEach((m, i) => notes.push([m, t + i * p.arp]));
+    group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.arp]));
     t += p.gap;
   });
   return { notes, length: t };

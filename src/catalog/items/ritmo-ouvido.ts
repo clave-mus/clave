@@ -104,7 +104,7 @@ function permutacoes(xs: readonly CellId[]): CellId[][] {
 export const ritmoOuvido: CatalogItem = {
   id: 'ritmo-ouvido',
   objetos: ['ritmo'], tarefas: ['ouvir'],
-  primaryModule: 'perception.rhythmic', skillTags: ['ear.rhythm_recognition', 'notation.rhythm_reading'],
+  primaryModule: 'ouvido', skillTags: ['ear.rhythm_recognition', 'notation.rhythm_reading'],
   contentTags: ['rhythm.quarter', 'rhythm.eighth', 'rhythm.sixteenth', 'rhythm.rests', 'rhythm.syncopation', 'rhythm.triplets'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: [],

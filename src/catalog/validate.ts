@@ -3,6 +3,7 @@
 // pede), casas diferentes do braço que dão a mesma nota contam igual, e C7M, Cmaj7 e "C 7M" são a
 // mesma cifra.
 import { midi, mod, type ChordId } from '../theory/core';
+import { formaDaDigitacao, julgarDigitacao } from '../theory/digitacao-de-escala';
 import type { ChoiceOption, Expected, Response } from './types';
 
 const NATURAL = [0, 2, 4, 5, 7, 9, 11];
@@ -80,6 +81,31 @@ export function validate(expected: Expected, r: Response): boolean {
       if (r.kind !== 'chord') return false;
       const c = parseChordSymbol(r.text);
       return !!c && c.root === expected.root && c.quality === expected.quality;
+    }
+    /**
+     * **Digitação de escala**: o certo é a regra, não uma lista de posições — ver o `Expected`.
+     * Sem as posições não dá para julgar o vão da mão, e é por isso que a superfície que acumula
+     * manda `posicoes` junto das alturas.
+     */
+    case 'digitacao': {
+      if (r.kind !== 'pitches' || !r.posicoes?.length) return false;
+      const quantos = expected.desenhos ?? 1;
+      const porDesenho = r.posicoes.length / quantos;
+      if (!Number.isInteger(porDesenho)) return false;
+      const assinaturas = new Set<string>();
+      for (let k = 0; k < quantos; k++) {
+        const desenho = r.posicoes.slice(k * porDesenho, (k + 1) * porDesenho);
+        if (!julgarDigitacao(desenho, expected).certo) return false;
+        /**
+         * **Diferentes em FORMA** — é o ponto do modo: repetir o mesmo desenho não sai do shape, e
+         * o mesmo desenho uma oitava acima é o mesmo desenho (ele relatou isso em 25/11, sobre as
+         * sugestões; vale igual aqui).
+         */
+        const a = formaDaDigitacao(desenho);
+        if (assinaturas.has(a)) return false;
+        assinaturas.add(a);
+      }
+      return true;
     }
     case 'contorno': {
       if (r.kind !== 'pitches') return false;

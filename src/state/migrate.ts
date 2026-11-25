@@ -4,17 +4,33 @@
 import type { ModuleId } from '../catalog/taxonomy';
 import { PORTA_IDS } from '../catalog/portas';
 
-/** Módulo mais próximo de cada área antiga. É aproximado (ex.: "ouvido" inclui acordes, que hoje
- *  são Percepção harmônica): serve ao resumo dos últimos 30 dias, não a diagnóstico. */
+/**
+ * Módulo mais próximo de cada área antiga. É aproximado: serve ao resumo dos últimos 30 dias, não a
+ * diagnóstico.
+ *
+ * ⚠️ **Duas gerações de área, e a de 20/11/2026 reencontra a primeira.** A tabela de cima é a
+ * original (`ouvido`, `tecnica`, `mapeamento`…); a do meio foi a dos módulos de percepção; e a nova
+ * volta a nomes parecidos com os primeiros — porque foi disso que o Paulo gostou, e porque a divisão
+ * do meio não se sustentou na medição (ver `taxonomy.ts`). Quem tem histórico de qualquer uma das
+ * duas gerações continua vendo os minutos no lugar certo.
+ */
 const AREA_TO_MODULE: Record<string, ModuleId> = {
-  ouvido: 'perception.melodic',
-  tecnica: 'technique',
-  mapeamento: 'theory',
-  harmonia: 'theory',
-  ritmo: 'perception.rhythmic',
-  leitura: 'theory',
+  ouvido: 'ouvido',
+  tecnica: 'tecnica',
+  mapeamento: 'instrumento',
+  harmonia: 'ouvido',
+  ritmo: 'ouvido',
+  leitura: 'leitura',
 };
-const MODULE_IDS: string[] = ['theory', 'technique', 'perception.melodic', 'perception.harmonic', 'perception.rhythmic'];
+/** A geração do meio (F1-01b até 20/11/2026) → as áreas de hoje. */
+const MODULO_ANTIGO: Record<string, ModuleId> = {
+  theory: 'teoria',
+  technique: 'tecnica',
+  'perception.melodic': 'ouvido',
+  'perception.harmonic': 'ouvido',
+  'perception.rhythmic': 'ouvido',
+};
+const MODULE_IDS: string[] = ['ouvido', 'instrumento', 'leitura', 'tecnica', 'teoria'];
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -143,7 +159,10 @@ export function migrateSaved(raw: unknown): Obj {
   }
   if (Array.isArray(out.history)) {
     out.history = out.history.filter(isObj).map(({ area, ...h }) => {
-      const module = typeof h.module === 'string' && MODULE_IDS.includes(h.module) ? h.module : AREA_TO_MODULE[String(area)] ?? 'theory';
+      const antigo = typeof h.module === 'string' ? MODULO_ANTIGO[h.module] : undefined;
+      const module = typeof h.module === 'string' && MODULE_IDS.includes(h.module)
+        ? h.module
+        : antigo ?? AREA_TO_MODULE[String(area)] ?? 'ouvido';
       // o id fundido entra; o snapshot NÃO é remexido — ele é o registro do que aconteceu naquele dia,
       // e reescrever a configuração de uma prática passada seria falsear o histórico
       return {

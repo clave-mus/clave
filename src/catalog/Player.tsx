@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { atTime, now, pararTudo } from '../audio/engine';
 import { playContent, resolvePresentation, type Presentation } from '../audio/presentation';
+import { sugerirDigitacao, type PosicaoDaDigitacao } from '../theory/digitacao-de-escala';
 import { useContent } from '../data/localized';
 import { getState, recordAnswer, saveSettings, useStore } from '../state/store';
 import { sortearSemEco } from './sorteio';
@@ -324,7 +325,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       window.setTimeout(() => onDone?.({ correct: ns.correct, total: ns.total, seconds: Math.round((Date.now() - started.current) / 1000) }), ok ? 900 : 1800);
       return;
     }
-    if (ok) window.setTimeout(next, 850);
+    // Acertou: segue sozinho — a não ser que a pergunta diga que há o que fazer depois dela.
+    if (ok && !q.aguardaDepois) window.setTimeout(next, 850);
   }, [phase, score, def, q, soundOn, play, playParte, presentationFor, locale, settings, params, target, onDone, next]);
 
   // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
@@ -589,6 +591,18 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
   const v = q.visual;
   const sf = q.surface;
   /**
+   * **A sugestão de digitação** — *"daria também pro usuário pedir pro computador dar sugestões de
+   * desenhos diferentes do que ele já tinha feito, a fim de expandir a visão do braço"* (Paulo,
+   * 25/11).
+   *
+   * Só depois de responder: pedir sugestão antes seria pedir a resposta. Ela exclui o que a pessoa
+   * acabou de montar E as sugestões já vistas, então apertar de novo traz sempre um desenho novo —
+   * até acabarem os daquele modo naquela região, e aí a tela diz isso.
+   */
+  const [sugestoes, setSugestoes] = useState<PosicaoDaDigitacao[][]>([]);
+  const [semMais, setSemMais] = useState(false);
+  useEffect(() => { setSugestoes([]); setSemMais(false); }, [q]);
+  /**
    * Quantas alturas a superfície espera antes de valer. `1` (ou ausente) é o caminho de sempre:
    * um toque é a resposta.
    */
@@ -610,7 +624,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
   const tocar = (j: Junta) => (acumula
     ? onJuntar(j)
     : onAnswer({ kind: 'pitch', midi: j.m }, j.s !== undefined ? `${j.s}:${j.f}` : String(j.m)));
-  const enviar = () => onAnswer({ kind: 'pitches', midis: juntadas.map(j => j.m) }, juntadas.map(j => j.m).join(','));
+  /**
+   * ⚠️ **As POSIÇÕES vão junto das alturas** (25/11). Uma digitação de escala é onde se toca: duas
+   * cordas dão a mesma altura, e o vão da mão só se mede em casas. Sem isto, o julgamento da
+   * digitação não teria como recusar um desenho que não cabe na mão — e aceitaria calado.
+   */
+  const enviar = () => onAnswer(
+    {
+      kind: 'pitches',
+      midis: juntadas.map(j => j.m),
+      posicoes: juntadas.every(j => j.s !== undefined && j.f !== undefined)
+        ? juntadas.map(j => ({ corda: j.s!, casa: j.f! }))
+        : undefined,
+    },
+    juntadas.map(j => (j.s !== undefined ? `${j.s}:${j.f}` : j.m)).join(','),
+  );
   /**
    * **O controle de ouvir, em qualquer superfície.**
    *
@@ -715,13 +743,47 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       const strings = sf.onlyString !== undefined ? [sf.onlyString] : sf.tuning.map((_, i) => i);
       for (const s of strings) for (let f = sf.from; f <= sf.to; f++) if (ok({ kind: 'pitch', midi: sf.tuning[s] + f }) || (acumula && alturaEsperada(q.expected, sf.tuning[s] + f))) marks.push({ s, f, color: 'var(--ok)', label: '✓' });
     }
+    /**
+     * **A sugestão sai numa cor própria**, e numerada: ela não é o que a pessoa fez nem o gabarito
+     * dela — é um desenho a mais, para olhar. Numerar diz a ordem de subida, que é o que se decora.
+     */
+    const ultima = sugestoes[sugestoes.length - 1];
+    if (ultima) {
+      const ordenada = [...ultima].sort((a, b) => (sf.tuning[a.corda] + a.casa) - (sf.tuning[b.corda] + b.casa));
+      ordenada.forEach((p, i) => marks.push({ s: p.corda, f: p.casa, color: 'var(--ve)', label: String(i + 1) }));
+    }
+    const podeSugerir = q.expected.kind === 'digitacao' && phase !== 'ask';
+    const pedirSugestao = () => {
+      if (q.expected.kind !== 'digitacao') return;
+      /** O tamanho do desenho sai da pergunta: sete, ou oito fechando na oitava. */
+      const quantosDesenhos = q.expected.desenhos ?? 1;
+      const porDesenho = Math.max(1, Math.floor(juntadas.length / quantosDesenhos));
+      const feitas: PosicaoDaDigitacao[][] = [];
+      for (let k = 0; k + porDesenho <= juntadas.length; k += porDesenho) {
+        const grupo = juntadas.slice(k, k + porDesenho);
+        if (grupo.every(j => j.s !== undefined && j.f !== undefined)) feitas.push(grupo.map(j => ({ corda: j.s!, casa: j.f! })));
+      }
+      const nova = sugerirDigitacao(
+        { ...q.expected, maxCasa: sf.to, maxVaoCasas: q.expected.maxVaoCasas, limite: 80, oitava: porDesenho > 7 },
+        [...feitas, ...sugestoes],
+      );
+      if (nova) setSugestoes(v => [...v, nova]);
+      else setSemMais(true);
+    };
     return (
       <div className="stage dark">
         {fb}
         <div className="prompt">{q.prompt}</div>
         {ouvir}
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
+          alto={sf.alto}
           onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
+        {podeSugerir && (
+          <div className="row" style={{ justifyContent: 'center' }}>
+            <Btn small tone="ghost" onClick={pedirSugestao} disabled={semMais}>{t('scaleOnInstrument.suggest')}</Btn>
+            {semMais && <span className="muted" style={{ fontSize: 13 }}>{t('scaleOnInstrument.noMoreSuggestions')}</span>}
+          </div>
+        )}
         {acoes}
       </div>
     );
@@ -1297,9 +1359,28 @@ function SequenceArea({ sf, q, phase, picked, onAnswer }: {
 }) {
   const t = useT();
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
+  /**
+   * **A sequência zera a cada pergunta nova** — e não zerava.
+   *
+   * Defeito achado medindo os modos novos em 20/11, mas ele é antigo: este componente não remonta
+   * entre perguntas, então o que a pessoa escolheu na anterior continuava nas casas da seguinte. Em
+   * `ouvido-celulas` e em `reconhecer-padroes-escala`, que já respondiam por sequência, a pergunta
+   * nova nascia meio respondida.
+   *
+   * `q` é objeto novo a cada `make()`, então a identidade dele é o sinal certo: muda a pergunta,
+   * limpa as casas.
+   */
+  useEffect(() => { setEscolhidos([]); }, [q]);
   const sep = sf.separador ?? ' ';
-  const cheia = escolhidos.length >= sf.comprimento;
-  const porId = new Map(sf.options.map(o => [o.id, o]));
+  /**
+   * **Com `passos`, cada passo tem a sua paleta e o seu rótulo** — e o comprimento sai deles.
+   * Sem `passos`, tudo segue como antes: uma paleta só, repetida.
+   */
+  const passos = sf.passos;
+  const quantos = passos ? passos.length : sf.comprimento;
+  const cheia = escolhidos.length >= quantos;
+  const paleta = passos ? (passos[Math.min(escolhidos.length, passos.length - 1)]?.options ?? []) : sf.options;
+  const porId = new Map([...sf.options, ...(passos?.flatMap(p => p.options) ?? [])].map(o => [o.id, o]));
   const rotulo = (id: string) => porId.get(id)?.label ?? id;
   const certa = q.expected.kind === 'option' ? q.expected.id : '';
 
@@ -1308,17 +1389,21 @@ function SequenceArea({ sf, q, phase, picked, onAnswer }: {
       {/* As casas: o que já foi escolhido e o que falta. Mostrar as vazias é o que diz quantas
           notas a pessoa tem de informar sem precisar de texto explicando. */}
       <div className="seq-casas" role="status" aria-label={t('player.sequenceSoFar')}>
-        {Array.from({ length: sf.comprimento }, (_, i) => (
-          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''}`}>{escolhidos[i] ? rotulo(escolhidos[i]) : ''}</span>
+        {Array.from({ length: quantos }, (_, i) => (
+          /* Com passos, a casa vazia leva o rótulo do passo: ela deixa de ser um buraco e vira a
+             pergunta ("que acorde?"), que é o que o modo do par precisa dizer sem texto à parte. */
+          <span key={i} className={`seq-casa ${escolhidos[i] ? 'cheia' : ''} ${!escolhidos[i] && passos ? 'rotulada' : ''}`}>
+            {escolhidos[i] ? rotulo(escolhidos[i]) : (passos?.[i]?.label ?? '')}
+          </span>
         ))}
       </div>
 
       {phase === 'ask' ? (
         <>
           <div className="answers compact seq-paleta">
-            {sf.options.map(o => (
+            {paleta.map(o => (
               <button key={o.id} type="button" className="ans compact" disabled={cheia}
-                onClick={() => setEscolhidos(v => (v.length >= sf.comprimento ? v : [...v, o.id]))}>{o.label}</button>
+                onClick={() => setEscolhidos(v => (v.length >= quantos ? v : [...v, o.id]))}>{o.label}</button>
             ))}
           </div>
           <div className="row seq-acoes">

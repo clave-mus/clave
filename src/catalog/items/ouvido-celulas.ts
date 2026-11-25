@@ -1,5 +1,6 @@
-import { ALL_SCALES, arr, celulaDeGraus, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ALL_SCALES, arr, celulaDeGraus, mod, pick, plain, scaleDegreeLabels, scaleDegs, scaleName, shuffle, regiao, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { acomodarMelodiaEAcorde } from '../../theory/nota-sobre-acorde';
+import { GRAUS_CROMATICOS, grauDaFundamental } from '../../theory/campo-harmonico';
 import { CADENCIAS, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
@@ -15,7 +16,7 @@ const EM_DO_MAIOR = { key: { tonic: 0, mode: 'maior' } } as const;
 export const ouvidoCelulas: CatalogItem = {
   id: 'ouvido-celulas',
   objetos: ['escalas', 'melodia'], tarefas: ['ouvir'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_degrees'],
   contentTags: ['scale.major', 'scale.minor', 'scale.modes', 'scale.pentatonic'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
@@ -68,9 +69,24 @@ export const ouvidoCelulas: CatalogItem = {
       { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
       { id: 'nenhum', label: ctx.t('settings.contextNone') },
     ] },
+    /**
+     * **Os quatro modos de resposta**, e os dois últimos entraram em 20/11 com o "modo quiz" que
+     * ele desenhou para a relação melodia-harmonia.
+     *
+     * - `todos` e `alternativas`: que graus da escala soaram. A pergunta de sempre, e o acorde é
+     *   dito no enunciado;
+     * - `relacao`: **o que cada nota é SOBRE o acorde** (`♭7`, `5`, `♭3`…), que é o degrau do meio
+     *   que ele pediu — *"pedir só a relação sem pedir o grau"*. O acorde continua sendo dito;
+     * - `par`: **o grau do acorde E os graus das notas**, em dois passos. É o topo do exercício, nas
+     *   palavras dele: *"o objetivo é que no final o usuário ouça qualquer combinação de grau +
+     *   melodia e saiba o que está sendo tocado"*. Aqui o enunciado **não diz o acorde** — dizê-lo
+     *   responderia metade da pergunta.
+     */
     { id: 'resposta', label: ctx.t('settings.answerMode'), type: 'single', options: [
       { id: 'todos', label: ctx.t('settings.answerAll') },
       { id: 'alternativas', label: ctx.t('settings.answerFour') },
+      { id: 'relacao', label: ctx.t('settings.answerRelation') },
+      { id: 'par', label: ctx.t('settings.answerPair') },
     ] },
     /**
      * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
@@ -99,8 +115,47 @@ export const ouvidoCelulas: CatalogItem = {
     { id: 'sobre-o-v', nome: 'presets.celulaSobreOV', settings: { escala: 'maior', tamanho: '3', graus: ['5'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
     { id: 'acorde-sorteado', nome: 'presets.celulaAcordeSorteado', settings: { escala: 'maior', tamanho: '3', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'todos', contexto: 'ii-V-I' }, params: EM_DO_MAIOR },
     { id: 'menor', nome: 'presets.celulaMenor', settings: { escala: 'menor', tamanho: '1', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'todos' }, params: EM_DO_MAIOR },
+    /**
+     * **Os atalhos do modo quiz** (20/11), na ordem em que o exercício cresce:
+     *
+     * - **a relação** é o degrau do meio que ele pediu: o acorde é dito, e a pergunta é só o que a
+     *   nota é sobre ele (`♭7`, `5`);
+     * - **o par com dois acordes** é a recomendação do próprio documento dele — *"é recomendado
+     *   começar com uma restrição de poucos graus e notas, pois todas combinações seria
+     *   extremamente difícil"*. I e V, uma nota;
+     * - **o par no campo inteiro** é o topo: *"o objetivo é que no final o usuário ouça qualquer
+     *   combinação de grau + melodia e saiba o que está sendo tocado"*.
+     */
+    { id: 'relacao-com-o-acorde', nome: 'presets.celulaRelacao',
+      settings: { escala: 'maior', tamanho: '1', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'relacao', contexto: 'ii-V-I' }, params: EM_DO_MAIOR },
+    { id: 'par-dois-acordes', nome: 'presets.celulaParDois',
+      settings: { escala: 'maior', tamanho: '1', graus: ['1', '5'], tetrade: false, registro: 'acima', resposta: 'par', contexto: 'ii-V-I' }, params: EM_DO_MAIOR },
+    { id: 'par-campo-inteiro', nome: 'presets.celulaParCampo',
+      settings: { escala: 'maior', tamanho: '1', graus: ['1', '2', '3', '4', '5', '6', '7'], tetrade: false, registro: 'acima', resposta: 'par', contexto: 'ii-V-I' }, params: EM_DO_MAIOR },
+    /**
+     * **E os dois eixos antigos que não tinham atalho**: a melodia por BAIXO do acorde (ele quis
+     * manter a opção em 09/11) e as quatro alternativas, que é o modo mais fácil do item.
+     */
+    { id: 'melodia-por-baixo', nome: 'presets.celulaPorBaixo',
+      settings: { escala: 'maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'abaixo', resposta: 'todos' }, params: EM_DO_MAIOR },
+    { id: 'quatro-alternativas', nome: 'presets.celulaQuatro',
+      settings: { escala: 'maior', tamanho: '3', graus: ['1'], tetrade: false, registro: 'acima', resposta: 'alternativas' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.55},
+  /**
+   * **O modo do par pede mais de um acorde possível** — e uma escala de sete notas, que é onde o
+   * campo harmônico existe (numa pentatônica o acorde é a tríade de referência, sempre a mesma).
+   *
+   * Com um acorde só na lista, o primeiro passo teria um botão: a pessoa "acertaria" o acorde sem
+   * ouvir nada, e o exercício seria o de sempre com um clique a mais. Recusar e explicar é a
+   * decisão 13 — ligar os sete acordes por conta seria decidir no lugar de quem configurou.
+   */
+  problema(s, ctx) {
+    if (s.resposta !== 'par') return null;
+    const sete = scaleDegs((ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId).length === 7;
+    const quantos = arr(s.graus, ['1']).length;
+    return sete && quantos > 1 ? null : ctx.t('player.parPedeMaisAcordes');
+  },
   make(s, ctx) {
     const id = (ALL_SCALES.includes(s.escala as ScaleId) ? s.escala : 'penta-maior') as ScaleId;
     const degs = scaleDegreeLabels(id);
@@ -189,15 +244,43 @@ export const ouvidoCelulas: CatalogItem = {
       ? [...caberNaFaixa(cadenciaHarmonica(cadencia, tonic, ctx.params.key?.mode === 'menor' ? 'menor-harmonica' : 'maior', s.tetrade === true), regiao(ctx).lo, regiao(ctx).hi), []]
       : [];
 
+    /**
+     * **A relação de cada nota com o acorde** — `♭7`, `5`, `♭3`. É a mesma conta do Relações: a
+     * distância em semitons até a fundamental do acorde, reduzida à oitava. `grauDaFundamental` é o
+     * mesmo rotulador do campo harmônico, então o trítono sai `♭5` aqui e lá (decisão dele).
+     *
+     * A fundamental é `acorde[0]`: o acorde é empilhado a partir do grau, sem inversão.
+     */
+    const fundamental = acorde[0];
+    const relacoes = melodia.map(n => grauDaFundamental(mod(n - fundamental, 12)));
+    const rotuloDoAcorde = degs[grauDoAcorde - 1];
+    const noPar = s.resposta === 'par';
+    const naRelacao = s.resposta === 'relacao';
+    /**
+     * **No modo do par, o enunciado cala o acorde.** O `hint` de sempre diz "primeiro o acorde do
+     * grau X" — e dizê-lo ali responderia metade da pergunta. Foi o primeiro erro que eu cometi
+     * escrevendo este modo, e ele só aparece lendo a tela, não os testes.
+     */
+    const grausDoPasso = possiveis.map(g => plain(degs[g - 1]));
+    const passos = noPar
+      ? [{ label: ctx.t('quiz.stepChord'), options: grausDoPasso },
+        ...melodia.map((_, n) => ({ label: ctx.t('quiz.partNote', { n: n + 1 }), options: degs.slice(0, top + 1).map(plain) }))]
+      : naRelacao
+        ? melodia.map((_, n) => ({ label: ctx.t('quiz.partNote', { n: n + 1 }), options: GRAUS_CROMATICOS.map(plain) }))
+        : undefined;
+    const gabarito = noPar ? `${rotuloDoAcorde} ${key(c)}` : naRelacao ? relacoes.join(' ') : key(c);
+
     return {
-      prompt: ctx.t('quiz.cells'),
-      visual: { kind: 'ear', hint: ctx.t('quiz.cellsHint', { degree: degs[grauDoAcorde - 1] }) },
-      // Os dois modos entregam **o mesmo `expected`** — `{ kind: 'option', id: '1 3 5' }`. Por
+      prompt: ctx.t(noPar ? 'quiz.cellsPair' : naRelacao ? 'quiz.cellsRelation' : 'quiz.cells'),
+      visual: { kind: 'ear', hint: noPar ? undefined : ctx.t('quiz.cellsHint', { degree: rotuloDoAcorde }) },
+      // Os modos entregam **o mesmo tipo de `expected`** — `{ kind: 'option', id: '1 3 5' }`. Por
       // isso trocar de modo não mexe em validação, histórico nem distrator: muda só a tela.
       surface: s.resposta === 'alternativas'
         ? { kind: 'choices', options: shuffle([key(c), ...others]).map(plain) }
-        : { kind: 'sequence', comprimento: size, options: degs.slice(0, top + 1).map(plain) },
-      expected: { kind: 'option', id: key(c) },
+        : passos
+          ? { kind: 'sequence', comprimento: passos.length, options: [], passos }
+          : { kind: 'sequence', comprimento: size, options: degs.slice(0, top + 1).map(plain) },
+      expected: { kind: 'option', id: gabarito },
       sound: {
         // A cadência, o respiro (grupo vazio), e então o acorde com a melodia — nesta ordem.
         groups: [...antessala, acorde, ...melodia.map(n => [n])],
@@ -210,7 +293,7 @@ export const ouvidoCelulas: CatalogItem = {
           ...melodia.map((nota, n) => ({ id: `n${n}`, label: ctx.t('quiz.partNote', { n: n + 1 }), groups: [[nota]] })),
         ],
       },
-      autoplay: true, reveal: key(c), presentation: vozDaPergunta(s),
+      autoplay: true, reveal: gabarito, presentation: vozDaPergunta(s),
     };
   },
 };

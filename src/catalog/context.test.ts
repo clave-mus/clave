@@ -115,7 +115,19 @@ describe('o tipo de término de cada item está travado (decisão 5)', () => {
   // afirmar. Mudar o de um item muda o que a rotina pode dizer sobre ele, então muda aqui de
   // propósito, com a decisão na mão.
   const ambientes: Record<string, string> = {
-    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', audiar: 'tarefa', metronomo: 'ambiente', ambiente: 'ambiente', backing: 'ambiente', leitura: 'ambiente', ritmo: 'ambiente', tecnica: 'tarefa',
+    // `ambiente` saiu da lista em 20/11: ele e o `backing` viraram um ambiente só, e o drone
+    // agora é um teclado dentro do backing. O cronômetro com meta e o metrônomo foram com ele.
+    'maos-livres': 'ambiente', 'no-instrumento': 'tarefa', metronomo: 'ambiente', backing: 'ambiente',
+    /**
+     * ⚠️ **A leitura de notas e a de ritmo viraram `tarefa` em 20/11** (decisão dele). O critério
+     * é como termina: ambiente termina quando a pessoa para e registra tempo; tarefa termina quando
+     * ela declara *consegui / com ajuda / preciso repetir*. Ler a partitura gerada e tocá-la junto
+     * é isto. Eram ambiente porque ninguém tinha posto um veredito nelas.
+     */
+    leitura: 'tarefa', ritmo: 'tarefa', tecnica: 'tarefa',
+    // A exploração dos padrões é `tarefa` por desenho (PE §2): ela termina quando a pessoa declara
+    // que ficou confortável, e o par dela — `reconhecer-padroes-escala` — é a `serie`.
+    'explorar-padroes-escala': 'tarefa',
     // MH: explora como uma nota soa sobre cada acorde — e com o som da melodia desligado, canta.
     // Nos dois casos o app não ouve, então termina na autoavaliação.
     'relacoes-melodia-harmonia': 'tarefa',

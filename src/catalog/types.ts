@@ -8,6 +8,7 @@ import type { GlobalParams, ParametroDePratica, ParametrosDePratica } from './pa
 import type { Publicacao } from './publicacao';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
+import type { FamiliaBase } from '../theory/digitacoes';
 
 // Uma pergunta separa quatro coisas (C1):
 // - conteúdo musical: o que se pergunta (visual, sound);
@@ -57,10 +58,29 @@ export type Response =
    * melodia tocada de volta. A ordem é a de quem respondeu; se ela importa, quem decide é o
    * `Expected` (ver `contorno`).
    */
-  | { kind: 'pitches'; midis: number[] };
+  /**
+   * Várias alturas postas numa superfície que acumula. `posicoes` vem junto quando a superfície é
+   * um braço: duas cordas dão a mesma altura, e uma **digitação** é onde se toca, não só o que soa.
+   */
+  | { kind: 'pitches'; midis: number[]; posicoes?: { corda: number; casa: number }[] };
 
 /** O que está certo, em termos musicais. */
 export type Expected =
+  /**
+   * **Uma digitação de escala no braço** — e aqui o certo não é uma lista de posições, é uma
+   * REGRA: as classes do modo, nenhuma repetida, subindo em ordem de grau, dentro do vão da mão.
+   *
+   * Existem dezenas de digitações certas para o mesmo modo (medido: 22 para ré dórico num baixo,
+   * com vão de 4 casas), e foi por isso que esta conferência não pôde ser `contorno`. Quem julga é
+   * `theory/digitacao-de-escala.ts`.
+   */
+  | { kind: 'digitacao'; tonica: Note; familia: FamiliaBase; grau: number; tuning: readonly number[]; maxVaoCasas?: number;
+      /**
+       * Quantos desenhos **diferentes** a rodada pede (1 a 5, decisão dele em 25/11): *"seria legal
+       * pedir pro usuário escrever diversas digitações pra mesma escala. isso ajuda a sair do
+       * shape"*. As posições chegam em sequência, e cada sete formam um desenho.
+       */
+      desenhos?: number }
   | { kind: 'option'; id: string }
   /** Classe de altura: qualquer oitava, qualquer grafia (Dó♯ = Ré♭). */
   | { kind: 'pitchClass'; pc: number }
@@ -110,7 +130,19 @@ export type Surface =
    * Com `comprimento: 1` isto é só uma lista maior de botões, e nem precisaria de superfície
    * própria; com mais de um, a pessoa escolhe em ordem e o que entra é uma sequência.
    */
-  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string }
+  | { kind: 'sequence'; options: ChoiceOption[]; comprimento: number; separador?: string;
+      /**
+       * **Uma lista por passo**, quando os passos pedem coisas diferentes — e com um rótulo cada,
+       * porque sem ele a pessoa não sabe o que está escolhendo agora.
+       *
+       * Nasceu em 20/11, do modo "que acorde é, e que nota é por cima": o primeiro passo são os
+       * graus do campo e o segundo são os graus da escala. A lista única de antes dava os dois
+       * passos com a mesma paleta, e a paleta é metade do enunciado.
+       *
+       * Quando `passos` existe, é ele que manda: `comprimento` passa a ser o número de passos, e
+       * `options` serve só para quem precisa da união (a leitura dos rótulos na conferência).
+       */
+      passos?: { label: string; options: ChoiceOption[] }[] }
   /**
    * **Audiar e conferir**: não há resposta a conferir, só a pessoa dizendo como foi.
    *
@@ -138,7 +170,13 @@ export type Surface =
    * último toque. Meia resposta não é resposta.
    */
   | { kind: 'keyboard'; lo: number; hi: number; quantas?: number; apoio?: Apoio }
-  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number; apoio?: Apoio }
+  | { kind: 'fretboard'; tuning: readonly number[]; from: number; to: number; onlyString?: number; quantas?: number; apoio?: Apoio;
+      /**
+       * Cordas com o dobro do espaçamento. Medido em 25/11 num celular deitado: com o espaçamento
+       * normal cada corda tem **24 px** de altura — metade de um alvo de toque confortável. Montar
+       * uma digitação são sete toques certeiros, e aí 24 px é pouco.
+       */
+      alto?: boolean }
   /**
    * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
@@ -281,6 +319,14 @@ export interface ParteDoSom {
 
 export interface Question {
   prompt: string;
+  /**
+   * **Acertou e o Player NÃO avança sozinho.**
+   *
+   * Ele avança 850 ms depois de um acerto, e isso é bom quase sempre — menos quando a pergunta tem
+   * o que fazer DEPOIS de responder. Ele relatou em 25/11: *"quando acerto, não consigo clicar no
+   * botão de ver um desenho que eu não fiz"*. O botão estava lá; a tela é que já tinha ido embora.
+   */
+  aguardaDepois?: boolean;
   visual: Visual;
   surface: Surface;
   expected: Expected;

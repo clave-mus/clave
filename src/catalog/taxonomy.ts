@@ -56,12 +56,31 @@ export const TAREFAS = {
 } as const;
 export type TarefaId = keyof typeof TAREFAS;
 
+/**
+ * **As cinco áreas** — reorganizadas em 20/11/2026, com o Paulo, a partir das anotações antigas dele.
+ *
+ * O que havia: `theory` · `technique` · `perception.melodic` · `perception.harmonic` ·
+ * `perception.rhythmic`. Dois problemas, medidos antes de mexer:
+ *
+ * 1. **`theory` era um depósito**: onze itens que eram três coisas — cinco de leitura na pauta,
+ *    cinco de posição no instrumento e **um** de teoria de verdade;
+ * 2. **a divisão do ouvido não se sustentava**: três dos onze itens de percepção não cabiam limpo
+ *    de nenhum lado (grau de escala sobre um acorde, acorde que se responde cantando, nota sobre
+ *    harmonia). *"No fim das contas é tudo ouvido"*, e a medição concordou.
+ *
+ * O **ritmo foi dissolvido** em vez de virar área: leitura rítmica é leitura, groove é técnica, e
+ * identificar ritmo de ouvido é ouvido.
+ *
+ * ⚠️ A divisão por objeto não se perdeu: cada item declara `objetos` (notas, intervalos, acordes,
+ * melodia, harmonia…), e é por ali que a lista se filtra — sem fingir uma fronteira que a música
+ * não tem.
+ */
 export const MODULES = {
-  theory: 'Teoria: notação e símbolos, escalas, acordes, harmonia e o mapa das notas no instrumento.',
-  technique: 'Técnica: controle motor, coordenação, digitação, articulação e regularidade.',
-  'perception.melodic': 'Percepção melódica: alturas, intervalos, graus e escalas ouvidos em sequência.',
-  'perception.harmonic': 'Percepção harmônica: acordes e sonoridades ouvidos juntos.',
-  'perception.rhythmic': 'Percepção rítmica: pulso, figuras e células, ouvidos ou lidos para tocar.',
+  ouvido: 'Ouvido: reconhecer o que soa — alturas, intervalos, acordes, graus, melodias e ritmo.',
+  instrumento: 'Mapear o instrumento: onde cada nota, intervalo e acorde mora no braço ou no teclado.',
+  leitura: 'Leitura: da nota escrita ao som, e do ritmo escrito ao gesto.',
+  tecnica: 'Técnica: controle motor, coordenação, digitação, articulação e regularidade.',
+  teoria: 'Teoria: os nomes e as razões do que se toca — intervalos, armaduras, campos.',
 } as const;
 export type ModuleId = keyof typeof MODULES;
 // "Rotinas" não está aqui de propósito: é organização da prática, não módulo de habilidade.

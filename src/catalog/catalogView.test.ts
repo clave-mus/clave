@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MODULE_LIST } from '../data/modules';
 import { EXERCISES } from './catalog';
-import { catalogByModule } from './catalogView';
+import { ambientesDePratica, catalogByModule } from './catalogView';
 import { AMBIENTES } from './index';
 
 describe('catálogo por módulo', () => {
@@ -13,16 +13,29 @@ describe('catálogo por módulo', () => {
   });
   // Era "exatamente uma vez". Mudou em 09/11, quando `tambemEm` passou a deixar um item aparecer
   // em mais de uma área (ver taxonomy.ts) — mas só nas que ele DECLARA, nunca por acidente.
-  it('cada exercício e ferramenta aparece uma vez por área declarada, e em nenhuma outra', () => {
+  /**
+   * ⚠️ **Mudou em 20/11**: a área lista **séries e tarefas** — as duas são exercício, uma conferida
+   * pelo app e a outra por quem faz. **Ambiente saiu das áreas** e virou seção própria
+   * (`ambientesDePratica`), porque ele não tem veredito nenhum: liga, pratica, para.
+   */
+  it('cada exercício aparece uma vez por área declarada, e em nenhuma outra', () => {
     const count = (ids: string[]) => ids.reduce<Record<string, number>>((a, id) => ({ ...a, [id]: (a[id] ?? 0) + 1 }), {});
     const exercises = count(all.flatMap(e => e.exercises));
-    const tools = count(all.flatMap(e => e.tools));
-    expect(Object.keys(exercises).sort()).toEqual(EXERCISES.map(e => e.id).sort());
-    expect(Object.keys(tools).sort()).toEqual(AMBIENTES.map(t => t.id).sort());
-    for (const i of [...EXERCISES, ...AMBIENTES]) {
+    const tarefas = AMBIENTES.filter(a => a.kind === 'tarefa');
+    expect(Object.keys(exercises).sort()).toEqual([...EXERCISES, ...tarefas].map(e => e.id).sort());
+    for (const i of [...EXERCISES, ...tarefas]) {
       const esperado = 1 + (i.tambemEm?.length ?? 0);
-      expect(({ ...exercises, ...tools })[i.id], i.id).toBe(esperado);
+      expect(exercises[i.id], i.id).toBe(esperado);
     }
+    // e nenhuma área lista ferramenta
+    expect(all.flatMap(e => e.tools)).toEqual([]);
+  });
+
+  it('os ambientes são seção própria, e são só os que não têm veredito', () => {
+    const ids = ambientesDePratica();
+    expect(ids.sort()).toEqual(AMBIENTES.filter(a => a.kind === 'ambiente').map(a => a.id).sort());
+    // nenhum deles aparece dentro de área
+    for (const id of ids) expect(all.flatMap(e => [...e.exercises, ...e.tools])).not.toContain(id);
   });
 
   it('quem aparece em duas áreas aparece nas que declarou', () => {
@@ -34,18 +47,19 @@ describe('catálogo por módulo', () => {
       }
     }
   });
-  it('o filtro "sem instrumento" tira exercícios e ferramentas que precisam dele', () => {
+  it('o filtro "sem instrumento" tira exercícios e ambientes que precisam dele', () => {
     const mobile = catalogByModule({ mobileOnly: true });
-    mobile.flatMap(e => e.exercises).forEach(id => expect(EXERCISES.find(x => x.id === id)!.mobile).toBe(true));
-    mobile.flatMap(e => e.tools).forEach(id => expect(AMBIENTES.find(x => x.id === id)!.mobile).toBe(true));
-    expect(mobile.flatMap(e => e.tools)).not.toContain('backing'); // precisa do instrumento
+    const todos = [...EXERCISES, ...AMBIENTES];
+    mobile.flatMap(e => e.exercises).forEach(id => expect(todos.find(x => x.id === id)!.mobile, id).toBe(true));
+    ambientesDePratica({ mobileOnly: true }).forEach(id => expect(todos.find(x => x.id === id)!.mobile, id).toBe(true));
+    expect(ambientesDePratica({ mobileOnly: true })).not.toContain('backing'); // precisa do instrumento
   });
 
   // O portão está desligado até o beta (decisão 104), então o teste o LIGA de propósito: é o
   // comportamento do beta que precisa de guarda, e hoje ele não é o padrão.
   describe('o portão de publicação (decisão 91), ligado', () => {
     const visiveis = catalogByModule({ portao: true });
-    const ids = (e: typeof visiveis) => e.flatMap(m => [...m.exercises, ...m.tools]);
+    const ids = (e: typeof visiveis) => [...e.flatMap(m => m.exercises), ...ambientesDePratica({ portao: true })];
 
     it('quem usa o app não vê nenhum rascunho', () => {
       const rascunhos = [...EXERCISES, ...AMBIENTES].filter(i => (i.publicacao?.estado ?? 'rascunho') === 'rascunho').map(i => i.id);
@@ -67,9 +81,14 @@ describe('catálogo por módulo', () => {
 
   describe('o portão desligado (hoje)', () => {
     it('o catálogo inteiro aparece, inclusive os rascunhos', () => {
-      const ids = (e: ReturnType<typeof catalogByModule>) => e.flatMap(m => [...m.exercises, ...m.tools]);
-      const todos = [...EXERCISES, ...AMBIENTES].flatMap(i => Array(1 + (i.tambemEm?.length ?? 0)).fill(i.id));
-      expect(ids(catalogByModule()).sort()).toEqual(todos.sort());
+      // as áreas (exercício) mais a seção de ambientes dão o catálogo inteiro — nada se perde na
+      // separação de 20/11
+      const nasAreas = catalogByModule().flatMap(m => m.exercises);
+      const todos = [...EXERCISES, ...AMBIENTES.filter(a => a.kind === 'tarefa')]
+        .flatMap(i => Array(1 + (i.tambemEm?.length ?? 0)).fill(i.id));
+      expect(nasAreas.sort()).toEqual(todos.sort());
+      expect([...nasAreas, ...ambientesDePratica()].length).toBe(
+        [...EXERCISES, ...AMBIENTES].reduce((n, i) => n + 1 + (i.tambemEm?.length ?? 0), 0));
     });
   });
 });

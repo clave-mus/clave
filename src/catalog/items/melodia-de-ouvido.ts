@@ -1,7 +1,7 @@
 import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 import { grauDaFundamental } from '../../theory/campo-harmonico';
 import { MAX_NOTAS, MIN_NOTAS, SALTO_PADRAO, sortearMelodia } from '../../theory/melodia';
-import { GRAUS_ESCOLHIDOS, arr, casasDaAltura, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, arr, casasDaAltura, emBracoDeBaixo, clave, faixaDoBraco, grausDaTonalidade, mod, nomeNaTonalidade, notaGrafada, pcsDosGraus, plain, superficieDoPerfil, quintasDaTonalidade, regiao, tonicaNaRegiao, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Question, Surface } from '../types';
 
@@ -42,7 +42,7 @@ const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico
 export const melodiaDeOuvido: CatalogItem = {
   id: 'melodia-de-ouvido',
   objetos: ['melodia', 'notas'], tarefas: ['ouvir', 'audiar'],
-  primaryModule: 'perception.melodic', skillTags: ['ear.scale_degrees', 'ear.audiation'],
+  primaryModule: 'ouvido', skillTags: ['ear.scale_degrees', 'ear.audiation'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'key.major', 'key.minor'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range', 'material'],
@@ -82,6 +82,32 @@ export const melodiaDeOuvido: CatalogItem = {
       { id: 'pauta', label: ctx.t('settings.onStaff') },
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
+    /**
+     * **Aproximações cromáticas** — pedido dele em 25/11: *"tanto entre notas, como entre o 4 e o
+     * 5, como se aproximando de uma nota, como fazendo um ♭2-1"*.
+     *
+     * É uma CONTAGEM, e não uma frequência em porcento: "duas notas de fora numa melodia de cinco"
+     * se confere ouvindo, e "trinta por cento" não. A cromática **substitui** uma nota da escala —
+     * a quantidade de notas que você pediu continua sendo a que soa.
+     */
+    { id: 'cromaticas', label: ctx.t('settings.chromatics'), type: 'single', options: [
+      { id: '0', label: ctx.t('settings.chromaticsNone') },
+      { id: '1', label: '1' },
+      { id: '2', label: '2' },
+      { id: '3', label: '3' },
+    ] },
+    /**
+     * **Resolvendo ou soltas** — a outra metade da pergunta dele.
+     *
+     * Resolvendo é a definição estrita da aproximação: a nota de fora é sempre seguida do alvo, a
+     * meio tom. Soltas é outro som e outro exercício: a nota alterada aparece sem destino, e o
+     * ouvido tem de aceitá-la como cor em vez de como caminho.
+     */
+    { id: 'comoEntram', label: ctx.t('settings.chromaticsHow'), type: 'single', quando: s => s.cromaticas !== '0' && s.cromaticas !== undefined,
+      options: [
+        { id: 'resolvendo', label: ctx.t('settings.chromaticsResolve') },
+        { id: 'livres', label: ctx.t('settings.chromaticsLoose') },
+      ] },
     { id: 'salto', label: ctx.t('settings.maxLeap'), type: 'range', min: 1, max: 12, step: 1,
       format: v => ctx.t('settings.semitones', { n: String(v) }) },
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single', options: [
@@ -96,14 +122,21 @@ export const melodiaDeOuvido: CatalogItem = {
      * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
      */
     ...TIMBRE(ctx),
+    ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.superficie ?? superficieDoPerfil(ctx))),
   ],
-  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9, ...TIMBRE_DEFAULTS },
+  defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9,
+    cromaticas: '0', comoEntram: 'resolvendo', ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
     { id: 'tres', nome: 'presets.melodiaTres', settings: { estimulo: 'som', notas: 3, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'graus', nome: 'presets.melodiaGraus', settings: { estimulo: 'som', notas: 3, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'cinco', nome: 'presets.melodiaCinco', settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
+    // Os dois sons das cromáticas, um atalho cada: a que cai no alvo e a que fica solta.
+    { id: 'aproximacoes', nome: 'presets.melodiaAproximacoes',
+      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: '2', comoEntram: 'resolvendo' }, params: EM_DO_DIATONICO },
+    { id: 'alteradas-soltas', nome: 'presets.melodiaAlteradas',
+      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: '2', comoEntram: 'livres' }, params: EM_DO_DIATONICO },
     { id: 'audiar-graus', nome: 'presets.melodiaAudiarGraus', settings: { estimulo: 'escrito', notas: 4, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'audiar-pauta', nome: 'presets.melodiaAudiarPauta', settings: { estimulo: 'escrito', notas: 3, superficie: 'pauta', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
   ],
@@ -145,7 +178,12 @@ export const melodiaDeOuvido: CatalogItem = {
         ? { lo: Math.max(lo, alcance.lo), hi: Math.min(hi, alcance.hi) }
         : alcance)
       : { lo, hi };
-    const melodia = sortearMelodia({ pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo: faixa.lo, hi: faixa.hi, n, saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)) });
+    const melodia = sortearMelodia({
+      pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo: faixa.lo, hi: faixa.hi, n,
+      saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)),
+      cromaticas: Number(s.cromaticas ?? 0),
+      cromaticasSoltas: s.comoEntram === 'livres',
+    });
     const tonica = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
     const cadencia = CADENCIAS.find(c => c === s.contexto);
     // O contexto cabe na MESMA faixa da melodia: nada soa fora do que a superfície desenha.

@@ -105,7 +105,9 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       { porque: 'intervalos melódicos, subindo: a unidade de tudo',
         instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'sobe' }, EM_DO)] },
       { porque: 'os mesmos intervalos tocados juntos: sem ordem no tempo, o ouvido tem de ouvir a fusão',
-        instancias: [i('ouvido-intervalo', { intervalos: TODOS_OS_INTERVALOS, direcao: 'juntas' }, EM_DO)] },
+        // Harmônico virou item em 20/11: a etapa aponta para ele, e `direcao` saiu — lá ela não é
+        // configuração, é o que o item é.
+        instancias: [i('ouvido-intervalo-harmonico', { intervalos: TODOS_OS_INTERVALOS }, EM_DO)] },
       { porque: 'todas as qualidades de acorde, sobre a mesma fundamental: sobra a cor',
         instancias: [i('ouvido-acorde', { tipos: ALL_CHORDS, arpejo: true, duracao: 2 }, EM_DO)] },
       // Entrou em 12/11/2026, a pedido dele ("não tínhamos um exercício de reconhecer graus do
@@ -128,10 +130,17 @@ export const ROTINAS_DO_TIME: readonly RotinaDoTime[] = [
       // Pentatônica de quatro notas: o padrão do item, e o recorte que ele escolheu.
       { porque: 'o mesmo desenho começando em cada grau: onde ele começou desta vez?',
         instancias: [i('reconhecer-padroes-escala', { escala: 'penta-maior', tamanho: '4', contexto: 'triade' }, EM_DO)] },
-      // No fim, por decisão dele. É a única etapa em que ninguém confere nada: a pessoa canta e
-      // ela mesma julga. Depois de oito etapas de resposta certa e errada, fechar cantando é bom.
+      /**
+       * No fim, por decisão dele. É a única etapa em que ninguém confere nada: a pessoa canta e ela
+       * mesma julga. Depois de oito etapas de resposta certa e errada, fechar cantando é bom.
+       *
+       * ⚠️ **Era o item `audiar`, aposentado em 20/11.** O que ele fazia — dizer o nome e esperar a
+       * pessoa produzir o som por dentro — virou direção dos itens de ouvido, e aqui a etapa passou
+       * a ser a escala audiada **pelo nome**: mesmo gesto, mesmo julgamento, dentro do item que já
+       * tem o objeto.
+       */
       { porque: 'audiar: ouvir por dentro antes de conferir — e aqui quem julga é você',
-        instancias: [i('audiar', {}, EM_DO)] },
+        instancias: [i('ouvido-escala', { estimulo: 'escrito' }, EM_DO)] },
     ],
   },
   {

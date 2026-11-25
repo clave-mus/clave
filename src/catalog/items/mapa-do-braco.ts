@@ -53,7 +53,7 @@ const CASA_MAX = 17;
 export const mapaDoBraco: CatalogItem = {
   id: 'mapa-do-braco',
   objetos: ['notas'], tarefas: ['nomear'],
-  primaryModule: 'theory', skillTags: ['fretboard.note_naming', 'fretboard.chord_shapes'],
+  primaryModule: 'instrumento', skillTags: ['fretboard.note_naming', 'fretboard.chord_shapes'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'chord.triads', 'chord.sevenths'],
   kind: 'serie',
   // Vazio de propósito: é tudo na tela, sem instrumento em mãos e sem cantar. Ver a nota do solfejo.

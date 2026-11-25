@@ -172,3 +172,112 @@ function empilhar(
   const todas = [baixo, ...direita].sort((a, b) => midi(a) - midi(b));
   return { esquerda: [baixo], direita, todas, omitidos };
 }
+
+// ---------------------------------------------------------------------------
+// **Condução de vozes**: escolher, entre os voicings de um acorde, o que move menos.
+//
+// Veio de `tools/Backing.tsx` em 19/11, quando o motor saiu de dentro da tela — e sair foi o que o
+// tornou reusável: a cadência de contexto dos itens de ouvido usa a mesma peça desde então.
+/**
+ * **O voicing do acompanhamento, com condução de vozes** — e isto é o conserto do defeito mais audível
+ * da ferramenta, achado medindo em 19/11.
+ *
+ * O que havia: `55 + mod(pc + semi - 55, 12)`, que **colapsa o acorde numa oitava só**. Medido, o que
+ * saía: dó maior em segunda inversão (G3 C4 E4), o Cmaj7 com o si colado no dó (G3 B3 C4 E4) e o Am7
+ * com o sol colado no lá (G3 A3 C4 E4) — aglomerado na região grave, que é onde isso mais encardi. E
+ * nenhuma relação com o acorde anterior: cada um era calculado sozinho.
+ *
+ * O que entra: `theory/voicings.ts`, o motor que a Tônica de ouvido usa — duas mãos, qualquer grau no
+ * baixo, a quinta saindo quando o acorde tem extensão. De todos os voicings do acorde, escolhe-se o
+ * que **move menos** em relação ao que soou antes: é o que faz um acompanhamento soar tocado em vez
+ * de digitado.
+ *
+ * O primeiro acorde não tem anterior, e aí a referência é o **centro** (dó4 e redor): sem isso a
+ * progressão podia começar no canto do teclado e descer a vida toda.
+ */
+/** O centro de referência quando não há acorde anterior: a região do dó central. */
+const CENTRO = [55, 60, 64, 67];
+/** A distância entre dois acordes: cada nota do novo até a mais próxima do antigo, somada. */
+export function distanciaEntreAcordes(novo: readonly number[], antigo: readonly number[]): number {
+  const dele = (m: number) => Math.min(...antigo.map(a => Math.abs(a - m)));
+  return novo.reduce((soma, m) => soma + dele(m), 0) / novo.length;
+}
+/**
+ * **Quanto este voicing encardi embaixo** — e esta peça nasceu de medir a anterior.
+ *
+ * Mover pouco, sozinho, escolhe o voicing mais **compacto**: medindo com só esse critério, o Cmaj7
+ * saía `G3 B3 C4 E4` (si colado no dó) e o Am7 `E3 G3 A3 C4` (sol colado no lá) — exatamente o
+ * aglomerado que eu havia criticado na função antiga. Um pianista não põe segunda na região grave.
+ *
+ * A regra é de prática, e por isso é fato e não gosto: **abaixo do dó central, nada menor que uma
+ * terça menor** entre vozes vizinhas. Cada infração custa, e quanto mais grave, mais custa.
+ */
+export function custoDeEncardimento(ms: readonly number[]): number {
+  let custo = 0;
+  for (let i = 1; i < ms.length; i++) {
+    const intervalo = ms[i] - ms[i - 1];
+    if (ms[i - 1] < 60 && intervalo < 3) custo += (3 - intervalo) * (ms[i - 1] < 52 ? 3 : 2);
+  }
+  return custo;
+}
+export function voicingConduzido(root: Note, type: ChordId, anterior: readonly number[] | null, teto = 84): number[] {
+  /**
+   * O teto é **dó6** e não sol6: num acompanhamento o acorde não pode brigar com a melodia de quem
+   * está tocando por cima, e o motor sozinho chega a alturas que invadem essa faixa.
+   */
+  const opcoes = voicingsDe(root, type, { teto });
+  if (!opcoes.length) return CHORDS[type].degs.map(([, semi]) => 55 + mod(midi(root) + semi - 55, 12)).sort((a, b) => a - b);
+  const alvo = anterior ?? CENTRO;
+  let melhor = opcoes[0];
+  let menor = Infinity;
+  for (const v of opcoes) {
+    const ms = v.todas.map(midi);
+    // o critério é mover pouco; o desempate é a nota mais aguda ficar perto da de antes
+    const d = distanciaEntreAcordes(ms, alvo) + custoDeEncardimento(ms) + Math.abs(Math.max(...ms) - Math.max(...alvo)) / 24;
+    if (d < menor) { menor = d; melhor = v; }
+  }
+  return melhor.todas.map(midi).sort((a, b) => a - b);
+}
+
+/**
+ * **Conduzir um acorde qualquer**, dado em alturas MIDI de partida (a fundamental e os graus já
+ * somados), para perto do acorde anterior.
+ *
+ * Irmã de `voicingConduzido`, e existe porque nem todo acorde do app tem `ChordId`: a cadência de
+ * contexto vem de `acordeDoCampo`, que devolve **semitons sobre a tônica** — pentatônica inclusive,
+ * onde não há qualidade nomeada. Esta aqui trabalha com o conjunto de classes e nada mais.
+ *
+ * Como funciona: cada nota pode subir ou descer oitavas dentro da faixa; de todas as combinações,
+ * vale a que **move menos** em relação ao acorde anterior, sem encardir embaixo e sem abrir mais que
+ * `vao`. Sem acorde anterior, a referência é o centro — o mesmo critério do acompanhamento.
+ *
+ * `baixo` prende a nota mais grave a uma classe de altura, para o acorde ficar em posição
+ * fundamental quando isso importa.
+ */
+export function conduzirAcorde(
+  base: readonly number[], anterior: readonly number[] | null,
+  { lo = 48, hi = 84, vao = 16, baixo }: { lo?: number; hi?: number; vao?: number; baixo?: number } = {},
+): number[] {
+  const porNota = base.map(m => {
+    const oitavas: number[] = [];
+    for (let x = lo + mod(m - lo, 12); x <= hi; x += 12) oitavas.push(x);
+    return oitavas.length ? oitavas : [m];
+  });
+  let melhor: number[] | null = null;
+  let menor = Infinity;
+  const combinar = (i: number, atual: number[]) => {
+    if (i === porNota.length) {
+      const ms = [...atual].sort((a, b) => a - b);
+      if (ms[ms.length - 1] - ms[0] > vao) return;
+      // `baixo` prende a nota mais grave a uma classe: é o que mantém o acorde em posição
+      // fundamental quando ele precisa fechar alguma coisa. Ver `conduzirCadencia`.
+      if (baixo !== undefined && mod(ms[0], 12) !== mod(baixo, 12)) return;
+      const d = distanciaEntreAcordes(ms, anterior ?? CENTRO) + custoDeEncardimento(ms);
+      if (d < menor) { menor = d; melhor = ms; }
+      return;
+    }
+    for (const x of porNota[i]) combinar(i + 1, [...atual, x]);
+  };
+  combinar(0, []);
+  return melhor ?? [...base].sort((a, b) => a - b);
+}

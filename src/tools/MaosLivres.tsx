@@ -48,11 +48,33 @@ export default function MaosLivres({ onRunning, settings }: { onRunning?: (r: bo
   const [revelado, setRevelado] = useState(false);
   const [feitas, setFeitas] = useState(0);
 
-  // sem voz do idioma instalada, prometer "dita em voz alta" seria mentira: a tela avisa e repete o som
-  const [temVoz] = useState(() => vozDoIdioma(locale));
+  /**
+   * Sem voz do idioma instalada, prometer "dita em voz alta" seria mentira: a tela avisa e repete
+   * o som.
+   *
+   * ⚠️ **E isto era um defeito que se parecia com "a ferramenta não funciona"** — o Paulo relatou em
+   * 20/11 que o mãos livres não estava funcional, e medindo achei: o som toca, a fala **nunca é
+   * chamada**.
+   *
+   * A causa é uma armadilha conhecida do navegador: `speechSynthesis.getVoices()` devolve **lista
+   * vazia na primeira chamada** e só enche quando o evento `voiceschanged` dispara. Perguntando uma
+   * vez na montagem — que era o que este `useState` fazia —, a resposta é "não tem voz" mesmo num
+   * computador cheio delas, e a ferramenta cai em "o som toca de novo" **para sempre**, em silêncio.
+   *
+   * Agora a pergunta é refeita quando o navegador avisa que a lista chegou.
+   */
+  const [temVoz, setTemVoz] = useState(() => vozDoIdioma(locale));
+  useEffect(() => {
+    if (temVoz || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const conferir = () => setTemVoz(vozDoIdioma(locale));
+    window.speechSynthesis.addEventListener('voiceschanged', conferir);
+    // e uma segunda olhada logo depois: em alguns navegadores a lista chega sem disparar o evento
+    const t = window.setTimeout(conferir, 500);
+    return () => { window.speechSynthesis.removeEventListener('voiceschanged', conferir); window.clearTimeout(t); };
+  }, [locale, temVoz]);
   const anuncioReal: Anuncio = anuncio === 'voz' && !temVoz ? 'repetir' : anuncio;
 
-  useToolLog('maos-livres', 'Mãos livres', 'perception.melodic', rodando, { settings: { objetos, pensar, anuncio } });
+  useToolLog('maos-livres', 'Mãos livres', 'ouvido', rodando, { settings: { objetos, pensar, anuncio } });
   useEffect(() => { onRunning?.(rodando); }, [rodando, onRunning]);
 
   /** Os temporizadores do ciclo, para parar na hora de parar. */

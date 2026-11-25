@@ -16,9 +16,15 @@ import { CONTENT_TAGS, MODULES, OBJETOS, SKILL_TAGS, TAREFAS, type Assunto, type
 // migração: o modo estava QUEBRADO (B4), então não havia resposta válida salva para preservar.
 const STABLE_IDS = [
   'nota-na-pauta', 'nota-no-instrumento', 'intervalo-na-pauta', 'intervalo-no-instrumento', 'acorde-na-pauta', 'acorde-no-instrumento',
+  // 20/11/2026: a escala era a única da família com só a metade da pauta. O nome é dele.
+  'escala-no-instrumento',
   'pauta-armadura', 'pauta-escala',
   'teoria-intervalos',
-  'ouvido-tecla', 'ouvido-intervalo', 'ouvido-acorde', 'ouvido-campo',
+  'ouvido-tecla', 'ouvido-intervalo',
+  // 20/11/2026: o intervalo harmônico virou item próprio, por decisão dele. O id do melódico ficou
+  // como estava — trocá-lo quebraria o histórico e as rotinas por nada, já que id não se vê.
+  'ouvido-intervalo-harmonico',
+  'ouvido-acorde', 'ouvido-campo',
   // 13/11/2026: desenhado com o Paulo numa conversa inteira. Nasce rascunho.
   'mapa-do-braco',
   // 15/11/2026: cantar a fundamental de um acorde num voicing de piano. Nasce rascunho.

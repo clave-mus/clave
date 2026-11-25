@@ -28,7 +28,7 @@ import type { CatalogItem } from '../types';
 export const intervaloNaPauta: CatalogItem = {
   id: 'intervalo-na-pauta',
   objetos: ['intervalos', 'notacao'], tarefas: ['nomear', 'ler', 'escrever'],
-  primaryModule: 'theory',
+  primaryModule: 'leitura',
   skillTags: ['theory.interval_naming', 'notation.pitch_reading', 'notation.pitch_writing'],
   contentTags: ['interval.simple', 'pitch.accidentals', 'clef.treble', 'clef.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,

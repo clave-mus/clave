@@ -36,17 +36,21 @@ describe('estado salvo por versões anteriores', () => {
   it('troca a área do histórico pelo módulo, sem perder o resto', () => {
     const h = (migrate(old)).history;
     // `braco-nota` era a pergunta no braço, e no eixo novo isso é `nota-no-instrumento`.
-    expect(h[0]).toEqual({ at: 5, id: 'nota-no-instrumento', title: 'Nota no braço', module: 'theory', seconds: 60, correct: 4, total: 5 });
-    expect(h[1].module).toBe('perception.rhythmic');
+    // ⚠️ `mapeamento` agora cai em **`instrumento`**, e não mais num depósito: era `theory` porque
+    // a área antiga misturava leitura, instrumento e teoria. A reorganização de 20/11 desfez isso,
+    // e o histórico de quem mapeava o braço passou a contar na área certa.
+    expect(h[0]).toEqual({ at: 5, id: 'nota-no-instrumento', title: 'Nota no braço', module: 'instrumento', seconds: 60, correct: 4, total: 5 });
+    expect(h[1].module).toBe('ouvido');
     expect(h[0].area).toBeUndefined();
   });
 
   it('não mexe em estado já migrado e aguenta lixo', () => {
-    const fresh = { v: 1, history: [{ at: 1, id: 'x', title: 'x', module: 'technique', seconds: 9 }] };
+    const fresh = { v: 1, history: [{ at: 1, id: 'x', title: 'x', module: 'tecnica', seconds: 9 }] };
     expect(migrateSaved(fresh)).toEqual(fresh);
     expect(migrateSaved(null)).toEqual({});
     expect(migrateSaved('oi')).toEqual({});
-    expect(migrate({ history: [{ area: 'inexistente', at: 1 }, 7] }).history).toEqual([{ at: 1, module: 'theory' }]);
+    // Área que nunca existiu é lixo, e lixo não tem área certa: cai na maior, que é o ouvido.
+    expect(migrate({ history: [{ area: 'inexistente', at: 1 }, 7] }).history).toEqual([{ at: 1, module: 'ouvido' }]);
   });
 });
 
@@ -54,7 +58,7 @@ describe('as fusões por superfície (decisão 16)', () => {
   it('o id antigo vira o novo no histórico, e o título antigo FICA', () => {
     // O título gravado é o que a pessoa viu naquele dia. Reescrevê-lo seria falsear o histórico — a
     // tela já prefere o título atual quando o item existe (ver Progresso).
-    const s = migrate({ history: [{ at: 1, id: 'teclado-acorde', title: 'Acorde no teclado', module: 'theory', seconds: 30 }] });
+    const s = migrate({ history: [{ at: 1, id: 'teclado-acorde', title: 'Acorde no teclado', module: 'teoria', seconds: 30 }] });
     expect(s.history[0].id).toBe('acorde-no-instrumento');
     expect(s.history[0].title).toBe('Acorde no teclado');
   });

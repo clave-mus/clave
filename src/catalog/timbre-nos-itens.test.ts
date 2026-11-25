@@ -4,7 +4,12 @@
 // ter timbres diferentes como parâmetro"*. A varredura achou o quadro: o piano de amostras **já** é
 // o timbre padrão de onze itens (desde 12/11), cinco soam com a voz do braço de propósito, e só o
 // `ouvido-intervalo` tinha o parâmetro. Este arquivo guarda os sete que o têm agora — declarado uma
-// vez em `TIMBRE`, não sete vezes.
+// vez em `TIMBRE`, não nove vezes.
+//
+// **O `ouvido-tecla` entrou em 20/11.** Ele estava na lista dos de fora, e a justificativa era
+// minha, não dele: o documento do Paulo pede timbre na linha de **nota** com as mesmas palavras com
+// que o pede nas outras — *"timbre. padrão: piano normal... mas ter o synth como opção"*. No braço
+// a superfície continua mandando, que é a regra que o resto do arquivo guarda.
 import { describe, expect, it } from 'vitest';
 import { EXERCISES } from './catalog';
 import { isSeries, type Ctx, type SeriesItem } from './types';
@@ -35,10 +40,11 @@ describe('quem tem o parâmetro', () => {
    * A lista é explícita de propósito: um item de ouvido novo que esqueça o `TIMBRE` aparece aqui
    * como falta, e não como silêncio. Os de braço e de pauta ficam fora — ver o teste do fim.
    */
-  it('são os sete itens de ouvido, e a lista é esta', () => {
+  it('são os nove itens de ouvido, e a lista é esta', () => {
     expect(comTimbre.map(e => e.id).sort()).toEqual([
       'melodia-de-ouvido', 'ouvido-acorde', 'ouvido-campo', 'ouvido-celulas',
-      'ouvido-escala', 'ouvido-intervalo', 'tonica-de-ouvido',
+      'ouvido-escala', 'ouvido-intervalo', 'ouvido-intervalo-harmonico', 'ouvido-tecla',
+      'tonica-de-ouvido',
     ]);
   });
 
@@ -122,7 +128,7 @@ describe('quem NÃO tem o parâmetro, e por quê', () => {
    */
   it('os de braço e de pauta ficam de fora, de propósito', () => {
     const sem = ['nota-no-instrumento', 'intervalo-no-instrumento', 'acorde-no-instrumento', 'mapa-do-braco',
-      'nota-na-pauta', 'intervalo-na-pauta', 'acorde-na-pauta', 'pauta-escala', 'ouvido-tecla', 'ritmo-ouvido'];
+      'nota-na-pauta', 'intervalo-na-pauta', 'acorde-na-pauta', 'pauta-escala', 'ritmo-ouvido'];
     for (const id of sem) {
       const e = EXERCISES.filter(isSeries).find(x => x.id === id);
       expect(e, id).toBeTruthy();

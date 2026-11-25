@@ -1,5 +1,5 @@
 import {
-  FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, bracoDoPerfil, alturaDoPc, arr, casaPermitida, fretRange, mod, nomeNaTonalidade,
+  ESCUTA_ACIMA, ESCUTA_DEFAULTS, FRETS, GRAUS_ESCOLHIDOS, INST, alturaDeTeclado, bracoDoPerfil, alturaDoPc, arr, casaPermitida, fretRange, mod, nomeNaTonalidade,
   pcOptions, pcsDosGraus, pick, regiao, teclasPermitidas, tuningOf, vozDoBraco,
 } from '../helpers';
 import type { Question } from '../helpers';
@@ -31,7 +31,7 @@ import type { CatalogItem } from '../types';
 export const notaNoInstrumento: CatalogItem = {
   id: 'nota-no-instrumento',
   objetos: ['notas'], tarefas: ['nomear', 'tocar'],
-  primaryModule: 'theory',
+  primaryModule: 'instrumento',
   skillTags: ['keyboard.note_naming', 'keyboard.note_finding', 'fretboard.note_naming', 'fretboard.note_finding'],
   contentTags: ['pitch.naturals', 'pitch.accidentals', 'instrument.keyboard', 'instrument.guitar', 'instrument.bass'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
@@ -101,11 +101,17 @@ export const notaNoInstrumento: CatalogItem = {
       quando: s => s.instrumento !== 'piano' && s.direcao === 'achar' && s.pergunta !== 'altura' },
     { id: 'oitavas', label: ctx.t('settings.octaves'), type: 'single', quando: s => s.instrumento === 'piano',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }] },
+    /**
+     * **Ouvir uma ou duas oitavas acima**, só com o braço do baixo escolhido — pedido dele em
+     * 20/11. Soma em `transpor`, que é apresentação: a nota continua sendo a que é, e a resposta
+     * continua sendo a casa onde ela mora de verdade.
+     */
+    ...ESCUTA_ACIMA(ctx, s => s.instrumento === 'baixo'),
   ],
   // Braço TODO por padrão (Paulo, 12/11): quem abre o item quer o instrumento que toca, inteiro —
   // casas 0–5 é um recorte de estudo, e recorte é escolha, não entrada.
   // O instrumento começa no do perfil — resolvido em `defaultsDo`, não por uma opção "auto".
-  defaults: { direcao: 'identificar', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, oitavas: '2', grausEscolhidos: [] },
+  defaults: { direcao: 'identificar', casas: '0-12', cordas: ['1', '2', '3', '4', '5', '6'], pergunta: 'nota', todasAsPosicoes: false, oitavas: '2', grausEscolhidos: [], ...ESCUTA_DEFAULTS },
   defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : bracoDoPerfil(ctx) }),
   make(s, ctx): Question {
     if (s.instrumento === 'piano') {

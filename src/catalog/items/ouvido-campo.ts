@@ -1,11 +1,12 @@
-import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, mod, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { qualidadeEnfeitada } from '../enfeites';
 import { voicingsDe } from '../../theory/voicings';
 import { midi } from '../../theory/core';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, SettingValue } from '../types';
-import { grauDaFundamental, materialDoCampo, opcoesDeEmprestimo, type CampoDoExercicio } from '../../theory/campo-harmonico';
-import { CADENCIAS, acordeNoTeto, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
+import { GRAUS_CROMATICOS, grauDaFundamental, materialDoCampo, opcoesDeEmprestimo, type CampoDoExercicio } from '../../theory/campo-harmonico';
+import { acomodarMelodiaEAcorde } from '../../theory/nota-sobre-acorde';
+import { CADENCIAS, alvoConduzido, caberNaFaixa, cadenciaHarmonica } from '../../theory/cadencia-harmonica';
 
 const EM_LA_MENOR = { key: { tonic: 9, mode: 'menor' } } as const;
 /** O material filtrado pelo que a pessoa incluiu: graus marcados + empréstimos marcados. */
@@ -31,7 +32,7 @@ function poolDe(s: Record<string, SettingValue>, conv: 'pt' | 'en' = 'pt') {
 export const ouvidoCampo: CatalogItem = {
   id: 'ouvido-campo',
   objetos: ['harmonia', 'acordes'], tarefas: ['ouvir'],
-  primaryModule: 'perception.harmonic', skillTags: ['ear.harmonic_function'],
+  primaryModule: 'ouvido', skillTags: ['ear.harmonic_function'],
   contentTags: ['harmony.diatonic_field', 'chord.triads', 'chord.sevenths'],
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'range'],
@@ -108,6 +109,37 @@ export const ouvidoCampo: CatalogItem = {
     { id: 'contexto', label: ctx.t('settings.patternContext'), type: 'single',
       options: [{ id: 'ii-V-I', label: ctx.t('settings.contextIIVI') }, { id: 'I-IV-V-I', label: ctx.t('settings.contextIIVVI') },
         { id: 'nota', label: ctx.t('settings.contextTonic') }] },
+    /**
+     * **A melodia por cima** — o "modo quiz · melodia fixa" que ele desenhou: *"segura-se uma
+     * melodia e varia o acorde que está abaixo; o usuário tem que responder corretamente qual
+     * acorde está soando"*.
+     *
+     * A pergunta não muda — continua sendo qual grau soou. O que muda é que há uma nota parada por
+     * cima, e é ela que torna o exercício outro: o mesmo Dó é a fundamental do I, a ♭7 do ii e a
+     * ♭6 do iii, e reconhecer o acorde **através** dela é a habilidade.
+     *
+     * `fixa` é o modo dele, e a nota se escolhe. `sorteada` é a versão difícil: a nota também muda,
+     * e aí nem ela serve de âncora — só se revela no fim.
+     */
+    { id: 'melodia', label: ctx.t('settings.melodyOnTop'), type: 'single', quando: s => s.estimulo !== 'escrito', options: [
+      { id: 'nenhuma', label: ctx.t('settings.melodyNone') },
+      { id: 'fixa', label: ctx.t('settings.melodyFixed') },
+      { id: 'sorteada', label: ctx.t('settings.melodyRandom') },
+    ] },
+    { id: 'notaDaMelodia', label: ctx.t('settings.whichMelodyNote'), type: 'single',
+      quando: s => s.estimulo !== 'escrito' && s.melodia === 'fixa',
+      options: GRAUS_CROMATICOS.map((g, i) => ({ id: String(i), label: g })) },
+    /**
+     * **Onde a nota mora dentro do acorde** (pedido dele em 20/11, quando perguntou o que faltava
+     * nos parâmetros). A mesma relação soa outra coisa com a nota embaixo: por cima ela é melodia,
+     * por baixo ela vira o baixo do acorde e a função inteira muda de cara.
+     */
+    { id: 'posicaoDaMelodia', label: ctx.t('settings.melodyPosition'), type: 'single',
+      quando: s => s.estimulo !== 'escrito' && s.melodia !== 'nenhuma', options: [
+        { id: 'topo', label: ctx.t('settings.melodyTop') },
+        { id: 'meio', label: ctx.t('settings.melodyMiddle') },
+        { id: 'baixo', label: ctx.t('settings.melodyBottom') },
+      ] },
     { id: 'arpejo', label: ctx.t('settings.arpeggiate'), type: 'toggle', soPresentation: true,
       present: v => ({ chord: v ? 'arpeggio-block' : 'block' }) },
     { id: 'duracao', label: ctx.t('settings.sustain'), type: 'range', min: 0.5, max: 4, step: 0.1,
@@ -119,7 +151,8 @@ export const ouvidoCampo: CatalogItem = {
     ...TIMBRE(ctx),
   ],
   defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades', ...TIMBRE_DEFAULTS,
-    emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2 },
+    emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2,
+    melodia: 'nenhuma', notaDaMelodia: '0', posicaoDaMelodia: 'topo' },
   presets: [
     { id: 'maior-tetrades', nome: 'presets.campoTetrades', settings: { campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
     { id: 'maior-triades', nome: 'presets.campoTriades', settings: { campo: 'maior', tetrades: false, emprestimos: [] }, params: EM_DO_MAIOR },
@@ -131,6 +164,29 @@ export const ouvidoCampo: CatalogItem = {
     // O caso que ele descreveu, pronto para usar: o V vestido de ♭9/♯9, que é onde a alteração
     // aparece na música de verdade.
     { id: 'maior-alterados', nome: 'presets.campoAlterados', settings: { campo: 'maior', tetrades: true, emprestimos: [], enfeites: 'alterados' }, params: EM_DO_MAIOR },
+    /**
+     * **Os três atalhos do modo quiz · melodia fixa** (20/11). Eles existem porque o modo tem três
+     * maneiras de ser usado, e sem atalho cada uma pede quatro cliques no painel:
+     *
+     * - a **tônica segurada por cima** é o exemplo do documento dele, o Dó contra os sete graus;
+     * - **por baixo** é a mesma nota virando o baixo do acorde, que muda a função inteira de cara;
+     * - **sorteada** tira a âncora: nem a nota se sabe, e ela só se revela no fim.
+     */
+    { id: 'melodia-por-cima', nome: 'presets.campoMelodiaPorCima',
+      settings: { campo: 'maior', tetrades: false, emprestimos: [], melodia: 'fixa', notaDaMelodia: '0', posicaoDaMelodia: 'topo' }, params: EM_DO_MAIOR },
+    { id: 'melodia-por-baixo', nome: 'presets.campoMelodiaPorBaixo',
+      settings: { campo: 'maior', tetrades: false, emprestimos: [], melodia: 'fixa', notaDaMelodia: '0', posicaoDaMelodia: 'baixo' }, params: EM_DO_MAIOR },
+    { id: 'melodia-sorteada', nome: 'presets.campoMelodiaSorteada',
+      settings: { campo: 'maior', tetrades: true, emprestimos: [], melodia: 'sorteada', posicaoDaMelodia: 'topo' }, params: EM_DO_MAIOR },
+    /**
+     * **E dois que faltavam para as maneiras ANTIGAS de usar** — ele pediu atalhos para todos os
+     * modos, e dois eixos do item não tinham nenhum: audiar o acorde a partir do grau escrito, e
+     * responder só pelo número do grau, sem algarismo romano nem qualidade.
+     */
+    { id: 'audiar-o-grau', nome: 'presets.campoAudiar',
+      settings: { estimulo: 'escrito', campo: 'maior', tetrades: true, emprestimos: [] }, params: EM_DO_MAIOR },
+    { id: 'so-o-numero', nome: 'presets.campoSoONumero',
+      settings: { campo: 'maior', tetrades: false, emprestimos: [], resposta: 'grau' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.45 },
   // Com um acorde só não há o que perguntar (decisão 13: recusar, não sortear).
@@ -181,7 +237,17 @@ export const ouvidoCampo: CatalogItem = {
      */
     const raiz = notaGrafada(ctx, tonica + alvo.semi);
     const doMotor = comVoicing(s) ? voicingsDe(raiz, qualidade, {}) : [];
-    let ms = doMotor.length ? doMotor[randInt(0, doMotor.length - 1)].todas.map(midi) : acordeNoTeto(tonica, semis);
+    /**
+     * **O alvo continua a condução do contexto** (19/11): a cadência agora conduz as vozes, e o
+     * acorde da pergunta entrando empilhado da fundamental soaria como anúncio — a diferença de
+     * registro e de empilhamento viraria pista, que é o que `acordeNoTeto` existia para evitar.
+     *
+     * Com voicing de piano ligado, quem manda é o motor de voicings: ali a pessoa pediu
+     * explicitamente outra coisa.
+     */
+    let ms = doMotor.length
+      ? doMotor[randInt(0, doMotor.length - 1)].todas.map(midi)
+      : alvoConduzido(tonica, semis, contexto[contexto.length - 1] ?? null);
     if (s.inversoes && !comVoicing(s)) for (let k = randInt(0, ms.length - 1); k > 0; k--) ms.push(ms.shift()! + 12);
 
     /**
@@ -199,7 +265,54 @@ export const ouvidoCampo: CatalogItem = {
      * 19/11). Sem ela, "V7" não conta o que você acabou de ouvir — e saber que era um Sol7(♯9) é
      * metade do aprendizado. Desligado, segue sendo só o romano, como sempre foi.
      */
-    const revelacao = vestindo ? `${alvo.roman} · ${chordSymbol(raiz, qualidade, ctx.conv)}` : alvo.roman;
+    const revelacaoDoAcorde = vestindo ? `${alvo.roman} · ${chordSymbol(raiz, qualidade, ctx.conv)}` : alvo.roman;
+
+    /**
+     * **A nota parada por cima** (ou por baixo, ou no meio) — o modo "melodia fixa" dele.
+     *
+     * A altura sai da POSIÇÃO pedida, e não de uma oitava escrita: por cima é a primeira ocorrência
+     * da classe acima do topo do acorde, por baixo a primeira abaixo da base, e no meio a que cai
+     * dentro do bloco (ou a mais próxima do centro, quando o bloco é apertado demais para ter uma).
+     * Depois ela é puxada de volta para dentro da região — nada soa fora do que a pessoa aguenta.
+     */
+    const comMelodia = s.estimulo !== 'escrito' && s.melodia !== 'nenhuma' && s.melodia !== undefined;
+    const semiDaMelodia = s.melodia === 'sorteada' ? randInt(0, 11) : Number(s.notaDaMelodia ?? 0);
+    const pcDaMelodia = mod(tonica + semiDaMelodia, 12);
+    const naClasse = (ref: number, acima: boolean) => {
+      let m = ref;
+      while (mod(m, 12) !== pcDaMelodia) m += acima ? 1 : -1;
+      return m;
+    };
+    const melodia = (() => {
+      if (!comMelodia) return null;
+      const pos = String(s.posicaoDaMelodia ?? 'topo');
+      /**
+       * **No meio, a nota cai dentro do bloco** — e só aí. Se nenhuma oitava da classe couber entre
+       * a base e o topo do acorde (um acorde fechado de três notas tem vãos pequenos), ela vira
+       * "por cima", que é o lugar musical padrão de uma melodia.
+       */
+      if (pos === 'meio') {
+        const dentro = naClasse(Math.min(...ms) + 1, true);
+        if (dentro < Math.max(...ms) && dentro >= lo && dentro <= hi) return dentro;
+      }
+      /**
+       * **Por cima e por baixo passam por `acomodarMelodiaEAcorde`** — o motor que o `ouvido-celulas`
+       * já usa, e que resolve o caso difícil: quando não há oitava livre do lado pedido, **quem se
+       * move é o acorde**, não a nota.
+       *
+       * Escrevi primeiro à mão e a medição pegou: pedindo "por baixo" com a região começando em 48,
+       * a nota era empurrada de volta para dentro do acorde e soava **acima** da nota mais grave
+       * dele — a tela prometia uma coisa e o som fazia outra, calado.
+       */
+      const alvoDaNota = pos === 'baixo' ? naClasse(Math.min(...ms) - 1, false) : naClasse(Math.max(...ms) + 1, true);
+      const r = acomodarMelodiaEAcorde(ms, [alvoDaNota], pos === 'baixo' ? 'abaixo' : 'acima', { lo, hi });
+      ms = r.acorde;
+      return r.melodia[0];
+    })();
+    /** A revelação diz o acorde e, havendo melodia, que nota estava segurando por cima. */
+    const revelacao = melodia === null
+      ? revelacaoDoAcorde
+      : `${revelacaoDoAcorde}  ·  ${GRAUS_CROMATICOS[semiDaMelodia]}`;
 
     // No modo "só o grau", iv e IV viram o MESMO botão `4` — daí o filtro de repetidos.
     const soGrau = s.resposta === 'grau';
@@ -228,8 +341,19 @@ export const ouvidoCampo: CatalogItem = {
         autoplay: false, reveal: revelacao, presentation: vozDaPergunta(s),
       };
     }
+    /** O que soa no lugar do alvo: o acorde, com a nota segurada quando ela existe. */
+    const comSoar = melodia === null ? ms : [...ms, melodia].sort((a, b) => a - b);
     return {
-      prompt: ctx.t('quiz.earFieldChord'), visual: { kind: 'ear' },
+      prompt: ctx.t('quiz.earFieldChord'),
+      /**
+       * Com melodia escolhida, o enunciado DIZ qual é: ela é a âncora, não a pergunta. Sorteada,
+       * ele cala — ali nem ela se sabe, e é esse o grau de dificuldade a mais.
+       *
+       * O texto **não diz onde ela está**, e isso é conserto: ele dizia "por cima" e a posição é
+       * escolha — com a nota por baixo, o enunciado mentia. A posição quem sabe é quem a escolheu.
+       */
+      visual: { kind: 'ear', hint: melodia !== null && s.melodia === 'fixa'
+        ? ctx.t('quiz.holdingNote', { note: GRAUS_CROMATICOS[semiDaMelodia] }) : undefined },
       // Em ordem de fundamental, SEM embaralhar: é a ordem do campo, botão parado entre rodadas
       // deixa a mão aprender o mapa, e a ordem não carrega a resposta.
       surface: { kind: 'choices', options, compact: options.length > 8 },
@@ -238,10 +362,19 @@ export const ouvidoCampo: CatalogItem = {
         // O grupo VAZIO entre contexto e alvo é um respiro de um `gap` (Paulo, 12/11: "precisa de um
         // tempo maior entre o contexto e o acorde"), e `arpejaveis` deixa o arpejo só no alvo — o
         // contexto é harmonia, e arpejá-lo tira dele o que ele estabelece.
-        groups: [...contexto, [], ms], arpejaveis: [contexto.length + 1],
+        groups: [...contexto, [], comSoar], arpejaveis: [contexto.length + 1],
+        /**
+         * ⚠️ **O pedaço "acorde" toca o que SOA, melodia junto** — e não o acorde limpo.
+         *
+         * Com a melodia por cima, oferecer o acorde sozinho desfaria o exercício num clique: a
+         * pergunta vira a de sempre, e a nota parada deixa de atrapalhar. O que se pode isolar é a
+         * **melodia**, que é a âncora — e é literalmente o que ele descreveu, *"um drone que pode
+         * ser ligado e desligado"*.
+         */
         partes: [
           { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
-          { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [ms] },
+          { id: 'acorde', label: ctx.t('quiz.partChord'), groups: [comSoar] },
+          ...(melodia === null ? [] : [{ id: 'melodia', label: ctx.t('quiz.partMelody'), groups: [[melodia]] }]),
         ],
       },
       autoplay: true, reveal: revelacao, presentation: vozDaPergunta(s),

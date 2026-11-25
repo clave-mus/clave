@@ -7,7 +7,8 @@
 // E o samba: *"faça com que o baixo faça a quinta grave, e não a aguda, e em semicolcheias
 // pontuadas, como deve ser tocado"*.
 import { describe, expect, it } from 'vitest';
-import { alturaDoBaixo, GROOVES, PRESETS } from './Backing';
+import { alturaDoBaixo, GROOVES, linhaDoTempo, desvioDoPasso } from '../theory/levada';
+import { PRESETS, resolverProgressaoParaTeste, lerGuardado } from './backing-progressao';
 import { CHORDS, mod, pc, type ChordId } from '../theory/core';
 
 const RAIZ = 48; // dó3, uma fundamental qualquer
@@ -46,10 +47,25 @@ describe('a quinta vem do acorde, não de uma soma fixa', () => {
     }
   });
 
-  it('a aproximação encosta na fundamental seguinte, por cima ou por baixo', () => {
+  /**
+   * **A aproximação conduz, e não sorteia** — isto era um defeito, achado em 19/11: ela escolhia o
+   * lado com `Math.random()`, então a mesma progressão aproximava por baixo numa volta do loop e por
+   * cima na outra. A nota mais importante da linha trocava de lugar a cada laço.
+   *
+   * A regra é a de um baixista: **contra o movimento**. Subindo, entra-se por baixo; descendo, por
+   * cima; e com a fundamental repetida, por baixo — que soa como condução, não como erro.
+   */
+  it('a aproximação conduz para a fundamental seguinte, e é sempre a mesma', () => {
+    // subindo (dó3 → sol3): entra por baixo, no fá♯
+    expect(alturaDoBaixo('aprox', 48, 'maior', 55)).toBe(54);
+    // descendo (sol3 → dó3): entra por cima, no dó♯
+    expect(alturaDoBaixo('aprox', 55, 'maior', 48)).toBe(49);
+    // mesma fundamental: por baixo
+    expect(alturaDoBaixo('aprox', 48, 'maior', 48)).toBe(47);
+    // e não muda entre chamadas: nada de sorteio
     const vistos = new Set<number>();
-    for (let i = 0; i < 60; i++) vistos.add(alturaDoBaixo('aprox', RAIZ, 'maior', 55) - 55);
-    expect([...vistos].sort()).toEqual([-1, 1]);
+    for (let i = 0; i < 60; i++) vistos.add(alturaDoBaixo('aprox', 48, 'maior', 55));
+    expect([...vistos]).toEqual([54]);
   });
 });
 
@@ -60,12 +76,57 @@ describe('o samba', () => {
     expect(quintas.every(g => g === 'quintaGrave'), quintas.join(',')).toBe(true);
   });
 
-  it('em semicolcheias pontuadas: toda nota dura 1,5 passo', () => {
-    expect(GROOVES.samba.bass.map(([, , d]) => d)).toEqual([1.5, 1.5, 1.5, 1.5, 1.5, 1.5]);
+  /**
+   * **A linha que ele ditou em 19/11, na terceira versão** — as duas primeiras eram minhas leituras
+   * erradas das palavras dele: *"um tempo em cada nota, tipo — colcheia pontuada e semicolcheia na
+   * tônica, aí colcheia pontuada e semicolcheia na quinta, depois repete"*.
+   *
+   * Um tempo por nota harmônica, e dentro do tempo a dupla: colcheia pontuada (3 passos) +
+   * semicolcheia (1), as duas na mesma nota. São oito ataques no compasso.
+   */
+  it('é colcheia pontuada + semicolcheia, um tempo por nota', () => {
+    expect(GROOVES.samba.bass).toEqual([
+      [0, 'raiz', 3], [3, 'raiz', 1],
+      [4, 'quintaGrave', 3], [7, 'quintaGrave', 1],
+      [8, 'raiz', 3], [11, 'raiz', 1],
+      [12, 'quintaGrave', 3], [15, 'quintaGrave', 1],
+    ]);
   });
 
-  it('e a colocação é a antecipação de sempre', () => {
-    expect(GROOVES.samba.bass.map(([s]) => s)).toEqual([0, 3, 4, 8, 11, 12]);
+  it('cada dupla fecha um tempo exato, e o compasso fecha nos quatro', () => {
+    const bass = GROOVES.samba.bass;
+    const porTempo = GROOVES.samba.grid / GROOVES.samba.tempos;
+    for (let i = 0; i < bass.length; i += 2) {
+      const [p1, , d1] = bass[i];
+      const [p2, , d2] = bass[i + 1];
+      // a colcheia pontuada começa no tempo, a semicolcheia emenda e as duas somam um tempo
+      expect(p1 % porTempo, `dupla ${i / 2 + 1}`).toBe(0);
+      expect(p2).toBe(p1 + d1);
+      expect(d1 + d2, `dupla ${i / 2 + 1}`).toBe(porTempo);
+    }
+    expect(bass.length / 2).toBe(GROOVES.samba.tempos);
+  });
+
+  it('a tônica nos tempos ímpares e a quinta grave nos pares', () => {
+    const porDupla = GROOVES.samba.bass.filter((_, i) => i % 2 === 0).map(([, g]) => g);
+    expect(porDupla).toEqual(['raiz', 'quintaGrave', 'raiz', 'quintaGrave']);
+    // e a semicolcheia repete a nota da sua dupla, não a da seguinte
+    for (let i = 0; i < GROOVES.samba.bass.length; i += 2) {
+      expect(GROOVES.samba.bass[i + 1][1]).toBe(GROOVES.samba.bass[i][1]);
+    }
+  });
+
+  /**
+   * E o encaixe que ninguém combinou: a semicolcheia cai no **último passo do tempo**, que é onde o
+   * micro-tempo adianta 27 ms (a 88 bpm). É dela que vem a antecipação do samba.
+   */
+  it('a semicolcheia cai onde o micro-tempo adianta', () => {
+    const porTempo = GROOVES.samba.grid / GROOVES.samba.tempos;
+    for (const [passo, , dur] of GROOVES.samba.bass) {
+      if (dur !== 1) continue;
+      expect(passo % porTempo).toBe(porTempo - 1);
+      expect(desvioDoPasso(GROOVES.samba, passo, 0.17045)).toBeLessThan(0);
+    }
   });
 });
 
@@ -78,7 +139,7 @@ describe('bossa nova e baião saíram', () => {
   });
 
   it('e as levadas que ficaram continuam inteiras', () => {
-    expect(Object.keys(GROOVES).sort()).toEqual(['balada', 'nenhum', 'rock', 'samba', 'shuffle', 'swing']);
+    expect(Object.keys(GROOVES).sort()).toEqual(['balada', 'nenhum', 'rock', 'samba', 'shuffle', 'swing', 'valsa']);
     for (const [nome, g] of Object.entries(GROOVES)) {
       expect(g.bass.length, `${nome}: sem baixo`).toBeGreaterThan(0);
       for (const [passo, , dur] of g.bass) {
@@ -95,7 +156,6 @@ describe('bossa nova e baião saíram', () => {
 // A progressão era uma lista de graus de UM campo. Empréstimo é acorde de fora que não muda o
 // centro; modulação é uma MARCA que troca o centro do ponto em diante. As duas peças resolvem na
 // mesma passada, e é isso que este bloco mede.
-import { resolverProgressaoParaTeste } from './Backing';
 
 const CONV = 'pt' as const;
 const DO_MAIOR = { fifths: 0, mode: 'maior' as const };
@@ -250,7 +310,6 @@ describe('o voicing do acompanhamento', () => {
 //
 // Antes todo acorde durava exatamente um compasso, e era o limite que mais aparecia ao escrever
 // música de verdade: nem ii–V dentro do mesmo compasso, nem tônica de dois.
-import { linhaDoTempo } from './Backing';
 
 describe('a linha do tempo', () => {
   it('um compasso cada é o de sempre', () => {
@@ -293,6 +352,154 @@ describe('a linha do tempo', () => {
         const quantos = janelas.filter(j => p >= j.inicio && p < j.fim).length;
         expect(quantos, `passo ${p} de ${JSON.stringify(durs)}`).toBe(1);
       }
+    }
+  });
+});
+
+describe('compasso ternário', () => {
+  it('a valsa tem três tempos; todas as outras, quatro', () => {
+    expect(GROOVES.valsa.tempos).toBe(3);
+    expect(GROOVES.valsa.grid).toBe(12);
+    for (const [nome, g] of Object.entries(GROOVES)) {
+      if (nome === 'valsa') continue;
+      expect(g.tempos, nome).toBe(4);
+    }
+  });
+
+  /**
+   * `grid / tempos` é o que o relógio usa como passos por tempo. Com `grid / 4` fixo — que era o
+   * código antes —, a valsa tocaria em 4/4 com a grade de 12, ou seja, fora de compasso.
+   */
+  it('os passos por tempo saem de grid/tempos, e são inteiros em toda levada', () => {
+    for (const [nome, g] of Object.entries(GROOVES)) {
+      const passosPorTempo = g.grid / g.tempos;
+      expect(Number.isInteger(passosPorTempo), `${nome}: ${passosPorTempo}`).toBe(true);
+      expect(passosPorTempo, nome).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('e a valsa cabe na linha do tempo: meio compasso são seis passos', () => {
+    // no meio da progressão, meio compasso é meio mesmo
+    expect(linhaDoTempo([{ dur: 0.5 }, { dur: 0.5 }, { dur: 1 }], GROOVES.valsa.grid).janelas.map(j => j.fim - j.inicio)).toEqual([6, 6, 12]);
+    // no FIM, ele estica para o loop fechar redondo — a regra de sempre, agora em 3/4
+    expect(linhaDoTempo([{ dur: 1 }, { dur: 0.5 }], GROOVES.valsa.grid).janelas.map(j => j.fim - j.inicio)).toEqual([12, 12]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Guardar a progressão — 19/11/2026, da revisão: *"o que você monta se perde"*.
+//
+// A leitura valida a forma porque configuração guardada é **dado de fora**: pode vir de uma versão
+// antiga do app, e dado de fora que entra sem conferência quebra a tela de quem só abriu o app.
+
+describe('a progressão guardada', () => {
+  const bom = { items: [{ deg: 1 }, { mod: { fifths: 0, mode: 'menor' } }, { deg: 5 }], fifths: -1, mode: 'maior', tetrads: true, style: 'samba', bpm: 98 };
+
+  it('volta inteira quando está íntegra', () => {
+    expect(lerGuardado(JSON.stringify(bom))).toEqual(bom);
+  });
+
+  /**
+   * Os três de som (contagem, baixo, timbre) foram para a gaveta depois: uma versão guardada antes
+   * não os tem, e a leitura precisa aceitar isso em vez de recusar a progressão inteira.
+   */
+  it('aceita versão antiga, sem os interruptores de som', () => {
+    const lido = lerGuardado(JSON.stringify(bom));
+    expect(lido!.contagem).toBeUndefined();
+    const novo = { ...bom, contagem: false, bassOn: false, acordesOn: false, compVoice: 'pad' };
+    expect(lerGuardado(JSON.stringify(novo))).toEqual(novo);
+    // e timbre que não existe é ignorado, não derruba o resto
+    const torto = lerGuardado(JSON.stringify({ ...bom, compVoice: 'cravo' }));
+    expect(torto!.items).toHaveLength(3);
+    expect(torto!.compVoice).toBeUndefined();
+  });
+
+  it('recusa o que não é progressão, sem quebrar', () => {
+    for (const cru of [
+      undefined, null, 42, '', 'nada disso', '{', '[]',
+      JSON.stringify({ ...bom, items: [] }),
+      JSON.stringify({ ...bom, items: [{ nada: 1 }] }),
+      JSON.stringify({ ...bom, items: 'quatro acordes' }),
+      JSON.stringify({ ...bom, fifths: 'dó' }),
+      JSON.stringify({ ...bom, bpm: null }),
+      JSON.stringify({ ...bom, mode: 'lídio' }),
+      JSON.stringify({ ...bom, style: 'bossa' }),
+    ]) {
+      expect(lerGuardado(cru as never), String(cru).slice(0, 40)).toBeNull();
+    }
+  });
+
+  /**
+   * A levada **bossa** saiu em 19/11, e uma progressão guardada antes disso ainda a nomeia. Recusar
+   * é o certo: cair numa levada que não existe mais deixaria a tela sem o que tocar.
+   */
+  it('e recusa levada que não existe mais — o caso do bossa removido', () => {
+    expect(lerGuardado(JSON.stringify({ ...bom, style: 'baiao' }))).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Micro-tempo do samba — 19/11/2026, pedido dele com os números: *"um atraso sutil (de uns 12 ms em
+// 120 bpm) na segunda semicolcheia e adiantamento na terceira e quarta (de uns 20 ms em 120 bpm)"*.
+//
+// Guardado em **fração da semicolcheia**, e não em milissegundos: assim o balanço é o mesmo balanço
+// em qualquer andamento. O teste confere os milissegundos nos dois andamentos que importam.
+
+describe('o micro-tempo', () => {
+  /** A duração de um passo (semicolcheia), em segundos. */
+  const sd = (bpm: number, g = GROOVES.samba) => 60 / bpm / (g.grid / g.tempos);
+  const ms = (bpm: number, step: number) => Math.round(desvioDoPasso(GROOVES.samba, step, sd(bpm)) * 1000 * 10) / 10;
+
+  it('a 120 bpm dá os números que ele pediu', () => {
+    expect(ms(120, 0)).toBe(0);     // a que cai no tempo não se mexe
+    expect(ms(120, 1)).toBe(12);    // a segunda atrasa 12 ms
+    expect(ms(120, 2)).toBe(-20);   // a terceira adianta 20 ms
+    expect(ms(120, 3)).toBe(-20);   // a quarta também
+  });
+
+  it('e o mesmo balanço vale em outro andamento, proporcional', () => {
+    // a 98 bpm (o andamento do preset) a semicolcheia é maior, e o desvio acompanha
+    expect(ms(98, 1)).toBeCloseTo(14.7, 1);
+    expect(ms(98, 2)).toBeCloseTo(-24.5, 1);
+    // a 160 bpm ele encolhe
+    expect(ms(160, 1)).toBeCloseTo(9, 1);
+  });
+
+  it('vale em todos os quatro tempos do compasso, e não só no primeiro', () => {
+    for (const tempo of [0, 1, 2, 3]) {
+      const base = tempo * 4;
+      expect(ms(120, base), `tempo ${tempo + 1}`).toBe(0);
+      expect(ms(120, base + 1), `tempo ${tempo + 1}`).toBe(12);
+      expect(ms(120, base + 2), `tempo ${tempo + 1}`).toBe(-20);
+      expect(ms(120, base + 3), `tempo ${tempo + 1}`).toBe(-20);
+    }
+  });
+
+  /**
+   * **O pulso não anda.** O desvio é sempre relativo ao tempo nominal do passo, nunca acumulado: a
+   * semicolcheia que cai no tempo fica em zero nos quatro tempos. É o que separa balanço de relógio
+   * errado — acumulando, o compasso ficaria mais curto ou mais longo a cada volta.
+   */
+  it('o tempo forte continua exatamente no lugar', () => {
+    for (const bpm of [50, 88, 120, 220]) {
+      for (const tempo of [0, 1, 2, 3]) expect(ms(bpm, tempo * 4), `${bpm} bpm`).toBe(0);
+    }
+  });
+
+  /**
+   * O relógio agenda com 80 ms de antecedência (`Clock.start`): um adiantamento maior que isso cairia
+   * no passado e o som não sairia. O pior caso é o andamento mais lento que o controle permite.
+   */
+  it('o adiantamento nunca cai no passado: cabe na antecedência do relógio', () => {
+    const pior = Math.max(...[0, 1, 2, 3].map(p => Math.abs(desvioDoPasso(GROOVES.samba, p, sd(50)))));
+    expect(pior).toBeLessThan(0.08);
+    expect(Math.round(pior * 1000)).toBe(48);
+  });
+
+  it('as outras levadas não têm micro-tempo, e seguem retas', () => {
+    for (const [nome, g] of Object.entries(GROOVES)) {
+      if (nome === 'samba') continue;
+      for (let p = 0; p < g.grid; p++) expect(desvioDoPasso(g, p, 0.125), `${nome}/${p}`).toBe(0);
     }
   });
 });

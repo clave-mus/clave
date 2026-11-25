@@ -100,7 +100,6 @@ export interface State {
    * audiar** — a autoavaliação por ETAPA (`tecnica`, `no-instrumento`) é outra coisa e continua
    * perguntando do jeito de sempre, sem relação com este interruptor.
    */
-  audiarAutoavaliar: boolean;
   /**
    * Modo de revisão (decisão 91): mostra os itens em `rascunho`, que ninguém mais vê. É para quem
    * constrói ou revisa itens. **Não há controle para isto no Perfil, de propósito**: quem testa o
@@ -140,7 +139,6 @@ export const DEFAULT_STATE: State = {
   theme: null,
   naming: null,
   sound: true,
-  audiarAutoavaliar: true,
   revisao: false,
   stats: {},
   history: [],
@@ -260,9 +258,6 @@ export function setAccount(account: Account | null) {
 }
 export function setLocale(locale: Locale | null) {
   setState(s => ({ ...s, locale }));
-}
-export function setAudiarAutoavaliar(v: boolean) {
-  setState(s => ({ ...s, audiarAutoavaliar: v }));
 }
 /** Tema claro, escuro, ou null para seguir o sistema. Escreve o atributo que src/index.css lê. */
 export function setTheme(theme: Theme | null) {
