@@ -105,6 +105,19 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Aproximações cromáticas na melodia (25/11/2026)
+
+Parâmetro novo do `melodia-de-ouvido`, do seu pedido: *"tanto entre notas, como entre o 4 e o 5,
+como se aproximando de uma nota, como fazendo um ♭2-1"*. Os três casos são o mesmo mecanismo — uma
+nota a meio tom de uma nota da escala, imediatamente antes dela.
+
+| o quê | confira |
+|---|---|
+| **a cromática substitui, não acrescenta** | pedindo cinco notas com duas cromáticas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **resolvendo × soltas** | resolvendo é a definição estrita (cai no alvo a meio tom); soltas é outro som, a nota alterada sem destino. Dois atalhos, um para cada |
+| **nunca duas coladas, nunca a primeira** | duas cromáticas seguidas viram cromatismo, e começar fora da escala tira a referência antes de a melodia dizer onde está |
+| ⚠️ **a grafia na pauta** | audiando, a cromática aparece escrita, e quem decide a grafia é a tonalidade: em dó maior o pc 3 sai **Mi♭**. Subindo para o Mi, o certo musical seria **Ré♯**. A regra "grafia pela tonalidade" é antiga e vale em todo o resto do app — mudar para "grafia pela direção da aproximação" é decisão sua, e vale só aqui |
+
 ### Montar digitação de modo no braço (25/11/2026)
 
 Modo novo do `escala-no-instrumento`, decidido com ele em 25/11 (Q1): no braço, "ler o nome e
