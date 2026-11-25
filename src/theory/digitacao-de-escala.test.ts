@@ -86,15 +86,19 @@ describe('o veredito', () => {
     // sobe uma oitava com a segunda nota: as classes continuam certas, a ordem não
     const d = digitacoesDaEscala(pedido)[0];
     const trocado = d.map((x, i) => (i === 1 ? { ...x, casa: x.casa + 12 } : x));
-    const v = julgarDigitacao(trocado, { ...pedido, maxVaoCasas: 99 });
+    const v = julgarDigitacao(trocado, pedido);
     expect(v.certo).toBe(false);
     expect(v.motivo).toBe('desce');
   });
 
-  it('recusa o que não cabe na mão', () => {
+  /**
+   * **O vão não reprova mais** (decisão dele em 25/11): o veredito julga se é a escala, e o vão é
+   * critério de SUGESTÃO. Este teste era o oposto disto até ontem, e guarda a inversão.
+   */
+  it('não recusa por vão, nem o mais esticado possível', () => {
     const d = digitacoesDaEscala(pedido)[0];
-    const esticado = d.map((x, i) => (i === d.length - 1 ? { ...x, casa: x.casa } : x));
-    expect(julgarDigitacao(esticado, { ...pedido, maxVaoCasas: 1 }).motivo).toBe('vao');
+    const esticado = d.map((x, i) => (i > 0 ? { ...x, casa: x.casa } : x));
+    expect(julgarDigitacao(esticado, pedido)).toEqual({ certo: true });
   });
 
   it('a tônica do modo é a nota mais grave do desenho', () => {
@@ -144,13 +148,13 @@ describe('o que ele relatou usando', () => {
     const base = Math.min(...d.map(x => BAIXO[x.corda] + x.casa));
     const corda = BAIXO.findIndex(t => base + 12 - t >= 0 && base + 12 - t <= 12);
     const comOitava = [...d, { corda, casa: base + 12 - BAIXO[corda] }];
-    expect(julgarDigitacao(comOitava, { ...pedido, maxVaoCasas: 99 })).toEqual({ certo: true });
+    expect(julgarDigitacao(comOitava, pedido)).toEqual({ certo: true });
   });
 
   it('outra classe repetida continua recusada', () => {
     const d = digitacoesDaEscala(pedido)[0];
     const repetida = [...d, { corda: d[1].corda, casa: d[1].casa + 12 }];
-    expect(julgarDigitacao(repetida, { ...pedido, maxVaoCasas: 99 }).motivo).toBe('repetida');
+    expect(julgarDigitacao(repetida, pedido).motivo).toBe('repetida');
   });
 
   it('a mesma forma uma oitava acima NÃO é um desenho novo', () => {
@@ -204,10 +208,20 @@ describe('numa corda só não há vão', () => {
     expect(julgarDigitacao(errada, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO }).certo).toBe(false);
   });
 
-  it('cruzando cordas, o vão volta a valer', () => {
-    const espalhada = [{ corda: 0, casa: 0 }, { corda: 0, casa: 2 }, { corda: 0, casa: 3 },
-      { corda: 1, casa: 0 }, { corda: 1, casa: 2 }, { corda: 1, casa: 4 }, { corda: 1, casa: 6 }, { corda: 1, casa: 7 }];
-    expect(julgarDigitacao(espalhada, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO, maxVaoCasas: 4 }).motivo)
-      .toBe('vao');
+  /**
+   * Cruzando cordas com a mão aberta também vale: é digitação pior, não escala errada. Quem evita
+   * isso é a SUGESTÃO, que continua gerando só o que cabe no vão pedido — ver o teste abaixo.
+   */
+  it('cruzando cordas com vão grande também vale', () => {
+    const mesmaEscala = [0, 2, 3, 5, 7, 9, 11].map((casa, i) => (i < 3 ? { corda: 0, casa } : { corda: 1, casa: casa - 5 }));
+    const v = julgarDigitacao(mesmaEscala, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO });
+    expect(v.motivo ?? 'certo').not.toBe('vao');
+  });
+
+  it('mas a SUGESTÃO continua cabendo na mão', () => {
+    for (const d of digitacoesDaEscala({ tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO, maxVaoCasas: 4 })) {
+      const casas = d.filter(x => x.casa > 0).map(x => x.casa);
+      if (casas.length > 1) expect(Math.max(...casas) - Math.min(...casas)).toBeLessThanOrEqual(4);
+    }
   });
 });

@@ -1080,7 +1080,6 @@ const pt = {
     readAndAudiate: 'Ler e audiar',
     howManyNotes: 'Quantas notas',
     chromatics: 'Notas de fora da escala',
-    chromaticsNone: 'Nenhuma',
     chromaticsHow: 'Como elas entram',
     chromaticsResolve: 'Aproximando: caem no alvo a meio tom',
     chromaticsLoose: 'Soltas: podem não resolver',

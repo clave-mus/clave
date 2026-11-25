@@ -1078,7 +1078,6 @@ const en: Shape<typeof pt> = {
     readAndAudiate: 'Read and audiate',
     howManyNotes: 'How many notes',
     chromatics: 'Notes from outside the scale',
-    chromaticsNone: 'None',
     chromaticsHow: 'How they come in',
     chromaticsResolve: 'As approaches: a semitone into the target',
     chromaticsLoose: 'Loose: they may not resolve',

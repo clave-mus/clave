@@ -113,7 +113,8 @@ nota a meio tom de uma nota da escala, imediatamente antes dela.
 
 | o quê | confira |
 |---|---|
-| **a cromática substitui, não acrescenta** | pedindo cinco notas com duas cromáticas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **a cromática substitui, não acrescenta** | pedindo cinco notas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **é interruptor, não cota** (25/11) | ligado, cada nota candidata tem ~22% de chance — uma em cada quatro ou cinco, como você pediu. Umas melodias saem sem nenhuma, e é isso que obriga a ouvir em vez de contar. Confira se a frequência está boa no uso |
 | **resolvendo × soltas** | resolvendo é a definição estrita (cai no alvo a meio tom); soltas é outro som, a nota alterada sem destino. Dois atalhos, um para cada |
 | **nunca duas coladas, nunca a primeira** | duas cromáticas seguidas viram cromatismo, e começar fora da escala tira a referência antes de a melodia dizer onde está |
 | ⚠️ **a grafia na pauta** | audiando, a cromática aparece escrita, e quem decide a grafia é a tonalidade: em dó maior o pc 3 sai **Mi♭**. Subindo para o Mi, o certo musical seria **Ré♯**. A regra "grafia pela tonalidade" é antiga e vale em todo o resto do app — mudar para "grafia pela direção da aproximação" é decisão sua, e vale só aqui |
@@ -125,7 +126,7 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 
 | o quê | confira |
 |---|---|
-| **o veredito** | ele é regra, não lista: classes do modo · nenhuma repetida · subindo em ordem de grau · cabendo no vão da mão. Confira se o vão padrão (4 casas) é o certo para o seu baixo, e se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
+| **o veredito** | decisão sua de 25/11: ele julga **se é a escala**, e nada mais — classes do modo, nenhuma repetida, subindo em ordem de grau. O vão da mão saiu: é critério de **sugestão**, não de correção. Confira se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
 | **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
 | **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
 | **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |

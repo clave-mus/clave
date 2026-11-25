@@ -232,7 +232,12 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
     // `gabarito` existe para o gabarito que são VÁRIOS botões — ver `ParteDoSom`.
     if (parte.id === 'resposta' || parte.gabarito) setOuviuAResposta(true);
     pararTudo();
-    const dur = playContent({ groups: parte.groups, instrument: question.sound?.instrument }, presentationFor(question));
+    // `parte.voz` manda sobre o timbre da pergunta: um pedaço pode ser de outra natureza de som
+    // (a melodia do braço contra a cadência harmônica — ver `vozPorGrupo`).
+    const dur = playContent(
+      { groups: parte.groups, instrument: question.sound?.instrument, vozPorGrupo: parte.voz ? parte.groups.map(() => parte.voz) : undefined },
+      presentationFor(question),
+    );
     setPlaying(true);
     atTime(now() + dur, () => setPlaying(false));
   }, [presentationFor]);

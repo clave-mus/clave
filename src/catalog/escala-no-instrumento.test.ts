@@ -12,7 +12,7 @@ import { validate } from './validate';
 import { ALL_SCALES, assinaturaDaEscala, spellPc, type ScaleId } from './helpers';
 import { mod, noteName } from '../theory/core';
 import { getModo, notasDoModo } from '../theory/digitacoes';
-import { classesDoModo, digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
+import { classesDoModo, digitacoesDaEscala, formaDaDigitacao, julgarDigitacao } from '../theory/digitacao-de-escala';
 import { translate, type MessageKey, type Vars } from '../i18n';
 
 const ctxCom = (instrument: 'violao' | 'baixo' | 'piano'): Ctx => ({
@@ -171,15 +171,23 @@ describe('a rodada de vários desenhos', () => {
   it('aceita desenhos diferentes e recusa o mesmo repetido', () => {
     const q = pergunta('2');
     if (q.expected.kind !== 'digitacao') throw new Error('era para ser digitação');
+    /**
+     * **Duas FORMAS diferentes**, e não duas posições: a lista vem deduplicada por lugar, então
+     * duas entradas podem ser o mesmo desenho uma oitava acima — e isso a conferência recusa de
+     * propósito (pedido dele em 25/11).
+     */
     const ds = digitacoesDaEscala({ ...q.expected, maxCasa: 12, limite: 60 });
-    expect(ds.length).toBeGreaterThan(1);
+    const formas = new Map<string, typeof ds[number]>();
+    for (const d of ds) if (!formas.has(formaDaDigitacao(d))) formas.set(formaDaDigitacao(d), d);
+    const [primeira, segunda] = [...formas.values()];
+    expect(segunda, 'o modo não tem duas formas diferentes').toBeTruthy();
     const resposta = (grupos: typeof ds) => ({
       kind: 'pitches' as const,
       midis: grupos.flat().map(p => q.expected.kind === 'digitacao' ? q.expected.tuning[p.corda] + p.casa : 0),
       posicoes: grupos.flat(),
     });
-    expect(validate(q.expected, resposta([ds[0], ds[1]])), 'dois diferentes').toBe(true);
-    expect(validate(q.expected, resposta([ds[0], ds[0]])), 'o mesmo duas vezes').toBe(false);
+    expect(validate(q.expected, resposta([primeira, segunda])), 'duas formas diferentes').toBe(true);
+    expect(validate(q.expected, resposta([primeira, primeira])), 'a mesma duas vezes').toBe(false);
   });
 
   it('recusa quando um dos desenhos é inválido', () => {

@@ -22,16 +22,16 @@ describe('perfil de apresentação', () => {
   const chord = { groups: [[60, 64, 67]] };
   it('acorde em bloco: as notas juntas (ou espaçadas pelo arp)', () => {
     const p = resolvePresentation([{ gap: 0.5 }]);
-    expect(schedule(chord, p)).toEqual({ notes: [[60, 0], [64, 0], [67, 0]], length: 0.5 });
+    expect(schedule(chord, p)).toEqual({ notes: [[60, 0, 0], [64, 0, 0], [67, 0, 0]], length: 0.5 });
     expect(schedule(chord, { ...p, arp: 0.1 }).notes.map(([, t]) => +t.toFixed(2))).toEqual([0, 0.1, 0.2]);
   });
   it('arpejo e depois o acorde: o mesmo conteúdo, só muda como soa', () => {
     const p = resolvePresentation([{ gap: 0.5, chord: 'arpeggio-block' }]);
-    expect(schedule(chord, p)).toEqual({ notes: [[60, 0], [64, 0.5], [67, 1], [60, 1.5], [64, 1.5], [67, 1.5]], length: 2 });
+    expect(schedule(chord, p)).toEqual({ notes: [[60, 0, 0], [64, 0.5, 0], [67, 1, 0], [60, 1.5, 0], [64, 1.5, 0], [67, 1.5, 0]], length: 2 });
   });
   it('só o arpejo', () => {
     const p = resolvePresentation([{ gap: 0.5, chord: 'arpeggio' }]);
-    expect(schedule(chord, p)).toEqual({ notes: [[60, 0], [64, 0.5], [67, 1]], length: 1.5 });
+    expect(schedule(chord, p)).toEqual({ notes: [[60, 0, 0], [64, 0.5, 0], [67, 1, 0]], length: 1.5 });
   });
   it('notas soltas em sequência não mudam com o modo de acorde', () => {
     const seq = { groups: [[60], [62], [64]] };

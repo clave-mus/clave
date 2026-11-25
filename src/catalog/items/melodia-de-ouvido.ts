@@ -39,6 +39,12 @@ import type { CatalogItem, Question, Surface } from '../types';
  */
 const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico' } as const;
 
+/**
+ * **Uma nota em cada quatro ou cinco** — a frequência que ele deu em 25/11. Não é por melodia: é a
+ * chance de CADA nota candidata virar aproximação, então melodias curtas às vezes saem limpas.
+ */
+const CHANCE_CROMATICA = 0.22;
+
 export const melodiaDeOuvido: CatalogItem = {
   id: 'melodia-de-ouvido',
   objetos: ['melodia', 'notas'], tarefas: ['ouvir', 'audiar'],
@@ -83,19 +89,17 @@ export const melodiaDeOuvido: CatalogItem = {
       { id: 'graus', label: ctx.t('settings.byDegrees') },
     ] },
     /**
-     * **Aproximações cromáticas** — pedido dele em 25/11: *"tanto entre notas, como entre o 4 e o
-     * 5, como se aproximando de uma nota, como fazendo um ♭2-1"*.
+     * **Aproximações cromáticas: um interruptor, não uma cota.**
      *
-     * É uma CONTAGEM, e não uma frequência em porcento: "duas notas de fora numa melodia de cinco"
-     * se confere ouvindo, e "trinta por cento" não. A cromática **substitui** uma nota da escala —
-     * a quantidade de notas que você pediu continua sendo a que soa.
+     * Nasceu como contagem (zero a três) e ele corrigiu o desenho em 25/11: *"um botão que tu
+     * clica e aí ele tem uma chance relativamente baixa... uma a cada 5 notas, ou a 4 notas"*.
+     *
+     * O argumento é musical: cota fixa faz toda melodia ter exatamente duas cromáticas, e aí o
+     * ouvido aprende a **contá-las** em vez de reconhecê-las. Com chance, às vezes não vem
+     * nenhuma — e é isso que obriga a ouvir. A cromática continua **substituindo** uma nota da
+     * escala: a quantidade de notas que você pediu é a que soa.
      */
-    { id: 'cromaticas', label: ctx.t('settings.chromatics'), type: 'single', options: [
-      { id: '0', label: ctx.t('settings.chromaticsNone') },
-      { id: '1', label: '1' },
-      { id: '2', label: '2' },
-      { id: '3', label: '3' },
-    ] },
+    { id: 'cromaticas', label: ctx.t('settings.chromatics'), type: 'toggle' },
     /**
      * **Resolvendo ou soltas** — a outra metade da pergunta dele.
      *
@@ -103,7 +107,7 @@ export const melodiaDeOuvido: CatalogItem = {
      * meio tom. Soltas é outro som e outro exercício: a nota alterada aparece sem destino, e o
      * ouvido tem de aceitá-la como cor em vez de como caminho.
      */
-    { id: 'comoEntram', label: ctx.t('settings.chromaticsHow'), type: 'single', quando: s => s.cromaticas !== '0' && s.cromaticas !== undefined,
+    { id: 'comoEntram', label: ctx.t('settings.chromaticsHow'), type: 'single', quando: s => s.cromaticas === true,
       options: [
         { id: 'resolvendo', label: ctx.t('settings.chromaticsResolve') },
         { id: 'livres', label: ctx.t('settings.chromaticsLoose') },
@@ -125,7 +129,7 @@ export const melodiaDeOuvido: CatalogItem = {
     ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.superficie ?? superficieDoPerfil(ctx))),
   ],
   defaults: { estimulo: 'som', notas: 3, grausEscolhidos: [], salto: SALTO_PADRAO, contexto: 'ii-V-I', duracao: 0.9,
-    cromaticas: '0', comoEntram: 'resolvendo', ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
+    cromaticas: false, comoEntram: 'resolvendo', ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   // Fora dos defaults estáticos de propósito — ver `superficieDoPerfil` em helpers.
   defaultsDo: ctx => ({ superficie: superficieDoPerfil(ctx) }),
   presets: [
@@ -134,9 +138,9 @@ export const melodiaDeOuvido: CatalogItem = {
     { id: 'cinco', nome: 'presets.melodiaCinco', settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     // Os dois sons das cromáticas, um atalho cada: a que cai no alvo e a que fica solta.
     { id: 'aproximacoes', nome: 'presets.melodiaAproximacoes',
-      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: '2', comoEntram: 'resolvendo' }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: true, comoEntram: 'resolvendo' }, params: EM_DO_DIATONICO },
     { id: 'alteradas-soltas', nome: 'presets.melodiaAlteradas',
-      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: '2', comoEntram: 'livres' }, params: EM_DO_DIATONICO },
+      settings: { estimulo: 'som', notas: 5, salto: SALTO_PADRAO, contexto: 'ii-V-I', cromaticas: true, comoEntram: 'livres' }, params: EM_DO_DIATONICO },
     { id: 'audiar-graus', nome: 'presets.melodiaAudiarGraus', settings: { estimulo: 'escrito', notas: 4, superficie: 'graus', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
     { id: 'audiar-pauta', nome: 'presets.melodiaAudiarPauta', settings: { estimulo: 'escrito', notas: 3, superficie: 'pauta', salto: SALTO_PADRAO, contexto: 'ii-V-I' }, params: EM_DO_DIATONICO },
   ],
@@ -181,7 +185,7 @@ export const melodiaDeOuvido: CatalogItem = {
     const melodia = sortearMelodia({
       pcs: pcsDosGraus(ctx, arr(s.grausEscolhidos, [])), lo: faixa.lo, hi: faixa.hi, n,
       saltoMax: Math.round(Number(s.salto ?? SALTO_PADRAO)),
-      cromaticas: Number(s.cromaticas ?? 0),
+      chanceCromatica: s.cromaticas === true ? CHANCE_CROMATICA : 0,
       cromaticasSoltas: s.comoEntram === 'livres',
     });
     const tonica = tonicaNaRegiao(ctx, { lo: 55, hi: 64 });
@@ -194,11 +198,28 @@ export const melodiaDeOuvido: CatalogItem = {
     const audiando = s.estimulo === 'escrito';
     // Audiando, a melodia não toca: só o contexto. Ver `partes`, que é onde o gabarito mora.
     const grupos = audiando ? [...contexto] : [...contexto, [], ...melodia.map(m => [m])];
+    /**
+     * ⚠️ **A cadência é harmonia; a melodia é que segue a superfície.**
+     *
+     * Ele ouviu o defeito em 25/11, no baixo: *"a cadência está soando travada, bugada"*. Estava —
+     * o timbre da pergunta valia para tudo, então quatro notas de **corda pulsada** soavam em bloco
+     * como acorde. Um baixo não toca acorde de quatro vozes, e a síntese de corda empilhada vira
+     * massa.
+     *
+     * Agora o timbre do braço vale só nos grupos da MELODIA, que é onde a decisão dele de 13/11
+     * manda (*"o som está como o som do piano, deveria ser o som do baixo"*). A cadência fica no
+     * timbre harmônico do perfil — e por isso `instrument` deixou de ser o braço: ele é o padrão
+     * de tudo, e o braço virou exceção por grupo.
+     */
+    const vozDoInstrumento = noBraco ? ctx.params.timbres[vozDoBraco(tuning)] : undefined;
+    const vozPorGrupo = noBraco
+      ? grupos.map((_, i) => (i < contexto.length ? undefined : vozDoInstrumento))
+      : undefined;
     const partes = [
       { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
       ...(audiando
-        ? [{ id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: melodia.map(m => [m]) }]
-        : melodia.map((m, i) => ({ id: `n${i}`, label: ctx.t('quiz.partNote', { n: i + 1 }), groups: [[m]] }))),
+        ? [{ id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: melodia.map(m => [m]), voz: vozDoInstrumento }]
+        : melodia.map((m, i) => ({ id: `n${i}`, label: ctx.t('quiz.partNote', { n: i + 1 }), groups: [[m]], voz: vozDoInstrumento }))),
     ];
     const grau = (m: number) => grauDaFundamental(m - tonica);
     const emGraus = melodia.map(grau).join('-');
@@ -230,7 +251,7 @@ export const melodiaDeOuvido: CatalogItem = {
         visual,
         surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
         // O gabarito soa no instrumento que está desenhado, não de piano.
-        sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: false,
+        sound: { groups: grupos, partes, vozPorGrupo }, autoplay: false,
         reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
       };
     }
@@ -272,7 +293,7 @@ export const melodiaDeOuvido: CatalogItem = {
       visual: { kind: 'ear', hint: ctx.t('quiz.earMelodyHint') },
       surface: superficie,
       expected: onde === 'graus' ? { kind: 'option', id: emGraus } : { kind: 'contorno', midis: melodia },
-      sound: { groups: grupos, partes, instrument: noBraco ? vozDoBraco(tuning) : undefined }, autoplay: true,
+      sound: { groups: grupos, partes, vozPorGrupo }, autoplay: true,
       reveal: `${emGraus}  ·  ${comNomes}`, presentation: vozDaPergunta(s, noBraco),
     };
   },

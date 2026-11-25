@@ -57,8 +57,10 @@ export function resolvePresentation(layers: (Partial<Presentation> | undefined)[
  * **`transpor` é somado aqui**, e não em `playContent`, para a soma ser mensurável: esta função
  * devolve o que vai soar, e é por ela que os testes afirmam a altura.
  */
-export function schedule(content: SoundContent, p: Presentation): { notes: [number, number][]; length: number } {
-  const notes: [number, number][] = [];
+export function schedule(content: SoundContent, p: Presentation): { notes: [number, number, number][]; length: number } {
+  // [altura, instante, ÍNDICE DO GRUPO] — o terceiro entrou em 25/11 com `vozPorGrupo`: para dar
+  // timbre por grupo, quem toca precisa saber de que grupo cada nota veio.
+  const notes: [number, number, number][] = [];
   let t = 0;
   content.groups.forEach((group, g) => {
     /**
@@ -76,11 +78,11 @@ export function schedule(content: SoundContent, p: Presentation): { notes: [numb
      */
     const arpeja = p.chord !== 'block' && (content.arpejaveis?.includes(g) ?? true);
     if (group.length > 1 && arpeja) {
-      group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.gap]));
+      group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.gap, g]));
       t += group.length * p.gap;
       if (p.chord === 'arpeggio') return;
     }
-    group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.arp]));
+    group.forEach((m, i) => notes.push([m + p.transpor, t + i * p.arp, g]));
     t += p.gap;
   });
   return { notes, length: t };
@@ -122,7 +124,9 @@ export function playContent(content: SoundContent, p: Presentation): number {
   }
   const t0 = now() + 0.05;
   const { notes, length } = schedule(content, p);
-  const vel = p.volume * VOICE_LEVEL[p.voice];
-  notes.forEach(([m, t]) => tone(m, t0 + t, p.dur, p.voice, vel));
+  notes.forEach(([m, t, g]) => {
+    const voz = content.vozPorGrupo?.[g] ?? p.voice;
+    tone(m, t0 + t, p.dur, voz, p.volume * VOICE_LEVEL[voz]);
+  });
   return length;
 }

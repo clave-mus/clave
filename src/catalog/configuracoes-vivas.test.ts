@@ -198,13 +198,22 @@ describe('quando: configuração condicional', () => {
         const todas = ex.settings(c);
         const padroes = { ...ex.defaults, ...(ex.defaultsDo?.(c) ?? {}) } as Record<string, SettingValue>;
         const unicas = todas.filter(s => s.type === 'single');
+        /**
+         * ⚠️ **Os interruptores entram na varredura.** Ela só virava escolhas únicas, e em 25/11
+         * uma condição legítima ficou "inalcançável" porque dependia de um toggle — o das
+         * aproximações cromáticas, que deixou de ser lista e virou botão. A pessoa alcança; a
+         * varredura é que não ia lá.
+         */
+        const toggles = todas.filter(s => s.type === 'toggle');
         const combos: Record<string, SettingValue>[] = [padroes];
         for (const s of unicas) for (const o of s.options ?? []) combos.push({ ...padroes, [s.id]: o.id });
+        for (const s of toggles) for (const v of [true, false]) combos.push({ ...padroes, [s.id]: v });
         for (const a of unicas) for (const oa of a.options ?? []) {
           for (const b of unicas) {
             if (b.id === a.id) continue;
             for (const ob of b.options ?? []) combos.push({ ...padroes, [a.id]: oa.id, [b.id]: ob.id });
           }
+          for (const t of toggles) combos.push({ ...padroes, [a.id]: oa.id, [t.id]: true });
         }
         for (const s of todas) {
           if (!s.quando) continue;
