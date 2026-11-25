@@ -325,7 +325,8 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       window.setTimeout(() => onDone?.({ correct: ns.correct, total: ns.total, seconds: Math.round((Date.now() - started.current) / 1000) }), ok ? 900 : 1800);
       return;
     }
-    if (ok) window.setTimeout(next, 850);
+    // Acertou: segue sozinho — a não ser que a pergunta diga que há o que fazer depois dela.
+    if (ok && !q.aguardaDepois) window.setTimeout(next, 850);
   }, [phase, score, def, q, soundOn, play, playParte, presentationFor, locale, settings, params, target, onDone, next]);
 
   // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
@@ -754,14 +755,16 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
     const podeSugerir = q.expected.kind === 'digitacao' && phase !== 'ask';
     const pedirSugestao = () => {
       if (q.expected.kind !== 'digitacao') return;
-      const porDesenho = 7;
+      /** O tamanho do desenho sai da pergunta: sete, ou oito fechando na oitava. */
+      const quantosDesenhos = q.expected.desenhos ?? 1;
+      const porDesenho = Math.max(1, Math.floor(juntadas.length / quantosDesenhos));
       const feitas: PosicaoDaDigitacao[][] = [];
       for (let k = 0; k + porDesenho <= juntadas.length; k += porDesenho) {
         const grupo = juntadas.slice(k, k + porDesenho);
         if (grupo.every(j => j.s !== undefined && j.f !== undefined)) feitas.push(grupo.map(j => ({ corda: j.s!, casa: j.f! })));
       }
       const nova = sugerirDigitacao(
-        { ...q.expected, maxCasa: sf.to, maxVaoCasas: q.expected.maxVaoCasas, limite: 80 },
+        { ...q.expected, maxCasa: sf.to, maxVaoCasas: q.expected.maxVaoCasas, limite: 80, oitava: porDesenho > 7 },
         [...feitas, ...sugestoes],
       );
       if (nova) setSugestoes(v => [...v, nova]);

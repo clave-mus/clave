@@ -105,8 +105,9 @@ describe('as duas direções', () => {
     const q = item.make({ ...base(noBraco), direcao: 'desenhar' } as never, noBraco);
     expect(q.expected.kind).toBe('digitacao');
     expect(q.surface.kind).toBe('fretboard');
-    // sete toques, braço alto para o dedo no celular deitado
-    expect('quantas' in q.surface && q.surface.quantas).toBe(7);
+    // oito toques — tônica a tônica, fechando na oitava (ele relatou em 25/11 que parar na sétima
+    // era o único aceito) — e braço alto para o dedo no celular deitado
+    expect('quantas' in q.surface && q.surface.quantas).toBe(8);
     expect('alto' in q.surface && q.surface.alto).toBe(true);
 
     const noPiano = ctxCom('piano');
@@ -152,12 +153,17 @@ describe('as duas direções', () => {
  */
 describe('a rodada de vários desenhos', () => {
   const ctx = ctxCom('baixo');
-  const pergunta = (desenhos: string) =>
-    item.make({ ...base(ctx), direcao: 'desenhar', desenhos, casas: '0-12' } as never, ctx);
+  const pergunta = (desenhos: string, extra: Record<string, unknown> = {}) =>
+    item.make({ ...base(ctx), direcao: 'desenhar', desenhos, casas: '0-12', ...extra } as never, ctx);
 
-  it.each(['1', '2', '3', '5'])('pede 7 × %s posições', desenhos => {
+  it('sem fechar na oitava, são sete por desenho', () => {
+    const q = pergunta('2', { oitava: false });
+    expect('quantas' in q.surface && q.surface.quantas).toBe(14);
+  });
+
+  it.each(['1', '2', '3', '5'])('pede 8 × %s posições, fechando na oitava', desenhos => {
     const q = pergunta(desenhos);
-    expect('quantas' in q.surface && q.surface.quantas).toBe(7 * Number(desenhos));
+    expect('quantas' in q.surface && q.surface.quantas).toBe(8 * Number(desenhos));
     expect(q.expected.kind === 'digitacao' && q.expected.desenhos).toBe(Number(desenhos));
   });
 

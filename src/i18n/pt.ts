@@ -126,6 +126,7 @@ const pt = {
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
   scaleOnInstrument: {
+    octave: 'Fechar na oitava (tônica a tônica)',
     semDesenhos: 'Nesta região não há {n} digitações diferentes deste modo. Abra mais casas, alargue o vão da mão, ou peça menos desenhos.',
     howMany: 'Quantos desenhos por rodada',
     buildManyPrompt: 'Monte {n} digitações DIFERENTES do {degree} modo da {family}, a partir de {note}.',

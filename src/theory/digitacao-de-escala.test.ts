@@ -4,7 +4,7 @@
 // estar travadas antes de haver tela: que o braço dá desenhos de sobra, e que o veredito aceita
 // QUALQUER digitação legítima — não só as que a busca por acaso devolveu.
 import { describe, expect, it } from 'vitest';
-import { classesDoModo, digitacoesDaEscala, julgarDigitacao, sugerirDigitacao, assinaturaDaDigitacao } from './digitacao-de-escala';
+import { classesDoModo, digitacoesDaEscala, julgarDigitacao, sugerirDigitacao, assinaturaDaDigitacao, formaDaDigitacao } from './digitacao-de-escala';
 import { note, mod } from './core';
 
 const BAIXO = [28, 33, 38, 43];
@@ -124,5 +124,56 @@ describe('a sugestão', () => {
     const s = sugerirDigitacao(pedido, [])!;
     expect(julgarDigitacao(s, pedido)).toEqual({ certo: true });
     expect(s).toHaveLength(7);
+  });
+});
+
+/**
+ * Os três defeitos que ele relatou em 25/11, usando o exercício. Cada um virou um teste, porque
+ * cada um passou pela minha revisão sem que eu visse.
+ */
+describe('o que ele relatou usando', () => {
+  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+
+  it('fechar na oitava vale — era recusado', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const base = Math.min(...d.map(x => BAIXO[x.corda] + x.casa));
+    const corda = BAIXO.findIndex(t => base + 12 - t >= 0 && base + 12 - t <= 12);
+    const comOitava = [...d, { corda, casa: base + 12 - BAIXO[corda] }];
+    expect(julgarDigitacao(comOitava, { ...pedido, maxVaoCasas: 99 })).toEqual({ certo: true });
+  });
+
+  it('outra classe repetida continua recusada', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const repetida = [...d, { corda: d[1].corda, casa: d[1].casa + 12 }];
+    expect(julgarDigitacao(repetida, { ...pedido, maxVaoCasas: 99 }).motivo).toBe('repetida');
+  });
+
+  it('a mesma forma uma oitava acima NÃO é um desenho novo', () => {
+    const d = digitacoesDaEscala(pedido)[0];
+    const umaOitavaAcima = d.map(x => ({ corda: x.corda, casa: x.casa + 12 }));
+    expect(formaDaDigitacao(umaOitavaAcima)).toBe(formaDaDigitacao(d));
+    expect(assinaturaDaDigitacao(umaOitavaAcima)).not.toBe(assinaturaDaDigitacao(d));
+  });
+
+  it('a sugestão nunca repete a FORMA do que já foi feito', () => {
+    const feitas: { corda: number; casa: number }[][] = [];
+    for (let i = 0; i < 6; i++) {
+      const nova = sugerirDigitacao(pedido, feitas);
+      if (!nova) break;
+      expect(feitas.map(formaDaDigitacao)).not.toContain(formaDaDigitacao(nova));
+      feitas.push(nova);
+    }
+    expect(feitas.length).toBeGreaterThan(2);
+  });
+
+  it('pedindo oitava, todo desenho sugerido vem com oito notas e fecha certo', () => {
+    const ds = digitacoesDaEscala({ ...pedido, oitava: true });
+    expect(ds.length).toBeGreaterThan(0);
+    for (const d of ds) {
+      expect(d).toHaveLength(8);
+      const alturas = d.map(x => BAIXO[x.corda] + x.casa).sort((a, b) => a - b);
+      expect(alturas[7] - alturas[0]).toBe(12);
+      expect(julgarDigitacao(d, pedido)).toEqual({ certo: true });
+    }
   });
 });

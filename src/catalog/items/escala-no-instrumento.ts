@@ -69,6 +69,8 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   const tuning = tuningOf(s, ctx);
   const maxVaoCasas = Number(s.vao ?? 4);
   const desenhos = Math.min(5, Math.max(1, Number(s.desenhos ?? 1)));
+  /** Sete graus, mais a tônica de cima quando o desenho fecha na oitava. */
+  const porDesenho = s.oitava === false ? 7 : 8;
   const [, ate] = fretRange(s);
 
   /**
@@ -99,11 +101,13 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
       : ctx.t('scaleOnInstrument.buildPrompt', { degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota }),
     visual: { kind: 'text', text: '' },
     surface: {
-      kind: 'fretboard', tuning, from: 0, to: ate, quantas: 7 * desenhos, alto: true,
+      kind: 'fretboard', tuning, from: 0, to: ate, quantas: porDesenho * desenhos, alto: true,
       // A tônica aparece como apoio: o desenho que se decora parte dela.
       apoio: { midis: exemplos.length ? [tuning[exemplos[0][0].corda] + exemplos[0][0].casa] : [] },
     },
     expected: { kind: 'digitacao', tonica, familia, grau, tuning, maxVaoCasas, desenhos },
+    // Acertando, a tela espera: há o botão de ver um desenho que você não fez.
+    aguardaDepois: true,
     // Ouvir é escolha: a escala soa no botão, nunca sozinha — senão a pergunta vira ditado.
     sound: { groups: classesDoModo({ tonica, familia, grau }).map(pcModo => [48 + pcModo]), instrument: vozDoBraco(tuning) },
     autoplay: false,
@@ -171,6 +175,16 @@ export const escalaNoInstrumento: CatalogItem = {
     { id: 'desenhos', label: ctx.t('scaleOnInstrument.howMany'), type: 'single',
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
       options: ['1', '2', '3', '4', '5'].map(n => ({ id: n, label: n })) },
+    /**
+     * **Fechar na oitava** — defeito que ele relatou em 25/11: *"está considerando que errei quando
+     * adiciono a oitava, só aceita se eu for até a sétima"*. Uma digitação de escala vai da tônica
+     * à tônica, e é assim que se toca. Ligado por padrão.
+     *
+     * É controle, e não só tolerância no juiz, porque a superfície precisa saber **quantos toques**
+     * esperar: pedindo dois desenhos, ela divide as posições em dois grupos iguais.
+     */
+    { id: 'oitava', label: ctx.t('scaleOnInstrument.octave'), type: 'toggle',
+      quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar' },
     { id: 'vao', label: ctx.t('scaleOnInstrument.span'), type: 'single',
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
       options: ['3', '4', '5'].map(n => ({ id: n, label: ctx.t('scaleOnInstrument.spanFrets', { n }) })) },
@@ -178,7 +192,7 @@ export const escalaNoInstrumento: CatalogItem = {
     { ...FRETS(ctx), quando: s => s.instrumento !== 'piano' },
   ],
   defaults: { direcao: 'identificar', tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'], casas: '0-12',
-    familia: ['maior'], graus: ['1', '2', '3', '4', '5', '6', '7'], vao: '4', desenhos: '1' },
+    familia: ['maior'], graus: ['1', '2', '3', '4', '5', '6', '7'], vao: '4', desenhos: '1', oitava: true },
   // O instrumento começa no do perfil, como nos irmãos — e o piano é um valor como os outros.
   defaultsDo: ctx => ({ instrumento: ctx.params.instrument === 'piano' ? 'piano' : (ctx.params.instrument === 'baixo' ? 'baixo' : 'violao') }),
   presets: [

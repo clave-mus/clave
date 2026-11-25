@@ -319,6 +319,14 @@ export interface ParteDoSom {
 
 export interface Question {
   prompt: string;
+  /**
+   * **Acertou e o Player NÃO avança sozinho.**
+   *
+   * Ele avança 850 ms depois de um acerto, e isso é bom quase sempre — menos quando a pergunta tem
+   * o que fazer DEPOIS de responder. Ele relatou em 25/11: *"quando acerto, não consigo clicar no
+   * botão de ver um desenho que eu não fiz"*. O botão estava lá; a tela é que já tinha ido embora.
+   */
+  aguardaDepois?: boolean;
   visual: Visual;
   surface: Surface;
   expected: Expected;
