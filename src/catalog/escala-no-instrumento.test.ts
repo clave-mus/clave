@@ -264,3 +264,42 @@ describe('a grafia das notas segue a escala', () => {
     expect(nomes, 'saiu com a grafia da tabela de sustenidos').not.toContain('Fá');
   });
 });
+
+/**
+ * **O som da escala sobe sempre** — ele relatou ouvindo, em 25/11: *"elas começam mais agudas,
+ * como esperado pra soar bem, mas aí voltam a ser mais graves depois de subir um pouco, no meio da
+ * escala"*.
+ *
+ * A causa era tocar `48 + classe de altura`: classe dá a volta, e num modo que começa em Lá o Dó
+ * da terceira nota caía uma sétima abaixo. Soa como escala errada — e era o som que ele estava
+ * usando para conferir o desenho que montava.
+ */
+describe('o som sobe sempre', () => {
+  const ctx = ctxCom('baixo');
+
+  it('montando digitação, cada nota soa acima da anterior', () => {
+    for (let i = 0; i < 80; i++) {
+      const q = item.make({ ...base(ctx), direcao: 'desenhar' } as never, ctx);
+      const ms = (q.sound?.groups ?? []).flat();
+      expect(ms.length, 'a escala não soou').toBeGreaterThan(6);
+      for (let k = 1; k < ms.length; k++) {
+        expect(ms[k], `desceu no meio: ${ms.join(' ')}`).toBeGreaterThan(ms[k - 1]);
+      }
+      // e fecha na oitava: a última é a primeira, doze acima
+      expect(ms[ms.length - 1] - ms[0]).toBe(12);
+    }
+  });
+
+  it('identificando também, nas duas superfícies', () => {
+    for (const instrument of ['piano', 'baixo'] as const) {
+      const c = ctxCom(instrument);
+      for (let i = 0; i < 40; i++) {
+        const q = item.make({ ...base(c), tipos: [...ALL_SCALES] } as never, c);
+        const ms = (q.sound?.groups ?? []).flat();
+        for (let k = 1; k < ms.length; k++) {
+          expect(ms[k], `${instrument} desceu: ${ms.join(' ')}`).toBeGreaterThan(ms[k - 1]);
+        }
+      }
+    }
+  });
+});

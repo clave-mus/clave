@@ -129,6 +129,7 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
 | **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
 | **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |
+| **não dá para repetir nota** | tocar a mesma classe duas vezes é ignorado no clique (pedido dele em 25/11: *"não tem sentido, só atrapalha"*). A exceção é a oitava que fecha o desenho |
 | **2 a 5 desenhos na rodada** | eles chegam numa pergunta só: cada sete posições são um desenho, e a conferência exige que todos sejam válidos **e diferentes entre si**. Confira se montar cinco seguidos cansa ou se é o treino certo |
 | **o botão de sugestão** | aparece depois de responder, nunca antes (antes seria pedir a resposta). Ele exclui o que você acabou de montar e as sugestões já vistas **por FORMA** — o mesmo desenho uma oitava acima não conta como novo (você relatou em 25/11) —, numera as notas na ordem de subida, e avisa quando acabaram |
 | **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |

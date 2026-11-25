@@ -182,7 +182,16 @@ export type Surface =
        * desde 13/11 — ela soma mais de 300 px dos 375 que existem. Quem declara isto ganha também o
        * botão de avançar **dentro do palco**, já que o rodapé é parte da moldura que some.
        */
-      foco?: boolean }
+      foco?: boolean;
+      /**
+       * **Não deixa repetir classe de altura** enquanto se acumula. Numa digitação de escala a
+       * mesma nota duas vezes é recusada no veredito de qualquer jeito, então permitir o toque só
+       * gasta uma casa — ele relatou em 25/11: *"não tem sentido, só atrapalha"*.
+       *
+       * A exceção é a oitava que FECHA o desenho: a tônica de novo, doze semitons acima da
+       * primeira. Essa é a única repetição de classe que a escala tem.
+       */
+      semRepetir?: boolean }
   /**
    * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou

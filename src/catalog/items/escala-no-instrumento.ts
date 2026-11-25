@@ -7,7 +7,7 @@ import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, Ctx, SettingValue, Surface } from '../types';
 import type { FretMark } from '../../components/music/Fretboard';
 import { mod } from '../../theory/core';
-import { classesDoModo, digitacoesDaEscala } from '../../theory/digitacao-de-escala';
+import { digitacoesDaEscala } from '../../theory/digitacao-de-escala';
 import { getModo, notasDoModo } from '../../theory/digitacoes';
 import type { FamiliaBase } from '../../theory/digitacoes';
 
@@ -99,9 +99,10 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
    * As notas já vêm grafadas de `notasDoModo` — é a teoria que manda, não uma tabela de
    * sustenidos: em fá♯ maior a sétima é **Mi♯**, e numa escala de bemóis o Sol♭ não vira Fá♯.
    */
-  const grafia = Object.fromEntries(
-    notasDoModo(getModo(tonica, familia, grau)).map(n => [mod(midi(n), 12), noteName(n, ctx.naming)]),
-  );
+  const notasDoGrau = notasDoModo(getModo(tonica, familia, grau));
+  const grafia = Object.fromEntries(notasDoGrau.map(n => [mod(midi(n), 12), noteName(n, ctx.naming)]));
+  /** As alturas que soam, subindo da tônica até a oitava — a escala como ela se toca. */
+  const alturasQueSoam = [...notasDoGrau.map(midi), midi(notasDoGrau[0]) + 12];
   const familiaEscrita = ctx.t(NOME_DA_FAMILIA(familia));
   const tradicional = NOME_TRADICIONAL[`${familia}:${grau}`];
   return {
@@ -112,7 +113,7 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
       : ctx.t('scaleOnInstrument.buildPrompt', { degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota }),
     visual: { kind: 'text', text: '' },
     surface: {
-      kind: 'fretboard', tuning, from: 0, to: ate, quantas: porDesenho * desenhos, alto: true, foco: true,
+      kind: 'fretboard', tuning, from: 0, to: ate, quantas: porDesenho * desenhos, alto: true, foco: true, semRepetir: true,
       // A tônica aparece como apoio: o desenho que se decora parte dela.
       apoio: { midis: exemplos.length ? [tuning[exemplos[0][0].corda] + exemplos[0][0].casa] : [] },
     },
@@ -121,7 +122,18 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
     aguardaDepois: true,
     grafia,
     // Ouvir é escolha: a escala soa no botão, nunca sozinha — senão a pergunta vira ditado.
-    sound: { groups: classesDoModo({ tonica, familia, grau }).map(pcModo => [48 + pcModo]), instrument: vozDoBraco(tuning) },
+    /**
+     * ⚠️ **O som sobe sempre** — e não subia.
+     *
+     * Ele tocava `48 + classe de altura`, e classe de altura **dá a volta**: num modo que começa em
+     * Lá, o Dó da terceira nota é a classe 0, e `48 + 0` cai abaixo do Lá que acabou de soar. Ele
+     * relatou ouvindo: *"elas começam mais agudas, como esperado pra soar bem, mas aí voltam a ser
+     * mais graves depois de subir um pouco, no meio da escala"*.
+     *
+     * Agora as alturas saem das NOTAS do modo, que já sobem, mais a oitava de cima fechando — é a
+     * escala como ela se toca, e é o que a pessoa está tentando montar no braço.
+     */
+    sound: { groups: alturasQueSoam.map(m => [m]), instrument: vozDoBraco(tuning) },
     autoplay: false,
     reveal: tradicional ? `${nota} — ${ctx.t(tradicional)}` : `${ordinal(grau, ctx.conv)} · ${nota} ${familiaEscrita}`,
   };

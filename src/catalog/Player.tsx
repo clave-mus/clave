@@ -780,6 +780,27 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       const ordenada = [...ultima].sort((a, b) => (sf.tuning[a.corda] + a.casa) - (sf.tuning[b.corda] + b.casa));
       ordenada.forEach((p, i) => marks.push({ s: p.corda, f: p.casa, color: 'var(--ve)', label: String(i + 1) }));
     }
+    /**
+     * **Repetir nota não entra** (`Surface.semRepetir`), porque o veredito recusaria de qualquer
+     * jeito e o toque só gastaria uma casa. A única repetição que vale é a oitava que fecha o
+     * desenho: a tônica doze acima da primeira nota **deste** desenho.
+     *
+     * "Deste desenho" importa: numa rodada de vários, cada grupo de posições é um desenho novo, e
+     * a conta de quantas posições cabem num grupo sai da própria pergunta.
+     */
+    const podeTocar = (m: number) => {
+      if (!sf.semRepetir || !acumula) return true;
+      const porDesenho = q.expected.kind === 'digitacao'
+        ? Math.max(1, Math.floor(quantas / (q.expected.desenhos ?? 1)))
+        : quantas;
+      const doDesenho = juntadas.slice(Math.floor(juntadas.length / porDesenho) * porDesenho);
+      if (!doDesenho.length) return true;
+      const classes = doDesenho.map(j => mod(j.m, 12));
+      if (!classes.includes(mod(m, 12))) return true;
+      // a oitava de fecho: a classe da primeira, exatamente doze acima dela, e ainda não posta
+      const primeira = Math.min(...doDesenho.map(j => j.m));
+      return m === primeira + 12 && !doDesenho.some(j => j.m === m);
+    };
     const podeSugerir = q.expected.kind === 'digitacao' && phase !== 'ask';
     const pedirSugestao = () => {
       if (q.expected.kind !== 'digitacao') return;
@@ -805,7 +826,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
         {ouvir}
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
           alto={sf.alto}
-          onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
+          onPick={(s, f) => phase === 'ask' && podeTocar(sf.tuning[s] + f) && tocar({ m: sf.tuning[s] + f, s, f })} />
         {(podeSugerir || (emFocoNoBraco && phase !== 'ask')) && (
           <div className="row" style={{ justifyContent: 'center' }}>
             {podeSugerir && <Btn small tone="ghost" onClick={pedirSugestao} disabled={semMais}>{t('scaleOnInstrument.suggest')}</Btn>}
