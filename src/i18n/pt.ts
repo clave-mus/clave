@@ -125,6 +125,10 @@ const pt = {
     noVoice: 'Este aparelho não tem voz instalada para o seu idioma. A resposta vai ser tocada de novo, em vez de dita.',
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
+  chordOnInstrument: {
+    drawIt: 'Ler a cifra e desenhar o acorde',
+    drawPrompt: 'Desenhe {chord} no instrumento.',
+  },
   scaleOnInstrument: {
     octave: 'Fechar na oitava (tônica a tônica)',
     semDesenhos: 'Nesta região não há {n} digitações diferentes deste modo. Abra mais casas, alargue o vão da mão, ou peça menos desenhos.',

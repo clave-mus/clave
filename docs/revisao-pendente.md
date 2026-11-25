@@ -134,6 +134,19 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |
 | **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
 
+### Desenhar o acorde no instrumento (25/11/2026)
+
+Direção nova do `acorde-no-instrumento`, a pedido dele: *"pensei que já tivesse um exercício de
+desenhar o acorde no instrumento, crie isso"*. Ele tinha razão em esperar — desenhar acorde existia
+**de ouvido** (`ouvido-acorde`), não a partir da **cifra escrita**. São exercícios diferentes.
+
+| o quê | confira |
+|---|---|
+| a conferência é **contorno não ordenado** | as notas do acorde, em qualquer ordem de clique e em qualquer oitava, desde que todas deslocadas juntas. Mesma regra do `ouvido-acorde` desenhando |
+| **o acorde cabe no braço** | o guarda pegou antes da tela: um acorde montado sobre a região 48–72 chegava a MIDI 80, e a casa 12 de um violão dá 76. Agora o bloco desce por oitavas até caber |
+| **braço alto e em foco** | três ou quatro toques certeiros num celular deitado |
+| ⚠️ **inversões e extensões** | hoje o desenho pede a posição fundamental do acorde. Se você quiser cobrar inversão aqui, é decisão sua — no `ouvido-acorde` ela é dificuldade, não pergunta |
+
 ### Escala no instrumento (20/11/2026)
 
 | Id | O que só você confere |

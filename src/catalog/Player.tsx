@@ -451,7 +451,7 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       {target && <div className="progressbar" aria-label={t('player.progressOf', { done: score.total, total: target })}><i style={{ width: `${Math.min(100, (score.total / target) * 100)}%` }} /></div>}
 
       <Stage q={q} phase={phase} playing={playing} heard={heard} onPlay={() => play(q, true)} onPlayParte={p => playParte(q, p)} onTocarGrupos={g => tocarGrupos(q, g)} placar={score} ouviuAResposta={ouviuAResposta} montada={montada} confirmada={confirmada} aoConsumir={() => setConfirmada(null)} naming={naming} picked={picked} acc={acc} onAnswer={submit}
-        juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} />
+        juntadas={juntadas} onJuntar={j => setJuntadas(v => [...v, j])} onDesfazer={() => setJuntadas(v => v.slice(0, -1))} onNext={next} />
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
@@ -576,7 +576,7 @@ const nomeDaAltura = (m: number, naming: 'pt' | 'en', grafia?: Record<number, st
 const stepDePc = (pc: number) => [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc];
 const accDePc = (pc: number) => [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][pc];
 
-function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta, montada, confirmada, aoConsumir }: {
+function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, placar, naming, picked, acc, onAnswer, juntadas, onJuntar, onDesfazer, ouviuAResposta, montada, confirmada, aoConsumir, onNext }: {
   q: Question; phase: Phase; playing: boolean; heard: boolean; onPlay: () => void;
   onPlayParte: (p: ParteDoSom) => void; onTocarGrupos: (g: number[][]) => void;
   /** Já ouviu o pedaço `resposta`? A autoavaliação, que mora no palco, espera por isso. */
@@ -591,6 +591,8 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
   picked: string | null; acc: number; onAnswer: Submit;
   /** Alturas já postas, quando a superfície acumula (`Surface.quantas`). */
   juntadas: Junta[]; onJuntar: (j: Junta) => void; onDesfazer: () => void;
+  /** Avançar, para o palco poder oferecê-lo no foco — onde o rodapé do Player não existe. */
+  onNext: () => void;
 }) {
   const t = useT();
   const v = q.visual;
@@ -616,7 +618,7 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
    * braço é o exercício (`alto`), não em toda pergunta de braço.
    */
   const tela = useTela();
-  const bracoEOExercicio = sf.kind === 'fretboard' && sf.alto === true;
+  const bracoEOExercicio = sf.kind === 'fretboard' && sf.foco === true;
   const emFocoNoBraco = bracoEOExercicio && !tela.cabeAMoldura;
   useFocoDeTela(emFocoNoBraco);
   /**
@@ -749,6 +751,15 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
         }
       }
     }
+    /**
+     * ⚠️ **As marcas do VISUAL entram aqui** — e não entravam.
+     *
+     * Quando a superfície é um braço, este ramo desenha o braço DA SUPERFÍCIE e ignorava
+     * `visual.marks`. O `intervalo-no-instrumento`, no modo de construir, põe a nota de partida
+     * exatamente ali — e ela sumia: ele relatou em 25/11 que *"em desenhar intervalo no
+     * instrumento, não tem a tal da nota marcada"*. O item estava certo; quem apagava era o Player.
+     */
+    if (v.kind === 'fretboard') for (const m of v.marks) marks.push({ ...m, color: m.color ?? 'var(--accent-quiet)' });
     // Acumulando, a posição clicada é guardada pelo índice da corda e da casa — duas cordas podem
     // dar a mesma altura, e desenhar um acorde é escolher ONDE, não só qual nota.
     for (const j of juntadas) if (j.s !== undefined && j.f !== undefined) marks.push({ s: j.s, f: j.f, color: phase === 'ask' ? 'var(--mu)' : phase === 'right' ? 'var(--ok)' : 'var(--err)' });
@@ -795,10 +806,24 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
         <Fretboard tuning={sf.tuning} from={sf.from} to={sf.to} marks={marks} onlyString={sf.onlyString} naming={naming}
           alto={sf.alto}
           onPick={(s, f) => phase === 'ask' && tocar({ m: sf.tuning[s] + f, s, f })} />
-        {podeSugerir && (
+        {(podeSugerir || (emFocoNoBraco && phase !== 'ask')) && (
           <div className="row" style={{ justifyContent: 'center' }}>
-            <Btn small tone="ghost" onClick={pedirSugestao} disabled={semMais}>{t('scaleOnInstrument.suggest')}</Btn>
+            {podeSugerir && <Btn small tone="ghost" onClick={pedirSugestao} disabled={semMais}>{t('scaleOnInstrument.suggest')}</Btn>}
+            {/**
+              * ⚠️ **O avançar mora aqui no foco** — o rodapé do Player é parte da moldura que some,
+              * e com ela ia o botão de próxima. Ele relatou em 25/11: *"ao acertar e pedir pra ver
+              * um desenho que não fez, some o botão de próximo"*. Ele não sumia ao pedir sugestão;
+              * ele nunca esteve lá, no foco.
+              */}
+            {/* `phase` já está estreitado para right/wrong pela condição do bloco. */}
+            {emFocoNoBraco && <Btn onClick={onNext} tone="mu">{t('player.next')}</Btn>}
             {semMais && <span className="muted" style={{ fontSize: 13 }}>{t('scaleOnInstrument.noMoreSuggestions')}</span>}
+          </div>
+        )}
+        {/* No foco, a revelação também não tem rodapé onde morar. */}
+        {emFocoNoBraco && phase === 'wrong' && (
+          <div className="row" style={{ justifyContent: 'center' }}>
+            <span className="muted" style={{ fontSize: 13 }}>{t('player.answer')} <b>{q.reveal}</b></span>
           </div>
         )}
         {acoes}

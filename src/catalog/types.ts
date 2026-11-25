@@ -176,7 +176,13 @@ export type Surface =
        * normal cada corda tem **24 px** de altura — metade de um alvo de toque confortável. Montar
        * uma digitação são sete toques certeiros, e aí 24 px é pouco.
        */
-      alto?: boolean }
+      alto?: boolean;
+      /**
+       * **O braço é o exercício**: num celular deitado a moldura do app sai, como no `mapa-do-braco`
+       * desde 13/11 — ela soma mais de 300 px dos 375 que existem. Quem declara isto ganha também o
+       * botão de avançar **dentro do palco**, já que o rodapé é parte da moldura que some.
+       */
+      foco?: boolean }
   /**
    * `fifths` é a armadura desenhada na pauta de RESPOSTA. Com ela, clicar na linha do fá em Sol
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou

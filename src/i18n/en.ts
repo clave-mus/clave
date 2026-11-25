@@ -125,6 +125,10 @@ const en: Shape<typeof pt> = {
     noVoice: 'This device has no voice installed for your language. The answer will be played again instead of spoken.',
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
+  chordOnInstrument: {
+    drawIt: 'Read the symbol and draw the chord',
+    drawPrompt: 'Draw {chord} on the instrument.',
+  },
   scaleOnInstrument: {
     octave: 'Close on the octave (root to root)',
     semDesenhos: 'There are not {n} different fingerings for this mode in this region. Open more frets, widen the hand span, or ask for fewer shapes.',

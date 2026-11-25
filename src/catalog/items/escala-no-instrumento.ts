@@ -112,7 +112,7 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
       : ctx.t('scaleOnInstrument.buildPrompt', { degree: ordinal(grau, ctx.conv), family: familiaEscrita, note: nota }),
     visual: { kind: 'text', text: '' },
     surface: {
-      kind: 'fretboard', tuning, from: 0, to: ate, quantas: porDesenho * desenhos, alto: true,
+      kind: 'fretboard', tuning, from: 0, to: ate, quantas: porDesenho * desenhos, alto: true, foco: true,
       // A tônica aparece como apoio: o desenho que se decora parte dela.
       apoio: { midis: exemplos.length ? [tuning[exemplos[0][0].corda] + exemplos[0][0].casa] : [] },
     },

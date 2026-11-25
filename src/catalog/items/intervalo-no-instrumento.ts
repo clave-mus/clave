@@ -92,7 +92,8 @@ export const intervaloNoInstrumento: CatalogItem = {
       return {
         prompt: ctx.t('quiz.tapIntervalFrom', { interval: semitoneName(par.d, ctx.conv) }),
         visual: { kind: 'fretboard', tuning, from: 0, to: 9, marks: [{ s: par.s1, f: par.f1, label: '1' }] },
-        surface: { kind: 'fretboard', tuning, from: 0, to: 9 }, expected: { kind: 'pitchClass', pc: alvoPc },
+        // `foco`: o braço é o exercício, e num celular deitado a moldura do app não cabe com ele.
+        surface: { kind: 'fretboard', tuning, from: 0, to: 9, foco: true }, expected: { kind: 'pitchClass', pc: alvoPc },
         sound: { groups: [[lo]], instrument: vozDoBraco(tuning) },
         reveal: nomeNaTonalidade(ctx, alvoPc, Math.random() < 0.5),
       };
