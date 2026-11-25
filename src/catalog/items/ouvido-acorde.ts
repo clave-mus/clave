@@ -304,7 +304,9 @@ export const ouvidoAcorde: CatalogItem = {
       const clef = clave(ctx);
       const tuning = ctx.params.tuning;
       const superficie = naPauta
-        ? { kind: 'staff' as const, clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: ms.length }
+        // `empilhar`: acorde é uma coluna, não um arpejo. Ver a nota do Player sobre a pauta
+        // que acumula — até 25/11 ela enviava na primeira nota, e este modo nunca pôde acertar.
+        ? { kind: 'staff' as const, clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: ms.length, empilhar: true }
         : noPiano
           // **A faixa cabe o acorde.** Era 48–72 fixo, e o acorde não: a fundamental sai da região
           // de quem usa e as inversões somam até 19 semitons. Com a região padrão o acorde chegava

@@ -125,6 +125,14 @@ const pt = {
     noVoice: 'Este aparelho não tem voz instalada para o seu idioma. A resposta vai ser tocada de novo, em vez de dita.',
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
+  chordOnStaff: {
+    writeIt: 'Ler a cifra e escrever na pauta',
+    writePrompt: 'Escreva {chord} na pauta.',
+  },
+  scaleOnStaff: {
+    writeIt: 'Ler o nome e escrever na pauta',
+    writePrompt: 'Escreva {scale} na pauta, subindo.',
+  },
   chordOnInstrument: {
     inversionReveal: '{chord} — {ord} inversão, {note} no baixo',
     drawIt: 'Ler a cifra e desenhar o acorde',
@@ -273,6 +281,12 @@ const pt = {
     escalaNoPiano: 'No piano, ver e nomear',
     escalaDesenhar: 'No piano, ler e desenhar',
     escalaNoBraco: 'No braço, nas casas de baixo',
+    acordePautaLer: 'Ler a cifra do que está escrito',
+    acordePautaEscrever: 'Escrever o acorde da cifra',
+    acordePautaInvertido: 'Escrever com inversão',
+    escalaPautaLer: 'Ler e dizer que escala é',
+    escalaPautaEscrever: 'Escrever a escala pedida',
+    escalaPautaModos: 'Escrever os modos',
     escalasModos: 'Os sete modos',
     escalasLivre: 'Todas, tonalidade livre',
     acordesVoicings: 'Tétrades em voicings de piano',

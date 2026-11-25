@@ -188,7 +188,13 @@ export type Surface =
    * maior já vale Fá♯ — era o "muito trabalho de ligar o sustenido" (Paulo, 12/11). Sem ela (ou
    * com tonalidade livre), a pessoa escreve o acidente à mão, como antes.
    */
-  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio }
+  | { kind: 'staff'; clef: Clef; accidentals: boolean; fifths?: number; quantas?: number; apoio?: Apoio;
+      /**
+       * Acumulando várias notas: **empilhadas numa coluna** (um acorde) ou **uma coluna por nota**
+       * (uma escala, uma melodia). Sem isto, escrever um acorde sairia como arpejo e escrever uma
+       * escala sairia como cacho.
+       */
+      empilhar?: boolean }
   /**
    * **O mapa do braço**: as posições de um arpejo desenhadas no braço, uma destacada por vez, e a
    * resposta é o NOME da nota destacada — clica-se no botão, não no braço.

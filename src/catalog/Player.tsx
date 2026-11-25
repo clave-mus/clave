@@ -11,7 +11,7 @@ import { sortearSemEco } from './sorteio';
 import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
-import { fromStep, keyAccidentals, mod, noteName, type Note } from '../theory/core';
+import { fromStep, keyAccidentals, midi, mod, noteName, type Note } from '../theory/core';
 import Fretboard from '../components/music/Fretboard';
 import { useFocoDeTela, useTela } from '../components/useTela';
 import Keyboard from '../components/music/Keyboard';
@@ -860,6 +860,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
     const notas: { note: Note; color?: string }[] = [];
     if (minha) notas.push({ note: minha, color: phase === 'ask' ? undefined : mesmaNota ? 'var(--ok)' : 'var(--err)' });
     if (phase === 'wrong' && certa && !mesmaNota) notas.push({ note: certa, color: 'var(--ok)' });
+    /**
+     * Acumulando, o que já foi escrito aparece na pauta: **empilhado** numa coluna quando é acorde,
+     * **uma coluna por nota** quando é escala ou melodia. Sem a distinção, um acorde sairia como
+     * arpejo e uma escala como cacho.
+     */
+    const escritas = acumula
+      ? juntadas.map(j => ({ note: notaDeAltura(j.m), color: phase === 'ask' ? undefined : phase === 'right' ? 'var(--ok)' : 'var(--err)' }))
+      : [];
+    const colunasEscritas = sf.empilhar ? (escritas.length ? [{ notes: escritas }] : []) : escritas.map(n => ({ notes: [n] }));
+    /** Errando, a resposta certa aparece ao lado, para a pessoa ver o que era. */
+    const colunasCertas = acumula && phase === 'wrong' && q.expected.kind === 'contorno'
+      ? (sf.empilhar
+        ? [{ notes: q.expected.midis.map(m => ({ note: notaDeAltura(m), color: 'var(--ok)' })) }]
+        : [...q.expected.midis].sort((a, b) => a - b).map(m => ({ notes: [{ note: notaDeAltura(m), color: 'var(--ok)' }] })))
+      : [];
     return (
       <div className="stage">
         {fb}
@@ -871,10 +886,12 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
            * seriam um acorde, e a referência não é parte da resposta. Lado a lado, lê-se "daqui para
            * aquela", que é o que o exercício pede.
            */
-          columns={[
-            ...(sf.apoio?.midis ?? []).map(m => ({ notes: [{ note: notaDeAltura(m), color: 'var(--accent-quiet)' }] })),
-            { notes: notas },
-          ]}
+          columns={acumula
+            ? [...colunasEscritas, ...colunasCertas]
+            : [
+              ...(sf.apoio?.midis ?? []).map(m => ({ notes: [{ note: notaDeAltura(m), color: 'var(--accent-quiet)' }] })),
+              { notes: notas },
+            ]}
           /**
            * O acidente da resposta: o que a pessoa escolheu à mão (`acc`), ou — se ela não escolheu
            * nenhum — **o que a armadura manda** (`fifths`). Em Sol maior, clicar a linha do fá dá
@@ -883,9 +900,21 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
           onPick={phase === 'ask' ? s => {
             const daArmadura = sf.fifths === undefined ? 0 : keyAccidentals(sf.fifths)[mod(s, 7)] ?? 0;
             const a = acc !== 0 ? acc : daArmadura;
-            onAnswer({ kind: 'spelled', letter: mod(s, 7), acc: a, oct: Math.floor(s / 7) }, `${s}:${a}`);
+            const nota = { letter: mod(s, 7) as 0, acc: a, oct: Math.floor(s / 7) };
+            /**
+             * ⚠️ **A pauta também ACUMULA desde 25/11.**
+             *
+             * Ela enviava sempre na primeira nota, ignorando `Surface.quantas` — e isso quebrava
+             * calado tudo que pede VÁRIAS notas escritas: o `ouvido-acorde` desenhando na pauta
+             * declarava `quantas` e `contorno` desde 12/11 e **nunca pôde acertar**, porque a
+             * resposta saía com uma nota só. Achei montando o escrever acorde/escala na pauta, que
+             * ele pediu ao ver a assimetria das famílias.
+             */
+            if (acumula) tocar({ m: midi(nota) });
+            else onAnswer({ kind: 'spelled', letter: nota.letter, acc: a, oct: nota.oct }, `${s}:${a}`);
           } : undefined} />
         <div className="hint">{phase === 'wrong' && notas.length > 1 ? t('player.staffYoursAndRight') : t('player.tapStaff')}</div>
+        {acoes}
       </div>
     );
   }

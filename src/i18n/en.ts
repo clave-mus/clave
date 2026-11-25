@@ -125,6 +125,14 @@ const en: Shape<typeof pt> = {
     noVoice: 'This device has no voice installed for your language. The answer will be played again instead of spoken.',
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
+  chordOnStaff: {
+    writeIt: 'Read the symbol and write it on the staff',
+    writePrompt: 'Write {chord} on the staff.',
+  },
+  scaleOnStaff: {
+    writeIt: 'Read the name and write it on the staff',
+    writePrompt: 'Write {scale} on the staff, going up.',
+  },
   chordOnInstrument: {
     inversionReveal: '{chord} — {ord} inversion, {note} in the bass',
     drawIt: 'Read the symbol and draw the chord',
@@ -273,6 +281,12 @@ const en: Shape<typeof pt> = {
     escalaNoPiano: 'On the piano, see and name',
     escalaDesenhar: 'On the piano, read and draw',
     escalaNoBraco: 'On the neck, lower frets',
+    acordePautaLer: 'Read the symbol on the staff',
+    acordePautaEscrever: 'Write the chord from the symbol',
+    acordePautaInvertido: 'Write it inverted',
+    escalaPautaLer: 'Read it and name the scale',
+    escalaPautaEscrever: 'Write the scale asked',
+    escalaPautaModos: 'Write the modes',
     escalasModos: 'The seven modes',
     escalasLivre: 'Every scale, free key',
     acordesVoicings: 'Seventh chords in piano voicings',

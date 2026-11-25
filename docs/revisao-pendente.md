@@ -134,6 +134,18 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |
 | **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
 
+### Escrever acorde e escala na pauta (25/11/2026)
+
+Fecha a simetria que a medição do catálogo mostrou: nota e intervalo tinham ler **e** escrever na
+pauta; acorde e escala só liam, enquanto do lado do instrumento as quatro famílias já escreviam.
+
+| o quê | confira |
+|---|---|
+| **a conferência é por ALTURA, não por grafia** | escrevendo UMA nota (`nota-na-pauta`) a conferência é a grafia, porque a pauta distingue Dó♯ de Ré♭. Escrevendo um acorde ou uma escala, é o contorno — exigir a grafia de cada nota transformaria um erro de enarmonia em acorde errado. É a escolha que o `ouvido-acorde` já fazia; confira se você concorda com ela aqui |
+| **a inversão vai na cifra** | `C/E`, como no instrumento |
+| **a escala fecha na oitava** | ligado por padrão, oito notas |
+| ⚠️ **a ordem dos cliques não conta** | escrevendo a escala, o contorno é o conjunto. Exigir a ordem puniria a ordem dos cliques, que não aparece no resultado escrito — mas talvez você queira que escrever uma escala seja escrevê-la **subindo**, e aí é outra conferência |
+
 ### Desenhar o acorde no instrumento (25/11/2026)
 
 Direção nova do `acorde-no-instrumento`, a pedido dele: *"pensei que já tivesse um exercício de

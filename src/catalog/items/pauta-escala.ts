@@ -11,8 +11,31 @@ export const pautaEscala: CatalogItem = {
   kind: 'serie', requires: {}, validation: ['deterministic'], mobile: true,
   respeita: ['key', 'material'],
   publicacao: LEGADO,
-  settings: ctx => [CLEFS(ctx), { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) }],
-  defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] },
+  settings: ctx => [
+    /**
+     * **Ler e escrever** — o oposto entrou em 25/11, quando a medição do catálogo mostrou a
+     * assimetria: nota e intervalo escreviam na pauta, acorde e escala só liam. A peça que faltava
+     * (pauta que acumula notas) existe desde a linha de ouvido.
+     */
+    { id: 'direcao', label: ctx.t('settings.direction2'), type: 'single', options: [
+      { id: 'ler', label: ctx.t('settings.readIt') },
+      { id: 'escrever', label: ctx.t('scaleOnStaff.writeIt') },
+    ] },
+    CLEFS(ctx),
+    { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+    /**
+     * **Fechar na oitava**, como no `escala-no-instrumento`: uma escala vai da tônica à tônica, e
+     * foi o que ele relatou lá — parar na sétima era o único aceito. A superfície precisa saber
+     * quantas notas esperar, então é controle e não tolerância.
+     */
+    { id: 'oitava', label: ctx.t('scaleOnInstrument.octave'), type: 'toggle', quando: s => s.direcao === 'escrever' },
+  ],
+  defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'], direcao: 'ler', oitava: true },
+  presets: [
+    { id: 'ler-a-escala', nome: 'presets.escalaPautaLer', settings: { direcao: 'ler', tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] } },
+    { id: 'escrever-na-pauta', nome: 'presets.escalaPautaEscrever', settings: { direcao: 'escrever', tipos: ['maior', 'menor'], oitava: true } },
+    { id: 'escrever-modos', nome: 'presets.escalaPautaModos', settings: { direcao: 'escrever', tipos: ['dorico', 'frigio', 'lidio', 'mixolidio', 'locrio'], oitava: true } },
+  ],
   presentation: { gap: 0.32 },
   make(s, ctx) {
     const clef = pickClef(s, ctx);
@@ -32,7 +55,8 @@ export const pautaEscala: CatalogItem = {
      */
     const oct = clef === 'sol' ? 4 : 2;
     const tonic = notaGrafada(ctx, (oct + 1) * 12 + pcPermitido(ctx));
-    const notes = [...buildScale(tonic, type), { ...tonic, oct: tonic.oct + 1 }];
+    const todas = [...buildScale(tonic, type), { ...tonic, oct: tonic.oct + 1 }];
+    const notes = s.direcao === 'escrever' && s.oitava === false ? todas.slice(0, -1) : todas;
     const name = (t: Note, id: ScaleId) => ctx.t('quiz.scaleOf', { note: noteName(t, ctx.naming), scale: ctx.t(`theory.scalesInline.${id}` as MessageKey) });
     /**
      * **Todas as alternativas têm a MESMA tônica**, e diferem só no tipo de escala.
@@ -63,6 +87,22 @@ export const pautaEscala: CatalogItem = {
       vistas.add(a);
       return true;
     };
+    /**
+     * **Escrever**: o nome da escala é o enunciado, e a pauta é onde se responde. A conferência é o
+     * contorno — o conjunto das notas, qualquer ordem de clique, deslocado por oitavas inteiras.
+     * Exigir a ordem puniria a ordem dos cliques, que não aparece no resultado escrito.
+     */
+    if (s.direcao === 'escrever') {
+      return {
+        prompt: ctx.t('scaleOnStaff.writePrompt', { scale: name(tonic, type) }),
+        visual: { kind: 'text', text: '' },
+        surface: { kind: 'staff', clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: notes.length },
+        expected: { kind: 'contorno', midis: notes.map(midi), ordenada: false },
+        sound: { groups: notes.map(n => [midi(n)]) }, autoplay: false,
+        reveal: name(tonic, type),
+      };
+    }
+
     const outros = shuffle([
       ...types.filter(t => t !== type),
       ...ALL_SCALES.filter(t => t !== type && !types.includes(t)),
