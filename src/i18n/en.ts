@@ -126,6 +126,7 @@ const en: Shape<typeof pt> = {
     hint: 'Headphones on, press start, pocket the phone. The question plays, you think, the answer comes. You do not answer anything here.',
   },
   chordOnInstrument: {
+    inversionReveal: '{chord} — {ord} inversion, {note} in the bass',
     drawIt: 'Read the symbol and draw the chord',
     drawPrompt: 'Draw {chord} on the instrument.',
   },

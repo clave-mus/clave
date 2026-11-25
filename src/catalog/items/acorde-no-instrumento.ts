@@ -1,4 +1,4 @@
-import { ALL_CHORDS, INST, ROOTS, alturaDoPc, arr, buildChord, chordOptions, chordSymbol, chordTypes, faixaDoBraco, faixaQueCabe, fretRange, guitarChordQuestion, midi, mod, pcPermitido, pick, tuningOf, vozDoBraco } from '../helpers';
+import { ALL_CHORDS, INST, ROOTS, alturaDoPc, arr, buildChord, chordOptions, chordSymbol, chordTypes, faixaDoBraco, faixaQueCabe, fretRange, guitarChordQuestion, midi, mod, noteName, ordinal, pcPermitido, pick, randInt, tuningOf, vozDoBraco } from '../helpers';
 import { FRETS } from '../helpers';
 import type { ChordId } from '../helpers';
 import { LEGADO } from '../publicacao';
@@ -50,11 +50,28 @@ function desenharAcorde(s: Record<string, SettingValue>, ctx: Ctx, noPiano: bool
    * desce o bloco inteiro por oitavas até ele caber.
    */
   const alcance = noPiano ? { lo: 0, hi: 127 } : faixaDoBraco(tuning, de, ate);
-  let notas = buildChord(root, type).map(midi);
+  /**
+   * **A inversão é pedida, não adivinhada** (decisão dele em 25/11: *"podemos pedir inversão
+   * sim"*). Ela vai no enunciado em cifra com baixo — `C/E` —, porque é assim que ela aparece numa
+   * grade de verdade, e ler isso é parte do exercício. A revelação diz por extenso qual era.
+   *
+   * A conferência não precisa mudar: o `contorno` exige que **todas** as notas estejam deslocadas
+   * pelo MESMO número de oitavas, então dó-mi-sol e mi-sol-dó são contornos diferentes. A inversão
+   * já está dentro do que ele compara.
+   */
+  const escritas = buildChord(root, type);
+  const inversao = s.inversoes === true ? randInt(0, escritas.length - 1) : 0;
+  let notas = escritas.map(midi);
+  let baixo = escritas[0];
+  for (let k = 0; k < inversao; k++) {
+    notas = [...notas.slice(1), notas[0] + 12];
+    baixo = escritas[(k + 1) % escritas.length];
+  }
   while (Math.max(...notas) > alcance.hi && Math.min(...notas) - 12 >= alcance.lo) notas = notas.map(m => m - 12);
   while (Math.min(...notas) < alcance.lo && Math.max(...notas) + 12 <= alcance.hi) notas = notas.map(m => m + 12);
+  const cifra = inversao ? `${sym}/${noteName(baixo, 'en')}` : sym;
   return {
-    prompt: ctx.t('chordOnInstrument.drawPrompt', { chord: sym }),
+    prompt: ctx.t('chordOnInstrument.drawPrompt', { chord: cifra }),
     visual: { kind: 'text', text: '' },
     surface: noPiano
       ? { kind: 'keyboard', ...faixaQueCabe(notas), quantas: notas.length }
@@ -62,7 +79,10 @@ function desenharAcorde(s: Record<string, SettingValue>, ctx: Ctx, noPiano: bool
     expected: { kind: 'contorno', midis: notas, ordenada: false },
     // Ouvir é escolha de quem responde: o acorde não toca sozinho, ou a leitura da cifra vira ditado.
     sound: { groups: [notas], instrument: noPiano ? undefined : vozDoBraco(tuning) },
-    autoplay: false, reveal: sym,
+    autoplay: false,
+    reveal: inversao
+      ? ctx.t('chordOnInstrument.inversionReveal', { chord: cifra, ord: ordinal(inversao, ctx.conv), note: noteName(baixo, ctx.naming) })
+      : sym,
   };
 }
 
@@ -101,7 +121,13 @@ export const acordeNoInstrumento: CatalogItem = {
     { id: 'tipos', label: ctx.t('settings.types'), type: 'multi', justify: true, options: chordTypes(ctx.t, ALL_CHORDS) },
     { id: 'pergunta', label: ctx.t('settings.whatToAsk'), type: 'single', quando: s => s.instrumento !== 'piano',
       options: [{ id: 'acorde', label: ctx.t('settings.askChord') }, { id: 'baixo', label: ctx.t('settings.askBass') }] },
-    { id: 'soltas', label: ctx.t('settings.openStrings'), type: 'toggle', quando: s => s.instrumento !== 'piano' },
+    { id: 'soltas', label: ctx.t('settings.openStrings'), type: 'toggle', quando: s => s.instrumento !== 'piano' && s.direcao !== 'desenhar' },
+    /**
+     * **Com inversões** — decisão dele em 25/11, e aqui ela é PERGUNTA, não dificuldade: o
+     * enunciado diz qual inversão quer, em cifra com baixo. É o contrário do `ouvido-acorde`, onde
+     * inverter serve para tirar a muleta da fundamental no grave.
+     */
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.direcao === 'desenhar' },
     { ...FRETS(ctx), quando: s => s.instrumento !== 'piano' },
     // Pedido do Paulo em 12/11. É o MESMO toggle de `ouvido-acorde`, e vale a pena ser o mesmo:
     // arpejar antes é como se ouve um acorde desenhado, nota por nota, para depois ouvi-lo junto.
@@ -114,7 +140,7 @@ export const acordeNoInstrumento: CatalogItem = {
      * há um teste que a cobra. Se o baixo entrar aqui algum dia, o parâmetro entra com ele.
      */
   ],
-  defaults: { tipos: ['maior', 'menor', 'dim', 'aum'], direcao: 'identificar',
+  defaults: { tipos: ['maior', 'menor', 'dim', 'aum'], direcao: 'identificar', inversoes: false,
     pergunta: 'acorde', soltas: false, casas: '0-12', arpejo: false,
   },
   /**

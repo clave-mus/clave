@@ -145,7 +145,8 @@ desenhar o acorde no instrumento, crie isso"*. Ele tinha razão em esperar — d
 | a conferência é **contorno não ordenado** | as notas do acorde, em qualquer ordem de clique e em qualquer oitava, desde que todas deslocadas juntas. Mesma regra do `ouvido-acorde` desenhando |
 | **o acorde cabe no braço** | o guarda pegou antes da tela: um acorde montado sobre a região 48–72 chegava a MIDI 80, e a casa 12 de um violão dá 76. Agora o bloco desce por oitavas até caber |
 | **braço alto e em foco** | três ou quatro toques certeiros num celular deitado |
-| ⚠️ **inversões e extensões** | hoje o desenho pede a posição fundamental do acorde. Se você quiser cobrar inversão aqui, é decisão sua — no `ouvido-acorde` ela é dificuldade, não pergunta |
+| **inversões** | você decidiu em 25/11 que sim. Aqui ela é **pergunta**, e não dificuldade: o enunciado pede em cifra com baixo (`C/E`), porque é assim que aparece numa grade — e ler isso é parte do exercício. A revelação diz por extenso. Confira se a cifra com baixo é a forma certa de pedir, ou se você prefere "dó maior, 1ª inversão" |
+| ⚠️ **extensões** | o desenho cobra tríades e tétrades do seletor de qualidades; acorde com extensão (9, 11, 13) não entra ainda |
 
 ### Escala no instrumento (20/11/2026)
 

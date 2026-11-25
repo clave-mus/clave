@@ -126,6 +126,7 @@ const pt = {
     hint: 'Põe o fone, aperta começar e guarda o celular. A pergunta toca, você pensa, e a resposta vem. Você não responde nada aqui.',
   },
   chordOnInstrument: {
+    inversionReveal: '{chord} — {ord} inversão, {note} no baixo',
     drawIt: 'Ler a cifra e desenhar o acorde',
     drawPrompt: 'Desenhe {chord} no instrumento.',
   },
