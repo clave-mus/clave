@@ -327,6 +327,18 @@ export interface Question {
    * botão de ver um desenho que eu não fiz"*. O botão estava lá; a tela é que já tinha ido embora.
    */
   aguardaDepois?: boolean;
+  /**
+   * **Como cada classe de altura se escreve NESTA pergunta** — `{ 6: 'Fá♯' }`.
+   *
+   * O Player escrevia o nome de uma altura por uma tabela fixa em sustenidos, e ele relatou em
+   * 25/11: *"em escalas como a de fá sustenido, seria necessário que todas as notas digitadas
+   * seguissem a enarmonia. mesmo acertando, a escala sai com os nomes errados"*. Está certo — em
+   * fá♯ maior a sétima é **Mi♯**, não Fá; e numa escala de bemóis, Sol♭ não é Fá♯.
+   *
+   * Quem sabe a grafia é quem gerou a pergunta: a escala já traz as notas grafadas. O Player só
+   * precisa de um mapa de classe → nome, e cai na tabela de sempre para o que não estiver aqui.
+   */
+  grafia?: Record<number, string>;
   visual: Visual;
   surface: Surface;
   expected: Expected;

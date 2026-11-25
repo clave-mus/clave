@@ -8,6 +8,7 @@ import type { CatalogItem, Ctx, SettingValue, Surface } from '../types';
 import type { FretMark } from '../../components/music/Fretboard';
 import { mod } from '../../theory/core';
 import { classesDoModo, digitacoesDaEscala } from '../../theory/digitacao-de-escala';
+import { getModo, notasDoModo } from '../../theory/digitacoes';
 import type { FamiliaBase } from '../../theory/digitacoes';
 
 /**
@@ -91,6 +92,16 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   }
 
   const nota = noteName(tonica, ctx.naming);
+  /**
+   * **A grafia do modo**, classe por classe — pedido dele em 25/11: *"em escalas como a de fá
+   * sustenido, seria necessário que todas as notas digitadas seguissem a enarmonia"*.
+   *
+   * As notas já vêm grafadas de `notasDoModo` — é a teoria que manda, não uma tabela de
+   * sustenidos: em fá♯ maior a sétima é **Mi♯**, e numa escala de bemóis o Sol♭ não vira Fá♯.
+   */
+  const grafia = Object.fromEntries(
+    notasDoModo(getModo(tonica, familia, grau)).map(n => [mod(midi(n), 12), noteName(n, ctx.naming)]),
+  );
   const familiaEscrita = ctx.t(NOME_DA_FAMILIA(familia));
   const tradicional = NOME_TRADICIONAL[`${familia}:${grau}`];
   return {
@@ -108,6 +119,7 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
     expected: { kind: 'digitacao', tonica, familia, grau, tuning, maxVaoCasas, desenhos },
     // Acertando, a tela espera: há o botão de ver um desenho que você não fez.
     aguardaDepois: true,
+    grafia,
     // Ouvir é escolha: a escala soa no botão, nunca sozinha — senão a pergunta vira ditado.
     sound: { groups: classesDoModo({ tonica, familia, grau }).map(pcModo => [48 + pcModo]), instrument: vozDoBraco(tuning) },
     autoplay: false,

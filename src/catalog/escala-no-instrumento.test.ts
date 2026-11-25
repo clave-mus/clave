@@ -10,8 +10,8 @@ import { isSeries, type Ctx, type SeriesItem } from './types';
 import { resolveParams } from './params';
 import { validate } from './validate';
 import { ALL_SCALES, assinaturaDaEscala, note, type ScaleId } from './helpers';
-import { mod } from '../theory/core';
-import { digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
+import { midi, mod } from '../theory/core';
+import { classesDoModo, digitacoesDaEscala, julgarDigitacao } from '../theory/digitacao-de-escala';
 import { translate, type MessageKey, type Vars } from '../i18n';
 
 const ctxCom = (instrument: 'violao' | 'baixo' | 'piano'): Ctx => ({
@@ -223,5 +223,49 @@ describe('a recusa quando não há desenho de sobra', () => {
         expect(achadas.length, `${q.expected.familia}/${q.expected.grau} com ${desenhos}`).toBeGreaterThanOrEqual(Number(desenhos));
       }
     }
+  });
+});
+
+/**
+ * **A enarmonia** — ele relatou em 25/11: *"em escalas como a de fá sustenido, seria necessário que
+ * todas as notas digitadas seguissem a enarmonia. mesmo acertando, a escala sai com os nomes
+ * errados"*. O Player escrevia o nome por uma tabela fixa em sustenidos; agora a pergunta leva a
+ * grafia, que sai da escala — e é a teoria que manda, não a tabela.
+ */
+describe('a grafia das notas segue a escala', () => {
+  const ctx = ctxCom('baixo');
+
+  it('toda pergunta de digitação leva a grafia das sete classes', () => {
+    for (let i = 0; i < 40; i++) {
+      const q = item.make({ ...base(ctx), direcao: 'desenhar' } as never, ctx);
+      if (q.expected.kind !== 'digitacao') continue;
+      expect(Object.keys(q.grafia ?? {}), 'sem grafia').toHaveLength(7);
+      // e ela cobre exatamente as classes do modo
+      const classes = classesDoModo(q.expected).sort((a, b) => a - b);
+      expect(Object.keys(q.grafia!).map(Number).sort((a, b) => a - b)).toEqual(classes);
+    }
+  });
+
+  /**
+   * O caso que ele deu: em **fá♯ maior** a sétima é **Mi♯**, e não Fá. A tabela fixa do Player
+   * escreveria Fá, porque ela só conhece sustenidos sobre as sete naturais.
+   */
+  it('em fá♯ maior a sétima é Mi♯, não Fá', () => {
+    const emFaSustenido = {
+      ...ctx,
+      params: resolveParams('baixo', { key: { tonic: 6, mode: 'maior' }, material: 'diatonico' }),
+    };
+    let viu = false;
+    for (let i = 0; i < 60; i++) {
+      const q = item.make({ ...base(emFaSustenido), direcao: 'desenhar', familia: ['maior'], graus: ['1'] } as never, emFaSustenido);
+      if (q.expected.kind !== 'digitacao') continue;
+      // a TÔNICA tem de ser fá♯ — mi maior também tem fá♯, e foi nela que eu tropecei escrevendo
+      if (mod(midi(q.expected.tonica), 12) !== 6 || q.expected.grau !== 1) continue;
+      const nomes = Object.values(q.grafia ?? {});
+      viu = true;
+      expect(nomes, `fá♯ maior saiu como ${nomes.join(' ')}`).toContain('Mi♯');
+      expect(nomes).not.toContain('Fá');
+    }
+    expect(viu, 'nunca sorteou fá♯ como tônica').toBe(true);
   });
 });
