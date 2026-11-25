@@ -7,7 +7,7 @@
 //
 // Os textos vêm de ctx.t (src/i18n): os fixos por chave e os de teoria montados com a gramática de
 // cada idioma (src/theory/names.ts). As cifras seguem a convenção do idioma (ctx.conv).
-import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
+import { buildChord, buildScale, chordSymbol, clefBottom, FLAT_ORDER, harmonicField, ALL_SCALE_IDS, majorTonic, midi, mod, note, noteName, optionsWith, pc, pcName, pick, randInt, relativeMinor, SCALES, scaleMidi, semisFor, SHARP_ORDER, shuffle, transpose, type ChordId, type Clef, type Direcao, type Note, type Quality, type ScaleId } from '../theory/core';
 import { digitacoesDaReceita } from '../theory/digitacoes';
 import { pcPermitido, regiao } from './contexto-musical';
 import { accidentalCount, intervalName, ordinal, semitoneName } from '../theory/names';
@@ -405,6 +405,19 @@ export function celulaDeGraus(top: number, size: number): number[] {
 }
 
 export const chordName = (t: Ctx['t'], id: ChordId) => t(`theory.chords.${id}` as MessageKey);
+/**
+ * **A assinatura do DESENHO de uma escala**: as classes de altura que ela acende, a partir de uma
+ * tônica. Duas escalas com a mesma assinatura são a mesma figura numa tela.
+ *
+ * Existe por um par concreto, achado por teste em 20/11: **menor melódica clássica e menor melódica
+ * jazz sobem iguais** — a diferença das duas é na DESCIDA, e um desenho não desce. Oferecer as duas
+ * como alternativas da mesma pergunta é uma pergunta sem resposta.
+ *
+ * Quem desenha escala e pede o nome filtra os distratores por aqui.
+ */
+export const assinaturaDaEscala = (tonica: Note, id: ScaleId): string =>
+  [...new Set(buildScale(tonica, id).map(n => mod(midi(n), 12)))].sort((a, b) => a - b).join(',');
+
 export const scaleName = (t: Ctx['t'], id: ScaleId) => t(`theory.scales.${id}` as MessageKey);
 export const chordTypes = (t: Ctx['t'], ids: ChordId[]) => ids.map(c => ({ id: c, label: chordName(t, c) }));
 /**

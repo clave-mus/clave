@@ -105,6 +105,12 @@ Mas cada um muda o que o exercício pede, e a revisão de ambiguidade é sua:
 > então confirma na tela. **As duas rotinas de braço passaram a compartilhar itens**, e a diferença
 > entre elas é o enquadramento e o vão do braço, não a lista.
 
+### Escala no instrumento (20/11/2026)
+
+| Id | O que só você confere |
+|---|---|
+| `escala-no-instrumento` | **Se o desenho é reconhecível.** O nome é seu; o resto pede o seu ouvido e o seu olho. No piano, a escala acende uma oitava com a **tônica rotulada `1`** — sem isso dó maior e ré dórico são a mesma figura, e eu preferi marcar a tônica a tirar os modos do sorteio. No braço, acendem **todas as posições da escala na região**, com a tônica no acento: confira se isso se lê como escala ou como mancha, principalmente com a região inteira (0–12). Confira também que **desenhar** só existe no piano — no braço eu precisaria de um motor de digitação de escala que não existe, e inventar um seria decisão musical sua |
+
 ### Graus no braço, com metrônomo (20/11/2026)
 
 Modo novo do `no-instrumento`, que você escolheu como casa dele (a opção 1 das três). Não é item
