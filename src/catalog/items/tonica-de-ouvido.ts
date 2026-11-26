@@ -76,6 +76,21 @@ export const tonicaDeOuvido: CatalogItem = {
      */
     { id: 'semFundamental', label: ctx.t('settings.withoutRoot'), type: 'toggle' },
     /**
+     * **Com inversões** — ligado por padrão, que é como o item soava, e pedido dele em 26/11:
+     * *"acho que poderia ter uma opção de não ter inversões"*.
+     *
+     * O controle não é novo: `inversoes`, com este mesmo rótulo, está em quatro itens. O que faltava
+     * é que nos de ouvido ele **se esconde quando o voicing de piano está ligado** — e aqui o
+     * voicing de piano é o único modo, então não havia como pedir a fundamental no baixo.
+     *
+     * Desligado, prende só o baixo: a oitava dele, quais notas saem e a ordem das de cima continuam
+     * variando. Medido, o item não fica pobre — ver `tonica-inversoes.test.ts`.
+     *
+     * Escondido com `semFundamental` ligado, porque ali o pedido é impossível: sem fundamental não
+     * há fundamental para pôr no baixo.
+     */
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.semFundamental !== true },
+    /**
      * **Soltar a qualidade da função do grau** — desligado por padrão, decisão dele em 15/11.
      *
      * Desligado, o acorde é **o do grau**: em dó maior o III é Mim7, e as extensões que a pessoa
@@ -116,7 +131,7 @@ export const tonicaDeOuvido: CatalogItem = {
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
+    semFundamental: false, inversoes: true, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
   },
   presets: [
     { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
@@ -178,6 +193,7 @@ export const tonicaDeOuvido: CatalogItem = {
     const voz = FAIXAS_DA_VOZ[String(s.faixaDaVoz ?? 'media')] ?? FAIXAS_DA_VOZ.media;
     const escolhidos = voicingsDe(grau.root, qualidade, {
       semFundamental: s.semFundamental === true,
+      semInversao: s.inversoes === false,
       ...(s.somAudivel === true ? { piso: 60, teto: 96 } : { piso: Math.min(voz.lo, MAO_ESQUERDA.lo), teto: voz.hi + 7 }),
     });
     const voicing: Voicing | null = escolhidos.length ? escolhidos[randInt(0, escolhidos.length - 1)] : null;

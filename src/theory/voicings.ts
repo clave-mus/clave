@@ -32,6 +32,18 @@ export const MAO_DIREITA = { lo: 55, hi: 84 } as const;
 export interface OpcoesDeVoicing {
   /** Omitir a fundamental: a terça e a sétima seguram o acorde, e o baixo fica implícito. */
   semFundamental?: boolean;
+  /**
+   * **Fundamental no baixo, sempre** — pedido dele em 26/11 para o `tonica-de-ouvido`: *"acho que
+   * poderia ter uma opção de não ter inversões"*.
+   *
+   * Prende só o baixo. Os outros três eixos seguem variando — a oitava do baixo, quais notas saem e
+   * em que ordem as de cima se empilham —, então o que se perde é a inversão e não a variedade.
+   *
+   * ⚠️ Com `semFundamental` ligado isto é **impossível**, e ali o pedido mais específico ganha: sem
+   * fundamental não há fundamental para pôr no baixo. Quem oferece os dois controles esconde este
+   * quando aquele está ligado.
+   */
+  semInversao?: boolean;
   /** Quantas notas no total. Sem isto, o tamanho sai da qualidade. */
   quantas?: number;
   /** Teto da mão direita, para subir tudo quando o alto-falante é pequeno. */
@@ -117,7 +129,8 @@ export function voicingsDe(fundamental: Note, id: ChordId, o: OpcoesDeVoicing = 
   const out: Voicing[] = [];
   const vistos = new Set<string>();
 
-  const candidatosAoBaixo = (o.semFundamental ? graus.filter(n => n !== 1) : graus).filter(n => n <= 7);
+  const candidatosAoBaixo = (o.semFundamental ? graus.filter(n => n !== 1) : o.semInversao ? [1] : graus)
+    .filter(n => n <= 7);
   for (const grauNoBaixo of candidatosAoBaixo) {
     for (const semQuinta of temExtensao && graus.includes(5) ? [false, true] : [false]) {
       const omitidos = [...(o.semFundamental ? [1] : []), ...(semQuinta ? [5] : [])];
