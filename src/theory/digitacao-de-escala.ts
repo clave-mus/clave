@@ -133,7 +133,8 @@ export function formaDaDigitacao(pos: readonly PosicaoDaDigitacao[]): string {
 }
 
 /** Por que um desenho foi recusado. A tela escolhe como dizer isso. */
-export type Recusa = 'faltam' | 'sobram' | 'desce' | 'vao' | 'repetida';
+/** `vao` saiu em 25/11: o vão é critério de sugestão, não de correção. Ver `julgarDigitacao`. */
+export type Recusa = 'faltam' | 'sobram' | 'desce' | 'repetida';
 
 export interface Veredito { certo: boolean; motivo?: Recusa; faltando?: number[]; sobrando?: number[] }
 
@@ -148,7 +149,8 @@ export interface Veredito { certo: boolean; motivo?: Recusa; faltando?: number[]
  * 3. **sobe** — ordenando por altura, a sequência tem de ser a ordem dos graus a partir da tônica
  *    do modo. Sem isso, qualquer punhado de posições com as classes certas passaria, e o desenho
  *    que se decora é o que sobe;
- * 4. **cabe na mão** — o vão entre a casa mais baixa e a mais alta, sem contar corda solta.
+ * E **não** julga o vão da mão: isso é qualidade de digitação, não correção — decisão dele em
+ * 25/11. Quem cuida do vão é a busca, que gera as sugestões.
  *
  * Não se compara com a lista de digitações geradas, de propósito: a lista é **sugestão**, e o
  * veredito é regra. Comparar com uma lista faria a busca decidir o que é certo — e aí um desenho
@@ -156,7 +158,7 @@ export interface Veredito { certo: boolean; motivo?: Recusa; faltando?: number[]
  */
 export function julgarDigitacao(
   pos: readonly PosicaoDaDigitacao[],
-  p: Pick<PedidoDeDigitacao, 'tonica' | 'familia' | 'grau' | 'tuning'> & { maxVaoCasas?: number },
+  p: Pick<PedidoDeDigitacao, 'tonica' | 'familia' | 'grau' | 'tuning'>,
 ): Veredito {
   const classes = classesDoModo(p);
   const alturas = pos.map(x => p.tuning[x.corda] + x.casa).sort((a, b) => a - b);
@@ -186,9 +188,21 @@ export function julgarDigitacao(
   const ordem = corpo.map(c => classes.indexOf(c));
   for (let i = 1; i < ordem.length; i++) if (ordem[i] !== ordem[i - 1] + 1) return { certo: false, motivo: 'desce' };
 
-  const pressionadas = pos.filter(x => x.casa > 0).map(x => x.casa);
-  const vao = pressionadas.length > 1 ? Math.max(...pressionadas) - Math.min(...pressionadas) : 0;
-  if (vao > (p.maxVaoCasas ?? 4)) return { certo: false, motivo: 'vao' };
+  /**
+   * **O vão NÃO entra no veredito** — decisão dele em 25/11, depois de dois relatos:
+   *
+   * > *"A validação deveria ser qualquer desenho, independentemente se tem um vão de tal tamanho
+   * > ou se é na mesma corda, desde que seja aquela escala. Agora, para as sugestões, aí não tem
+   * > porquê ter um exemplo de tudo na mesma corda."*
+   *
+   * A distinção é limpa e eu não a tinha visto: **o veredito julga se é a escala; a sugestão
+   * ensina uma mão boa.** O vão descreve posição de mão — é critério de qualidade de digitação,
+   * não de correção —, e julgar por ele chamava de erro escalas certas: a que desliza numa corda
+   * só (o caso que ele mandou) e qualquer uma que mude de posição no meio.
+   *
+   * Por isso `maxVaoCasas` segue no `PedidoDeDigitacao`: ele continua **gerando** sugestões que
+   * cabem na mão. Aqui ele não é lido, e `motivo: 'vao'` deixou de ser possível.
+   */
   return { certo: true };
 }
 

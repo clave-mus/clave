@@ -9,7 +9,12 @@ import { note, mod } from './core';
 
 const BAIXO = [28, 33, 38, 43];
 const VIOLAO = [40, 45, 50, 55, 59, 64];
-const re = { ...note(2), oct: 2 };
+/**
+ * ⚠️ `note` recebe o **índice diatônico**, não a classe de altura: `note(2)` é MI. Este arquivo
+ * chamava esta constante de `re` e os testes falavam em "mi dórico" — era mi o tempo todo. O nome
+ * mentia; o que os testes mediam estava certo, porque qualquer tônica serve para a medida.
+ */
+const mi = { ...note(2), oct: 2 };
 
 describe('quantos desenhos o braço dá', () => {
   it.each([
@@ -17,26 +22,26 @@ describe('quantos desenhos o braço dá', () => {
     ['menor-harmonica', 1], ['menor-harmonica', 5],
     ['menor-melodica-jazz', 1], ['menor-melodica-jazz', 7],
   ] as const)('%s, grau %i: há desenho de sobra no baixo', (familia, grau) => {
-    const ds = digitacoesDaEscala({ tonica: re, familia, grau, tuning: BAIXO });
+    const ds = digitacoesDaEscala({ tonica: mi, familia, grau, tuning: BAIXO });
     expect(ds.length, `${familia}/${grau}`).toBeGreaterThan(5);
     // e todos são de sete notas, uma por grau
     for (const d of ds) expect(d.length).toBe(7);
   });
 
   it('não repete desenho na lista', () => {
-    const ds = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 2, tuning: BAIXO });
+    const ds = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 2, tuning: BAIXO });
     expect(new Set(ds.map(assinaturaDaDigitacao)).size).toBe(ds.length);
   });
 
   it('no violão também, e com mais cordas há mais desenho', () => {
-    const noBaixo = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: BAIXO });
-    const noViolao = digitacoesDaEscala({ tonica: re, familia: 'maior', grau: 1, tuning: VIOLAO });
+    const noBaixo = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 1, tuning: BAIXO });
+    const noViolao = digitacoesDaEscala({ tonica: mi, familia: 'maior', grau: 1, tuning: VIOLAO });
     expect(noViolao.length).toBeGreaterThan(noBaixo.length);
   });
 });
 
 describe('o veredito', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('aceita TODA digitação que a busca devolve', () => {
     for (const d of digitacoesDaEscala(pedido)) {
@@ -81,15 +86,19 @@ describe('o veredito', () => {
     // sobe uma oitava com a segunda nota: as classes continuam certas, a ordem não
     const d = digitacoesDaEscala(pedido)[0];
     const trocado = d.map((x, i) => (i === 1 ? { ...x, casa: x.casa + 12 } : x));
-    const v = julgarDigitacao(trocado, { ...pedido, maxVaoCasas: 99 });
+    const v = julgarDigitacao(trocado, pedido);
     expect(v.certo).toBe(false);
     expect(v.motivo).toBe('desce');
   });
 
-  it('recusa o que não cabe na mão', () => {
+  /**
+   * **O vão não reprova mais** (decisão dele em 25/11): o veredito julga se é a escala, e o vão é
+   * critério de SUGESTÃO. Este teste era o oposto disto até ontem, e guarda a inversão.
+   */
+  it('não recusa por vão, nem o mais esticado possível', () => {
     const d = digitacoesDaEscala(pedido)[0];
-    const esticado = d.map((x, i) => (i === d.length - 1 ? { ...x, casa: x.casa } : x));
-    expect(julgarDigitacao(esticado, { ...pedido, maxVaoCasas: 1 }).motivo).toBe('vao');
+    const esticado = d.map((x, i) => (i > 0 ? { ...x, casa: x.casa } : x));
+    expect(julgarDigitacao(esticado, pedido)).toEqual({ certo: true });
   });
 
   it('a tônica do modo é a nota mais grave do desenho', () => {
@@ -102,7 +111,7 @@ describe('o veredito', () => {
 });
 
 describe('a sugestão', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('nunca repete o que a pessoa já montou', () => {
     const feitas: { corda: number; casa: number }[][] = [];
@@ -132,20 +141,20 @@ describe('a sugestão', () => {
  * cada um passou pela minha revisão sem que eu visse.
  */
 describe('o que ele relatou usando', () => {
-  const pedido = { tonica: re, familia: 'maior' as const, grau: 2, tuning: BAIXO };
+  const pedido = { tonica: mi, familia: 'maior' as const, grau: 2, tuning: BAIXO };
 
   it('fechar na oitava vale — era recusado', () => {
     const d = digitacoesDaEscala(pedido)[0];
     const base = Math.min(...d.map(x => BAIXO[x.corda] + x.casa));
     const corda = BAIXO.findIndex(t => base + 12 - t >= 0 && base + 12 - t <= 12);
     const comOitava = [...d, { corda, casa: base + 12 - BAIXO[corda] }];
-    expect(julgarDigitacao(comOitava, { ...pedido, maxVaoCasas: 99 })).toEqual({ certo: true });
+    expect(julgarDigitacao(comOitava, pedido)).toEqual({ certo: true });
   });
 
   it('outra classe repetida continua recusada', () => {
     const d = digitacoesDaEscala(pedido)[0];
     const repetida = [...d, { corda: d[1].corda, casa: d[1].casa + 12 }];
-    expect(julgarDigitacao(repetida, { ...pedido, maxVaoCasas: 99 }).motivo).toBe('repetida');
+    expect(julgarDigitacao(repetida, pedido).motivo).toBe('repetida');
   });
 
   it('a mesma forma uma oitava acima NÃO é um desenho novo', () => {
@@ -174,6 +183,45 @@ describe('o que ele relatou usando', () => {
       const alturas = d.map(x => BAIXO[x.corda] + x.casa).sort((a, b) => a - b);
       expect(alturas[7] - alturas[0]).toBe(12);
       expect(julgarDigitacao(d, pedido)).toEqual({ certo: true });
+    }
+  });
+});
+
+/**
+ * **A escala ao longo de UMA corda vale** — ele mandou o caso em 25/11, com a tela: mi menor
+ * melódica nas casas 0 2 3 5 7 9 11 12 da corda mais grave, recusada por vão.
+ *
+ * O vão mede posição de mão, e numa corda só a mão desliza. Chamar isso de erro é chamar de erro
+ * um estudo clássico de baixo.
+ */
+describe('numa corda só não há vão', () => {
+  
+  const umaCorda = [0, 2, 3, 5, 7, 9, 11, 12].map(casa => ({ corda: 0, casa }));
+
+  it('aceita a escala inteira na corda mais grave', () => {
+    expect(julgarDigitacao(umaCorda, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO }))
+      .toEqual({ certo: true });
+  });
+
+  it('e continua recusando as notas erradas ali', () => {
+    const errada = [...umaCorda.slice(0, -1), { corda: 0, casa: 13 }];
+    expect(julgarDigitacao(errada, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO }).certo).toBe(false);
+  });
+
+  /**
+   * Cruzando cordas com a mão aberta também vale: é digitação pior, não escala errada. Quem evita
+   * isso é a SUGESTÃO, que continua gerando só o que cabe no vão pedido — ver o teste abaixo.
+   */
+  it('cruzando cordas com vão grande também vale', () => {
+    const mesmaEscala = [0, 2, 3, 5, 7, 9, 11].map((casa, i) => (i < 3 ? { corda: 0, casa } : { corda: 1, casa: casa - 5 }));
+    const v = julgarDigitacao(mesmaEscala, { tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO });
+    expect(v.motivo ?? 'certo').not.toBe('vao');
+  });
+
+  it('mas a SUGESTÃO continua cabendo na mão', () => {
+    for (const d of digitacoesDaEscala({ tonica: mi, familia: 'menor-melodica-jazz', grau: 1, tuning: BAIXO, maxVaoCasas: 4 })) {
+      const casas = d.filter(x => x.casa > 0).map(x => x.casa);
+      if (casas.length > 1) expect(Math.max(...casas) - Math.min(...casas)).toBeLessThanOrEqual(4);
     }
   });
 });

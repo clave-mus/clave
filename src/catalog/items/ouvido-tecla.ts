@@ -1,4 +1,4 @@
-import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, TONALIDADE_LIVRE, TUNINGS, emBracoDeBaixo, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, clave, faixaDaClave, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDaPergunta, vozDoBraco } from '../helpers';
+import { ESCUTA_ACIMA, ESCUTA_DEFAULTS, FRETS, GRAUS_ESCOLHIDOS, TIMBRE, TIMBRE_DEFAULTS, TONALIDADE_LIVRE, TUNINGS, emBracoDeBaixo, alturaDoPc, arr, bracoDoPerfil, casaDaAltura, casasDaAltura, clave, faixaDaClave, faixaDoBraco, fretRange, grauDoPc, grausDaTonalidade, mod, nomeNaTonalidade, pcsDosGraus, pick, notaGrafada, quintasDaTonalidade, regiao, tonalidade, tonicaDeContexto, vozDaPergunta, vozDoBraco } from '../helpers';
 import type { Ctx, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -15,6 +15,30 @@ const FAIXA = { lo: 48, hi: 83 };
 /** Dó maior **e só as notas dela** — a lista de graus depende do material, então o atalho o leva. */
 const EM_DO_DIATONICO = { key: { tonic: 0, mode: 'maior' }, material: 'diatonico' } as const;
 
+/** Responder no braço — o predicado num lugar só, porque agora três coisas dependem dele. */
+const emBraco = (onde: string) => onde === 'baixo' || onde === 'violao';
+
+/**
+ * A janela de casas em vigor.
+ *
+ * ⚠️ **O padrão é o deste item, não o de `fretRange`** — que cai em 0–5 quando a chave falta. O
+ * teste da oitava da referência pegou a diferença no mesmo dia em que a janela entrou: ele chama o
+ * seletor com `{ onde }` e mais nada, e o braço do violão encolhia para cinco casas por causa de um
+ * padrão que não é o declarado em `defaults`. Padrão em dois lugares é padrão que diverge.
+ */
+const janelaDeCasas = (s: { casas?: unknown }): [number, number] => fretRange({ casas: String(s.casas ?? '0-12') });
+
+/**
+ * A primeira casa em que a nota pode cair.
+ *
+ * ⚠️ **Não é a primeira casa DESENHADA**: numa janela que não começa no zero, a casa inicial aparece
+ * no braço mas não recebe toque — é a convenção de `casaPermitida`, para janelas vizinhas não se
+ * sobreporem, e o `Fretboard` monta os alvos pela mesma regra. Medido na tela em 26/11: pondo o
+ * `+1` também aqui ele era aplicado duas vezes, e a janela 5–9 virava três casas tocáveis em vez de
+ * quatro.
+ */
+const primeiraTocavel = (de: number) => (de === 0 ? 0 : de + 1);
+
 /** A superfície padrão deste item: teclado para piano, o braço de quem toca para os outros. */
 const ondePadrao = (ctx: Ctx) => (ctx.params.instrument === 'piano' ? 'teclado' : bracoDoPerfil(ctx));
 
@@ -23,12 +47,29 @@ const ondePadrao = (ctx: Ctx) => (ctx.params.instrument === 'piano' ? 'teclado' 
  * região pedida. Sem nenhuma na região, vale qualquer uma do braço: melhor sair da região que fazer
  * uma pergunta sem resposta possível — a mesma regra que `regiao` já segue.
  */
-function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pc: number): number {
-  const noBraco = tuning.flatMap(t => Array.from({ length: 13 }, (_, k) => t + k))
-    .filter(m => mod(m, 12) === pc);
+function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pcs: readonly number[], de = 0, ate = 12): number {
+  const nasCasas = (lo: number, hi: number) => tuning
+    .flatMap(t => Array.from({ length: hi - lo + 1 }, (_, k) => t + lo + k))
+    .filter(m => pcs.includes(mod(m, 12)));
+  /**
+   * ⚠️ **A classe de altura sai do que a janela tem**, e não o contrário — e isto foi medido na
+   * tela em 26/11, no dia em que a janela entrou: num baixo entre as casas 6 e 9 **não existe um
+   * sol** (ali as alturas são 34–37, 39–42, 44–47 e 49–52). Sorteando a classe primeiro, a pergunta
+   * ia para fora da janela, onde não há onde clicar — e o `varre-superficies` pegou junto, pela
+   * invariante que ele guarda desde sempre: toda altura esperada tem casa no braço desenhado.
+   *
+   * Sorteia-se a classe entre as que a janela oferece, e **depois** a altura: sortear altura direto
+   * faria as classes com mais posições saírem mais vezes.
+   *
+   * O cinto do braço todo continua, para a janela que não oferecer classe nenhuma.
+   */
+  const todas = nasCasas(de, ate).length ? nasCasas(de, ate) : nasCasas(0, 12);
+  const classe = pick([...new Set(todas.map(m => mod(m, 12)))]);
+  const daClasse = todas.filter(m => mod(m, 12) === classe);
   const { lo, hi } = ctx.params.range;
-  const naRegiao = noBraco.filter(m => m >= lo && m <= hi);
-  return pick(naRegiao.length ? naRegiao : noBraco);
+  // A região é preferência; o braço é o que existe — a mesma ordem que a referência já segue.
+  const naRegiao = daClasse.filter(m => m >= lo && m <= hi);
+  return pick(naRegiao.length ? naRegiao : daClasse);
 }
 
 // `notaEscrita` morava aqui, com sustenido fixo — e era um defeito que sobreviveu à revisão do
@@ -60,13 +101,16 @@ function alturaNoBraco(tuning: readonly number[], ctx: Ctx, pc: number): number 
  * - **pauta**: o que a clave lê sem linhas suplementares demais;
  * - **letras e graus**: não há posição desenhada, e aí a região é o único limite.
  */
-function oitavasDaSuperficie(ctx: Ctx, onde: string): number[] {
+function oitavasDaSuperficie(ctx: Ctx, onde: string, de = 0, ate = 12): number[] {
   const pcTonica = mod(tonalidade(ctx)?.tonic ?? 0, 12);
   const resolvido = onde;
   const cabe = (m: number): boolean => {
     if (resolvido === 'baixo' || resolvido === 'violao') {
       const t = resolvido === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
-      return t.some(corda => m - corda >= 0 && m - corda <= 12);
+      // **A janela de casas entra aqui também**: restringindo o braço às casas 0–5, as oitavas que a
+      // referência pode ocupar mudam com ele — oferecer uma que a janela não desenha é o defeito de
+      // 14/11 de novo ("um estado que a tela não sabe mostrar").
+      return t.some(corda => m - corda >= de && m - corda <= ate);
     }
     if (resolvido === 'pauta') {
       const f = faixaDaClave(clave(ctx));
@@ -139,23 +183,17 @@ function naFaixa(m: number, faixa: { lo: number; hi: number }, preferida?: { lo:
  * que se aprende no braço. A nota a audiar numa só porque ela é a pergunta — mostrar todas as
  * posições dela seria responder onde ela está antes de a pessoa audiar.
  */
-function marcasNoBraco(tuning: readonly number[], referencia: number, alvo: number, nomeDaRef: string) {
+function marcasNoBraco(tuning: readonly number[], referencia: number, alvo: number, nomeDaRef: string, de = 0, ate = 12) {
   const marcas: { s: number; f: number; color?: string; label?: string }[] = [];
-  for (const pos of todasAsCasas(tuning, referencia)) marcas.push({ ...pos, color: 'var(--accent-quiet)', label: nomeDaRef });
-  const posAlvo = casaDaAltura(tuning, alvo);
+  for (const pos of casasDaAltura(tuning, referencia, de, ate)) marcas.push({ ...pos, color: 'var(--accent-quiet)', label: nomeDaRef });
+  const posAlvo = casaDaAltura(tuning, alvo, de, ate);
   if (posAlvo) marcas.push({ ...posAlvo, color: 'var(--mu)' });
   return marcas;
 }
 
-/** Todas as casas (0 a 12) que dão exatamente esta altura. */
-function todasAsCasas(tuning: readonly number[], m: number): { s: number; f: number }[] {
-  const out: { s: number; f: number }[] = [];
-  for (let s = 0; s < tuning.length; s++) {
-    const f = m - tuning[s];
-    if (f >= 0 && f <= 12) out.push({ s, f });
-  }
-  return out;
-}
+// `todasAsCasas` morava aqui e era a sétima cópia de `casasDaAltura`, só sem a janela de casas —
+// que é justamente o que o item passou a ter em 26/11. Uma implementação de braço virtual é a
+// decisão 17, e vale para as contas dele também.
 
 // `casaDaAltura` morava aqui — esta era a versão CERTA das três que existiam (devolvia `null` quando
 // o braço não alcança). Foi para `helpers.ts` em 13/11, e com ela as outras duas, que devolviam a
@@ -234,7 +272,9 @@ export const ouvidoTecla: CatalogItem = {
       ],
       // ...e o recorte que a TELA oferece: só as oitavas que a superfície escolhida alcança.
       opcoesDe: valores => [
-        ...oitavasDaSuperficie(ctx, String(valores.onde ?? ondePadrao(ctx))).map(o => ({ id: String(o), label: String(o) })),
+        // A janela de casas entra no recorte: restrito às casas 0–5 de um baixo, só existe a oitava
+        // mais grave, e oferecer a outra seria oferecer o que a tela não desenha.
+        ...oitavasDaSuperficie(ctx, String(valores.onde ?? ondePadrao(ctx)), ...janelaDeCasas(valores)).map(o => ({ id: String(o), label: String(o) })),
         { id: 'sorteada', label: ctx.t('settings.referenceAnyOctave') },
       ] },
     /**
@@ -268,11 +308,24 @@ export const ouvidoTecla: CatalogItem = {
      * foi queixa dele em 13/11, e um sorteio de timbre não pode desfazer isso.
      */
     ...TIMBRE(ctx),
+    /**
+     * **Que pedaço do braço** — pedido dele em 26/11, junto da queixa que o motivou: *"atualmente
+     * está ruim de usar no celular, tem que dar um zoom pra conseguir clicar certo na nota"*.
+     *
+     * O controle é o `casas` compartilhado (`FRETS`), o mesmo de outros três itens de braço, e a
+     * janela entra em tudo que depende dela: de onde a nota sai, o que o braço desenha, onde a
+     * referência pode cair e quais oitavas o painel oferece. Fazer só o desenho encolher daria um
+     * braço curto com perguntas de fora dele.
+     *
+     * O padrão fica no braço todo, como nos outros três: encolher por conta mudaria o exercício de
+     * quem já o usa assim. Quem quer o pedaço escolhe.
+     */
+    { ...FRETS(ctx), quando: s => emBraco(String(s.onde ?? ondePadrao(ctx))) },
     ...ESCUTA_ACIMA(ctx, s => emBracoDeBaixo(ctx, s.onde ?? ondePadrao(ctx))),
   ],
   // `onde` fica FORA dos defaults estáticos: quem o resolve é `ondePadrao`, pelo perfil. Um valor
   // fixo aqui venceria o contexto em todo chamador que não seja o Player.
-  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [], ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
+  defaults: { estimulo: 'som', referencia: true, grausEscolhidos: [], casas: '0-12', ...TIMBRE_DEFAULTS, ...ESCUTA_DEFAULTS },
   /**
    * **A oitava da referência também sai do contexto**, e sem isto o chip não aparecia marcado.
    *
@@ -335,14 +388,37 @@ export const ouvidoTecla: CatalogItem = {
    */
   problema(s, ctx) {
     const possiveis = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
-    return possiveis.length ? null : ctx.t('player.poucasNotas');
+    if (!possiveis.length) return ctx.t('player.poucasNotas');
+    /**
+     * **Uma nota só não é pergunta** — e a janela de casas abriu esse caso em 26/11.
+     *
+     * Visto na tela, com "tônica e quinta" marcadas e as casas 5–9 de um baixo: ali só existe o
+     * dó2, e o exercício perguntava a mesma nota para sempre. Não é impossível como o caso acima, é
+     * **degenerado** — e a decisão 13 manda explicar em vez de entregar uma pergunta que não
+     * pergunta. O texto já existia e diz a saída: marcar mais notas, ou abrir a região.
+     */
+    const onde = String(s.onde ?? ondePadrao(ctx));
+    if (!emBraco(onde)) return null;
+    const tuning = onde === 'baixo' ? TUNINGS.baixo : TUNINGS.violao;
+    const [de, ate] = janelaDeCasas(s);
+    const classes = new Set(tuning.flatMap(t => Array.from(
+      { length: ate - primeiraTocavel(de) + 1 }, (_, k) => mod(t + primeiraTocavel(de) + k, 12),
+    )).filter(pc => possiveis.includes(pc)));
+    return classes.size > 1 ? null : ctx.t('player.poucasNotas');
   },
   make(s, ctx): Question {
     const permitidas = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
-    const p = pick(permitidas);
     // Ausente quer dizer "a do perfil" — `ondePadrao`, a mesma função que o `defaultsDo` usa.
     const onde = String(s.onde ?? ondePadrao(ctx));
-    const noBraco = onde === 'baixo' || onde === 'violao';
+    const noBraco = emBraco(onde);
+    /**
+     * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
+     * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
+     * Nos outros três modos a oitava continua sendo a resposta.
+     */
+    const semOitava = onde === 'letras' || onde === 'graus';
+    /** A janela de casas: vale para o sorteio, para o desenho e para a referência. */
+    const [de, ate] = janelaDeCasas(s);
     /** A afinação da superfície escolhida — não a do perfil, que pode ser outra. */
     const tuning = onde === 'baixo' ? TUNINGS.baixo : onde === 'violao' ? TUNINGS.violao : ctx.params.tuning;
     /**
@@ -375,7 +451,11 @@ export const ouvidoTecla: CatalogItem = {
      * fora do alcance (medido: soava 60 num baixo que chega a 55). Enumerar o que existe é a mesma
      * escolha que consertou os distratores de ritmo: onde o espaço é pequeno, enumere.
      */
-    const m = noBraco ? alturaNoBraco(tuning, ctx, p) : alturaDoPc(ctx, p, faixa);
+    /** Uma nota que o material permite, onde a superfície escolhida a alcança. */
+    const sortearAltura = () => (noBraco
+      ? alturaNoBraco(tuning, ctx, permitidas, primeiraTocavel(de), ate)
+      : alturaDoPc(ctx, pick(permitidas), faixa));
+    let m = sortearAltura();
     /**
      * **A referência é a tônica em vigor**, não um dó cravado — e isto é a correção de um bug que a
      * pergunta do Paulo em 13/11 expôs.
@@ -443,12 +523,37 @@ export const ouvidoTecla: CatalogItem = {
      * mais próxima que o braço alcança, e isso aparece na tela porque a marca está lá.
      */
     const faixaDaSuperficie = noBraco
-      ? { lo: tuning[0], hi: tuning[tuning.length - 1] + 12 }
+      ? faixaDoBraco(tuning, de, ate)
       : { lo: Math.min(faixa.lo, 24), hi: Math.max(faixa.hi, 96) };
     const preferida = noBraco ? faixa : undefined;
-    const referencia = s.oitavaDaReferencia === 'sorteada'
-      ? tonicaDeContexto(ctx, m)
-      : naFaixa((Number(s.oitavaDaReferencia ?? 4) + 1) * 12 + pcDaReferencia, faixaDaSuperficie, preferida);
+    const calcularReferencia = (alvo: number) => (s.oitavaDaReferencia === 'sorteada'
+      ? tonicaDeContexto(ctx, alvo)
+      : naFaixa((Number(s.oitavaDaReferencia ?? 4) + 1) * 12 + pcDaReferencia, faixaDaSuperficie, preferida));
+    let referencia = calcularReferencia(m);
+    /**
+     * **A nota nunca é a própria referência** — pedido dele em 26/11: *"faça com que ele nunca
+     * repita a exata mesma nota que a referência"*.
+     *
+     * Ela acabou de soar e é dada de graça; perguntar "que nota é" sobre ela é perguntar o que o
+     * enunciado já disse. A mesma nota **noutra oitava** continua valendo: ali a pergunta é a
+     * oitava, que é a conferência deste item desde 10/11.
+     *
+     * ⚠️ Respondendo por **letras ou graus**, a conferência é por classe de altura — e aí a classe
+     * repetida é a mesma pergunta de graça, mesmo uma oitava acima. Nesses dois modos o que não
+     * pode repetir é a classe.
+     *
+     * Sortear de novo (em vez de empurrar a nota para o lado) é o que preserva o material escolhido:
+     * empurrar daria uma nota que os graus marcados podem não permitir. Com a referência sorteada,
+     * ela se recalcula junto, porque depende da nota.
+     *
+     * O laço é limitado: se o material permitir só aquela nota, a última palavra é do material e a
+     * pergunta sai como saía. O caso tem aviso próprio em `problema` quando é no braço.
+     */
+    const repete = (alvo: number, ref: number) => (semOitava ? mod(alvo, 12) === mod(ref, 12) : alvo === ref);
+    for (let tentativa = 0; tentativa < 24 && s.referencia === true && repete(m, referencia); tentativa++) {
+      m = sortearAltura();
+      referencia = calcularReferencia(m);
+    }
     /**
      * **A grafia segue a tonalidade.** O Paulo em 13/11: *"na tonalidade, diz Réb, mas no exercicio
      * diz 'primeiro um Do#'"*. `pcNameUm(..., false)` escolhe sempre o sustenido; em Ré♭ maior a
@@ -465,12 +570,6 @@ export const ouvidoTecla: CatalogItem = {
     // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
 
     /**
-     * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
-     * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
-     * Nos outros três modos a oitava continua sendo a resposta.
-     */
-    const semOitava = onde === 'letras' || onde === 'graus';
-    /**
      * A referência também é **apoio visível** na superfície de resposta: ela soou, é dada, e a pessoa
      * precisa ver onde está (ver `Apoio`, em `types.ts`). Sem `referencia` não há o que mostrar.
      */
@@ -480,7 +579,18 @@ export const ouvidoTecla: CatalogItem = {
       ? { lo: Math.min(faixa.lo, referencia), hi: Math.max(faixa.hi, referencia) }
       : faixa;
     const superficie =
-      noBraco ? { kind: 'fretboard' as const, tuning, from: 0, to: 12, apoio }
+      /**
+       * **O braço é o exercício**, e com ele vêm as duas coisas que o tornam usável no celular — a
+       * queixa dele de 26/11, de ter que dar zoom para acertar a nota:
+       *
+       * - `alto`: o dobro de espaçamento entre cordas. Medido em 25/11 num celular deitado, cada
+       *   corda tem 24 px de altura com o espaçamento normal — metade de um alvo de toque;
+       * - `foco`: a moldura do app sai, e ela come mais de 300 px dos 375 que a tela deitada tem.
+       *
+       * Nenhuma das duas é nova: é o que o `acorde-no-instrumento` e o `escala-no-instrumento` já
+       * declaram. Faltava aqui, e aqui o toque é a resposta inteira.
+       */
+      noBraco ? { kind: 'fretboard' as const, tuning, from: de, to: ate, apoio, alto: true, foco: true }
       // A armadura da tonalidade em vigor, como em `nota-na-pauta`: sem ela, praticar em Sol maior
       // pedia ligar o sustenido à mão (o Paulo relatou isso em 12/11 e de novo em 13/11).
       : onde === 'pauta' ? { kind: 'staff' as const, clef: clave(ctx), accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, apoio }
@@ -515,7 +625,7 @@ export const ouvidoTecla: CatalogItem = {
          * isso `casaDaAltura` agora avisa quando não alcança, e aí a referência é omitida em vez de
          * ser desenhada na casa errada.
          */
-        : noBraco ? { kind: 'fretboard', tuning, from: 0, to: 12, marks: marcasNoBraco(tuning, referencia, m, nomeDaReferencia) }
+        : noBraco ? { kind: 'fretboard', tuning, from: de, to: ate, marks: marcasNoBraco(tuning, referencia, m, nomeDaReferencia, de, ate) }
         : { kind: 'text', text: '' };
       /**
        * **O grau sozinho é ambíguo**, e o Paulo pegou isso em 13/11: *"apareceu audie o grau 6 e eu

@@ -1,6 +1,7 @@
 import { CHORDS, EM_DO_MAIOR, SCALES, arr, chordSymbol, mod, notaGrafada, pick, randInt, regiao, scaleName, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import { qualidadeEnfeitada } from '../enfeites';
 import { voicingsDe } from '../../theory/voicings';
+import { VER_O_QUE_SOOU, faixaDaRevelacao, noteName } from '../helpers';
 import { midi } from '../../theory/core';
 import { RASCUNHO } from '../publicacao';
 import type { CatalogItem, SettingValue } from '../types';
@@ -94,6 +95,14 @@ export const ouvidoCampo: CatalogItem = {
     // Com voicing o baixo já pode ser qualquer grau: inverter de novo seria meia função repetida.
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => !comVoicing(s) },
     /**
+     * **Ver as notas ao conferir** — o mesmo teclado da Tônica e do Qualidades de acordes, pedido
+     * dele para os três de uma vez em 26/11.
+     *
+     * ⚠️ Mostra **o acorde da pergunta**, não a cadência inteira: a cadência é contexto, e marcar
+     * tudo que soou desde o começo faria o teclado dizer "foram estas doze notas".
+     */
+    VER_O_QUE_SOOU(ctx),
+    /**
      * **Os acordes da cadência de contexto**, e o padrão são tríades desde 19/11 (pedido dele:
      * *"seria bom se a cadência de contexto pudesse ser só de tríades"*).
      *
@@ -150,7 +159,7 @@ export const ouvidoCampo: CatalogItem = {
      */
     ...TIMBRE(ctx),
   ],
-  defaults: { estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades', ...TIMBRE_DEFAULTS,
+  defaults: { verOQueSoou: true, estimulo: 'som', campo: 'maior', tetrades: true, graus: ['1', '2', '3', '4', '5', '6', '7'], emprestimos: [], enfeites: 'nenhum', voicing: 'fechado', contextoAcordes: 'triades', ...TIMBRE_DEFAULTS,
     emprestimosMenor: [], resposta: 'romano', inversoes: false, contexto: 'ii-V-I', arpejo: false, duracao: 2,
     melodia: 'nenhuma', notaDaMelodia: '0', posicaoDaMelodia: 'topo' },
   presets: [
@@ -378,6 +387,19 @@ export const ouvidoCampo: CatalogItem = {
         ],
       },
       autoplay: true, reveal: revelacao, presentation: vozDaPergunta(s),
+      /**
+       * O teclado do que soou **no lugar do alvo** — o acorde e a nota segurada, se houver. A
+       * fundamental vai nomeada, grafada pela tonalidade (`raiz` já saiu de `notaGrafada`).
+       */
+      ...(s.verOQueSoou !== false && comSoar.length
+        ? (() => {
+            // ⚠️ Pela CLASSE, não pela nota mais grave: com inversão ou voicing a fundamental não
+            // está no baixo, e rotular o baixo de fundamental seria afirmar o contrário do que soou.
+            const fund = comSoar.find(m => ((m % 12) + 12) % 12 === ((midi(raiz) % 12) + 12) % 12);
+            return { revelacao: { kind: 'keyboard' as const, ...faixaDaRevelacao(comSoar), notas: comSoar,
+              ...(fund !== undefined ? { rotulos: { [fund]: noteName(raiz, ctx.naming) } } : {}) } };
+          })()
+        : {}),
     };
   },
 };

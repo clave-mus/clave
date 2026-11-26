@@ -249,10 +249,25 @@ describe('o timbre segue a superfície', () => {
    * padrão do motor é o piano de amostras — que, de passagem, nem alcança os graves de um baixo: as
    * amostras param no Dó2 e um baixo de quatro cordas desce ao Mi1.
    */
+  /**
+   * ⚠️ **A voz do braço pode vir por GRUPO desde 25/11.** A `melodia-de-ouvido` passou a dar o
+   * timbre do braço só às notas da melodia, deixando a cadência no timbre harmônico — ele ouviu a
+   * cadência de quatro vozes em corda pulsada e a descreveu como *"travada, bugada"*.
+   *
+   * O guarda continua exigindo a mesma coisa (o que soa do braço soa como braço), só que agora
+   * aceita as duas formas de dizer: no som inteiro, ou nos grupos que são do braço.
+   */
   it('braço desenhado soa com voz de braço, nunca com a voz padrão', () => {
     for (const { q, onde } of todasAsPerguntas()) {
       const noBraco = q.visual.kind === 'fretboard' || q.surface.kind === 'fretboard';
       if (!noBraco || !q.sound) continue;
+      // Audiando, o que soa de braço é o GABARITO (um pedaço), não os grupos — ali o som principal
+      // é a cadência, que é harmonia.
+      const porGrupo = [...(q.sound.vozPorGrupo ?? []), ...(q.sound.partes ?? []).map(p => p.voz)].filter(Boolean);
+      if (porGrupo.length) {
+        for (const v of porGrupo) expect(['violao', 'baixo'], `${onde}: pedaço com voz ${v}`).toContain(v);
+        continue;
+      }
       expect(['violao', 'baixo'], `${onde}`).toContain(q.sound.instrument);
     }
   });

@@ -26,15 +26,21 @@ export interface PedidoDeMelodia {
   /** Salto máximo entre notas seguidas, em semitons. */
   saltoMax: number;
   /**
-   * **Quantas notas de fora da escala**, aproximando por meio tom — pedido dele em 25/11:
-   * *"podemos adicionar aproximações cromáticas (tanto entre notas, como entre o 4 e o 5, como se
-   * aproximando de uma nota, como fazendo um ♭2-1)"*.
+   * **A chance de cada nota ser uma aproximação cromática**, de 0 a 1.
    *
-   * Os três casos que ele deu são o mesmo mecanismo: uma nota a um semitom de uma nota da escala,
-   * imediatamente antes dela. O que muda é de onde ela vem — de baixo (o cromático entre 4 e 5) ou
-   * de cima (o ♭2 caindo na tônica).
+   * Era uma CONTAGEM (zero a três), e ele corrigiu o desenho em 25/11: *"não necessariamente
+   * escolhemos quantas notas cromáticas vai ter, mas sim um botão que tu clica e aí ele tem uma
+   * chance relativamente baixa... digamos que uma a cada 5 notas, ou a 4 notas"*.
+   *
+   * Ele está certo, e o motivo é musical: contagem fixa faz **toda** melodia ter exatamente duas
+   * cromáticas, e aí o ouvido aprende a contá-las em vez de reconhecê-las. Com chance, a melodia
+   * às vezes não tem nenhuma — e é isso que obriga a ouvir.
+   *
+   * Os três casos que ele deu antes são o mesmo mecanismo: uma nota a um semitom de uma nota da
+   * escala, imediatamente antes dela. O que muda é de onde ela vem — de baixo (o cromático entre 4
+   * e 5) ou de cima (o ♭2 caindo na tônica).
    */
-  cromaticas?: number;
+  chanceCromatica?: number;
   /**
    * **A cromática resolve, ou fica solta?**
    *
@@ -76,7 +82,7 @@ export function sortearMelodia(p: PedidoDeMelodia): number[] {
     if (!de.length) break;
     melodia.push(escolher(de));
   }
-  return p.cromaticas ? comAproximacoes(melodia, p) : melodia;
+  return p.chanceCromatica ? comAproximacoes(melodia, p) : melodia;
 }
 
 /**
@@ -94,15 +100,23 @@ export function sortearMelodia(p: PedidoDeMelodia): number[] {
  */
 function comAproximacoes(melodia: number[], p: PedidoDeMelodia): number[] {
   const rnd = p.rnd ?? Math.random;
-  const quantas = Math.max(0, Math.min(p.cromaticas ?? 0, melodia.length - 1));
-  if (!quantas) return melodia;
+  const chance = Math.max(0, Math.min(1, p.chanceCromatica ?? 0));
+  if (!chance) return melodia;
   const naEscala = (m: number) => p.pcs.includes(((m % 12) + 12) % 12);
 
   const saida = [...melodia];
   /** Os lugares que podem virar cromática: nunca o primeiro, e nunca dois colados. */
   const candidatos = saida.map((_, i) => i).filter(i => i > 0);
-  for (let k = 0; k < quantas && candidatos.length; k++) {
-    const escolhido = candidatos.splice(Math.floor(rnd() * candidatos.length), 1)[0];
+  /**
+   * **Sorteio por nota, e não uma cota.** Cada lugar candidato tira a sua sorte; o teto é só para
+   * a melodia não virar cromatismo quando a chance for alta.
+   */
+  const teto = Math.max(1, Math.round(melodia.length * Math.min(chance * 2, 0.6)));
+  let postas = 0;
+  while (candidatos.length && postas < teto) {
+    const i = Math.floor(rnd() * candidatos.length);
+    if (rnd() >= chance) { candidatos.splice(i, 1); continue; }
+    const escolhido = candidatos.splice(i, 1)[0];
     // o alvo é a nota SEGUINTE quando ela existe; sendo a última, o alvo é a anterior e a
     // aproximação vem de volta — continua resolvendo, só que descendo para trás.
     const iAlvo = escolhido + 1 < saida.length ? escolhido + 1 : escolhido - 1;
@@ -114,6 +128,7 @@ function comAproximacoes(melodia: number[], p: PedidoDeMelodia): number[] {
     const nova = vale(candidata) ? candidata : vale(outra) ? outra : null;
     if (nova === null) continue;
     saida[escolhido] = nova;
+    postas += 1;
     // Duas cromáticas coladas viram cromatismo, não aproximação: tira os vizinhos da lista.
     for (const vizinho of [escolhido - 1, escolhido + 1]) {
       const onde = candidatos.indexOf(vizinho);

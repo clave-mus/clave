@@ -75,14 +75,37 @@ const NA_MADEIRA: Record<string, string> = {
 };
 const naMadeira = (c: string | undefined) => (c ? NA_MADEIRA[c] ?? c : 'var(--fret-dot-now)');
 
-const FW = 52;
+const FW_BASE = 52;
 const GAP_BASE = 22;
+/**
+ * **A casa cresce quando a janela é curta** — e isto é o fim da queixa dele de 26/11 sobre o braço
+ * no celular: *"está ruim de usar no celular, tem que dar um zoom pra conseguir clicar certo na
+ * nota"*.
+ *
+ * Medido num celular deitado (812×375), em modo de foco: quem limita o desenho é a **altura**, e por
+ * isso o braço de doze casas ocupa 759 px de largura e o de cinco ocupa **244 px dos 759** — a casa
+ * continua do mesmo tamanho e dois terços da tela ficam vazios. Como o SVG escala por igual, alargar
+ * a casa em unidades de desenho é o que transforma aquela largura livre em alvo de toque.
+ *
+ * Só onde o braço é para o dedo (`alto`): é lá que o tamanho do alvo decide, e é o que mantém o
+ * desenho do braço-enunciado igual ao que já foi revisado.
+ */
+const FW_LARGO = FW_BASE * 2;
 
 export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted = [], onPick, onlyString, showNames = false, naming = 'pt', label, foco, alto = false }: Props) {
   const t = useT();
   const n = tuning.length;
   const GAP = alto ? GAP_BASE * 2 : GAP_BASE;
-  const left = 50;  // espaço para o nome da corda à esquerda
+  const FW = alto ? Math.min(Math.round((FW_BASE * 12) / Math.max(to - from, 1)), FW_LARGO) : FW_BASE;
+  /**
+   * Espaço à esquerda: o nome da corda **e** a casa da corda solta, que é alvo de toque como as
+   * outras. Com `alto` ele cresce, senão a solta fica sendo o menor alvo da tela — medido em 26/11,
+   * 26 px de largura contra 98 px das casas pisadas.
+   */
+  const left = alto ? 74 : 50;
+  const ABERTA = alto ? 46 : 28;
+  const abertaX = alto ? left - ABERTA - 2 : left - 32;
+  const soltaNoMeio = alto ? abertaX + ABERTA / 2 : null;
   const top = 18;
   const frets = to - from;
   const width = left + frets * FW + 16;
@@ -134,7 +157,7 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
           branco sobre branco. Foi o screenshot que pegou; a medição eu tinha feito contra a
           madeira errada. */}
       {tuning.map((aberta, s) => (
-        <text key={`n${s}`} x={left - 32} y={yS(s) + 4} textAnchor="middle" fontSize="11" fontWeight="700"
+        <text key={`n${s}`} x={soltaNoMeio ?? left - 32} y={yS(s) + 4} textAnchor="middle" fontSize="11" fontWeight="700"
           fill="var(--cream)" opacity={onlyString === undefined || onlyString === s ? 0.9 : 0.4} fontFamily="var(--body)">
           {pcName(aberta, naming, false)}
         </text>
@@ -145,9 +168,9 @@ export default function Fretboard({ tuning, from = 0, to = 12, marks = [], muted
       {Array.from({ length: frets }, (_, i) => from + i + 1).filter(f => [1, 3, 5, 7, 9, 12, 15].includes(f)).map(f => (
         <text key={f} x={left + (f - from - 0.5) * FW} y={height - 4} textAnchor="middle" fontSize="11" fill="var(--muted)" fontFamily="var(--body)">{f}</text>
       ))}
-      {muted.map(s => <text key={'m' + s} x={left - 18} y={yS(s) + 5} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ve)" fontFamily="var(--body)">×</text>)}
+      {muted.map(s => <text key={'m' + s} x={soltaNoMeio ?? left - 18} y={yS(s) + 5} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ve)" fontFamily="var(--body)">×</text>)}
       {cells.map(({ s, f }) => (
-        <rect key={`c${s}-${f}`} className="fret-cell" x={f === 0 ? left - 32 : left + (f - from - 1) * FW} y={yS(s) - GAP / 2} width={f === 0 ? 28 : FW} height={GAP}
+        <rect key={`c${s}-${f}`} className="fret-cell" x={f === 0 ? abertaX : left + (f - from - 1) * FW} y={yS(s) - GAP / 2} width={f === 0 ? ABERTA : FW} height={GAP}
           fill="transparent" onPointerDown={() => onPick!(s, f)} />
       ))}
       {marks.map((m, i) => {

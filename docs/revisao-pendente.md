@@ -113,7 +113,8 @@ nota a meio tom de uma nota da escala, imediatamente antes dela.
 
 | o quê | confira |
 |---|---|
-| **a cromática substitui, não acrescenta** | pedindo cinco notas com duas cromáticas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **a cromática substitui, não acrescenta** | pedindo cinco notas, soam cinco. Confira se é isso que você espera, ou se a aproximação devia ser uma nota a MAIS |
+| **é interruptor, não cota** (25/11) | ligado, cada nota candidata tem ~22% de chance — uma em cada quatro ou cinco, como você pediu. Umas melodias saem sem nenhuma, e é isso que obriga a ouvir em vez de contar. Confira se a frequência está boa no uso |
 | **resolvendo × soltas** | resolvendo é a definição estrita (cai no alvo a meio tom); soltas é outro som, a nota alterada sem destino. Dois atalhos, um para cada |
 | **nunca duas coladas, nunca a primeira** | duas cromáticas seguidas viram cromatismo, e começar fora da escala tira a referência antes de a melodia dizer onde está |
 | ⚠️ **a grafia na pauta** | audiando, a cromática aparece escrita, e quem decide a grafia é a tonalidade: em dó maior o pc 3 sai **Mi♭**. Subindo para o Mi, o certo musical seria **Ré♯**. A regra "grafia pela tonalidade" é antiga e vale em todo o resto do app — mudar para "grafia pela direção da aproximação" é decisão sua, e vale só aqui |
@@ -125,7 +126,7 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 
 | o quê | confira |
 |---|---|
-| **o veredito** | ele é regra, não lista: classes do modo · nenhuma repetida · subindo em ordem de grau · cabendo no vão da mão. Confira se o vão padrão (4 casas) é o certo para o seu baixo, e se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
+| **o veredito** | decisão sua de 25/11: ele julga **se é a escala**, e nada mais — classes do modo, nenhuma repetida, subindo em ordem de grau. O vão da mão saiu: é critério de **sugestão**, não de correção. Confira se "subindo" é restritivo demais — hoje um desenho que desce é recusado |
 | **o enunciado pelo grau** | *"monte uma digitação do 4º modo da escala maior, a partir de Lá"*. Foi sua decisão (Q3): o número no enunciado, e o nome tradicional na revelação quando existe |
 | **as três famílias** | maior, menor harmônica e menor melódica. A menor natural é o 6º grau da maior, e por isso não é família à parte |
 | **o braço alto** | as cordas com o dobro do espaçamento. Medido deitado: casa de ~70 px, corda de ~59 px, contra os 24 px de antes. Confira com o dedo |
@@ -134,6 +135,31 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **o botão de sugestão** | aparece depois de responder, nunca antes (antes seria pedir a resposta). Ele exclui o que você acabou de montar e as sugestões já vistas **por FORMA** — o mesmo desenho uma oitava acima não conta como novo (você relatou em 25/11) —, numera as notas na ordem de subida, e avisa quando acabaram |
 | **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |
 | **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
+
+### Os modos das menores no ouvido (26/11/2026)
+
+Rota nova do `ouvido-escala`, decidida com ele: o painel **troca de lista** em vez de crescer.
+`escalas` é a lista de sempre (13 chips); `modos` é **família × grau** — 3 interruptores e 7 chips
+cobrindo 21 modos. Medido antes de escolher: cadastrar os modos como escalas levaria a lista a 25
+chips, e `ALL_SCALES` é lido em 25 lugares, então pauta e braço ganhariam 25 também.
+
+| o quê | confira |
+|---|---|
+| **o grau no enunciado, o nome na revelação** | a convenção que você fixou em 25/11 para a digitação, reusada aqui. Confira se reconhecer "4º modo da menor melódica" é o que você quer treinar, ou se prefere ver "lídio dominante" já na alternativa |
+| **as alternativas são os pares que você marcou** | uma família dá 7 opções; as três dão 21, que é a versão difícil. Confira se 21 na tela é demais |
+| **nos três itens** | ele pediu no mesmo dia, e entrou: `ouvido-escala`, `pauta-escala` e `escala-no-instrumento` oferecem o mesmo seletor, com os controles e a convenção de nome em `catalog/modos.ts` |
+
+### Audiar o padrão a partir de um grau qualquer (26/11/2026)
+
+Direção nova do `reconhecer-padroes-escala`, e é a **ideia original do ChicagoBassBuddy** que ele
+descreveu: *"audiar / solfejar a partir de algum grau arbitrário, como a partir do 6. E aí, sem
+solfejar os outros padrões, ele vai direto para o 6. Isso é bem mais difícil."*
+
+| o quê | confira |
+|---|---|
+| **o salto é o exercício** | subir posição por posição já existe, e é a tela de exploração. Aqui a pedida vem sem aviso. Confira se a dificuldade está onde você esperava |
+| **o enunciado diz o desenho e o grau** | *"audie o desenho 1-3-2-5 começando no grau 6"* — o desenho vem em graus da PRIMEIRA posição, que é como você o conhece da exploração. Confira se isso basta, ou se o enunciado devia mostrar o desenho de outro jeito |
+| ⚠️ **o nome do item** | ele se chama *Reconhecer padrões pela escala*, e agora também audia. Pelo modelo de 12/11, direção é parâmetro e o nome devia falar do objeto — algo como "Padrões pela escala". É nome, então é seu |
 
 ### Escrever acorde e escala na pauta (25/11/2026)
 

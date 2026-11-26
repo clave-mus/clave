@@ -1,7 +1,8 @@
-import { voicingsDe, type Voicing } from '../../theory/voicings';
+import { MAO_ESQUERDA, voicingsDe, type Voicing } from '../../theory/voicings';
 import {
   ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
-  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, } from '../helpers';
+  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, VER_O_QUE_SOOU,
+  faixaDaRevelacao, vozDaPergunta, } from '../helpers';
 import { qualidadeEnfeitada, type NoCampo } from '../enfeites';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
@@ -76,6 +77,21 @@ export const tonicaDeOuvido: CatalogItem = {
      */
     { id: 'semFundamental', label: ctx.t('settings.withoutRoot'), type: 'toggle' },
     /**
+     * **Com inversões** — ligado por padrão, que é como o item soava, e pedido dele em 26/11:
+     * *"acho que poderia ter uma opção de não ter inversões"*.
+     *
+     * O controle não é novo: `inversoes`, com este mesmo rótulo, está em quatro itens. O que faltava
+     * é que nos de ouvido ele **se esconde quando o voicing de piano está ligado** — e aqui o
+     * voicing de piano é o único modo, então não havia como pedir a fundamental no baixo.
+     *
+     * Desligado, prende só o baixo: a oitava dele, quais notas saem e a ordem das de cima continuam
+     * variando. Medido, o item não fica pobre — ver `tonica-inversoes.test.ts`.
+     *
+     * Escondido com `semFundamental` ligado, porque ali o pedido é impossível: sem fundamental não
+     * há fundamental para pôr no baixo.
+     */
+    { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => s.semFundamental !== true },
+    /**
      * **Soltar a qualidade da função do grau** — desligado por padrão, decisão dele em 15/11.
      *
      * Desligado, o acorde é **o do grau**: em dó maior o III é Mim7, e as extensões que a pessoa
@@ -87,6 +103,14 @@ export const tonicaDeOuvido: CatalogItem = {
      * ele havia dito "quis dizer os graus do campo harmônico". O padrão agora é o que ele pediu.
      */
     { id: 'qualidadeLivre', label: ctx.t('settings.freeQuality'), type: 'toggle' },
+    /**
+     * **Ver as notas ao conferir** — o teclado do que soou, depois de responder (`VER_O_QUE_SOOU`).
+     *
+     * O teclado **não** é desenhado antes: ali ver as notas entregaria a fundamental de graça, que é
+     * a razão de este item nunca ter tido teclado. Depois de responder a conta se inverte — o nome
+     * do acorde não diz onde as notas estavam, e é isso que ele pediu em 26/11.
+     */
+    VER_O_QUE_SOOU(ctx),
     /** Mostrar o nome do acorde **antes** de responder. Padrão: mostrar (decisão dele). */
     { id: 'mostrarNome', label: ctx.t('settings.showChordName'), type: 'toggle' },
     /**
@@ -116,7 +140,7 @@ export const tonicaDeOuvido: CatalogItem = {
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
+    semFundamental: false, inversoes: true, qualidadeLivre: false, verOQueSoou: true, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
   },
   presets: [
     { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
@@ -156,9 +180,30 @@ export const tonicaDeOuvido: CatalogItem = {
       dominante: nGrau === 5 && grau.chord === '7',
     };
     const qualidade = s.qualidadeLivre === true ? pick(qualidades(s)) : qualidadeDoGrau(grau.chord, fams, noCampo);
+    /**
+     * **O acorde fica perto da voz, não acima dela** (relato dele em 26/11: *"às vezes o acorde soa
+     * agudo e estridente demais"*).
+     *
+     * Medido antes de mexer, com a região padrão 48–72: o teto do que soava tinha mediana 72, p90
+     * **79** e chegava a **84** — um dó6 de piano amostrado, que é exatamente o estridente que ele
+     * ouviu. A causa: `voicingsDe` usa o alcance das duas mãos (48–84) quando ninguém diz outra
+     * coisa, e este item não dizia.
+     *
+     * O eixo certo já existia aqui e não era usado para isto: a **faixa da voz**. Quem vai cantar a
+     * fundamental na faixa média não precisa ouvir o acorde duas oitavas acima dela.
+     *
+     * O teto é **uma quinta acima do topo da faixa**. Tentei uma oitava primeiro e medi: o máximo
+     * caiu de 84 para 83, ou seja, quase nada — porque o que incomoda é justamente a cauda. Com a
+     * quinta, o acorde fica no registro em que um piano acompanha quem canta.
+     *
+     * `somAudivel` continua mandando onde está ligado: ali o problema é outro (o alto-falante do
+     * celular não reproduz o grave), e a decisão dele de 15/11 é subir tudo de propósito.
+     */
+    const voz = FAIXAS_DA_VOZ[String(s.faixaDaVoz ?? 'media')] ?? FAIXAS_DA_VOZ.media;
     const escolhidos = voicingsDe(grau.root, qualidade, {
       semFundamental: s.semFundamental === true,
-      ...(s.somAudivel === true ? { piso: 60, teto: 96 } : {}),
+      semInversao: s.inversoes === false,
+      ...(s.somAudivel === true ? { piso: 60, teto: 96 } : { piso: Math.min(voz.lo, MAO_ESQUERDA.lo), teto: voz.hi + 7 }),
     });
     const voicing: Voicing | null = escolhidos.length ? escolhidos[randInt(0, escolhidos.length - 1)] : null;
     const notas = voicing?.todas ?? [];
@@ -190,6 +235,21 @@ export const tonicaDeOuvido: CatalogItem = {
       },
       autoplay: true,
       reveal: ctx.t('quiz.tonicaReveal', { chord: cifra, note: tonica }),
+      /**
+       * **O teclado do que soou**, ao conferir. A fundamental vem em acento: neste item ela É a
+       * resposta, e ver qual das teclas ela era é metade do que se aprende errando.
+       *
+       * ⚠️ Com a fundamental omitida ela não está entre as notas, e aí nenhuma tecla ganha acento —
+       * o que é a informação certa: o acorde soou sem ela.
+       */
+      ...(s.verOQueSoou !== false && notas.length
+        ? (() => {
+            const ms = notas.map(midi);
+            const fundamental = ms.find(m => mod(m, 12) === mod(midi(grau.root), 12));
+            return { revelacao: { kind: 'keyboard' as const, ...faixaDaRevelacao(ms), notas: ms,
+              ...(fundamental !== undefined ? { rotulos: { [fundamental]: tonica } } : {}) } };
+          })()
+        : {}),
       presentation: vozDaPergunta(s),
     };
   },

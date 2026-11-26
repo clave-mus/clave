@@ -9,6 +9,7 @@ import type { Publicacao } from './publicacao';
 import type { CellId } from '../theory/rhythm';
 import type { FretMark } from '../components/music/Fretboard';
 import type { FamiliaBase } from '../theory/digitacoes';
+import type { Voice } from '../audio/engine';
 
 // Uma pergunta separa quatro coisas (C1):
 // - conteúdo musical: o que se pergunta (visual, sound);
@@ -302,6 +303,19 @@ export interface SoundContent {
   /** De que instrumento é o som, para usar o timbre escolhido para ele. Sem isso, piano. */
   instrument?: Instrument;
   /**
+   * **O timbre grupo a grupo**, quando a pergunta tem sons de naturezas diferentes.
+   *
+   * Nasceu de um defeito que ele ouviu em 25/11: na `melodia-de-ouvido` respondida no braço, a
+   * CADÊNCIA soava com a voz do braço — quatro notas de corda pulsada ao mesmo tempo, e ele
+   * descreveu como *"travada, bugada"*. Está certo: um baixo não toca acorde de quatro vozes em
+   * bloco, e a corda pulsada empilhada vira massa.
+   *
+   * A melodia segue a superfície (decisão de 13/11, dele); a cadência é **harmonia**, e harmonia
+   * soa de instrumento harmônico. Um timbre só para a pergunta inteira não dava conta das duas
+   * coisas. Índice por índice de `groups`; onde faltar, vale o timbre da pergunta.
+   */
+  vozPorGrupo?: (Voice | undefined)[];
+  /**
    * Pedaços que dá para **ouvir isolados**, além do botão que repete tudo (09/11/2026).
    *
    * Nasceu de "reconhecer melodia na harmonia": ouvir o acorde de contexto sozinho, e depois cada
@@ -336,6 +350,12 @@ export interface ParteDoSom {
    * 18/11 —, e aí não há um id único para marcar. Qual delas conferir é escolha de quem estuda.
    */
   gabarito?: boolean;
+  /**
+   * O timbre **deste pedaço**, quando ele difere do som da pergunta — mesma razão de `vozPorGrupo`:
+   * audiando uma melodia no braço, o gabarito é a melodia e ela soa do braço, enquanto o contexto
+   * que toca junto é harmonia.
+   */
+  voz?: Voice;
 }
 
 export interface Question {
@@ -367,6 +387,24 @@ export interface Question {
   autoplay?: boolean;
   reveal: string; // a resposta certa, por extenso
   /**
+   * **O que se vê DEPOIS de responder** — a peça que faltava, pedida por ele em 26/11: *"seria legal
+   * poder ver os voicings do piano (além de ler o nome do acorde) depois de ver a resposta. e poder
+   * conferir o som de cada tecla, pra saber onde se confundiu."*
+   *
+   * Até aqui a revelação era uma linha de texto no rodapé, e num exercício de ouvido o nome do
+   * acorde não diz **onde** as notas estavam. O teclado diz, e tocá-las uma a uma é o que transforma
+   * o erro em informação.
+   *
+   * ⚠️ **Aparece em qualquer desfecho**, inclusive no acerto — pedido dele no mesmo dia: *"seria bom
+   * que isso aparecesse mesmo quando marca 'consegui com facilidade'"*. Não é detalhe: nos itens de
+   * autoavaliação a fase final é sempre de acerto, e uma revelação que só saísse no erro nunca
+   * apareceria ali.
+   *
+   * **Tocável é só o que soou** (decisão dele, contra a minha sugestão de deixar o teclado inteiro
+   * tocável): *"só é tocável as notas do acorde, que são justamente as que usuário se confunde"*.
+   */
+  revelacao?: Revelacao;
+  /**
    * **Apresentação desta pergunta**, por cima do perfil, do item e das configurações.
    *
    * Existe desde 19/11, para o timbre **sorteado a cada pergunta** do `ouvido-intervalo`: o perfil
@@ -376,6 +414,25 @@ export interface Question {
    */
   presentation?: Partial<Presentation>;
 }
+
+/**
+ * A revelação visual de uma pergunta. Hoje só o teclado; a forma é a de sempre — uma declaração do
+ * item, desenhada pelo Player.
+ */
+export type Revelacao =
+  /**
+   * As notas que soaram, num teclado. A faixa é a **do acorde, com uma terça de folga** para cada
+   * lado (decisão dele em 26/11): a tecla vizinha é onde a confusão costuma morar, e faixa fixa
+   * desperdiça tela no celular.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; notas: number[];
+      /**
+       * Texto sobre uma tecla — o nome da fundamental, por exemplo.
+       *
+       * Vem **do item** e não do Player: quem sabe grafar pela tonalidade é quem sorteou o acorde
+       * (em Ré♭ maior a classe 1 é Ré♭, não Dó♯), e esta é a regra de ouro do projeto.
+       */
+      rotulos?: Record<number, string> };
 
 export type SettingValue = string | string[] | boolean | number;
 

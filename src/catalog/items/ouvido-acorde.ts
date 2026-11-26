@@ -1,7 +1,7 @@
 import { caberNaFaixa } from '../../theory/cadencia-harmonica';
 import { voicingsDe } from '../../theory/voicings';
 import { midi } from '../../theory/core';
-import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ALL_CHORDS, CHORDS, EM_DO_MAIOR, VER_O_QUE_SOOU, faixaDaRevelacao, TONALIDADE_LIVRE, alturaDoPc, arr, casaDaAltura, chordName, chordTypes, noteName, clave, faixaDoBraco, faixaQueCabe, notaGrafada, pick, porComplexidade, quintasDaTonalidade, randInt, tonalidade, vozDoBraco, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import type { ChordId, Question } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
@@ -82,6 +82,15 @@ export const ouvidoAcorde: CatalogItem = {
     // qualquer grau —, e dois controles fazendo meia coisa cada é pior que um.
     { id: 'inversoes', label: ctx.t('settings.inversions'), type: 'toggle', quando: s => !comVoicing(s) },
     /**
+     * **Ver as notas ao conferir** — o teclado do que soou, depois de responder. Pedido dele em
+     * 26/11, junto com a Tônica: *"seria legal pôr a mesma coisa como opção em acordes de ouvido e
+     * graus do campo harmônico"*.
+     *
+     * Aqui ela vale para os dois modos de som: com voicing de piano ela mostra o voicing, e com
+     * pilha fechada mostra a pilha. É o que soou, e não o que se imagina que soou.
+     */
+    VER_O_QUE_SOOU(ctx),
+    /**
      * **Onde se responde** (`OR-ouvido-relativo.md`, §3.4: *"dois modos: alternativas com a
      * descrição, ou desenhar o acorde na pauta, no piano ou no violão"*).
      *
@@ -114,7 +123,7 @@ export const ouvidoAcorde: CatalogItem = {
      * sorteado a cada pergunta. O sorteio é o que treina ouvir independente do timbre.
      */
     ...TIMBRE(ctx)],
-  defaults: { estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', voicing: 'fechado', semFundamental: false, ...TIMBRE_DEFAULTS },
+  defaults: { verOQueSoou: true, estimulo: 'som', fundamental: 'fixa', tipos: ['maior', 'menor'], arpejo: true, duracao: 2, inversoes: false, resposta: 'alternativas', voicing: 'fechado', semFundamental: false, ...TIMBRE_DEFAULTS },
   /**
    * "Todas as qualidades por padrão" (Paulo, 09/11) — então `tudo` virou o PRIMEIRO, porque o
    * primeiro atalho é a entrada do item.
@@ -343,6 +352,16 @@ export const ouvidoAcorde: CatalogItem = {
       // As opções de resposta saem em ordem de complexidade (U7), não na ordem em que a pessoa
       // marcou os chips — senão a ordem dos botões mudaria dependendo de como ela configurou.
       surface: { kind: 'choices', compact: types.length > 6, options: chordTypes(ctx.t, porComplexidade(types)) }, expected: { kind: 'option', id: type },
+      // O teclado do que soou, com a fundamental nomeada — ver `Question.revelacao`.
+      ...(s.verOQueSoou !== false && soam.length
+        ? (() => {
+            // Pela classe: com voicing de piano a fundamental pode estar noutra oitava — ou ausente,
+            // quando "sem a fundamental" está ligado, e aí nenhuma tecla leva nome.
+            const fund = soam.find(m => ((m % 12) + 12) % 12 === ((root % 12) + 12) % 12);
+            return { revelacao: { kind: 'keyboard' as const, ...faixaDaRevelacao(soam), notas: soam,
+              ...(fund !== undefined ? { rotulos: { [fund]: noteName(notaGrafada(ctx, root), ctx.naming) } } : {}) } };
+          })()
+        : {}),
       // O timbre é o padrão de `SoundContent`, que **é piano** — um voicing de piano tocado com voz
       // de braço soaria como coisa nenhuma, e é o defeito que ele pegou em 13/11 no audiar.
       sound: { groups: [soam], partes: porNota(soam) }, autoplay: true, reveal: chordName(ctx.t, type), presentation: vozDaPergunta(s),

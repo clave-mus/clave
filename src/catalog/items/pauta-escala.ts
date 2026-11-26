@@ -2,6 +2,8 @@ import { ALL_SCALES, CLEFS, arr, assinaturaDaEscala, buildScale, midi, notaGrafa
 import type { MessageKey, Note, ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem } from '../types';
+import { MODOS_DEFAULTS, MODOS_SETTINGS, opcoesDeModo, rotuloComNome, rotuloDoModo, sortearModo } from '../modos';
+import { getModo, notasDoModo } from '../../theory/digitacoes';
 
 export const pautaEscala: CatalogItem = {
   id: 'pauta-escala',
@@ -22,7 +24,20 @@ export const pautaEscala: CatalogItem = {
       { id: 'escrever', label: ctx.t('scaleOnStaff.writeIt') },
     ] },
     CLEFS(ctx),
-    { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+    /**
+     * **Escalas ou modos** — a mesma rota que o `ouvido-escala` ganhou em 26/11, aqui por pedido
+     * dele no mesmo dia: *"sim, eu quero que eles apareçam também na pauta e no braço"*.
+     *
+     * A lista de escalas não cresce; o painel troca de lista. Os controles e a convenção de nome
+     * moram em `catalog/modos.ts`, para os três itens dizerem a mesma coisa do mesmo jeito.
+     */
+    { id: 'material', label: ctx.t('modes.material'), type: 'single', options: [
+      { id: 'escalas', label: ctx.t('modes.materialEscalas') },
+      { id: 'modos', label: ctx.t('modes.materialModos') },
+    ] },
+    { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', quando: s => s.material !== 'modos',
+      options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+    ...MODOS_SETTINGS(ctx, s => s.material === 'modos'),
     /**
      * **Fechar na oitava**, como no `escala-no-instrumento`: uma escala vai da tônica à tônica, e
      * foi o que ele relatou lá — parar na sétima era o único aceito. A superfície precisa saber
@@ -30,7 +45,7 @@ export const pautaEscala: CatalogItem = {
      */
     { id: 'oitava', label: ctx.t('scaleOnInstrument.octave'), type: 'toggle', quando: s => s.direcao === 'escrever' },
   ],
-  defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'], direcao: 'ler', oitava: true },
+  defaults: { claves: ['sol'], tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'], direcao: 'ler', oitava: true, ...MODOS_DEFAULTS },
   presets: [
     { id: 'ler-a-escala', nome: 'presets.escalaPautaLer', settings: { direcao: 'ler', tipos: ['maior', 'menor', 'menor-harmonica', 'menor-melodica'] } },
     { id: 'escrever-na-pauta', nome: 'presets.escalaPautaEscrever', settings: { direcao: 'escrever', tipos: ['maior', 'menor'], oitava: true } },
@@ -39,8 +54,15 @@ export const pautaEscala: CatalogItem = {
   presentation: { gap: 0.32 },
   make(s, ctx) {
     const clef = pickClef(s, ctx);
+    /**
+     * **A rota dos modos**: as notas saem de `getModo` em vez de `buildScale`, e o nome é o grau.
+     * O resto da pergunta — desenhar na pauta, ler, escrever — é o mesmo, e por isso ela entra
+     * aqui dentro em vez de virar um `make` paralelo.
+     */
+    const porModo = s.material === 'modos';
     const types = arr(s.tipos, ['maior']) as ScaleId[];
     const type = pick(types);
+    const modo = porModo ? sortearModo(s, pick) : null;
     /**
      * A tônica **grafada pela tonalidade**: em Ré♭ maior a classe 6 é Sol♭, não Fá♯.
      *
@@ -55,9 +77,14 @@ export const pautaEscala: CatalogItem = {
      */
     const oct = clef === 'sol' ? 4 : 2;
     const tonic = notaGrafada(ctx, (oct + 1) * 12 + pcPermitido(ctx));
-    const todas = [...buildScale(tonic, type), { ...tonic, oct: tonic.oct + 1 }];
+    const notasDaEscala = modo ? notasDoModo(getModo(tonic, modo.familia, modo.grau)) : buildScale(tonic, type);
+    const todas = [...notasDaEscala, { ...tonic, oct: tonic.oct + 1 }];
     const notes = s.direcao === 'escrever' && s.oitava === false ? todas.slice(0, -1) : todas;
     const name = (t: Note, id: ScaleId) => ctx.t('quiz.scaleOf', { note: noteName(t, ctx.naming), scale: ctx.t(`theory.scalesInline.${id}` as MessageKey) });
+    /** O nome da pergunta: a escala, ou o modo pelo grau (a convenção dele, de 25/11). */
+    const nomeDaPergunta = modo
+      ? ctx.t('quiz.scaleOfMode', { note: noteName(tonic, ctx.naming), mode: rotuloDoModo(ctx, modo.familia, modo.grau) })
+      : name(tonic, type);
     /**
      * **Todas as alternativas têm a MESMA tônica**, e diferem só no tipo de escala.
      *
@@ -94,14 +121,32 @@ export const pautaEscala: CatalogItem = {
      */
     if (s.direcao === 'escrever') {
       return {
-        prompt: ctx.t('scaleOnStaff.writePrompt', { scale: name(tonic, type) }),
+        prompt: ctx.t('scaleOnStaff.writePrompt', { scale: nomeDaPergunta }),
         visual: { kind: 'text', text: '' },
         surface: { kind: 'staff', clef, accidentals: true, fifths: quintasDaTonalidade(ctx) ?? undefined, quantas: notes.length },
         expected: { kind: 'contorno', midis: notes.map(midi), ordenada: false },
         sound: { groups: notes.map(n => [midi(n)]) }, autoplay: false,
-        reveal: name(tonic, type),
+        reveal: modo ? rotuloComNome(ctx, modo.familia, modo.grau) : name(tonic, type),
       };
     }
+
+    /**
+     * **Lendo um modo, as alternativas são os pares marcados** — e não as escalas da lista. Todas
+     * partem da mesma tônica, pelo mesmo motivo de sempre: com tônicas diferentes, ler a primeira
+     * nota descartaria metade sem saber escala nenhuma.
+     */
+    if (modo) {
+      const certa = `${modo.familia}:${modo.grau}`;
+      return {
+        prompt: ctx.t('quiz.whatScale'),
+        visual: { kind: 'staff', clef, fifths: quintasDaTonalidade(ctx) ?? undefined, columns: notes.map(n => [n]) },
+        surface: { kind: 'choices', options: opcoesDeModo(ctx, modo.pares), wide: true, compact: modo.pares.length > 8 },
+        expected: { kind: 'option', id: certa },
+        sound: { groups: notes.map(n => [midi(n)]) },
+        reveal: rotuloComNome(ctx, modo.familia, modo.grau),
+      };
+    }
+
 
     const outros = shuffle([
       ...types.filter(t => t !== type),

@@ -79,9 +79,15 @@ describe('os três valores, item por item', () => {
   it.each(comTimbre.map(e => e.id))('%s: sorteado, passeia — ou preserva a voz do braço', id => {
     const e = comTimbre.find(x => x.id === id)!;
     const padrao = e.make(baseDe(e) as never, ctx);
-    const doBraco = padrao.sound?.instrument === 'violao' || padrao.sound?.instrument === 'baixo';
+    // A voz do braço pode estar no som inteiro ou só nos grupos dele (ver `vozPorGrupo`, 25/11).
+    const vozes = [padrao.sound?.instrument, ...(padrao.sound?.vozPorGrupo ?? [])];
+    const doBraco = vozes.some(v => v === 'violao' || v === 'baixo');
     if (doBraco) {
-      expect(vozDe(e, { timbre: 'sorteado' }), `${id}: o braço mantém a voz`).toBe(padrao.sound!.instrument);
+      // Com a voz por grupo, o sorteio não entra: `vozDaPergunta` preserva, e cada grupo do braço
+      // segue com a sua. O que o teste afirma é que ela NÃO passeia.
+      const vistos = new Set<string>();
+      for (let i = 0; i < 40; i++) vistos.add(String(vozDe(e, { timbre: 'sorteado' })));
+      expect(vistos.size, `${id}: o braço deixou a voz passear`).toBe(1);
       return;
     }
     const vistos = new Set<string>();
@@ -112,8 +118,16 @@ describe('o braço mantém a voz do braço', () => {
     for (let i = 0; i < 80; i++) vistos.add(String(vozDe(acorde, { resposta: 'desenhar', instrumento: 'piano', timbre: 'sorteado' })));
     expect(vistos.size).toBeGreaterThan(1);
 
+    /**
+     * Na `melodia-de-ouvido` a voz do braço mora nos grupos da MELODIA desde 25/11, e a cadência
+     * fica harmônica — então o que se afirma aqui é onde ela está, não o timbre da pergunta.
+     */
     const melodia = comTimbre.find(e => e.id === 'melodia-de-ouvido')!;
-    expect(vozDe(melodia, { superficie: 'braco', timbre: 'sorteado' })).toBe('violao');
+    const q = melodia.make({ ...baseDe(melodia), superficie: 'braco', timbre: 'sorteado' } as never, ctx);
+    const vozes = (q.sound?.vozPorGrupo ?? []).filter(Boolean);
+    expect(vozes.length, 'a melodia no braço ficou sem voz de braço').toBeGreaterThan(0);
+    for (const v of vozes) expect(v).toBe('violao');
+    expect(q.sound?.vozPorGrupo?.[0], 'a cadência não pode levar a voz do braço').toBeUndefined();
     // e na pauta ele passeia, como os outros
     const naPauta = new Set<string>();
     for (let i = 0; i < 80; i++) naPauta.add(String(vozDe(melodia, { superficie: 'pauta', timbre: 'sorteado' })));
