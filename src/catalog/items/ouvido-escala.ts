@@ -2,8 +2,8 @@ import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, midi, n
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
 import type { CatalogItem, Ctx, Question, SettingValue } from '../types';
-import { getModo, notasDoModo, type FamiliaBase } from '../../theory/digitacoes';
-import { FAMILIAS_DE_MODO, rotuloComNome, rotuloDoModo } from '../modos';
+import { getModo, notasDoModo } from '../../theory/digitacoes';
+import { MODOS_DEFAULTS, MODOS_SETTINGS, opcoesDeModo, rotuloComNome, sortearModo } from '../modos';
 
 /**
  * **Que modo soou** — a rota `modos` do item, decidida com ele em 26/11.
@@ -16,12 +16,7 @@ import { FAMILIAS_DE_MODO, rotuloComNome, rotuloDoModo } from '../modos';
  * digitação, e reusá-la é o que mantém os dois exercícios falando a mesma língua.
  */
 function perguntaDeModo(s: Record<string, SettingValue>, ctx: Ctx): Question {
-  const possiveis = FAMILIAS_DE_MODO.map(([id]) => id);
-  const familias = (arr(s.familia, ['menor-melodica-jazz']) as FamiliaBase[]).filter(f => possiveis.includes(f));
-  const graus = arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= 7);
-  const escolhidos = familias.length ? familias : possiveis;
-  const familia = pick(escolhidos);
-  const grau = pick(graus.length ? graus : [1]);
+  const { familia, grau, pares } = sortearModo(s, pick);
   const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });
   const notas = notasDoModo(getModo(notaGrafada(ctx, tonic), familia, grau));
   const alturas = [...notas.map(midi), midi(notas[0]) + 12];
@@ -29,12 +24,7 @@ function perguntaDeModo(s: Record<string, SettingValue>, ctx: Ctx): Question {
     : s.direcao === 'ambos' ? [...alturas, ...[...alturas].reverse().slice(1)] : alturas;
 
   const certa = `${familia}:${grau}`;
-  /** Todos os pares família × grau que a pessoa marcou — é entre eles que a pergunta se decide. */
-  const todas = escolhidos.flatMap(f => (graus.length ? graus : [1]).map(g => `${f}:${g}`));
-  const opcoes = todas.map(id => {
-    const [f, g] = id.split(':');
-    return { id, label: rotuloDoModo(ctx, f as FamiliaBase, Number(g)) };
-  });
+  const opcoes = opcoesDeModo(ctx, pares);
   const revelacao = rotuloComNome(ctx, familia, grau);
 
   if (s.estimulo === 'escrito') {
@@ -100,12 +90,7 @@ export const ouvidoEscala: CatalogItem = {
     ] },
     { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', quando: s => s.material !== 'modos',
       options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
-    { id: 'familia', label: ctx.t('scaleOnInstrument.family'), type: 'multi', justify: true,
-      quando: s => s.material === 'modos',
-      options: FAMILIAS_DE_MODO.map(([id, rotulo]) => ({ id, label: ctx.t(rotulo) })) },
-    { id: 'graus', label: ctx.t('modes.degrees'), type: 'multi', justify: true,
-      quando: s => s.material === 'modos',
-      options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: `${g}º` })) },
+    ...MODOS_SETTINGS(ctx, s => s.material === 'modos'),
     DIRECAO(ctx),
     /**
      * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
@@ -114,8 +99,7 @@ export const ouvidoEscala: CatalogItem = {
     ...TIMBRE(ctx),
   ],
   defaults: { estimulo: 'som', tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe',
-    material: 'escalas', familia: ['menor-melodica-jazz'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    ...TIMBRE_DEFAULTS },
+    ...MODOS_DEFAULTS, ...TIMBRE_DEFAULTS },
   /**
    * "Todas as escalas, uma etapa só" (Paulo, 09/11) — e isso **obriga** `direcao: 'ambos'`. Não é
    * gosto: com as duas menores melódicas marcadas e só subindo, o `problema` acima recusa a

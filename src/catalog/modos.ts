@@ -14,7 +14,7 @@
  * batizar vinte e um modos — mas quem já conhece "lídio dominante" encontra o nome ao conferir.
  */
 import type { FamiliaBase } from '../theory/digitacoes';
-import type { Ctx } from './types';
+import type { Ctx, Setting, SettingValue } from './types';
 import { ordinal, type MessageKey } from './helpers';
 
 /** As três famílias que os exercícios oferecem. A menor natural é o 6º grau da maior. */
@@ -53,3 +53,40 @@ export const rotuloComNome = (ctx: Ctx, familia: FamiliaBase, grau: number): str
   const base = rotuloDoModo(ctx, familia, grau);
   return tradicional ? `${base} · ${ctx.t(tradicional)}` : base;
 };
+
+/**
+ * **Os dois controles da rota dos modos**, para os três itens declararem a mesma coisa.
+ *
+ * `quando` vem do item porque cada um liga a rota de um jeito — no `ouvido-escala` é o seletor de
+ * material, e nos de desenho pode ser outro eixo. O resto é igual, e igual precisa ser escrito uma
+ * vez só.
+ */
+export const MODOS_SETTINGS = (ctx: Ctx, quando: (s: Record<string, SettingValue>) => boolean): Setting[] => [
+  { id: 'familia', label: ctx.t('scaleOnInstrument.family'), type: 'multi', justify: true, quando,
+    options: FAMILIAS_DE_MODO.map(([id, rotulo]) => ({ id, label: ctx.t(rotulo) })) },
+  { id: 'graus', label: ctx.t('modes.degrees'), type: 'multi', justify: true, quando,
+    options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: `${g}º` })) },
+];
+
+export const MODOS_DEFAULTS: Record<string, SettingValue> = {
+  material: 'escalas', familia: ['menor-melodica-jazz'], graus: ['1', '2', '3', '4', '5', '6', '7'],
+};
+
+/** O modo sorteado e **todos os pares marcados** — que são as alternativas da pergunta. */
+export function sortearModo(s: Record<string, SettingValue>, rnd: <T>(xs: T[]) => T) {
+  const possiveis = FAMILIAS_DE_MODO.map(([id]) => id);
+  const marcadas = (Array.isArray(s.familia) ? s.familia as FamiliaBase[] : []).filter(f => possiveis.includes(f));
+  const familias = marcadas.length ? marcadas : possiveis;
+  const graus = (Array.isArray(s.graus) ? s.graus : []).map(Number).filter(g => g >= 1 && g <= 7);
+  const todosOsGraus = graus.length ? graus : [1];
+  const familia = rnd(familias);
+  const grau = rnd(todosOsGraus);
+  const pares = familias.flatMap(f => todosOsGraus.map(g => `${f}:${g}` ));
+  return { familia, grau, pares };
+}
+
+/** As alternativas de uma pergunta de modo, pelo grau — a convenção de nome dele. */
+export const opcoesDeModo = (ctx: Ctx, pares: string[]) => pares.map(id => {
+  const [f, g] = id.split(':');
+  return { id, label: rotuloDoModo(ctx, f as FamiliaBase, Number(g)) };
+});

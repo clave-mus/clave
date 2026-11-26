@@ -147,7 +147,19 @@ chips, e `ALL_SCALES` é lido em 25 lugares, então pauta e braço ganhariam 25 
 |---|---|
 | **o grau no enunciado, o nome na revelação** | a convenção que você fixou em 25/11 para a digitação, reusada aqui. Confira se reconhecer "4º modo da menor melódica" é o que você quer treinar, ou se prefere ver "lídio dominante" já na alternativa |
 | **as alternativas são os pares que você marcou** | uma família dá 7 opções; as três dão 21, que é a versão difícil. Confira se 21 na tela é demais |
-| ⚠️ **só no `ouvido-escala`** | para os modos das menores aparecerem também na pauta e no braço, é repetir o seletor lá — pequeno, mas é escopo seu |
+| **nos três itens** | ele pediu no mesmo dia, e entrou: `ouvido-escala`, `pauta-escala` e `escala-no-instrumento` oferecem o mesmo seletor, com os controles e a convenção de nome em `catalog/modos.ts` |
+
+### Audiar o padrão a partir de um grau qualquer (26/11/2026)
+
+Direção nova do `reconhecer-padroes-escala`, e é a **ideia original do ChicagoBassBuddy** que ele
+descreveu: *"audiar / solfejar a partir de algum grau arbitrário, como a partir do 6. E aí, sem
+solfejar os outros padrões, ele vai direto para o 6. Isso é bem mais difícil."*
+
+| o quê | confira |
+|---|---|
+| **o salto é o exercício** | subir posição por posição já existe, e é a tela de exploração. Aqui a pedida vem sem aviso. Confira se a dificuldade está onde você esperava |
+| **o enunciado diz o desenho e o grau** | *"audie o desenho 1-3-2-5 começando no grau 6"* — o desenho vem em graus da PRIMEIRA posição, que é como você o conhece da exploração. Confira se isso basta, ou se o enunciado devia mostrar o desenho de outro jeito |
+| ⚠️ **o nome do item** | ele se chama *Reconhecer padrões pela escala*, e agora também audia. Pelo modelo de 12/11, direção é parâmetro e o nome devia falar do objeto — algo como "Padrões pela escala". É nome, então é seu |
 
 ### Escrever acorde e escala na pauta (25/11/2026)
 

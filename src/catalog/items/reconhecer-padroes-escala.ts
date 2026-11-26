@@ -45,6 +45,26 @@ export const reconhecerPadroesEscala: CatalogItem = {
   respeita: ['key', 'range'],
   publicacao: { estado: 'publicado', revisadoEm: '2026-11-19', por: 'Paulo' },
   settings: ctx => [
+    /**
+     * **De onde vem a pergunta** — e a segunda direção é a ideia original do ChicagoBassBuddy, que
+     * ele descreveu em 26/11:
+     *
+     * > *"pegar um padrão na escala, como 1 2 3 4, e ir subindo pela escala com ele... e daí depois
+     * > um quiz que pede para o usuário audiar / solfejar a partir de algum grau arbitrário, como a
+     * > partir do 6. E aí, sem solfejar os outros padrões, ele vai direto para o 6. Isso é bem mais
+     * > difícil, porque fazer sequencialmente é relativamente fácil."*
+     *
+     * Ele está certo sobre a dificuldade, e é isso que o modo pede: o salto para uma posição
+     * arbitrária é o exercício. Subir posição por posição já existe, e é a tela de exploração.
+     *
+     * **Por que aqui, e não num item novo** (decisão 15, e o modelo de 12/11): o gerador é o mesmo
+     * — padrão, escala, posições. Quem tem o gerador tem as duas direções; um item só para audiar
+     * precisaria do mesmo motor, e motor duplicado é proibido.
+     */
+    { id: 'estimulo', label: ctx.t('settings.stimulus'), type: 'single', options: [
+      { id: 'som', label: ctx.t('settings.hearIt') },
+      { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
+    ] },
     { id: 'escala', label: ctx.t('settings.scale'), type: 'single', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
     { id: 'tamanho', label: ctx.t('settings.patternSize'), type: 'single',
       options: ['3', '4', '5', '6'].map(n => ({ id: n, label: n })) },
@@ -63,12 +83,18 @@ export const reconhecerPadroesEscala: CatalogItem = {
     ] },
   ],
   // Pentatônica como padrão, decisão do Paulo.
-  defaults: { escala: 'penta-maior', tamanho: '4', contexto: 'ii-V-I' },
+  defaults: { escala: 'penta-maior', tamanho: '4', contexto: 'ii-V-I', estimulo: 'som' },
   presets: [
     { id: 'penta-tres', nome: 'presets.padraoPentaTres', settings: { escala: 'penta-maior', tamanho: '3', contexto: 'triade' } },
     { id: 'penta-quatro', nome: 'presets.padraoPentaQuatro', settings: { escala: 'penta-maior', tamanho: '4', contexto: 'triade' } },
     { id: 'maior-quatro', nome: 'presets.padraoMaiorQuatro', settings: { escala: 'maior', tamanho: '4', contexto: 'triade' } },
     { id: 'so-tonica', nome: 'presets.padraoSoTonica', settings: { escala: 'penta-maior', tamanho: '4', contexto: 'nota' } },
+    /**
+     * Os atalhos de audiar: a pentatônica é a porta (menos posições, saltos menores) e a maior é o
+     * que ele chamou de bem mais difícil — sete posições, e a pedida vem sem aviso.
+     */
+    { id: 'audiar-penta', nome: 'presets.padraoAudiarPenta', settings: { estimulo: 'escrito', escala: 'penta-maior', tamanho: '4', contexto: 'ii-V-I' } },
+    { id: 'audiar-maior', nome: 'presets.padraoAudiarMaior', settings: { estimulo: 'escrito', escala: 'maior', tamanho: '4', contexto: 'ii-V-I' } },
   ],
   presentation: { gap: 0.4 },
   make(s, ctx) {
@@ -101,6 +127,32 @@ export const reconhecerPadroesEscala: CatalogItem = {
     let sobe = 0;
     while (Math.min(...cru) + sobe < regiao(ctx).lo) sobe += 12;
     const notas = cru.map(m => m + sobe);
+
+    /**
+     * **Audiar**: o enunciado diz o padrão e **de que grau partir**, o contexto toca, e o padrão
+     * fica no botão de conferência. A autoavaliação espera esse botão — julgar antes de conferir é
+     * julgar no vácuo.
+     *
+     * O enunciado nomeia a posição pelo grau inicial, não pelo rótulo inteiro (`1-3-2-5`): o rótulo
+     * entregaria as notas que se quer audiar. O desenho vem do padrão em graus do PRIMEIRO lugar,
+     * que é como a pessoa o conhece da exploração.
+     */
+    if (s.estimulo === 'escrito') {
+      const desenho = rotulo(posicoes[0]);
+      return {
+        prompt: ctx.t('quiz.audiatePatternFrom', { pattern: desenho, degree: certa.graus[0] }),
+        visual: { kind: 'text', text: '' },
+        surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+        sound: {
+          groups: contexto,
+          partes: [
+            { id: 'contexto', label: ctx.t('quiz.partContext'), groups: contexto },
+            { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: notas.map(m => [m]) },
+          ],
+        },
+        autoplay: false, reveal: rotulo(certa),
+      };
+    }
 
     return {
       prompt: ctx.t('quiz.whichPosition'),

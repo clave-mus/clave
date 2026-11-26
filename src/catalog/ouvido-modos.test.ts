@@ -85,3 +85,44 @@ describe('a rota dos modos', () => {
     expect(q.reveal).not.toContain('·');
   });
 });
+
+/**
+ * **Os modos aparecem também na pauta e no braço** — pedido dele em 26/11, no mesmo dia em que
+ * aprovou a rota no ouvido. O que isto trava é a coisa que faria os três divergirem sem avisar:
+ * eles têm de oferecer o MESMO seletor e falar a mesma língua.
+ */
+describe('a mesma rota nos três itens', () => {
+  const comModos = (id: string) => {
+    const e = EXERCISES.filter(isSeries).find(x => x.id === id) as SeriesItem;
+    const base: Record<string, unknown> = { ...e.defaults, ...(e.defaultsDo?.(ctx) ?? {}), material: 'modos' };
+    return { e, base, visiveis: e.settings(ctx).filter(s => s.quando?.(base as never) ?? true).map(s => s.id) };
+  };
+
+  it.each(['ouvido-escala', 'pauta-escala', 'escala-no-instrumento'])(
+    '%s troca a lista de escalas por família e grau', id => {
+      const { visiveis } = comModos(id);
+      expect(visiveis, `${id} sem família`).toContain('familia');
+      expect(visiveis, `${id} sem graus`).toContain('graus');
+      expect(visiveis, `${id} manteve a lista de 13 escalas`).not.toContain('tipos');
+    });
+
+  it.each(['pauta-escala', 'escala-no-instrumento'])('%s pergunta o modo pelo grau', id => {
+    const { e, base } = comModos(id);
+    for (let i = 0; i < 30; i++) {
+      const q = e.make({ ...base, familia: ['menor-harmonica'], graus: ['1', '2', '3', '4', '5', '6', '7'] } as never, ctx);
+      if (q.surface.kind !== 'choices') continue;
+      expect(q.surface.options).toHaveLength(7);
+      // o id é o par família:grau, e a certa está entre as opções
+      expect(q.surface.options.map(o => o.id)).toContain((q.expected as { id: string }).id);
+      expect((q.expected as { id: string }).id.startsWith('menor-harmonica:')).toBe(true);
+    }
+  });
+
+  it('o 5º da harmônica revela o nome tradicional nos três', () => {
+    for (const id of ['ouvido-escala', 'pauta-escala', 'escala-no-instrumento']) {
+      const { e, base } = comModos(id);
+      const q = e.make({ ...base, familia: ['menor-harmonica'], graus: ['5'] } as never, ctx);
+      expect(q.reveal, `${id}: ${q.reveal}`).toContain('frígio dominante');
+    }
+  });
+});
