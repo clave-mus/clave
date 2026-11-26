@@ -136,6 +136,19 @@ marcar as notas" virou **montar uma digitação**, com dezenas de respostas cert
 | **fechar na oitava** | ligado por padrão: a digitação vai da tônica à tônica, oito toques. Era recusado até você relatar. Desligando, são sete, parando na sétima. Confira qual dos dois você quer como padrão |
 | **a recusa de região apertada** | com as casas 0–5 e vão de 3 costuma existir **um** desenho só; pedir cinco ali é recusado com a saída escrita (abrir casas, alargar o vão, ou pedir menos) |
 
+### Os modos das menores no ouvido (26/11/2026)
+
+Rota nova do `ouvido-escala`, decidida com ele: o painel **troca de lista** em vez de crescer.
+`escalas` é a lista de sempre (13 chips); `modos` é **família × grau** — 3 interruptores e 7 chips
+cobrindo 21 modos. Medido antes de escolher: cadastrar os modos como escalas levaria a lista a 25
+chips, e `ALL_SCALES` é lido em 25 lugares, então pauta e braço ganhariam 25 também.
+
+| o quê | confira |
+|---|---|
+| **o grau no enunciado, o nome na revelação** | a convenção que você fixou em 25/11 para a digitação, reusada aqui. Confira se reconhecer "4º modo da menor melódica" é o que você quer treinar, ou se prefere ver "lídio dominante" já na alternativa |
+| **as alternativas são os pares que você marcou** | uma família dá 7 opções; as três dão 21, que é a versão difícil. Confira se 21 na tela é demais |
+| ⚠️ **só no `ouvido-escala`** | para os modos das menores aparecerem também na pauta e no braço, é repetir o seletor lá — pequeno, mas é escopo seu |
+
 ### Escrever acorde e escala na pauta (25/11/2026)
 
 Fecha a simetria que a medição do catálogo mostrou: nota e intervalo tinham ler **e** escrever na

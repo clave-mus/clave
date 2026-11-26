@@ -1,7 +1,64 @@
-import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, notaGrafada, noteName, pick, scaleName, scaleSound, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
+import { ALL_SCALES, DIRECAO, EM_DO_MAIOR, MODES, TONALIDADE_LIVRE, arr, midi, notaGrafada, noteName, pick, scaleName, scaleSound, tonicaNaRegiao, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta } from '../helpers';
 import type { ScaleId } from '../helpers';
 import { LEGADO } from '../publicacao';
-import type { CatalogItem } from '../types';
+import type { CatalogItem, Ctx, Question, SettingValue } from '../types';
+import { getModo, notasDoModo, type FamiliaBase } from '../../theory/digitacoes';
+import { FAMILIAS_DE_MODO, rotuloComNome, rotuloDoModo } from '../modos';
+
+/**
+ * **Que modo soou** — a rota `modos` do item, decidida com ele em 26/11.
+ *
+ * As alternativas partem **todas da mesma tônica**, como no `pauta-escala`: com tônicas diferentes
+ * nos nomes, ler a primeira nota descartaria metade das opções sem ouvir escala nenhuma.
+ *
+ * O enunciado e as alternativas dizem o **grau** (*"4º modo da menor melódica"*); a revelação
+ * acrescenta o nome tradicional quando ele existe. É a convenção que ele fixou em 25/11 para a
+ * digitação, e reusá-la é o que mantém os dois exercícios falando a mesma língua.
+ */
+function perguntaDeModo(s: Record<string, SettingValue>, ctx: Ctx): Question {
+  const possiveis = FAMILIAS_DE_MODO.map(([id]) => id);
+  const familias = (arr(s.familia, ['menor-melodica-jazz']) as FamiliaBase[]).filter(f => possiveis.includes(f));
+  const graus = arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= 7);
+  const escolhidos = familias.length ? familias : possiveis;
+  const familia = pick(escolhidos);
+  const grau = pick(graus.length ? graus : [1]);
+  const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });
+  const notas = notasDoModo(getModo(notaGrafada(ctx, tonic), familia, grau));
+  const alturas = [...notas.map(midi), midi(notas[0]) + 12];
+  const ms = s.direcao === 'desce' ? [...alturas].reverse()
+    : s.direcao === 'ambos' ? [...alturas, ...[...alturas].reverse().slice(1)] : alturas;
+
+  const certa = `${familia}:${grau}`;
+  /** Todos os pares família × grau que a pessoa marcou — é entre eles que a pergunta se decide. */
+  const todas = escolhidos.flatMap(f => (graus.length ? graus : [1]).map(g => `${f}:${g}`));
+  const opcoes = todas.map(id => {
+    const [f, g] = id.split(':');
+    return { id, label: rotuloDoModo(ctx, f as FamiliaBase, Number(g)) };
+  });
+  const revelacao = rotuloComNome(ctx, familia, grau);
+
+  if (s.estimulo === 'escrito') {
+    return {
+      prompt: ctx.t('quiz.audiateScaleByName', { scale: revelacao, note: noteName(notaGrafada(ctx, tonic), ctx.naming) }),
+      visual: { kind: 'text', text: '' },
+      surface: { kind: 'autoavaliacao' }, expected: { kind: 'option', id: 'facil' },
+      sound: {
+        groups: [[tonic]],
+        partes: [
+          { id: 'contexto', label: ctx.t('quiz.partContext'), groups: [[tonic]] },
+          { id: 'resposta', label: ctx.t('quiz.partAnswer'), groups: ms.map(m => [m]) },
+        ],
+      },
+      autoplay: false, reveal: revelacao, presentation: vozDaPergunta(s),
+    };
+  }
+  return {
+    prompt: ctx.t('quiz.whatScale'), visual: { kind: 'ear' },
+    surface: { kind: 'choices', options: opcoes, wide: true, compact: opcoes.length > 8 },
+    expected: { kind: 'option', id: certa },
+    sound: { groups: ms.map(m => [m]) }, autoplay: true, reveal: revelacao, presentation: vozDaPergunta(s),
+  };
+}
 
 export const ouvidoEscala: CatalogItem = {
   id: 'ouvido-escala',
@@ -25,7 +82,30 @@ export const ouvidoEscala: CatalogItem = {
       { id: 'som', label: ctx.t('settings.hearIt') },
       { id: 'escrito', label: ctx.t('settings.readAndAudiate') },
     ] },
-    { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+    /**
+     * **O que entra no sorteio: escalas ou modos** — decisão dele em 26/11.
+     *
+     * Ele pediu os modos das duas menores e viu o problema junto: *"talvez fique muita coisa para
+     * selecionar cada escala de uma só vez"*. Medido, ele tinha razão — cadastrar os modos das
+     * menores como escalas levaria a lista de **13 para 25 chips**, e não só aqui: `ALL_SCALES` é
+     * lido em 25 lugares, então pauta e braço ganhariam 25 também, sem ninguém pedir.
+     *
+     * Então o painel troca de lista em vez de crescer: `escalas` é a lista de sempre, `modos` é
+     * **família × grau** — 3 interruptores e 7 chips cobrindo 21 modos. O eixo é o mesmo que o
+     * `escala-no-instrumento` já usa para montar digitação, e o motor (`getModo`) é o mesmo.
+     */
+    { id: 'material', label: ctx.t('modes.material'), type: 'single', options: [
+      { id: 'escalas', label: ctx.t('modes.materialEscalas') },
+      { id: 'modos', label: ctx.t('modes.materialModos') },
+    ] },
+    { id: 'tipos', label: ctx.t('settings.scales'), type: 'multi', quando: s => s.material !== 'modos',
+      options: ALL_SCALES.map(k => ({ id: k, label: scaleName(ctx.t, k) })) },
+    { id: 'familia', label: ctx.t('scaleOnInstrument.family'), type: 'multi', justify: true,
+      quando: s => s.material === 'modos',
+      options: FAMILIAS_DE_MODO.map(([id, rotulo]) => ({ id, label: ctx.t(rotulo) })) },
+    { id: 'graus', label: ctx.t('modes.degrees'), type: 'multi', justify: true,
+      quando: s => s.material === 'modos',
+      options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: `${g}º` })) },
     DIRECAO(ctx),
     /**
      * **O timbre** — compartilhado em `TIMBRE`, de `helpers` (19/11): o do perfil, um escolhido, ou
@@ -33,7 +113,9 @@ export const ouvidoEscala: CatalogItem = {
      */
     ...TIMBRE(ctx),
   ],
-  defaults: { estimulo: 'som', tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe', ...TIMBRE_DEFAULTS },
+  defaults: { estimulo: 'som', tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'sobe',
+    material: 'escalas', familia: ['menor-melodica-jazz'], graus: ['1', '2', '3', '4', '5', '6', '7'],
+    ...TIMBRE_DEFAULTS },
   /**
    * "Todas as escalas, uma etapa só" (Paulo, 09/11) — e isso **obriga** `direcao: 'ambos'`. Não é
    * gosto: com as duas menores melódicas marcadas e só subindo, o `problema` acima recusa a
@@ -44,6 +126,17 @@ export const ouvidoEscala: CatalogItem = {
     { id: 'tres', nome: 'presets.escalasTres', settings: { tipos: ['maior', 'menor', 'menor-harmonica'], direcao: 'ambos' }, params: EM_DO_MAIOR },
     { id: 'modos', nome: 'presets.escalasModos', settings: { tipos: MODES, direcao: 'sobe' }, params: EM_DO_MAIOR },
     { id: 'livre', nome: 'presets.escalasLivre', settings: { tipos: ALL_SCALES, direcao: 'ambos' }, params: TONALIDADE_LIVRE },
+    /**
+     * Os atalhos da rota dos modos (26/11). O da menor melódica é o que ele pediu primeiro, e o
+     * "todos os modos" só faz sentido depois de reconhecer os de uma família — 21 alternativas é
+     * a versão difícil.
+     */
+    { id: 'modos-melodica', nome: 'presets.escalasModosMelodica',
+      settings: { material: 'modos', familia: ['menor-melodica-jazz'], graus: ['1', '2', '3', '4', '5', '6', '7'], direcao: 'sobe' }, params: EM_DO_MAIOR },
+    { id: 'modos-harmonica', nome: 'presets.escalasModosHarmonica',
+      settings: { material: 'modos', familia: ['menor-harmonica'], graus: ['1', '2', '3', '4', '5', '6', '7'], direcao: 'sobe' }, params: EM_DO_MAIOR },
+    { id: 'modos-todos', nome: 'presets.escalasModosTodos',
+      settings: { material: 'modos', familia: ['maior', 'menor-harmonica', 'menor-melodica-jazz'], graus: ['1', '2', '3', '4', '5', '6', '7'], direcao: 'sobe' }, params: EM_DO_MAIOR },
   ],
   presentation: { gap: 0.3 },
   // As duas melódicas são IDÊNTICAS subindo (decisão 70). Com as duas marcadas e direção só
@@ -55,6 +148,7 @@ export const ouvidoEscala: CatalogItem = {
     return asDuas && (s.direcao ?? 'sobe') === 'sobe' ? ctx.t('player.sameAscending') : null;
   },
   make(s, ctx) {
+    if (s.material === 'modos') return perguntaDeModo(s, ctx);
     const types = arr(s.tipos, ['maior', 'menor']) as ScaleId[];
     const type = pick(types);
     const tonic = tonicaNaRegiao(ctx, { lo: 55, hi: 62 });

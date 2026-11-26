@@ -138,6 +138,13 @@ const pt = {
     drawIt: 'Ler a cifra e desenhar o acorde',
     drawPrompt: 'Desenhe {chord} no instrumento.',
   },
+  modes: {
+    ofFamily: '{degree} modo da {family}',
+    material: 'O que entra no sorteio',
+    materialEscalas: 'Escalas, uma a uma',
+    materialModos: 'Modos, por família e grau',
+    degrees: 'Quais graus',
+  },
   scaleOnInstrument: {
     octave: 'Fechar na oitava (tônica a tônica)',
     semDesenhos: 'Nesta região não há {n} digitações diferentes deste modo. Abra mais casas, alargue o vão da mão, ou peça menos desenhos.',
@@ -287,6 +294,9 @@ const pt = {
     escalaPautaLer: 'Ler e dizer que escala é',
     escalaPautaEscrever: 'Escrever a escala pedida',
     escalaPautaModos: 'Escrever os modos',
+    escalasModosMelodica: 'Os modos da menor melódica',
+    escalasModosHarmonica: 'Os modos da menor harmônica',
+    escalasModosTodos: 'Os modos das três famílias',
     escalasModos: 'Os sete modos',
     escalasLivre: 'Todas, tonalidade livre',
     acordesVoicings: 'Tétrades em voicings de piano',

@@ -10,6 +10,7 @@ import { mod } from '../../theory/core';
 import { digitacoesDaEscala } from '../../theory/digitacao-de-escala';
 import { getModo, notasDoModo } from '../../theory/digitacoes';
 import type { FamiliaBase } from '../../theory/digitacoes';
+import { FAMILIAS_DE_MODO, NOME_TRADICIONAL, nomeDaFamilia } from '../modos';
 
 /**
  * **Escala no instrumento** — o irmão que faltava na família das superfícies.
@@ -42,14 +43,6 @@ import type { FamiliaBase } from '../../theory/digitacoes';
  * só identifica. Quando houver motor de digitação, a direção abre para o braço sem mudar o resto.
  */
 /** As três famílias que o exercício de digitação oferece. A menor natural é o 6º grau da maior. */
-const FAMILIAS: [FamiliaBase, MessageKey][] = [
-  ['maior', 'scaleOnInstrument.family_maior'],
-  ['menor-harmonica', 'scaleOnInstrument.familyHarmonica'],
-  ['menor-melodica-jazz', 'scaleOnInstrument.familyMelodica'],
-];
-const NOME_DA_FAMILIA = (f: FamiliaBase): MessageKey =>
-  (FAMILIAS.find(([id]) => id === f)?.[1] ?? 'scaleOnInstrument.family_maior');
-
 /**
  * **Monte uma digitação deste modo no braço** — o exercício que ele desenhou em 25/11 para decorar
  * os modos no braço do baixo só com o celular.
@@ -62,7 +55,7 @@ const NOME_DA_FAMILIA = (f: FamiliaBase): MessageKey =>
  * modo em algum lugar", e o que se decora é o desenho A PARTIR da tônica.
  */
 function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
-  const possiveis = FAMILIAS.map(([id]) => id);
+  const possiveis = FAMILIAS_DE_MODO.map(([id]) => id);
   const familias = (arr(s.familia, ['maior']) as FamiliaBase[]).filter(f => possiveis.includes(f));
   const familia = pick(familias.length ? familias : possiveis);
   const graus = arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= 7);
@@ -103,7 +96,7 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   const grafia = Object.fromEntries(notasDoGrau.map(n => [mod(midi(n), 12), noteName(n, ctx.naming)]));
   /** As alturas que soam, subindo da tônica até a oitava — a escala como ela se toca. */
   const alturasQueSoam = [...notasDoGrau.map(midi), midi(notasDoGrau[0]) + 12];
-  const familiaEscrita = ctx.t(NOME_DA_FAMILIA(familia));
+  const familiaEscrita = ctx.t(nomeDaFamilia(familia));
   const tradicional = NOME_TRADICIONAL[`${familia}:${grau}`];
   return {
     // O ordinal vem da convenção do idioma: `4º` em português, `4th` em inglês. Era `${grau}º`
@@ -139,19 +132,6 @@ function montarDigitacao(s: Record<string, SettingValue>, ctx: Ctx): Question {
   };
 }
 
-/** Os modos que têm nome de uso corrente. Os outros se dizem pelo grau, e está certo assim. */
-const NOME_TRADICIONAL: Record<string, MessageKey | undefined> = {
-  'maior:2': 'scaleOnInstrument.mode_dorico',
-  'maior:3': 'scaleOnInstrument.mode_frigio',
-  'maior:4': 'scaleOnInstrument.mode_lidio',
-  'maior:5': 'scaleOnInstrument.mode_mixolidio',
-  'maior:6': 'scaleOnInstrument.mode_eolio',
-  'maior:7': 'scaleOnInstrument.mode_locrio',
-  'menor-harmonica:5': 'scaleOnInstrument.mode_frigioDominante',
-  'menor-melodica-jazz:4': 'scaleOnInstrument.mode_lidioDominante',
-  'menor-melodica-jazz:7': 'scaleOnInstrument.mode_superlocrio',
-};
-
 export const escalaNoInstrumento: CatalogItem = {
   id: 'escala-no-instrumento',
   objetos: ['escalas'], tarefas: ['nomear', 'tocar'],
@@ -184,7 +164,7 @@ export const escalaNoInstrumento: CatalogItem = {
      */
     { id: 'familia', label: ctx.t('scaleOnInstrument.family'), type: 'multi', justify: true,
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
-      options: FAMILIAS.map(([id, rotulo]) => ({ id, label: ctx.t(rotulo) })) },
+      options: FAMILIAS_DE_MODO.map(([id, rotulo]) => ({ id, label: ctx.t(rotulo) })) },
     { id: 'graus', label: ctx.t('scaleOnInstrument.degrees'), type: 'multi', justify: true,
       quando: s => s.instrumento !== 'piano' && s.direcao === 'desenhar',
       options: ['1', '2', '3', '4', '5', '6', '7'].map(g => ({ id: g, label: `${g}º` })) },
@@ -235,7 +215,7 @@ export const escalaNoInstrumento: CatalogItem = {
     if (s.instrumento === 'piano' || s.direcao !== 'desenhar') return null;
     const desenhos = Math.min(5, Math.max(1, Number(s.desenhos ?? 1)));
     if (desenhos < 2) return null;
-    const familias = FAMILIAS.map(([id]) => id).filter(f => arr(s.familia, ['maior']).includes(f));
+    const familias = FAMILIAS_DE_MODO.map(([id]) => id).filter(f => arr(s.familia, ['maior']).includes(f));
     const graus = arr(s.graus, ['1']).map(Number).filter(g => g >= 1 && g <= 7);
     const tuning = tuningOf(s, ctx);
     const [, ate] = fretRange(s);

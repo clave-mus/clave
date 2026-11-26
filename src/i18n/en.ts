@@ -138,6 +138,13 @@ const en: Shape<typeof pt> = {
     drawIt: 'Read the symbol and draw the chord',
     drawPrompt: 'Draw {chord} on the instrument.',
   },
+  modes: {
+    ofFamily: '{degree} mode of the {family}',
+    material: 'What goes into the draw',
+    materialEscalas: 'Scales, one by one',
+    materialModos: 'Modes, by family and degree',
+    degrees: 'Which degrees',
+  },
   scaleOnInstrument: {
     octave: 'Close on the octave (root to root)',
     semDesenhos: 'There are not {n} different fingerings for this mode in this region. Open more frets, widen the hand span, or ask for fewer shapes.',
@@ -287,6 +294,9 @@ const en: Shape<typeof pt> = {
     escalaPautaLer: 'Read it and name the scale',
     escalaPautaEscrever: 'Write the scale asked',
     escalaPautaModos: 'Write the modes',
+    escalasModosMelodica: 'The modes of melodic minor',
+    escalasModosHarmonica: 'The modes of harmonic minor',
+    escalasModosTodos: 'The modes of all three families',
     escalasModos: 'The seven modes',
     escalasLivre: 'Every scale, free key',
     acordesVoicings: 'Seventh chords in piano voicings',
