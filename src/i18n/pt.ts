@@ -929,7 +929,7 @@ const pt = {
     'melodia-de-ouvido': { title: 'Melodia de ouvido', desc: 'Ouça poucas notas depois do contexto e diga quais foram — ou leia a melodia e audie antes de conferir.' },
     'ouvido-escala': { title: 'Escalas de ouvido', desc: 'Reconheça a escala ou o modo.' },
     'explorar-padroes-escala': { title: 'Explorar padrões pela escala', desc: 'Escreva um desenho de poucas notas e ouça cada posição da escala, no seu ritmo, com o contexto sustentando embaixo. Exercício inspirado num vídeo do canal ChicagoBassBuddy; recomendamos assistir, mas não é requisito.' },
-    'reconhecer-padroes-escala': { title: 'Reconhecer padrões pela escala', desc: 'Um desenho de poucas notas soa começando em algum grau — diga em qual. Exercício inspirado num vídeo do canal ChicagoBassBuddy; recomendamos assistir, mas não é requisito.' },
+    'reconhecer-padroes-escala': { title: 'Padrões pela escala', desc: 'Um desenho de poucas notas soa começando em algum grau — diga em qual, ou audie o desenho a partir de um grau pedido. Exercício inspirado num vídeo do canal ChicagoBassBuddy; recomendamos assistir, mas não é requisito.' },
     'ouvido-celulas': { title: 'Notas sobre o acorde', desc: 'Um acorde do campo soa com notas por cima. Diga que graus foram, o que cada um é sobre o acorde, ou as duas coisas — qual acorde e quais notas.' },
     'ritmo-ouvido': { title: 'Que ritmo é esse?', desc: 'Ouça um compasso e escolha a escrita certa. Dá para batucar junto.' },
   },

@@ -1,4 +1,4 @@
-import { voicingsDe, type Voicing } from '../../theory/voicings';
+import { MAO_ESQUERDA, voicingsDe, type Voicing } from '../../theory/voicings';
 import {
   ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
   noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, } from '../helpers';
@@ -156,9 +156,29 @@ export const tonicaDeOuvido: CatalogItem = {
       dominante: nGrau === 5 && grau.chord === '7',
     };
     const qualidade = s.qualidadeLivre === true ? pick(qualidades(s)) : qualidadeDoGrau(grau.chord, fams, noCampo);
+    /**
+     * **O acorde fica perto da voz, não acima dela** (relato dele em 26/11: *"às vezes o acorde soa
+     * agudo e estridente demais"*).
+     *
+     * Medido antes de mexer, com a região padrão 48–72: o teto do que soava tinha mediana 72, p90
+     * **79** e chegava a **84** — um dó6 de piano amostrado, que é exatamente o estridente que ele
+     * ouviu. A causa: `voicingsDe` usa o alcance das duas mãos (48–84) quando ninguém diz outra
+     * coisa, e este item não dizia.
+     *
+     * O eixo certo já existia aqui e não era usado para isto: a **faixa da voz**. Quem vai cantar a
+     * fundamental na faixa média não precisa ouvir o acorde duas oitavas acima dela.
+     *
+     * O teto é **uma quinta acima do topo da faixa**. Tentei uma oitava primeiro e medi: o máximo
+     * caiu de 84 para 83, ou seja, quase nada — porque o que incomoda é justamente a cauda. Com a
+     * quinta, o acorde fica no registro em que um piano acompanha quem canta.
+     *
+     * `somAudivel` continua mandando onde está ligado: ali o problema é outro (o alto-falante do
+     * celular não reproduz o grave), e a decisão dele de 15/11 é subir tudo de propósito.
+     */
+    const voz = FAIXAS_DA_VOZ[String(s.faixaDaVoz ?? 'media')] ?? FAIXAS_DA_VOZ.media;
     const escolhidos = voicingsDe(grau.root, qualidade, {
       semFundamental: s.semFundamental === true,
-      ...(s.somAudivel === true ? { piso: 60, teto: 96 } : {}),
+      ...(s.somAudivel === true ? { piso: 60, teto: 96 } : { piso: Math.min(voz.lo, MAO_ESQUERDA.lo), teto: voz.hi + 7 }),
     });
     const voicing: Voicing | null = escolhidos.length ? escolhidos[randInt(0, escolhidos.length - 1)] : null;
     const notas = voicing?.todas ?? [];
