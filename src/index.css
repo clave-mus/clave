@@ -1171,4 +1171,14 @@ select.sel {
  * ele tinha antes do modo alto), e tudo cabe.
  */
 .foco-exercicio .stage.braco.em-foco .fret-svg { max-height: 46svh; }
+/**
+ * **O disco de tocar encolhe no foco** — medido em 26/11, quando o braço de "Qual nota tocou?"
+ * entrou em foco e os números das casas saíram cortados: o disco são 128 px dos 375 que a tela
+ * deitada tem, e com o braço alto a soma passa da tela.
+ *
+ * Ele continua sendo o maior alvo da tela depois do braço; o que ele perde é o tamanho de cartaz,
+ * que no foco não serve — ali a pergunta já tocou sozinha.
+ */
+.foco-exercicio .stage.braco.em-foco .listen { width: 76px; height: 76px; }
+.foco-exercicio .stage.braco.em-foco .listen svg { width: 22px; height: 22px; }
 .foco-exercicio .stage.braco.em-foco .sequencia { margin-top: 4px !important; }
