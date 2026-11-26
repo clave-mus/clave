@@ -1,7 +1,8 @@
 import { MAO_ESQUERDA, voicingsDe, type Voicing } from '../../theory/voicings';
 import {
   ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
-  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, vozDaPergunta, } from '../helpers';
+  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, VER_O_QUE_SOOU,
+  faixaDaRevelacao, vozDaPergunta, } from '../helpers';
 import { qualidadeEnfeitada, type NoCampo } from '../enfeites';
 import type { CatalogItem } from '../types';
 import { randInt } from '../../theory/core';
@@ -102,6 +103,14 @@ export const tonicaDeOuvido: CatalogItem = {
      * ele havia dito "quis dizer os graus do campo harmônico". O padrão agora é o que ele pediu.
      */
     { id: 'qualidadeLivre', label: ctx.t('settings.freeQuality'), type: 'toggle' },
+    /**
+     * **Ver as notas ao conferir** — o teclado do que soou, depois de responder (`VER_O_QUE_SOOU`).
+     *
+     * O teclado **não** é desenhado antes: ali ver as notas entregaria a fundamental de graça, que é
+     * a razão de este item nunca ter tido teclado. Depois de responder a conta se inverte — o nome
+     * do acorde não diz onde as notas estavam, e é isso que ele pediu em 26/11.
+     */
+    VER_O_QUE_SOOU(ctx),
     /** Mostrar o nome do acorde **antes** de responder. Padrão: mostrar (decisão dele). */
     { id: 'mostrarNome', label: ctx.t('settings.showChordName'), type: 'toggle' },
     /**
@@ -131,7 +140,7 @@ export const tonicaDeOuvido: CatalogItem = {
   ],
   defaults: {
     familias: ['tetrades'], graus: ['1', '2', '3', '4', '5', '6', '7'],
-    semFundamental: false, inversoes: true, qualidadeLivre: false, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
+    semFundamental: false, inversoes: true, qualidadeLivre: false, verOQueSoou: true, mostrarNome: true, faixaDaVoz: 'media', somAudivel: false, ...TIMBRE_DEFAULTS,
   },
   presets: [
     { id: 'tetrades', nome: 'presets.tonicaTetrades', settings: { familias: ['tetrades'], mostrarNome: true }, params: TONALIDADE_LIVRE },
@@ -226,6 +235,21 @@ export const tonicaDeOuvido: CatalogItem = {
       },
       autoplay: true,
       reveal: ctx.t('quiz.tonicaReveal', { chord: cifra, note: tonica }),
+      /**
+       * **O teclado do que soou**, ao conferir. A fundamental vem em acento: neste item ela É a
+       * resposta, e ver qual das teclas ela era é metade do que se aprende errando.
+       *
+       * ⚠️ Com a fundamental omitida ela não está entre as notas, e aí nenhuma tecla ganha acento —
+       * o que é a informação certa: o acorde soou sem ela.
+       */
+      ...(s.verOQueSoou !== false && notas.length
+        ? (() => {
+            const ms = notas.map(midi);
+            const fundamental = ms.find(m => mod(m, 12) === mod(midi(grau.root), 12));
+            return { revelacao: { kind: 'keyboard' as const, ...faixaDaRevelacao(ms), notas: ms,
+              ...(fundamental !== undefined ? { rotulos: { [fundamental]: tonica } } : {}) } };
+          })()
+        : {}),
       presentation: vozDaPergunta(s),
     };
   },

@@ -387,6 +387,24 @@ export interface Question {
   autoplay?: boolean;
   reveal: string; // a resposta certa, por extenso
   /**
+   * **O que se vê DEPOIS de responder** — a peça que faltava, pedida por ele em 26/11: *"seria legal
+   * poder ver os voicings do piano (além de ler o nome do acorde) depois de ver a resposta. e poder
+   * conferir o som de cada tecla, pra saber onde se confundiu."*
+   *
+   * Até aqui a revelação era uma linha de texto no rodapé, e num exercício de ouvido o nome do
+   * acorde não diz **onde** as notas estavam. O teclado diz, e tocá-las uma a uma é o que transforma
+   * o erro em informação.
+   *
+   * ⚠️ **Aparece em qualquer desfecho**, inclusive no acerto — pedido dele no mesmo dia: *"seria bom
+   * que isso aparecesse mesmo quando marca 'consegui com facilidade'"*. Não é detalhe: nos itens de
+   * autoavaliação a fase final é sempre de acerto, e uma revelação que só saísse no erro nunca
+   * apareceria ali.
+   *
+   * **Tocável é só o que soou** (decisão dele, contra a minha sugestão de deixar o teclado inteiro
+   * tocável): *"só é tocável as notas do acorde, que são justamente as que usuário se confunde"*.
+   */
+  revelacao?: Revelacao;
+  /**
    * **Apresentação desta pergunta**, por cima do perfil, do item e das configurações.
    *
    * Existe desde 19/11, para o timbre **sorteado a cada pergunta** do `ouvido-intervalo`: o perfil
@@ -396,6 +414,25 @@ export interface Question {
    */
   presentation?: Partial<Presentation>;
 }
+
+/**
+ * A revelação visual de uma pergunta. Hoje só o teclado; a forma é a de sempre — uma declaração do
+ * item, desenhada pelo Player.
+ */
+export type Revelacao =
+  /**
+   * As notas que soaram, num teclado. A faixa é a **do acorde, com uma terça de folga** para cada
+   * lado (decisão dele em 26/11): a tecla vizinha é onde a confusão costuma morar, e faixa fixa
+   * desperdiça tela no celular.
+   */
+  | { kind: 'keyboard'; lo: number; hi: number; notas: number[];
+      /**
+       * Texto sobre uma tecla — o nome da fundamental, por exemplo.
+       *
+       * Vem **do item** e não do Player: quem sabe grafar pela tonalidade é quem sorteou o acorde
+       * (em Ré♭ maior a classe 1 é Ré♭, não Dó♯), e esta é a regra de ouro do projeto.
+       */
+      rotulos?: Record<number, string> };
 
 export type SettingValue = string | string[] | boolean | number;
 

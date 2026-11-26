@@ -697,6 +697,16 @@ select.sel {
    pediu que ficassem mais visíveis — eram fáceis de não ver debaixo do botão grande. Agora têm
    superfície, texto de leitura e um rótulo dizendo para que servem. Seguem menores e mais quietos
    que o botão de ouvir tudo: repetir o trecho inteiro continua sendo o gesto principal. */
+/**
+ * **A revelação visual** — o teclado do que soou, depois de responder (ver `Question.revelacao`).
+ *
+ * Centrada e discreta: ela é conferência, não enunciado. O teclado cresce até a largura do palco e
+ * para aí, senão num desktop largo um acorde de quatro notas viraria um piano de parede.
+ */
+.revelacao-visual { display: grid; justify-items: center; gap: 6px; margin-top: 14px; }
+.revelacao-visual .kbd-svg { max-width: min(100%, 420px); }
+.revelacao-visual .eyebrow { color: var(--ink-faint); }
+
 .listen-partes { display: grid; justify-items: center; gap: 7px; margin-top: 14px; }
 .listen-partes > .eyebrow { color: var(--ink-faint); }
 .listen-partes .partes-fila { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

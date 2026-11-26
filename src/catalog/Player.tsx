@@ -11,7 +11,7 @@ import { sortearSemEco } from './sorteio';
 import { useRegistroDePratica } from '../state/useRegistro';
 import { buildAttempt, buildFeedback, CONFIDENCE_SERIES, newId, shouldAskConfidence, type AttemptFeedback } from '../state/attempts';
 import { saveAttempt, saveFeedback } from '../state/attemptLog';
-import { fromStep, keyAccidentals, midi, mod, noteName, type Note } from '../theory/core';
+import { fromStep, keyAccidentals, midi, mod, noteName, type Naming, type Note } from '../theory/core';
 import Fretboard from '../components/music/Fretboard';
 import { useFocoDeTela, useTela } from '../components/useTela';
 import Keyboard from '../components/music/Keyboard';
@@ -21,7 +21,7 @@ import { Btn, Chip, PlayIcon, Tag } from '../components/ui';
 import { globalPresentation, useParamsDoItem, type ParametrosDePratica } from './params';
 import { atalhoEmVigor, chavesDisputadas, settingsDoAtalho } from './atalhos';
 import { optionResponse, validate } from './validate';
-import type { Ctx, ParteDoSom, SeriesItem, Question, Response, SettingValue, Surface } from './types';
+import type { Ctx, ParteDoSom, SeriesItem, Question, Response, Revelacao, SettingValue, Surface } from './types';
 import SalvarNaRotina from '../components/SalvarNaRotina';
 import { paramsRegistraveis } from './registro';
 import PracticePanel from '../components/PracticePanel';
@@ -331,7 +331,16 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       return;
     }
     // Acertou: segue sozinho — a não ser que a pergunta diga que há o que fazer depois dela.
-    if (ok && !q.aguardaDepois) window.setTimeout(next, 850);
+    /**
+     * ⚠️ **Quem tem revelação visual também espera.** Medido na tela em 26/11: a Tônica de ouvido
+     * autoavalia sempre como acerto, o Player avançava 850 ms depois, e o teclado da revelação
+     * piscava e sumia — justamente o caso que ele pediu (*"seria bom que isso aparecesse mesmo
+     * quando marca 'consegui com facilidade'"*).
+     *
+     * Fica aqui e não no item: revelação que ninguém alcança é defeito de qualquer item que venha a
+     * declarar uma, e `aguardaDepois` continua existindo para quem espera sem revelação.
+     */
+    if (ok && !q.aguardaDepois && !q.revelacao) window.setTimeout(next, 850);
   }, [phase, score, def, q, soundOn, play, playParte, presentationFor, locale, settings, params, target, onDone, next]);
 
   // atalhos de teclado: 1-9 para opções, letras para notas, Enter para seguir, espaço para ouvir
@@ -460,6 +469,15 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
 
       <AnswerArea q={q} phase={phase} picked={picked} acc={acc} setAcc={setAcc} onAnswer={submit} naming={naming} montada={montada} />
 
+      {/**
+        * **A revelação visual**, quando o item declara uma — ver `Question.revelacao`.
+        *
+        * Mora **fora do palco** de propósito: o palco é onde se responde, e cada superfície monta o
+        * seu próprio. A revelação é a mesma coisa para todas, e pô-la aqui a torna disponível a
+        * qualquer item sem mexer em oito ramos de `Stage`.
+        */}
+      {phase !== 'ask' && q.revelacao && <RevelacaoVisual r={q.revelacao} naming={naming} onTocar={m => tocarGrupos(q, [[m]])} />}
+
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
           {phase === 'wrong' && <>{t('player.answer')} <b>{q.reveal}</b></>}
@@ -467,7 +485,9 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
           {phase === 'ask' && <span className="muted">{itemText(t, def.id, 'desc')}</span>}
         </div>
         <div className="row acoes-do-rodape">
-          {phase === 'wrong' && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
+          {/* Acertando com revelação na tela, o avançar também precisa existir — sem ele a pessoa
+              fica com o teclado aberto e sem saída (o automático não vem mais). */}
+          {(phase === 'wrong' || (phase === 'right' && !!q.revelacao)) && <Btn onClick={next} tone="mu">{t('player.next')}</Btn>}
           <Btn small tone="ghost" onClick={() => setShowSettings(v => !v)}>{t(showSettings ? 'player.close' : 'player.customize')}</Btn>
         </div>
       </div>
@@ -1013,6 +1033,40 @@ function Stage({ q, phase, playing, heard, onPlay, onPlayParte, onTocarGrupos, p
       {q.surface.kind === 'autoavaliacao' && (
         <AutoAvaliacao phase={phase} onAnswer={onAnswer} ouviuAResposta={ouviuAResposta} />
       )}
+    </div>
+  );
+}
+
+/**
+ * **O que soou, no teclado, depois de responder.**
+ *
+ * Pedido dele em 26/11, para a Tônica de ouvido e depois para os dois irmãos: *"poder ver os
+ * voicings do piano (além de ler o nome do acorde) depois de ver a resposta. e poder conferir o som
+ * de cada tecla, pra saber onde se confundiu."*
+ *
+ * ⚠️ **Só as teclas que soaram respondem ao toque** — decisão dele, contra a minha sugestão de
+ * deixar o teclado inteiro tocável: *"só é tocável as notas do acorde, que são justamente as que
+ * usuário se confunde"*.
+ *
+ * A fundamental vem em acento e as outras em tinta fraca: num exercício que pergunta a fundamental,
+ * ver qual das teclas ela é faz parte da resposta.
+ */
+function RevelacaoVisual({ r, naming, onTocar }: { r: Revelacao; naming: Naming; onTocar: (m: number) => void }) {
+  const t = useT();
+  /**
+   * **Tudo que soou vai em acento cheio**, e a fundamental se distingue pelo **nome escrito na
+   * tecla**. Medi as três tentativas anteriores em 26/11, nos dois temas: um segundo tom para as
+   * outras notas não existe nesta paleta — `--accent-quiet` numa tecla branca do tema escuro lê como
+   * tecla preta (e clareado vira 1,27:1, invisível), e numa preta é 1,1:1. O nome não depende de
+   * tom nenhum, e ainda diz mais do que uma cor diria. Quem grafa o nome é o item, pela tonalidade.
+   */
+  const marks = Object.fromEntries(r.notas.map(m => [m, 'var(--accent)']));
+  const tocaveis = new Set(r.notas);
+  return (
+    <div className="revelacao-visual">
+      <span className="eyebrow">{t('player.revealKeys')}</span>
+      <Keyboard lo={r.lo} hi={r.hi} marks={marks} marcasComTexto={r.rotulos ?? {}} naming={naming} label={t('player.revealKeys')}
+        onPress={m => tocaveis.has(m) && onTocar(m)} />
     </div>
   );
 }

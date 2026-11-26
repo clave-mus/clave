@@ -20,6 +20,21 @@ interface Props {
   label?: string;
 }
 
+/**
+ * **A marca fraca numa tecla PRETA** — a cura é a do `Fretboard`: traduzir a tinta para a superfície
+ * em que ela cai.
+ *
+ * `--accent-quiet` é um tom de **fundo**, escuro no tema escuro (#2e2019). Numa tecla preta (#211e1c)
+ * isso dá **1,1:1** — medido em 26/11, e 1,1:1 quer dizer que a nota marcada não aparece. Na branca
+ * ela continua como estava: escura sobre clara, que se vê.
+ *
+ * O acento clareado é o que contrasta com preto nos dois temas; misturar com a cor da tecla preta
+ * daria escuro sobre escuro de novo.
+ */
+const NA_TECLA_PRETA: Record<string, string> = {
+  'var(--accent-quiet)': 'color-mix(in srgb, var(--accent) 55%, var(--key-white))',
+};
+
 export default function Keyboard({ lo, hi, marks = {}, marcasComTexto = {}, onPress, labels = 'do', naming = 'pt', label }: Props) {
   const t = useT();
   const whites: number[] = [];
@@ -57,10 +72,14 @@ export default function Keyboard({ lo, hi, marks = {}, marcasComTexto = {}, onPr
       })}
       {blacks.map(({ m, x }) => (
         <g key={m}>
-          <rect x={x} y={0} width={BW} height={BH} fill={marks[m] ?? 'var(--key-black)'} stroke="var(--key-black)" strokeWidth="1.5"
+          <rect x={x} y={0} width={BW} height={BH} fill={marks[m] ? NA_TECLA_PRETA[marks[m]] ?? marks[m] : 'var(--key-black)'} stroke="var(--key-black)" strokeWidth="1.5"
             onPointerDown={interactive ? () => onPress!(m) : undefined} style={{ cursor: interactive ? 'pointer' : undefined }} className={interactive ? 'key black' : undefined} />
           {/* Nas pretas o número fica em cor clara: a tecla marcada é escura por baixo. */}
-          {marcasComTexto[m] && <text x={x + BW / 2} y={BH - 10} textAnchor="middle" fontSize="12" fontWeight="800" fill="var(--key-white)" fontFamily="var(--display)">{marcasComTexto[m]}</text>}
+          {/* ⚠️ Numa tecla preta **marcada** o texto vai em tinta escura: a marca a clareia, e texto
+              claro sobre acento mede 2:1. Medido em 26/11, com a revelação escrevendo o nome da
+              fundamental na tecla. */}
+          {marcasComTexto[m] && <text x={x + BW / 2} y={BH - 10} textAnchor="middle" fontSize="12" fontWeight="800"
+            fill={marks[m] ? 'var(--key-black)' : 'var(--key-white)'} fontFamily="var(--display)">{marcasComTexto[m]}</text>}
         </g>
       ))}
     </svg>

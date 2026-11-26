@@ -112,6 +112,26 @@ export const GRAUS_ESCOLHIDOS = (ctx: Ctx): Setting => ({
  */
 export const VOZES: Voice[] = ['piano', 'limpo', 'pad', 'violao', 'baixo', 'orgao'];
 
+/**
+ * **Ver o que soou, ao conferir** — o controle compartilhado da revelação visual (26/11).
+ *
+ * Nasce compartilhado porque ele pediu nos três de uma vez: a Tônica primeiro, e logo *"seria legal
+ * pôr a mesma coisa como opção em acordes de ouvido e graus do campo harmônico"*.
+ *
+ * Ligado por padrão: a revelação só aparece **depois** de responder, então ela não entrega nada —
+ * e um padrão desligado faria o pedido chegar só a quem fosse procurá-lo no painel.
+ */
+export const VER_O_QUE_SOOU = (ctx: Ctx): Setting =>
+  ({ id: 'verOQueSoou', label: ctx.t('settings.showWhatSounded'), type: 'toggle' });
+
+/**
+ * A faixa de teclado que mostra um punhado de notas: elas, **com uma terça de folga** para cada
+ * lado (decisão dele em 26/11). A tecla vizinha é onde a confusão mora, e faixa fixa desperdiça
+ * tela no celular.
+ */
+export const faixaDaRevelacao = (notas: readonly number[]) =>
+  ({ lo: Math.min(...notas) - 4, hi: Math.max(...notas) + 4 });
+
 export const TIMBRE = (ctx: Ctx): Setting[] => [
   { id: 'timbre', label: ctx.t('settings.timbre'), type: 'single', options: [
     { id: 'perfil', label: ctx.t('settings.timbreFromProfile') },
