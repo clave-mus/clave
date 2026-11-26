@@ -481,7 +481,19 @@ export default function Player({ def, target, onDone, initialSettings, initialPa
       <div className="player-foot">
         <div className="reveal" aria-live="polite">
           {phase === 'wrong' && <>{t('player.answer')} <b>{q.reveal}</b></>}
-          {phase === 'right' && <span className="muted">{t('player.right')}</span>}
+          {/**
+            * **Acertando, a resposta por extenso aparece junto da revelação visual.**
+            *
+            * Visto na tela em 26/11, na `nota-comum`: o teclado mostrava as teclas e o rodapé dizia
+            * só "Acertou!", então a cifra do acorde e o desenho cantado — que são o gabarito escrito
+            * — ficavam invisíveis justo para quem acertou. Num item de audiar isso é meio gabarito.
+            *
+            * Vale só onde o item declarou revelação: é ele dizendo que esta pergunta tem o que
+            * conferir depois. Onde não há, acertar continua sendo uma palavra e a próxima pergunta.
+            */}
+          {phase === 'right' && (q.revelacao
+            ? <><span className="muted">{t('player.right')}</span>{'  ·  '}<b>{q.reveal}</b></>
+            : <span className="muted">{t('player.right')}</span>)}
           {phase === 'ask' && <span className="muted">{itemText(t, def.id, 'desc')}</span>}
         </div>
         <div className="row acoes-do-rodape">
