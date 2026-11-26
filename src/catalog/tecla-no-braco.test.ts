@@ -60,6 +60,40 @@ describe('a janela de casas vale para tudo', () => {
   });
 });
 
+describe('a nota nunca é a própria referência', () => {
+  const SUPERFICIES = ['baixo', 'violao', 'teclado', 'pauta', 'letras', 'graus'];
+  /**
+   * Pedido dele em 26/11: *"faça com que ele nunca repita a exata mesma nota que a referência"*.
+   *
+   * Medido antes, com os ajustes que ele tinha salvos (tônica e quinta, referência na oitava mais
+   * grave): **20% das perguntas** no violão, no teclado, nas letras e nos graus repetiam a altura da
+   * referência — a nota que acabou de soar e que o enunciado nomeia.
+   */
+  it.each(SUPERFICIES)('em %s, 300 perguntas e nenhuma repete', onde => {
+    const c = ctx(onde === 'violao' ? 'violao' : 'baixo');
+    const semOitava = onde === 'letras' || onde === 'graus';
+    for (const q of perguntas({ onde, referencia: true, grausEscolhidos: ['0', '7'],
+      oitavaDaReferencia: onde === 'baixo' ? '2' : '3' }, c, 300)) {
+      const [[referencia], ...resto] = q.sound!.groups;
+      const alvo = resto[0]?.[0];
+      expect(alvo, 'a pergunta deixou de ter nota depois da referência').toBeTypeOf('number');
+      // Onde a resposta é a classe (letras, graus), a classe repetida também entrega a pergunta.
+      if (semOitava) expect(alvo % 12, `${onde}: a classe da referência de volta`).not.toBe(referencia % 12);
+      else expect(alvo, `${onde}: a altura da referência de volta`).not.toBe(referencia);
+    }
+  });
+
+  /** A mesma nota **noutra oitava** continua valendo: ali a pergunta é a oitava. */
+  it('no teclado, a mesma classe uma oitava adiante segue acontecendo', () => {
+    const qs = perguntas({ onde: 'teclado', referencia: true, grausEscolhidos: ['0', '7'], oitavaDaReferencia: '3' }, ctx(), 300);
+    const oitavaAcima = qs.filter(q => {
+      const [[r], ...resto] = q.sound!.groups;
+      return resto[0]?.[0] !== undefined && resto[0][0] % 12 === r % 12;
+    });
+    expect(oitavaAcima.length, 'a oitava deixou de ser perguntável').toBeGreaterThan(0);
+  });
+});
+
 describe('janela que não dá pergunta', () => {
   /**
    * Visto na tela em 26/11: "tônica e quinta" com as casas 5–9 de um baixo deixa **só o dó2** —

@@ -408,10 +408,15 @@ export const ouvidoTecla: CatalogItem = {
   },
   make(s, ctx): Question {
     const permitidas = pcsDosGraus(ctx, arr(s.grausEscolhidos, []));
-    const p = pick(permitidas);
     // Ausente quer dizer "a do perfil" — `ondePadrao`, a mesma função que o `defaultsDo` usa.
     const onde = String(s.onde ?? ondePadrao(ctx));
     const noBraco = emBraco(onde);
+    /**
+     * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
+     * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
+     * Nos outros três modos a oitava continua sendo a resposta.
+     */
+    const semOitava = onde === 'letras' || onde === 'graus';
     /** A janela de casas: vale para o sorteio, para o desenho e para a referência. */
     const [de, ate] = janelaDeCasas(s);
     /** A afinação da superfície escolhida — não a do perfil, que pode ser outra. */
@@ -446,7 +451,11 @@ export const ouvidoTecla: CatalogItem = {
      * fora do alcance (medido: soava 60 num baixo que chega a 55). Enumerar o que existe é a mesma
      * escolha que consertou os distratores de ritmo: onde o espaço é pequeno, enumere.
      */
-    const m = noBraco ? alturaNoBraco(tuning, ctx, permitidas, primeiraTocavel(de), ate) : alturaDoPc(ctx, p, faixa);
+    /** Uma nota que o material permite, onde a superfície escolhida a alcança. */
+    const sortearAltura = () => (noBraco
+      ? alturaNoBraco(tuning, ctx, permitidas, primeiraTocavel(de), ate)
+      : alturaDoPc(ctx, pick(permitidas), faixa));
+    let m = sortearAltura();
     /**
      * **A referência é a tônica em vigor**, não um dó cravado — e isto é a correção de um bug que a
      * pergunta do Paulo em 13/11 expôs.
@@ -517,9 +526,34 @@ export const ouvidoTecla: CatalogItem = {
       ? faixaDoBraco(tuning, de, ate)
       : { lo: Math.min(faixa.lo, 24), hi: Math.max(faixa.hi, 96) };
     const preferida = noBraco ? faixa : undefined;
-    const referencia = s.oitavaDaReferencia === 'sorteada'
-      ? tonicaDeContexto(ctx, m)
-      : naFaixa((Number(s.oitavaDaReferencia ?? 4) + 1) * 12 + pcDaReferencia, faixaDaSuperficie, preferida);
+    const calcularReferencia = (alvo: number) => (s.oitavaDaReferencia === 'sorteada'
+      ? tonicaDeContexto(ctx, alvo)
+      : naFaixa((Number(s.oitavaDaReferencia ?? 4) + 1) * 12 + pcDaReferencia, faixaDaSuperficie, preferida));
+    let referencia = calcularReferencia(m);
+    /**
+     * **A nota nunca é a própria referência** — pedido dele em 26/11: *"faça com que ele nunca
+     * repita a exata mesma nota que a referência"*.
+     *
+     * Ela acabou de soar e é dada de graça; perguntar "que nota é" sobre ela é perguntar o que o
+     * enunciado já disse. A mesma nota **noutra oitava** continua valendo: ali a pergunta é a
+     * oitava, que é a conferência deste item desde 10/11.
+     *
+     * ⚠️ Respondendo por **letras ou graus**, a conferência é por classe de altura — e aí a classe
+     * repetida é a mesma pergunta de graça, mesmo uma oitava acima. Nesses dois modos o que não
+     * pode repetir é a classe.
+     *
+     * Sortear de novo (em vez de empurrar a nota para o lado) é o que preserva o material escolhido:
+     * empurrar daria uma nota que os graus marcados podem não permitir. Com a referência sorteada,
+     * ela se recalcula junto, porque depende da nota.
+     *
+     * O laço é limitado: se o material permitir só aquela nota, a última palavra é do material e a
+     * pergunta sai como saía. O caso tem aviso próprio em `problema` quando é no braço.
+     */
+    const repete = (alvo: number, ref: number) => (semOitava ? mod(alvo, 12) === mod(ref, 12) : alvo === ref);
+    for (let tentativa = 0; tentativa < 24 && s.referencia === true && repete(m, referencia); tentativa++) {
+      m = sortearAltura();
+      referencia = calcularReferencia(m);
+    }
     /**
      * **A grafia segue a tonalidade.** O Paulo em 13/11: *"na tonalidade, diz Réb, mas no exercicio
      * diz 'primeiro um Do#'"*. `pcNameUm(..., false)` escolhe sempre o sustenido; em Ré♭ maior a
@@ -535,12 +569,6 @@ export const ouvidoTecla: CatalogItem = {
     const nomeDaReferencia = `${nomeNaTonalidade(ctx, mod(referencia, 12))}${Math.floor(referencia / 12) - 1}`;
     // O contexto do audiar é a tônica da TONALIDADE (não o dó fixo da referência, que é outra coisa).
 
-    /**
-     * **Letras e graus não carregam oitava**, então ali a conferência é por classe de altura — e o
-     * enunciado DIZ isso, porque relaxar em silêncio faria o histórico afirmar o que não aconteceu.
-     * Nos outros três modos a oitava continua sendo a resposta.
-     */
-    const semOitava = onde === 'letras' || onde === 'graus';
     /**
      * A referência também é **apoio visível** na superfície de resposta: ela soou, é dada, e a pessoa
      * precisa ver onde está (ver `Apoio`, em `types.ts`). Sem `referencia` não há o que mostrar.
