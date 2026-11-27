@@ -119,6 +119,19 @@ export function resolverProgressao(items: Item[], inicial: Tonalidade, tetrads: 
   return { chords, porItem, noFim: tom };
 }
 
+/**
+ * O sorteio guardado só vale se for inteiro: um campo torto vindo de uma versão antiga (ou de uma
+ * mão na janela do navegador) cairia no padrão em silêncio, e aí a tela mostraria uma coisa e o
+ * botão faria outra.
+ */
+function sorteioValido(o: unknown): o is OpcoesDeSorteio {
+  if (!o || typeof o !== 'object') return false;
+  const x = o as Partial<OpcoesDeSorteio>;
+  return typeof x.compassos === 'number' && x.compassos >= 1 && x.compassos <= 24
+    && typeof x.emprestimos === 'boolean' && typeof x.porFuncoes === 'boolean'
+    && typeof x.modulaCada === 'number' && x.modulaCada >= 0 && x.modulaCada <= 16;
+}
+
 /** O sufixo da cifra romana de uma qualidade (`7`, `ø`, `°7`…). Vive aqui e em `romanFor`. */
 function sufixoRomano(type: ChordId, conv: Convention): string {
   const suf: Partial<Record<ChordId, string>> = { '7': '7', '7M': conv === 'pt' ? '7M' : 'maj7', m7: '7', m7b5: 'ø', dim: '°', dim7: '°7', aum: '+' };
@@ -167,6 +180,11 @@ export interface Guardado {
   contagem?: boolean; bassOn?: boolean; acordesOn?: boolean; compVoice?: Voice;
   /** O drone: ligado, quais notas, e com que caráter. Ausentes numa versão guardada antes de 20/11. */
   droneOn?: boolean; droneNotas?: number[]; droneCarater?: Carater | 'piano';
+  /**
+   * **Tocar sem ver os acordes** e as opções do sorteio (26/11). Guardados porque são jeito de
+   * estudar, não escolha de uma sessão: quem usa o *surprise play along* volta a ele amanhã.
+   */
+  esconder?: boolean; sorteio?: OpcoesDeSorteio;
 }
 export function lerGuardado(cru: unknown): Guardado | null {
   if (typeof cru !== 'string') return null;
@@ -190,6 +208,8 @@ export function lerGuardado(cru: unknown): Guardado | null {
       ...(Array.isArray(o.droneNotas) && o.droneNotas.every(n => typeof n === 'number' && n >= 21 && n <= 108)
         ? { droneNotas: o.droneNotas } : {}),
       ...(o.droneCarater && ['fundo', 'acorde', 'destaque', 'piano'].includes(o.droneCarater) ? { droneCarater: o.droneCarater } : {}),
+      ...(typeof o.esconder === 'boolean' ? { esconder: o.esconder } : {}),
+      ...(sorteioValido(o.sorteio) ? { sorteio: o.sorteio } : {}),
     };
   } catch { return null; }
 }
@@ -203,3 +223,89 @@ export const resolverProgressaoParaTeste = (
   items: readonly ({ deg: number; type?: ChordId; flat?: boolean; emp?: string } | { mod: { fifths: number; mode: ModoDoCampo } })[],
   inicial: { fifths: number; mode: ModoDoCampo }, tetrads: boolean, conv: Convention,
 ) => resolverProgressao(items as Item[], inicial, tetrads, conv);
+
+// ---------------------------------------------------------------------------
+// **A progressão sorteada** — o *surprise play along*, do desenho dele em 26/11.
+//
+// > *"um sistema de geração aleatória de progressões de acordes que o usuário põe pra tocar e tem
+// > que tentar se virar pra entender quais são os acordes e improvisar algo que encaixe ali."*
+//
+// Ele montava isso à mão: gravava acordes soltos, jogava no iTunes e dava shuffle. Aqui a
+// ferramenta já toca progressão com empréstimo, modulação, levada e baixo — o que faltava era
+// **sortear** e **esconder**.
+//
+// ## Aleatório de verdade é o padrão, e é decisão dele
+//
+// Eu havia recomendado seguir funções (preparar o V, cadenciar no fim), e ele cortou: *"quero que o
+// padrão seja aleatório, e que seguir funções seja uma opção. a ideia é ser aleatório mesmo."*
+// Faz sentido para o que o exercício treina — reconhecer o que soa, sem poder adivinhar pelo que
+// costuma vir depois.
+import { randInt } from '../theory/core';
+
+export interface OpcoesDeSorteio {
+  /** Quantos compassos. Oito é o padrão: cabe na faixa do celular e dá volta sem ficar longo. */
+  compassos: number;
+  /** Deixa entrar acorde de fora do campo, da mesma lista curada que o `ouvido-campo` usa. */
+  emprestimos: boolean;
+  /** Modula a cada N compassos. `0` não modula. */
+  modulaCada: number;
+  /**
+   * **Seguir funções** — tônica → subdominante → dominante → tônica, com cadência no fim.
+   *
+   * Opção, nunca padrão (decisão dele). Os grupos são os clássicos: T = I, iii, vi · S = ii, IV ·
+   * D = V, vii°. Não há nada inventado aqui, e é por isso que cabe no código; o que é dele é
+   * **quando** isso vale.
+   */
+  porFuncoes: boolean;
+}
+
+export const SORTEIO_PADRAO: OpcoesDeSorteio = { compassos: 8, emprestimos: false, modulaCada: 0, porFuncoes: false };
+
+/** Os grupos funcionais, em graus do campo. Usados só quando `porFuncoes` está ligado. */
+const FUNCOES: number[][] = [[1, 3, 6], [2, 4], [5, 7]];
+
+/**
+ * **Uma progressão sorteada**, pronta para a faixa de compassos.
+ *
+ * `rnd` entra por parâmetro para o teste poder fixar o sorteio — o resto do arquivo já faz assim.
+ */
+export function sortearProgressao(
+  o: OpcoesDeSorteio, campo: ModoDoCampo, fifths: number, rnd: (a: number, b: number) => number = randInt,
+): Item[] {
+  const quantos = Math.max(1, Math.min(24, o.compassos));
+  const emprestaveis = o.emprestimos ? emprestimosDoCampo(campo === 'maior' ? 'maior' : 'menor') : [];
+  const out: Item[] = [];
+  let tom = fifths;
+
+  for (let c = 0; c < quantos; c++) {
+    /**
+     * **A marca de modulação entra ANTES do compasso**, como a música escreve uma mudança de
+     * armadura — nunca no primeiro, que não tem de onde modular. O destino é um vizinho no ciclo
+     * das quintas: modular para longe a cada quatro compassos não é surpresa, é confusão.
+     */
+    if (o.modulaCada > 0 && c > 0 && c % o.modulaCada === 0) {
+      tom = Math.max(-6, Math.min(6, tom + (rnd(0, 1) ? 1 : -1) * (rnd(0, 1) ? 1 : 2)));
+      out.push({ mod: { fifths: tom, mode: campo } });
+    }
+
+    /**
+     * **Empréstimo ou grau do campo.** Um em cada quatro compassos vem de fora quando a opção está
+     * ligada: mais que isso deixa de soar como desvio e passa a soar como outra tonalidade, e aí o
+     * exercício perde o pé.
+     */
+    if (emprestaveis.length && rnd(1, 4) === 1) {
+      const e = emprestaveis[rnd(0, emprestaveis.length - 1)];
+      out.push({ deg: e.grau, emp: e.id });
+      continue;
+    }
+    if (o.porFuncoes) {
+      // O último compasso fecha na tônica; os outros andam T → S → D → T, cada um sorteando dentro
+      // do seu grupo. É a forma mais simples de "fazer sentido" sem escrever uma gramática inteira.
+      const grupo = c === quantos - 1 ? FUNCOES[0] : FUNCOES[c % FUNCOES.length];
+      out.push({ deg: c === quantos - 1 ? 1 : grupo[rnd(0, grupo.length - 1)] });
+      continue;
+    }
+    out.push({ deg: rnd(1, 7) });
+  }
+  return out;
+}
