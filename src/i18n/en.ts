@@ -944,7 +944,7 @@ const en: Shape<typeof pt> = {
     'ouvido-tecla': { title: 'Which note played?', desc: 'Listen and tap the right key.' },
     'ouvido-intervalo': { title: 'Melodic interval', desc: 'The notes sound one after the other, going up or down — listen and name the interval.' },
 'ouvido-intervalo-harmonico': { title: 'Harmonic interval', desc: 'Two notes sound together after the context — say which interval it is. You can hear each note on its own, point them out on a surface, or audiate them one by one.' },
-    'nota-comum': { title: 'Common tone', desc: 'One note held still, and the chords it fits into: sing the arpeggio from it. Inspired by Tim Collins\u2019 ear training.' },
+    'nota-comum': { title: 'A note in many roles', desc: 'One note held still, and the chords it fits into: sing the arpeggio from it. Inspired by Tim Collins\u2019 ear training.' },
     'ouvido-acorde': { title: 'Chord qualities', desc: 'Recognise the quality of the chord you hear — major, minor, seventh, altered.' },
     'ouvido-campo': { title: 'Harmonic field degrees', desc: 'Hear the cadence and name which degree of the field was played — with borrowed chords, if you like.' },
     'mapa-do-braco': { title: 'Fretboard map', desc: 'Arpeggios from the key appear on the neck and you name one note at a time. Sing along — that is what makes the positions stick.' },

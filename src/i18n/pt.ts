@@ -946,7 +946,7 @@ const pt = {
     'ouvido-tecla': { title: 'Que nota tocou?', desc: 'Ouça e toque a tecla certa.' },
     'ouvido-intervalo': { title: 'Intervalo melódico', desc: 'As notas soam uma depois da outra, subindo ou descendo — ouça e reconheça o intervalo.' },
 'ouvido-intervalo-harmonico': { title: 'Intervalo harmônico', desc: 'Duas notas soam juntas depois do contexto — diga que intervalo é. Dá para ouvir cada nota sozinha, apontá-las na superfície, ou audiá-las uma a uma.' },
-    'nota-comum': { title: 'Nota comum', desc: 'Uma nota parada, e os acordes em que ela cabe: solfeje o arpejo a partir dela. Inspirado no ear training do Tim Collins.' },
+    'nota-comum': { title: 'Nota em várias funções', desc: 'Uma nota parada, e os acordes em que ela cabe: solfeje o arpejo a partir dela. Inspirado no ear training do Tim Collins.' },
     'ouvido-acorde': { title: 'Qualidades de acordes', desc: 'Reconheça a qualidade do acorde que soa — maior, menor, com sétima, alterado.' },
     'ouvido-campo': { title: 'Graus do campo harmônico', desc: 'Ouça a cadência e diga que grau do campo soou — com empréstimos modais, se quiser.' },
     'mapa-do-braco': { title: 'Mapa do braço', desc: 'Arpejos do campo aparecem no braço e você nomeia uma nota por vez. Cante junto: é o que fixa onde cada nota mora.' },
