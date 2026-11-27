@@ -1,7 +1,7 @@
 import { MAO_ESQUERDA, voicingsDe, type Voicing } from '../../theory/voicings';
 import {
-  ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod, notaGrafada,
-  noteName, pick, tonalidade, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, VER_O_QUE_SOOU,
+  ALTERADOS, EXTENSOES, SCALES, SEVENTHS, TONALIDADE_LIVRE, TRIADS, arr, chordSymbol, harmonicField, midi, mod,
+  noteName, pick, tonalidade, tonicaGrafada, type ChordId, type Ctx, type Note, type Question, TIMBRE, TIMBRE_DEFAULTS, VER_O_QUE_SOOU,
   faixaDaRevelacao, vozDaPergunta, } from '../helpers';
 import { qualidadeEnfeitada, type NoCampo } from '../enfeites';
 import type { CatalogItem } from '../types';
@@ -162,7 +162,14 @@ export const tonicaDeOuvido: CatalogItem = {
     const fams = arr(s.familias as never, ['tetrades']);
     // Tríades só se a pessoa pediu tríades e nada mais: pedir tétrade manda no campo.
     const soTriades = fams.length === 1 && fams[0] === 'triades';
-    const campo = harmonicField(notaGrafada(ctx, (3 + 1) * 12 + pcDaTonica(ctx)), modoDoCampo(ctx), !soTriades, ctx.conv);
+    /**
+     * **A tônica grafada pela armadura** (`tonicaGrafada`), e não por `notaGrafada`.
+     *
+     * Com tonalidade livre, a tônica sorteada saía sempre em sustenido — e cair na classe 3, 8 ou
+     * 10 dava Ré♯, Sol♯ ou Lá♯ maior, cujo campo tem `F♯♯m7` e `C♯♯m7(♭5)`. Foi o que ele leu na
+     * tela: *"a fundamental de C♯♯m7♭5"*. Medido: 3 das 24 combinações de classe × modo.
+     */
+    const campo = harmonicField(tonicaGrafada(pcDaTonica(ctx), modoDoCampo(ctx), 3), modoDoCampo(ctx), !soTriades, ctx.conv);
     const nGrau = pick(grausEscolhidos(s));
     const grau = campo[nGrau - 1] ?? campo[0];
     /**

@@ -8,8 +8,8 @@ import { buildScale, CHORDS, harmonicField, majorTonic, mod, note, noteName, pc,
 import { emprestimosDoCampo } from '../theory/campo-harmonico';
 import { alturaDoBaixo, desvioDoPasso, DURACOES, GROOVES, linhaDoTempo, type Duracao, type Style } from '../theory/levada';
 import {
-  ehMarca, GUARDADO, lerGuardado, PRESETS, resolve, resolverProgressao, tonicaDe, VOICES,
-  type Guardado, type Item, type Preset, type Tonalidade,
+  ehMarca, GUARDADO, lerGuardado, PRESETS, resolve, resolverProgressao, sortearProgressao, SORTEIO_PADRAO, tonicaDe, VOICES,
+  type Guardado, type Item, type OpcoesDeSorteio, type Preset, type Tonalidade,
 } from './backing-progressao';
 import Fretboard, { TUNINGS } from '../components/music/Fretboard';
 import Keyboard from '../components/music/Keyboard';
@@ -102,6 +102,17 @@ export default function Backing({ presetId }: { presetId?: string }) {
    * próximo acorde vai cair, então não há adivinhação.
    */
   const [sel, setSel] = useState<number | null>(null);
+  /**
+   * **Tocar sem ver os acordes** — o *surprise play along* que ele descreveu em 26/11: a progressão
+   * soa e a tarefa é se virar de ouvido para entender o que está passando.
+   *
+   * Interruptor **e** atalho, como ele decidiu: o interruptor sozinho não se acha, e o atalho
+   * sozinho não deixaria esconder uma progressão montada à mão.
+   */
+  const [esconder, setEsconder] = useState(salvo?.esconder ?? false);
+  /** Enquanto a pessoa espia, os acordes aparecem. Solta o botão e somem de novo. */
+  const [espiando, setEspiando] = useState(false);
+  const [sorteio, setSorteio] = useState<OpcoesDeSorteio>(salvo?.sorteio ?? SORTEIO_PADRAO);
   /** Para onde a próxima marca de modulação aponta. Começa na quarta acima, que é a mais comum. */
   const [destino, setDestino] = useState<Tonalidade>({ fifths: initial.mode === 'maior' ? -1 : -1, mode: initial.mode });
   const clock = useRef<Clock | null>(null);
@@ -131,8 +142,8 @@ export default function Backing({ presetId }: { presetId?: string }) {
 
   // Guarda a cada mudança. É escrita no estado global, que já persiste — nada de `localStorage` à mão.
   useEffect(() => {
-    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater } satisfies Guardado) });
-  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater]);
+    saveSettings(GUARDADO, { progressao: JSON.stringify({ items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater, esconder, sorteio } satisfies Guardado) });
+  }, [items, fifths, mode, tetrads, style, bpm, contagem, bassOn, acordesOn, compVoice, droneOn, droneNotas, droneCarater, esconder, sorteio]);
 
   /** As notas do drone — as escolhidas, ou a tônica em vigor com a oitava acima. */
   const notasDoDrone = droneNotas.length ? droneNotas : [48 + mod(pc(tonicaDoFim), 12), 60 + mod(pc(tonicaDoFim), 12)];
@@ -281,8 +292,22 @@ export default function Backing({ presetId }: { presetId?: string }) {
     setItems(p.items); setMode(p.mode); setStyle(p.style); setBpm(p.bpm); setTetrads(p.tetrads); setBar(0); setSel(null);
     if (clock.current) clock.current.stepsPerBeat = GROOVES[p.style].grid / GROOVES[p.style].tempos;
   };
+  /**
+   * **Sortear a progressão.** Sorteia e põe na faixa; o resto da tela (tonalidade, levada, baixo)
+   * fica como está — o que muda é a harmonia, que é o que o exercício esconde.
+   *
+   * A seleção volta ao começo: sortear com o cursor no sexto compasso de uma progressão que agora
+   * tem quatro deixaria a edição apontando para o nada.
+   */
+  const sortear = () => {
+    setItems(sortearProgressao(sorteio, mode, fifths));
+    setBar(0); setSel(null); setEspiando(false);
+  };
+
   const changeStyle = (s: Style) => { setStyle(s); if (clock.current) clock.current.stepsPerBeat = GROOVES[s].grid / GROOVES[s].tempos; };
 
+  /** A cifra some quando o esconder está ligado e ninguém está espiando. */
+  const escondido = esconder && !espiando;
   const cur = chords[Math.min(bar, chords.length - 1)];
   const [scaleIdx, setScaleIdx] = useState(0);
   const sc = cur?.scales[Math.min(scaleIdx, cur.scales.length - 1)];
@@ -315,7 +340,30 @@ export default function Backing({ presetId }: { presetId?: string }) {
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <section className="panel" style={{ display: 'grid', gap: 14 }}>
-        <div className="row"><span className="eyebrow">{t('backing.readyMade')}</span>{PRESETS.map(p => <Chip key={p.id} onClick={() => loadPreset(p)}>{t(p.name)}</Chip>)}</div>
+        <div className="row"><span className="eyebrow">{t('backing.readyMade')}</span>{PRESETS.map(p => <Chip key={p.id} onClick={() => loadPreset(p)}>{t(p.name)}</Chip>)}
+          {/**
+            * **O atalho do surprise play along**: sorteia e já esconde. É o par do interruptor —
+            * decisão dele em 26/11, porque um sem o outro deixa metade do caminho na mão.
+            */}
+          <Chip onClick={() => { setEsconder(true); setItems(sortearProgressao(sorteio, mode, fifths)); setBar(0); setSel(null); setEspiando(false); }}>
+            {t('backing.surprise')}
+          </Chip>
+        </div>
+        <div className="row">
+          <span className="eyebrow">{t('backing.draw')}</span>
+          <Btn small onClick={sortear}>{t('backing.drawNow')}</Btn>
+          <select className="sel" value={sorteio.compassos} aria-label={t('backing.drawBars')} id="bk-sorteio-compassos"
+            onChange={e => setSorteio(o => ({ ...o, compassos: Number(e.target.value) }))}>
+            {[2, 4, 8, 12, 16].map(n => <option key={n} value={n}>{t('backing.drawBarsN', { n })}</option>)}
+          </select>
+          <Chip on={sorteio.emprestimos} onClick={() => setSorteio(o => ({ ...o, emprestimos: !o.emprestimos }))}>{t('backing.drawBorrowed')}</Chip>
+          <Chip on={sorteio.modulaCada > 0} onClick={() => setSorteio(o => ({ ...o, modulaCada: o.modulaCada > 0 ? 0 : 4 }))}>{t('backing.drawModulate')}</Chip>
+          {sorteio.modulaCada > 0 && [2, 4, 8].map(n => (
+            <Chip key={n} on={sorteio.modulaCada === n} onClick={() => setSorteio(o => ({ ...o, modulaCada: n }))}>{t('backing.drawEveryN', { n })}</Chip>
+          ))}
+          {/* Aleatório é o padrão, e seguir funções é a opção — decisão dele, contra a minha sugestão. */}
+          <Chip on={sorteio.porFuncoes} onClick={() => setSorteio(o => ({ ...o, porFuncoes: !o.porFuncoes }))}>{t('backing.drawFunctions')}</Chip>
+        </div>
         <div className="row">
           <span className="eyebrow">{t('backing.key')}</span>
           <select className="sel" value={fifths} onChange={e => setFifths(Number(e.target.value))} aria-label={t('backing.tonality')} id="bk-tom">
@@ -339,22 +387,42 @@ export default function Backing({ presetId }: { presetId?: string }) {
           {items.map((it, k) => {
             if (ehMarca(it)) return (
               <button key={k} type="button" onClick={() => setSel(k)} aria-pressed={sel === k}
-                className={`backing-marca ${sel === k ? 'sel' : ''}`}>⇢ {nomeDoTom(it.mod)}</button>
+                className={`backing-marca ${sel === k ? 'sel' : ''}`}>⇢ {escondido ? '' : nomeDoTom(it.mod)}</button>
             );
             const i = progressao.porItem[k] ?? 0;
             const c = chords[i];
             if (!c) return null;
             return (
+              /**
+               * **Escondido, o compasso mostra um traço** em vez da cifra — e continua clicável,
+               * porque editar e marcar duração seguem valendo. A duração fica à vista: ela é ritmo,
+               * não harmonia, e esconder o que não é a pergunta só atrapalharia.
+               */
               <button key={k} type="button" onClick={() => { setBar(i); setSel(k); }}
                 className={`backing-compasso ${running && i === bar ? 'soando' : i === bar ? 'aqui' : ''} ${sel === k ? 'sel' : ''}`}>
-                <div className="cifra">{c.symbol}</div>
-                <div className="roman">{c.roman}{c.dur !== 1 ? ` · ${c.dur === 0.5 ? '½' : c.dur}` : ''}</div>
+                <div className="cifra">{escondido ? '—' : c.symbol}</div>
+                <div className="roman">{escondido ? '' : c.roman}{c.dur !== 1 ? ` · ${c.dur === 0.5 ? '½' : c.dur}` : ''}</div>
               </button>
             );
           })}
         </div>
         <div className="row">
           <Btn onClick={start} tone={running ? 'mu' : undefined}>{t(running ? 'common.stop' : 'common.playPlay')}</Btn>
+          <Chip on={esconder} onClick={() => { setEsconder(v => !v); setEspiando(false); }}>{t('backing.hideChords')}</Chip>
+          {/**
+            * **Espiar é momentâneo**: segura e vê, solta e some. Um botão que revelasse de vez
+            * faria o exercício acabar no primeiro toque — e a vontade de conferir no meio de um
+            * chorus é justamente o que ele descreveu.
+            */}
+          {esconder && (
+            /* Botão cru, e não `Btn`: segurar precisa de `onPointerDown`/`Up`, que o componente
+               compartilhado não expõe — e expor lá para um caso só espalharia a exceção. */
+            <button type="button" className="btn ghost small"
+              onPointerDown={() => setEspiando(true)} onPointerUp={() => setEspiando(false)}
+              onPointerLeave={() => setEspiando(false)} onBlur={() => setEspiando(false)}>
+              <span>{t('backing.peek')}</span>
+            </button>
+          )}
           <span className="num" style={{ fontFamily: 'var(--display)', fontWeight: 900, fontSize: 30 }}>♩ = {bpm}</span>
           <input className="range" style={{ maxWidth: 220 }} type="range" min={50} max={220} value={bpm} onChange={e => setBpm(Number(e.target.value))} aria-label={t('common.tempo')} id="bk-bpm" />
         </div>
@@ -484,7 +552,17 @@ export default function Backing({ presetId }: { presetId?: string }) {
         </div>
       </section>
 
-      {cur && (
+      {/**
+        * ⚠️ **O painel do acorde da vez some enquanto os acordes estão escondidos.**
+        *
+        * Visto na tela em 26/11, logo depois de o esconder ficar pronto: a faixa mostrava `—` em
+        * todos os compassos e, três seções abaixo, esta dizia "sobre Cmaj7" e acendia as notas do
+        * acorde no teclado em tempo real. Esconder a cifra e deixar o teclado aceso é esconder o
+        * nome de quem está à vista.
+        *
+        * Espiar traz tudo de volta junto, que é o ponto de espiar.
+        */}
+      {cur && !escondido && (
         <section className="panel" style={{ display: 'grid', gap: 14 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div>

@@ -40,9 +40,11 @@ describe('quem tem o parâmetro', () => {
    * A lista é explícita de propósito: um item de ouvido novo que esqueça o `TIMBRE` aparece aqui
    * como falta, e não como silêncio. Os de braço e de pauta ficam fora — ver o teste do fim.
    */
-  it('são os nove itens de ouvido, e a lista é esta', () => {
+  it('são os dez itens de ouvido, e a lista é esta', () => {
+    // `nota-comum` entrou em 26/11 e declara `TIMBRE` como os outros: audiar um arpejo com o timbre
+    // sorteado é o mesmo treino de não se apoiar na cor do som.
     expect(comTimbre.map(e => e.id).sort()).toEqual([
-      'melodia-de-ouvido', 'ouvido-acorde', 'ouvido-campo', 'ouvido-celulas',
+      'melodia-de-ouvido', 'nota-comum', 'ouvido-acorde', 'ouvido-campo', 'ouvido-celulas',
       'ouvido-escala', 'ouvido-intervalo', 'ouvido-intervalo-harmonico', 'ouvido-tecla',
       'tonica-de-ouvido',
     ]);
