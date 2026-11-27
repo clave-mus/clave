@@ -50,6 +50,12 @@ const DEPENDE: Record<string, ParametroDePratica[]> = {
   // que ela dita. Só tonalidade — nem região nem material passam por aqui.
   quintasDaTonalidade: ['key'],
   notaDaTonalidade: ['key'],
+  /**
+   * Entrou em 26/11/2026 e **não depende de nada**: recebe a classe e o modo por argumento, e
+   * devolve a grafia que a armadura daquela tonalidade usa. Quem decide a tônica é o item —
+   * sorteando, quando a tonalidade é livre, que é justamente o caso que ela conserta.
+   */
+  tonicaGrafada: [],
   // Entrou em 12/11/2026 no lugar do parâmetro "extensão": os passos da pauta saem da REGIÃO.
   passosDaRegiao: ['range'],
   // Lê `params.clef`, que NÃO é parâmetro de prática (os três são key, range e material) — então

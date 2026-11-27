@@ -11,7 +11,7 @@
 //
 // E é por isso que elas moram num arquivo só: acrescentar um parâmetro musical novo se faz aqui,
 // e passa a valer para todo item sem editar o catálogo. É o critério de pronto da F2-1.
-import { applyKey, buildScale, clefBottom, fromMidi, fromStep, midi, mod, note, pcNameUm, pick, randInt, type Clef, type Note } from '../theory/core';
+import { applyKey, buildScale, clefBottom, fromMidi, fromStep, majorTonic, midi, mod, note, pcNameUm, pick, randInt, transpose, type Clef, type ModoDoCampo, type Note } from '../theory/core';
 import type { GlobalParams } from './params';
 import type { Ctx } from './types';
 
@@ -124,10 +124,44 @@ export function quintasDaTonalidade(ctx: Ctx): number | null {
   if (!k) return null;
   // A relativa menor tem a MESMA armadura da maior três semitons acima (lá menor = dó maior).
   const pcMaior = mod(k.mode === 'menor' ? k.tonic + 3 : k.tonic, 12);
-  // Quintas que dão cada classe de altura como tônica maior, escolhendo a grafia usual: dó♯ maior
-  // (7 sustenidos) não; ré♭ maior (5 bemóis) sim — é como a música escreve.
-  const PORPC: Record<number, number> = { 0: 0, 1: -5, 2: 2, 3: -3, 4: 4, 5: -1, 6: 6, 7: 1, 8: -4, 9: 3, 10: -2, 11: 5 };
-  return PORPC[pcMaior];
+  return QUINTAS_POR_PC[pcMaior];
+}
+
+/**
+ * Quintas que dão cada classe de altura como tônica maior, **na grafia usual**: dó♯ maior (7
+ * sustenidos) não; ré♭ maior (5 bemóis) sim — é como a música escreve, e é a lista de doze que o
+ * seletor de tonalidade oferece.
+ *
+ * Saiu de dentro de `quintasDaTonalidade` em 26/11 para `tonicaGrafada` poder usá-la. Uma tabela
+ * só: duas divergiriam no primeiro ajuste.
+ */
+const QUINTAS_POR_PC: Record<number, number> = { 0: 0, 1: -5, 2: 2, 3: -3, 4: 4, 5: -1, 6: 6, 7: 1, 8: -4, 9: 3, 10: -2, 11: 5 };
+
+/**
+ * **A tônica de uma tonalidade, grafada como a armadura dela manda.**
+ *
+ * Existe por um defeito que ele viu duas vezes e eu medi em 26/11: com **tonalidade livre**, a
+ * tônica sorteada era grafada por `notaGrafada`, que escolhe sustenido sempre. Cair na classe 3, 8
+ * ou 10 produzia **Ré♯, Sol♯ e Lá♯ maior** — tonalidades que o seletor nem oferece (ele oferece
+ * Mi♭, Lá♭ e Si♭) e cujo campo harmônico tem graus ilegíveis:
+ *
+ * | tonalidade | graus que saem |
+ * |---|---|
+ * | Ré♯ maior | `F♯♯m7`, `C♯♯m7(♭5)` |
+ * | Sol♯ maior | `F♯♯m7(♭5)` |
+ * | Lá♯ maior | `C♯♯m7`, `F♯♯m7`, `G♯♯m7(♭5)` |
+ *
+ * São 3 das 24 combinações de classe × modo — e o que ele leu na tela foi *"a fundamental de
+ * C♯♯m7♭5"*. Nas menores não há problema: ré♯, sol♯ e lá♯ menor são tonalidades de verdade.
+ *
+ * ⚠️ Isto grafa **a tônica**, não uma nota qualquer: quem grafa nota solta é `notaGrafada`, e ali
+ * sustenido por padrão está certo — não há armadura para consultar.
+ */
+export function tonicaGrafada(pc: number, mode: ModoDoCampo, oct = 4): Note {
+  const pcMaior = mod(mode === 'maior' ? pc : pc + 3, 12);
+  const maior = majorTonic(QUINTAS_POR_PC[pcMaior]);
+  const t = mode === 'maior' ? maior : transpose(maior, { num: 6, semis: 9 });
+  return { ...t, oct };
 }
 
 /**
